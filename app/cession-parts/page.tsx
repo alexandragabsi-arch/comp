@@ -590,14 +590,105 @@ function StepRecap({ data, onGenerate }: { data: FormData; onGenerate: () => voi
 }
 
 // ─── Download helper ──────────────────────────────────────────────────────────
-function downloadTxt(content: string, filename: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+async function downloadPdf(content: string, filename: string) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const marginLeft = 20;
+  const marginRight = 20;
+  const marginTop = 20;
+  const pageWidth = 210;
+  const usableWidth = pageWidth - marginLeft - marginRight;
+  const lineHeight = 5.5;
+  const pageHeight = 297;
+  const marginBottom = 20;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+
+  let y = marginTop;
+  const lines = content.split("\n");
+
+  for (const rawLine of lines) {
+    // Detect section headers (═══ or ───)
+    const isSeparatorDouble = /^═{10,}/.test(rawLine);
+    const isSeparatorSingle = /^─{10,}/.test(rawLine);
+
+    if (isSeparatorDouble) {
+      // Draw a thick rule
+      if (y + 2 > pageHeight - marginBottom) { doc.addPage(); y = marginTop; }
+      doc.setDrawColor(26, 39, 68);
+      doc.setLineWidth(0.5);
+      doc.line(marginLeft, y, pageWidth - marginRight, y);
+      y += 3;
+      continue;
+    }
+    if (isSeparatorSingle) {
+      if (y + 2 > pageHeight - marginBottom) { doc.addPage(); y = marginTop; }
+      doc.setDrawColor(180, 180, 180);
+      doc.setLineWidth(0.2);
+      doc.line(marginLeft, y, pageWidth - marginRight, y);
+      y += 3;
+      continue;
+    }
+
+    // Detect main title (all caps, centred)
+    const isMainTitle = /^(CESSION D'ACTIONS|ACTE DE CESSION|PROCÈS-VERBAL)/.test(rawLine.trim());
+    // Detect article headers like "ARTICLE X –"
+    const isArticle = /^ARTICLE \d+/.test(rawLine.trim());
+    // Detect sub-headers like "1.1 Le Cédant"
+    const isSubHeader = /^\d+\.\d+ /.test(rawLine.trim());
+    // Detect SIGNATURES block
+    const isSignatures = /^SIGNATURES$/.test(rawLine.trim());
+
+    if (isMainTitle) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(26, 39, 68);
+    } else if (isArticle || isSignatures) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(26, 39, 68);
+    } else if (isSubHeader) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(50, 50, 50);
+    } else {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(30, 30, 30);
+    }
+
+    const wrapped = doc.splitTextToSize(rawLine || " ", usableWidth);
+    for (const wLine of wrapped) {
+      if (y + lineHeight > pageHeight - marginBottom) {
+        doc.addPage();
+        y = marginTop;
+      }
+      if (isMainTitle) {
+        doc.text(wLine, pageWidth / 2, y, { align: "center" });
+      } else {
+        doc.text(wLine, marginLeft, y);
+      }
+      y += isMainTitle ? lineHeight + 1 : lineHeight;
+    }
+
+    // Extra space after blank lines
+    if (rawLine.trim() === "") y += 1;
+  }
+
+  // Page numbers
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`${i} / ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: "center" });
+    doc.text("Document confidentiel — LegalCorners", marginLeft, pageHeight - 8);
+  }
+
+  doc.save(filename);
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -770,16 +861,16 @@ export default function CessionParts() {
                 )}
 
                 <button
-                  onClick={() => downloadTxt(acteText, `acte-cession-${data.societe.denomination || "societe"}.txt`)}
+                  onClick={() => downloadPdf(acteText, `acte-cession-${data.societe.denomination || "societe"}.pdf`)}
                   className="w-full flex items-center gap-2 justify-center px-4 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors"
                 >
-                  ⬇ Télécharger l&apos;acte de cession
+                  ⬇ Télécharger l&apos;acte de cession (PDF)
                 </button>
                 <button
-                  onClick={() => downloadTxt(pvText, `pv-ag-${data.societe.denomination || "societe"}.txt`)}
+                  onClick={() => downloadPdf(pvText, `pv-ag-${data.societe.denomination || "societe"}.pdf`)}
                   className="w-full flex items-center gap-2 justify-center px-4 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors"
                 >
-                  ⬇ Télécharger le PV AG
+                  ⬇ Télécharger le PV AG (PDF)
                 </button>
               </div>
 

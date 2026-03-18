@@ -84,6 +84,7 @@ ${
 - Représentée par : ${cedant.morale?.representantCivilite || ""} ${cedant.morale?.representantNom || ""} ${cedant.morale?.representantPrenom || ""}, ${cedant.morale?.representantQualite || ""}`
 }
 - Nombre de ${typeTitre} cédées : ${cedant.nombreTitresCedes || "[non renseigné]"} (${pct}% du capital)
+${data.natureCession.numeroDe && data.natureCession.numeroA ? `- Numéros des titres : n°${data.natureCession.numeroDe} à n°${data.natureCession.numeroA}` : ""}
 
 CESSIONNAIRE :
 ${
@@ -129,6 +130,8 @@ ${
 - Plafond global : ${gap.plafond || "[non renseigné]"}
 - Durée : ${gap.dureeAnnees || "[non renseigné]"} années
 - Délai notification : ${gap.notificationDelaiMois || "[non renseigné]"} mois
+${gap.notificationAdresse ? `- Adresse de notification : ${gap.notificationAdresse}` : ""}
+${gap.notificationEmail ? `- Email de notification : ${gap.notificationEmail}` : ""}
 ${gap.escrow ? `- SÉQUESTRE : ${gap.escrowMontant || ""} auprès de ${gap.escrowBeneficiaire || ""}` : "- Pas de séquestre"}`
     : "- Pas de GAP prévue"
 }
@@ -164,7 +167,8 @@ INSTRUCTIONS DE RÉDACTION :
       ? "0,1% (SA/SAS)"
       : "3% avec abattement 23 000€ proratisé (SARL/EURL)"
   }
-7. Termine par les blocs de signature avec les mentions manuscrites requises`;
+7. Termine par les blocs de signature avec les mentions manuscrites requises
+${nomCedant} ${nomCessionnaire}`;
 }
 
 function buildPromptPV(data: FormData): string {
@@ -196,6 +200,21 @@ function buildPromptPV(data: FormData): string {
     cessionnaire.typePersonne === "physique" && cessionnaire.physique
       ? `${cessionnaire.physique.civilite} ${cessionnaire.physique.nom} ${cessionnaire.physique.prenom}`
       : cessionnaire.morale?.denomination || "[CESSIONNAIRE]";
+
+  const nouveauDirigeantBlock =
+    pv.changementDirigeant
+      ? pv.nouveauDirigeantTypePersonne === "morale"
+        ? `Nouveau dirigeant (PM) :
+- Dénomination : ${pv.nouveauDirigeantDenomination || ""}
+- Forme : ${pv.nouveauDirigeantFormeJuridiqueStr || ""}, Capital : ${pv.nouveauDirigeantCapitalStr || ""}
+- Siège : ${pv.nouveauDirigeantSiegeSocial || ""}
+- RCS ${pv.nouveauDirigeantRCSSiege || ""} n° ${pv.nouveauDirigeantRCSNum || ""}
+- Représentant permanent : ${pv.rpCivilite || ""} ${pv.rpNom || ""} ${pv.rpPrenom || ""}`
+        : `Nouveau dirigeant (PP) : ${nomCessionnaire}
+- Né(e) le ${cessionnaire.physique?.dateNaissance || pv.nouveauDirigeantDateNaissance || ""} à ${pv.nouveauDirigeantVilleNaissance || cessionnaire.physique?.villeNaissance || ""}
+- Nationalité : ${pv.nouveauDirigeantNationalite || cessionnaire.physique?.nationalite || "française"}
+- Demeurant : ${cessionnaire.physique?.adresse || pv.nouveauDirigeantAdresse || ""}`
+      : "";
 
   return `Tu es un juriste expert en droit des sociétés français. Rédige un PROCÈS-VERBAL ${pv.typeAssemblee === "AGE" ? "D'ASSEMBLÉE GÉNÉRALE EXTRAORDINAIRE" : pv.typeAssemblee === "associe_unique" ? "DE L'ASSOCIÉ UNIQUE" : "DE DÉCISIONS UNANIMES DES ASSOCIÉS"} complet et juridiquement correct.
 
@@ -238,13 +257,8 @@ ${
 - ${pv.ancienDirigeantCivilite || ""} ${pv.ancienDirigeantNom || ""} ${pv.ancienDirigeantPrenom || ""}, né(e) le ${pv.ancienDirigeantDateNaissance || ""}
 - Fonction : ${pv.ancienDirigeantFonction || ""}
 
-NOUVEAU DIRIGEANT : ${nomCessionnaire}
-${
-  cessionnaire.typePersonne === "physique" && cessionnaire.physique
-    ? `Né(e) le ${cessionnaire.physique.dateNaissance || ""}, demeurant ${cessionnaire.physique.adresse || ""}`
-    : `Société : ${cessionnaire.morale?.denomination || ""}, RCS ${cessionnaire.morale?.rcsVille || ""} n° ${cessionnaire.morale?.rcsNumero || ""}`
-}
-- Fonction : ${pv.nouveauDirigeantFonction || ""}
+${nouveauDirigeantBlock}
+- Fonction attribuée : ${pv.nouveauDirigeantFonction || ""}
 - Durée du mandat : ${pv.dureeMandat || "illimitée"}`
     : ""
 }
@@ -257,6 +271,64 @@ INSTRUCTIONS :
 5. Toutes les résolutions sont adoptées à l'unanimité
 6. Termine par les signatures appropriées selon le type d'assemblée
 7. Style juridique professionnel français`;
+}
+
+function buildDeclarationNonCondamnation(data: FormData): string {
+  const pv = data.pv;
+  const cessionnaire = data.cessionnaire;
+  const ville = pv.ville || data.ville || "[ville]";
+  const dateSignature = pv.date || data.date || "[date]";
+
+  const isPM = pv.nouveauDirigeantTypePersonne === "morale";
+
+  // Identité du signataire
+  const civilite = isPM ? (pv.rpCivilite || "M.") : (cessionnaire.physique?.civilite || pv.nouveauDirigeantCivilite || "M.");
+  const nom = isPM ? (pv.rpNom || "") : (cessionnaire.physique?.nom || pv.nouveauDirigeantNom || "");
+  const prenom = isPM ? (pv.rpPrenom || "") : (cessionnaire.physique?.prenom || pv.nouveauDirigeantPrenom || "");
+  const dateNaissance = isPM ? (pv.rpDateNaissance || "") : (cessionnaire.physique?.dateNaissance || pv.nouveauDirigeantDateNaissance || "");
+  const villeNaissance = isPM ? (pv.rpVilleNaissance || "") : (pv.nouveauDirigeantVilleNaissance || cessionnaire.physique?.villeNaissance || "");
+  const nationalite = isPM ? (pv.rpNationalite || "française") : (pv.nouveauDirigeantNationalite || cessionnaire.physique?.nationalite || "française");
+  const adresse = isPM ? (pv.rpAdresse || "") : (cessionnaire.physique?.adresse || pv.nouveauDirigeantAdresse || "");
+  const nomPere = isPM ? (pv.rpNomPere || "") : (pv.nouveauDirigeantNomPere || "");
+  const prenomPere = isPM ? (pv.rpPrenomPere || "") : (pv.nouveauDirigeantPrenomPere || "");
+  const nomMere = isPM ? (pv.rpNomMere || "") : (pv.nouveauDirigeantNomMere || "");
+  const prenomMere = isPM ? (pv.rpPrenomMere || "") : (pv.nouveauDirigeantPrenomMere || "");
+  const genreFils = civilite === "Mme" ? "Fille" : "Fils";
+
+  // Qualité dans la société
+  const qualite = isPM
+    ? `représentant permanent de ${pv.nouveauDirigeantDenomination || "[PM]"}, ${pv.nouveauDirigeantFonction || "dirigeant"}`
+    : (pv.nouveauDirigeantFonction || "dirigeant");
+
+  return `DÉCLARATION DE NON-CONDAMNATION ET DE FILIATION DU DIRIGEANT
+
+══════════════════════════════════════════════════════════════════
+
+Je soussigné(e) : ${civilite} ${nom.toUpperCase()}, ${prenom}
+
+Né(e) le : ${dateNaissance}
+À : ${villeNaissance}
+De nationalité : ${nationalite}
+Demeurant : ${adresse}
+
+${genreFils} de : Monsieur ${nomPere.toUpperCase()} ${prenomPere}
+Et de : Madame ${nomMere.toUpperCase()} ${prenomMere}
+
+──────────────────────────────────────────────────────────────────
+
+En ma qualité de ${qualite} de la société ${data.societe.denomination || "[Société]"} (${data.societe.formeJuridique || ""}), immatriculée au RCS de ${data.societe.rcsVille || ""} sous le n° ${data.societe.rcsNumero || ""},
+
+Déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce, relatif au Registre du Commerce et des Sociétés,
+
+* n'avoir jamais fait l'objet d'aucune condamnation pénale ni de sanction civile ou administrative de nature à m'interdire, soit d'exercer une activité commerciale, soit de gérer, d'administrer ou de diriger une personne morale.
+
+──────────────────────────────────────────────────────────────────
+
+Fait à ${ville}, le ${dateSignature}
+
+__________________________
+${nom.toUpperCase()} ${prenom}
+(Signature précédée de la mention manuscrite "Lu et approuvé")`;
 }
 
 export async function POST(request: NextRequest) {
@@ -298,7 +370,13 @@ export async function POST(request: NextRequest) {
       type === "pv" || type === "both" ? generatePV() : Promise.resolve(undefined),
     ]);
 
-    return NextResponse.json({ acte, pv });
+    // Génère la déclaration de non-condamnation si changement de dirigeant
+    const declaration =
+      formData.pv.changementDirigeant
+        ? buildDeclarationNonCondamnation(formData)
+        : undefined;
+
+    return NextResponse.json({ acte, pv, declaration });
   } catch (error) {
     console.error("Erreur génération documents:", error);
     if (error instanceof Anthropic.AuthenticationError) {

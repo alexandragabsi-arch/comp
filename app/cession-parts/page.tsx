@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FormData, StepId } from "../types/form";
+import { generateActeDocx, generatePVDocx, generateDeclarationDocx } from "../lib/generateDocx";
 
 // ─── Initial state ───────────────────────────────────────────────────────────
 const initialData: FormData = {
@@ -303,13 +304,22 @@ function StepPrix({ data, set }: { data: FormData; set: (d: Partial<FormData>) =
       )}
 
       <SectionTitle>Nature de la cession</SectionTitle>
-      <Field label="Type de transfert">
-        <Select value={data.natureCession.type} onChange={v => set({ natureCession: { ...data.natureCession, type: v as "pleine_propriete" | "usufruit" | "nue_propriete" } })} options={[
-          { value: "pleine_propriete", label: "Pleine propriété (standard)" },
-          { value: "usufruit", label: "Usufruit seulement" },
-          { value: "nue_propriete", label: "Nue-propriété seulement" },
-        ]} />
-      </Field>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <Field label="Type de transfert">
+          <Select value={data.natureCession.type} onChange={v => set({ natureCession: { ...data.natureCession, type: v as "pleine_propriete" | "usufruit" | "nue_propriete" } })} options={[
+            { value: "pleine_propriete", label: "Pleine propriété (standard)" },
+            { value: "usufruit", label: "Usufruit seulement" },
+            { value: "nue_propriete", label: "Nue-propriété seulement" },
+          ]} />
+        </Field>
+        <div />
+        <Field label="Numéro du premier titre cédé">
+          <Input type="number" value={data.natureCession.numeroDe} onChange={v => set({ natureCession: { ...data.natureCession, numeroDe: v } })} placeholder="ex : 1" />
+        </Field>
+        <Field label="Numéro du dernier titre cédé">
+          <Input type="number" value={data.natureCession.numeroA} onChange={v => set({ natureCession: { ...data.natureCession, numeroA: v } })} placeholder="ex : 100" />
+        </Field>
+      </div>
 
       <SectionTitle>Informations de signature</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
@@ -357,6 +367,12 @@ function StepOptions({ data, set }: { data: FormData; set: (d: Partial<FormData>
           </Field>
           <Field label="Délai de notification (mois)">
             <Input type="number" value={gap.notificationDelaiMois} onChange={v => set({ gap: { ...gap, notificationDelaiMois: v } })} placeholder="3" />
+          </Field>
+          <Field label="Adresse de notification">
+            <Input value={gap.notificationAdresse} onChange={v => set({ gap: { ...gap, notificationAdresse: v } })} placeholder="Adresse postale du cédant" />
+          </Field>
+          <Field label="Email de notification">
+            <Input type="email" value={gap.notificationEmail} onChange={v => set({ gap: { ...gap, notificationEmail: v } })} placeholder="cedant@email.com" />
           </Field>
           <div className="col-span-2 mt-2">
             <Toggle checked={!!gap.escrow} onChange={v => set({ gap: { ...gap, escrow: v } })} label="Mettre en place un séquestre (Escrow)" />
@@ -512,9 +528,16 @@ function StepPV({ data, set }: { data: FormData; set: (d: Partial<FormData>) => 
             </div>
           </div>
 
-          <div className="p-4 bg-green-50 rounded-lg">
-            <p className="text-sm font-semibold text-green-700 mb-3">Nouveau dirigeant</p>
+          <div className="p-4 bg-green-50 rounded-lg space-y-4">
+            <p className="text-sm font-semibold text-green-700">Nouveau dirigeant</p>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <Field label="Type de dirigeant">
+                <Select value={pv.nouveauDirigeantTypePersonne || "physique"} onChange={v => upd("nouveauDirigeantTypePersonne", v)} options={[
+                  { value: "physique", label: "Personne physique" },
+                  { value: "morale", label: "Personne morale (PM)" },
+                ]} />
+              </Field>
               <Field label="Fonction attribuée">
                 <Select value={pv.nouveauDirigeantFonction || ""} onChange={v => upd("nouveauDirigeantFonction", v)} options={[
                   { value: "gérant", label: "Gérant" },
@@ -533,7 +556,106 @@ function StepPV({ data, set }: { data: FormData; set: (d: Partial<FormData>) => 
                 ]} />
               </Field>
             </div>
-            <p className="text-xs text-green-600 mt-2">Les informations du cessionnaire (nom, prénom, adresse) seront reprises automatiquement.</p>
+
+            {(!pv.nouveauDirigeantTypePersonne || pv.nouveauDirigeantTypePersonne === "physique") && (
+              <>
+                <p className="text-xs text-green-600">Identité du cessionnaire reprise automatiquement. Complétez les champs ci-dessous pour la déclaration.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                  <Field label="Ville de naissance">
+                    <Input value={pv.nouveauDirigeantVilleNaissance} onChange={v => upd("nouveauDirigeantVilleNaissance", v)} placeholder="Paris (75001)" />
+                  </Field>
+                  <Field label="Nationalité">
+                    <Input value={pv.nouveauDirigeantNationalite} onChange={v => upd("nouveauDirigeantNationalite", v)} placeholder="française" />
+                  </Field>
+                </div>
+
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <p className="text-xs font-semibold text-green-800 mb-3">Déclaration de non-condamnation — Filiation</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <Field label="Nom du père">
+                      <Input value={pv.nouveauDirigeantNomPere} onChange={v => upd("nouveauDirigeantNomPere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom du père">
+                      <Input value={pv.nouveauDirigeantPrenomPere} onChange={v => upd("nouveauDirigeantPrenomPere", v)} placeholder="Prénom" />
+                    </Field>
+                    <Field label="Nom de la mère (naissance)">
+                      <Input value={pv.nouveauDirigeantNomMere} onChange={v => upd("nouveauDirigeantNomMere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom de la mère">
+                      <Input value={pv.nouveauDirigeantPrenomMere} onChange={v => upd("nouveauDirigeantPrenomMere", v)} placeholder="Prénom" />
+                    </Field>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {pv.nouveauDirigeantTypePersonne === "morale" && (
+              <>
+                <div className="p-3 bg-white border border-green-200 rounded-lg">
+                  <p className="text-xs font-semibold text-green-800 mb-3">Personne morale dirigeante</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <Field label="Dénomination sociale">
+                      <Input value={pv.nouveauDirigeantDenomination} onChange={v => upd("nouveauDirigeantDenomination", v)} placeholder="Ma Société SAS" />
+                    </Field>
+                    <Field label="Forme juridique">
+                      <Input value={pv.nouveauDirigeantFormeJuridiqueStr} onChange={v => upd("nouveauDirigeantFormeJuridiqueStr", v)} placeholder="SAS" />
+                    </Field>
+                    <Field label="Capital">
+                      <Input value={pv.nouveauDirigeantCapitalStr} onChange={v => upd("nouveauDirigeantCapitalStr", v)} placeholder="10 000 €" />
+                    </Field>
+                    <Field label="Ville RCS">
+                      <Input value={pv.nouveauDirigeantRCSSiege} onChange={v => upd("nouveauDirigeantRCSSiege", v)} placeholder="Paris" />
+                    </Field>
+                    <Field label="Numéro RCS">
+                      <Input value={pv.nouveauDirigeantRCSNum} onChange={v => upd("nouveauDirigeantRCSNum", v)} placeholder="123 456 789" />
+                    </Field>
+                    <Field label="Siège social">
+                      <Input value={pv.nouveauDirigeantSiegeSocial} onChange={v => upd("nouveauDirigeantSiegeSocial", v)} placeholder="1 rue de la Paix, 75001 Paris" />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <p className="text-xs font-semibold text-green-800 mb-3">Représentant permanent — Déclaration de non-condamnation</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <Field label="Civilité">
+                      <Select value={pv.rpCivilite || "M."} onChange={v => upd("rpCivilite", v)} options={[{ value: "M.", label: "M." }, { value: "Mme", label: "Mme" }]} />
+                    </Field>
+                    <Field label="Nom">
+                      <Input value={pv.rpNom} onChange={v => upd("rpNom", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom(s)">
+                      <Input value={pv.rpPrenom} onChange={v => upd("rpPrenom", v)} placeholder="Prénom(s)" />
+                    </Field>
+                    <Field label="Date de naissance">
+                      <Input type="date" value={pv.rpDateNaissance} onChange={v => upd("rpDateNaissance", v)} />
+                    </Field>
+                    <Field label="Ville de naissance">
+                      <Input value={pv.rpVilleNaissance} onChange={v => upd("rpVilleNaissance", v)} placeholder="Paris (75001)" />
+                    </Field>
+                    <Field label="Nationalité">
+                      <Input value={pv.rpNationalite} onChange={v => upd("rpNationalite", v)} placeholder="française" />
+                    </Field>
+                    <Field label="Adresse">
+                      <Input value={pv.rpAdresse} onChange={v => upd("rpAdresse", v)} placeholder="1 rue de la Paix, 75001 Paris" />
+                    </Field>
+                    <div />
+                    <Field label="Nom du père">
+                      <Input value={pv.rpNomPere} onChange={v => upd("rpNomPere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom du père">
+                      <Input value={pv.rpPrenomPere} onChange={v => upd("rpPrenomPere", v)} placeholder="Prénom" />
+                    </Field>
+                    <Field label="Nom de la mère (naissance)">
+                      <Input value={pv.rpNomMere} onChange={v => upd("rpNomMere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom de la mère">
+                      <Input value={pv.rpPrenomMere} onChange={v => upd("rpPrenomMere", v)} placeholder="Prénom" />
+                    </Field>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -882,7 +1004,8 @@ export default function CessionParts() {
   const [error, setError] = useState("");
   const [acteText, setActeText] = useState("");
   const [pvText, setPvText] = useState("");
-  const [preview, setPreview] = useState<"acte" | "pv" | null>(null);
+  const [declarationText, setDeclarationText] = useState("");
+  const [preview, setPreview] = useState<"acte" | "pv" | "declaration" | null>(null);
 
   const currentStep = STEPS[stepIndex];
 
@@ -911,6 +1034,7 @@ export default function CessionParts() {
       const result = await res.json();
       setActeText(result.acte || "");
       setPvText(result.pv || "");
+      setDeclarationText(result.declaration || "");
       setGenerated(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur inconnue");
@@ -1041,18 +1165,90 @@ export default function CessionParts() {
                   <pre className="text-xs bg-gray-50 border rounded-xl p-4 max-h-96 overflow-y-auto whitespace-pre-wrap font-mono">{pvText}</pre>
                 )}
 
-                <button
-                  onClick={() => downloadPdf(acteText, `acte-cession-${data.societe.denomination || "societe"}.pdf`, data, "acte")}
-                  className="w-full flex items-center gap-2 justify-center px-4 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors"
-                >
-                  ⬇ Télécharger l&apos;acte de cession (PDF)
-                </button>
-                <button
-                  onClick={() => downloadPdf(pvText, `pv-ag-${data.societe.denomination || "societe"}.pdf`, data, "pv")}
-                  className="w-full flex items-center gap-2 justify-center px-4 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors"
-                >
-                  ⬇ Télécharger le PV AG (PDF)
-                </button>
+                {/* Acte download */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => downloadPdf(acteText, `acte-cession-${data.societe.denomination || "societe"}.pdf`, data, "acte")}
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
+                  >
+                    ⬇ Acte (.pdf)
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const blob = await generateActeDocx(acteText, data);
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `acte-cession-${data.societe.denomination || "societe"}.docx`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
+                  >
+                    ⬇ Acte (.docx)
+                  </button>
+                </div>
+
+                {/* PV download */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => downloadPdf(pvText, `pv-ag-${data.societe.denomination || "societe"}.pdf`, data, "pv")}
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
+                  >
+                    ⬇ PV AG (.pdf)
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const blob = await generatePVDocx(pvText, data);
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `pv-ag-${data.societe.denomination || "societe"}.docx`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
+                  >
+                    ⬇ PV AG (.docx)
+                  </button>
+                </div>
+
+                {declarationText && (
+                  <>
+                    <button
+                      onClick={() => setPreview(preview === "declaration" ? null : "declaration")}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800"
+                    >
+                      <span>👁 Aperçu — Déclaration de non-condamnation</span>
+                      <span>{preview === "declaration" ? "▲" : "▼"}</span>
+                    </button>
+                    {preview === "declaration" && (
+                      <pre className="text-xs bg-gray-50 border rounded-xl p-4 max-h-96 overflow-y-auto whitespace-pre-wrap font-mono">{declarationText}</pre>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => downloadPdf(declarationText, `declaration-non-condamnation-${data.societe.denomination || "societe"}.pdf`, data, "pv")}
+                        className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-amber-700 text-amber-700 rounded-xl font-medium hover:bg-amber-700 hover:text-white transition-colors text-sm"
+                      >
+                        ⬇ Déclaration (.pdf)
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const blob = await generateDeclarationDocx(declarationText, data);
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `declaration-non-condamnation-${data.societe.denomination || "societe"}.docx`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-amber-700 text-amber-700 rounded-xl font-medium hover:bg-amber-700 hover:text-white transition-colors text-sm"
+                      >
+                        ⬇ Déclaration (.docx)
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="mt-6 p-4 bg-blue-50 rounded-xl text-sm text-blue-700 flex gap-2">

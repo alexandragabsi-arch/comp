@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { FormData } from "../../types/form";
 import { TEMPLATE_ACTE, TEMPLATE_PV } from "../../lib/templates";
 
+export const maxDuration = 300;
+
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -269,9 +271,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results: { acte?: string; pv?: string } = {};
-
-    if (type === "acte" || type === "both") {
+    async function generateActe(): Promise<string> {
       const stream = client.messages.stream({
         model: "claude-opus-4-6",
         max_tokens: 8000,
@@ -279,10 +279,10 @@ export async function POST(request: NextRequest) {
       });
       const response = await stream.finalMessage();
       const block = response.content.find((b) => b.type === "text");
-      results.acte = block && block.type === "text" ? block.text : "";
+      return block && block.type === "text" ? block.text : "";
     }
 
-    if (type === "pv" || type === "both") {
+    async function generatePV(): Promise<string> {
       const stream = client.messages.stream({
         model: "claude-opus-4-6",
         max_tokens: 6000,
@@ -290,10 +290,15 @@ export async function POST(request: NextRequest) {
       });
       const response = await stream.finalMessage();
       const block = response.content.find((b) => b.type === "text");
-      results.pv = block && block.type === "text" ? block.text : "";
+      return block && block.type === "text" ? block.text : "";
     }
 
-    return NextResponse.json(results);
+    const [acte, pv] = await Promise.all([
+      type === "acte" || type === "both" ? generateActe() : Promise.resolve(undefined),
+      type === "pv" || type === "both" ? generatePV() : Promise.resolve(undefined),
+    ]);
+
+    return NextResponse.json({ acte, pv });
   } catch (error) {
     console.error("Erreur génération documents:", error);
     if (error instanceof Anthropic.AuthenticationError) {

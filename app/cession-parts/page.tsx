@@ -589,8 +589,91 @@ function StepRecap({ data, onGenerate }: { data: FormData; onGenerate: () => voi
   );
 }
 
-// ─── HTML converter ───────────────────────────────────────────────────────────
-function buildHtmlFromText(text: string): string {
+// ─── Cover page builder ───────────────────────────────────────────────────────
+function buildCoverHtml(data: FormData, docType: "acte" | "pv"): string {
+  function esc(s: string) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  const typeTitre = ["SARL", "EURL", "SNC", "SCI"].includes(data.societe.formeJuridique || "")
+    ? "parts sociales" : "actions";
+  const nomCedant = data.cedant.typePersonne === "physique" && data.cedant.physique
+    ? `${data.cedant.physique.civilite} ${data.cedant.physique.nom} ${data.cedant.physique.prenom}`.trim()
+    : data.cedant.morale?.denomination || "—";
+  const nomCessionnaire = data.cessionnaire.typePersonne === "physique" && data.cessionnaire.physique
+    ? `${data.cessionnaire.physique.civilite} ${data.cessionnaire.physique.nom} ${data.cessionnaire.physique.prenom}`.trim()
+    : data.cessionnaire.morale?.denomination || "—";
+  const dateFormatted = data.date
+    ? new Date(data.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })
+    : "—";
+  const title = docType === "acte"
+    ? `ACTE DE CESSION<br>DE ${typeTitre.toUpperCase()}`
+    : `PROC&Egrave;S-VERBAL<br>${data.pv.typeAssemblee === "AGE" ? "D&apos;ASSEMBL&Eacute;E G&Eacute;N&Eacute;RALE EXTRAORDINAIRE" : data.pv.typeAssemblee === "associe_unique" ? "DE L&apos;ASSOCI&Eacute; UNIQUE" : "DE D&Eacute;CISIONS UNANIMES"}`;
+
+  const partiesBlock = docType === "acte" ? `
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">C&Eacute;DANT (VENDEUR)</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCedant)}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">CESSIONNAIRE (ACH&Egrave;TEUR)</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCessionnaire)}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">SOCI&Eacute;T&Eacute; CIBLE</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(data.societe.denomination || "—")}</div>
+      <div style="font-size:11px;color:#666;margin-top:3px">${esc(data.societe.formeJuridique || "")} &mdash; Capital&nbsp;: ${esc(data.societe.capital || "—")} &mdash; ${esc(data.cedant.nombreTitresCedes || "—")} ${typeTitre} c&eacute;d&eacute;es</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div>
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">PRIX DE CESSION</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(data.prix.prixTotal || "—")}</div>
+      <div style="font-size:11px;color:#666;margin-top:3px">${data.prix.typePaiement === "comptant" ? "Paiement comptant" : "Paiement &eacute;chelonn&eacute;"}</div>
+    </div>` : `
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">SOCI&Eacute;T&Eacute;</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(data.societe.denomination || "—")}</div>
+      <div style="font-size:11px;color:#666;margin-top:3px">${esc(data.societe.formeJuridique || "")} &mdash; Capital&nbsp;: ${esc(data.societe.capital || "—")}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">C&Eacute;DANT</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCedant)}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div>
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">CESSIONNAIRE</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCessionnaire)}</div>
+    </div>`;
+
+  return `<div style="width:794px;height:1123px;background:#fff;position:relative;overflow:hidden;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif">
+  <div style="position:absolute;left:0;top:0;width:6px;height:100%;background:#1a2744"></div>
+  <div style="position:absolute;top:0;left:6px;right:0;height:3px;background:#22c55e"></div>
+  <div style="padding:65px 65px 50px 78px;height:100%;box-sizing:border-box;display:flex;flex-direction:column">
+    <div style="margin-bottom:60px">
+      <span style="font-size:22px;color:#1a2744;font-weight:bold;letter-spacing:-0.5px">Legal<span style="color:#22c55e">Corners</span></span>
+    </div>
+    <div style="margin-bottom:42px">
+      <span style="display:inline-block;border:1px solid #1a2744;padding:4px 14px;font-size:9px;letter-spacing:2px;color:#1a2744;text-transform:uppercase">Confidentiel</span>
+    </div>
+    <div style="font-size:9px;letter-spacing:2px;color:#22c55e;text-transform:uppercase;margin-bottom:10px;font-weight:bold">Document Juridique</div>
+    <div style="font-size:24px;font-weight:bold;color:#1a2744;line-height:1.25;margin-bottom:10px;font-family:Georgia,serif">${title}</div>
+    <div style="width:48px;height:3px;background:#22c55e;margin-bottom:44px"></div>
+    <div style="flex:1">${partiesBlock}</div>
+    <div style="border-top:1px solid #e5e7eb;padding-top:18px;margin-top:16px;display:flex;justify-content:space-between;align-items:flex-end">
+      <div>
+        <div style="font-size:10px;color:#444;font-weight:bold">Fait &agrave; ${esc(data.ville || "—")}, le ${esc(dateFormatted)}</div>
+        <div style="font-size:8px;color:#aaa;margin-top:3px">Document confidentiel &mdash; LegalCorners &mdash; Usage r&eacute;serv&eacute; aux professionnels</div>
+      </div>
+      <div style="font-size:8px;color:#ccc">Page de garde</div>
+    </div>
+  </div>
+</div>`;
+}
+
+// ─── Body HTML builder ────────────────────────────────────────────────────────
+function buildBodyHtml(text: string): string {
   const lines = text.split("\n");
   const parts: string[] = [];
   let inList = false;
@@ -599,11 +682,11 @@ function buildHtmlFromText(text: string): string {
   let isFirstTableRow = true;
 
   function flushList() {
-    if (inList) { parts.push("</ul>"); inList = false; }
+    if (inList) { parts.push(`</ul>`); inList = false; }
   }
   function flushTable() {
     if (inTable) {
-      parts.push(`<table style="width:100%;border-collapse:collapse;margin:6px 0;font-size:10px">${tableRows.join("")}</table>`);
+      parts.push(`<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px">${tableRows.join("")}</table>`);
       tableRows = []; inTable = false; isFirstTableRow = true;
     }
   }
@@ -612,152 +695,177 @@ function buildHtmlFromText(text: string): string {
   }
 
   for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const t = raw.trim();
-    const isTableLine = t.startsWith("|") && t.endsWith("|") && t.length > 1;
-    const isBullet = t.startsWith("•");
+    const t = lines[i].trim();
+    const isTableLine = t.startsWith("|") && t.endsWith("|") && t.length > 2;
+    const isBullet = t.startsWith("•") || t.startsWith("*") || t.startsWith("-\u00a0") || /^[-*]\s/.test(t);
 
     if (!isTableLine) flushTable();
     if (!isBullet) flushList();
 
-    // Double separator ═════
-    if (/^═{5,}/.test(t)) {
-      parts.push(`<div style="border-top:2px solid #1a2744;margin:8px 0"></div>`);
-      continue;
-    }
-    // Single separator ─────
-    if (/^─{5,}/.test(t)) {
-      parts.push(`<div style="border-top:1px solid #bbb;margin:5px 0"></div>`);
-      continue;
-    }
-    // Markdown table separator |---|---|
+    // Separators
+    if (/^═{5,}/.test(t)) { parts.push(`<div style="border-top:2px solid #1a2744;margin:10px 0"></div>`); continue; }
+    if (/^─{5,}/.test(t)) { parts.push(`<div style="border-top:1px solid #ddd;margin:6px 0"></div>`); continue; }
+    // Markdown table separator
     if (/^\|[-|: ]+\|$/.test(t)) continue;
 
-    // Markdown table data row
+    // Table rows
     if (isTableLine) {
       const cells = t.split("|").map(c => c.trim()).filter(c => c !== "");
       const nextLine = lines[i + 1]?.trim() || "";
       const isHeader = isFirstTableRow || /^\|[-|: ]+\|$/.test(nextLine);
       if (!inTable) inTable = true;
-      const tag = isHeader ? "th" : "td";
-      const cellStyle = isHeader
-        ? `border:1px solid #1a2744;padding:5px 8px;background:#1a2744;color:white;font-weight:bold;text-align:left`
-        : `border:1px solid #ccc;padding:4px 8px;text-align:left`;
-      tableRows.push(`<tr>${cells.map(c => `<${tag} style="${cellStyle}">${esc(c)}</${tag}>`).join("")}</tr>`);
+      if (isHeader) {
+        tableRows.push(`<tr>${cells.map(c => `<th style="border:1px solid #1a2744;padding:7px 10px;background:#1a2744;color:#fff;font-weight:bold;text-align:left;font-size:10px">${esc(c)}</th>`).join("")}</tr>`);
+      } else {
+        const bg = tableRows.length % 2 === 1 ? "#f8f9fc" : "#fff";
+        tableRows.push(`<tr style="background:${bg}">${cells.map((c, ci) => `<td style="border:1px solid #dde;padding:6px 10px;text-align:left;font-size:10px;${ci === 0 ? "font-weight:bold;color:#1a2744;width:35%" : "color:#333"}">${esc(c)}</td>`).join("")}</tr>`);
+      }
       if (isFirstTableRow) isFirstTableRow = false;
       continue;
     }
 
-    // Empty line
-    if (t === "") { parts.push(`<div style="height:5px"></div>`); continue; }
+    if (t === "") { parts.push(`<div style="height:6px"></div>`); continue; }
 
-    // Document main title
-    if (/^(CESSION D['''`]ACTIONS|ACTE DE CESSION|PROCÈS-VERBAL|DÉCISIONS UNANIMES)/.test(t)) {
-      parts.push(`<div style="font-size:13px;color:#1a2744;font-weight:bold;text-align:center;margin:10px 0 5px;font-family:Georgia,serif;text-transform:uppercase">${esc(t)}</div>`);
+    // INDEX DES DÉFINITIONS section title
+    if (/^INDEX DES D[EÉ]FINITIONS/.test(t)) {
+      parts.push(`<div style="margin:18px 0 8px;padding:10px 14px;background:#1a2744;color:#fff;font-size:11px;font-weight:bold;font-family:Georgia,serif;letter-spacing:0.5px;text-transform:uppercase">${esc(t)}</div>`);
       continue;
     }
-    // ARTICLE / RÉSOLUTION / block headers
-    if (/^(ARTICLE \d+|RÉSOLUTION \d+|OUVERTURE|SIGNATURES|ORDRE DU JOUR)/.test(t)) {
-      parts.push(`<div style="font-size:10.5px;color:#1a2744;font-weight:bold;margin:10px 0 3px;text-transform:uppercase;letter-spacing:0.3px">${esc(t)}</div>`);
+    // Main doc title (CESSION D'ACTIONS / PROCÈS-VERBAL)
+    if (/^(CESSION D|ACTE DE CESSION|PROC[EÈ]S-VERBAL|D[EÉ]CISIONS UNANIMES)/i.test(t)) {
+      parts.push(`<div style="font-size:13px;color:#1a2744;font-weight:bold;text-align:center;margin:12px 0 4px;font-family:Georgia,serif;text-transform:uppercase">${esc(t)}</div>`);
       continue;
     }
-    // Sub-section X.X headers
-    if (/^\d+\.\d+ /.test(t)) {
-      parts.push(`<div style="font-size:10.5px;color:#333;font-weight:bold;margin:6px 0 2px">${esc(t)}</div>`);
+    // ARTICLE / RÉSOLUTION headers
+    if (/^(ARTICLE \d+|R[EÉ]SOLUTION \d+|OUVERTURE|SIGNATURES|ORDRE DU JOUR)/i.test(t)) {
+      parts.push(`<div style="margin:16px 0 4px;padding:6px 12px;border-left:4px solid #22c55e;background:#f8f9fc;font-size:10.5px;color:#1a2744;font-weight:bold;text-transform:uppercase;letter-spacing:0.4px">${esc(t)}</div>`);
       continue;
     }
-    // Signature labels
-    if (/^(LE CÉDANT|LE CESSIONNAIRE|LE PRÉSIDENT|LE CONJOINT|L['']ASSOCIÉ)/.test(t)) {
-      parts.push(`<div style="font-weight:bold;color:#1a2744;margin:10px 0 2px">${esc(t)}</div>`);
+    // Sub-section X.X
+    if (/^\d+\.\d+\s/.test(t)) {
+      parts.push(`<div style="font-size:10.5px;color:#1a2744;font-weight:bold;margin:10px 0 3px;padding-left:2px">${esc(t)}</div>`);
+      continue;
+    }
+    // OPTION lines
+    if (/^OPTION\s*[—\-–]/.test(t) || /^Option\s+\d/.test(t)) {
+      parts.push(`<div style="font-size:9.5px;color:#666;font-style:italic;margin:8px 0 2px;padding:3px 8px;border-left:2px solid #22c55e;background:#f0fdf4">${esc(t)}</div>`);
+      continue;
+    }
+    // D'UNE PART / D'AUTRE PART
+    if (/^D[''']?(UNE|AUTRE) PART/.test(t)) {
+      parts.push(`<div style="font-size:10px;font-weight:bold;color:#1a2744;margin:6px 0;text-align:right;font-style:italic">${esc(t)}</div>`);
+      continue;
+    }
+    // Signature blocks
+    if (/^(LE C[EÉ]DANT|LE CESSIONNAIRE|LE PR[EÉ]SIDENT|LE CONJOINT|L[''']ASSOCI[EÉ]|LE G[EÉ]RANT)/i.test(t)) {
+      parts.push(`<div style="font-weight:bold;color:#1a2744;margin:14px 0 3px;font-size:10.5px">${esc(t)}</div>`);
+      continue;
+    }
+    // Quote lines (Lu et approuvé / Bon pour)
+    if (/^["""«]/.test(t) || /^(Lu et approuv|Bon pour)/.test(t)) {
+      parts.push(`<div style="font-size:10px;color:#555;font-style:italic;margin:2px 0">${esc(t)}</div>`);
       continue;
     }
     // Bullet points
     if (isBullet) {
-      if (!inList) { parts.push(`<ul style="margin:3px 0;padding-left:18px">`); inList = true; }
-      parts.push(`<li style="margin:1px 0;font-size:10.5px">${esc(t.slice(1).trim())}</li>`);
+      if (!inList) { parts.push(`<ul style="margin:4px 0;padding-left:20px">`); inList = true; }
+      const content = t.replace(/^[•*-]\s*/, "");
+      parts.push(`<li style="margin:2px 0;font-size:10.5px;color:#333">${esc(content)}</li>`);
       continue;
     }
-    // Date / signature fill-in lines
-    if (/^(Date\s*:|Signature\s*:|"Lu et approuvé|"Bon pour)/.test(t)) {
-      parts.push(`<div style="font-size:10px;color:#555;margin:1px 0;font-style:italic">${esc(t)}</div>`);
+    // Signature fill-in lines
+    if (/^\[.*(Date|Signature|Nom|Pr[eé]nom).*\]/.test(t)) {
+      parts.push(`<div style="font-size:10px;color:#888;margin:2px 0;font-style:italic">${esc(t)}</div>`);
+      continue;
+    }
+    // Document confidentiel footer line
+    if (/^Document confidentiel/.test(t)) {
+      parts.push(`<div style="font-size:9px;color:#aaa;margin:10px 0 2px;text-align:center;border-top:1px solid #eee;padding-top:6px">${esc(t)}</div>`);
       continue;
     }
     // Regular paragraph
-    parts.push(`<p style="margin:2px 0;font-size:10.5px">${esc(t)}</p>`);
+    parts.push(`<p style="margin:3px 0;font-size:10.5px;color:#222;line-height:1.55">${esc(t)}</p>`);
   }
 
   flushList();
   flushTable();
-  return parts.join("");
+  return `<div style="padding:55px 65px;font-family:Arial,Helvetica,sans-serif;line-height:1.55;color:#222">${parts.join("")}</div>`;
 }
 
-// ─── Download helper ──────────────────────────────────────────────────────────
-async function downloadPdf(content: string, filename: string) {
+// ─── PDF helper ───────────────────────────────────────────────────────────────
+async function downloadPdf(content: string, filename: string, data: FormData, docType: "acte" | "pv") {
   const { jsPDF } = await import("jspdf");
   const { default: html2canvas } = await import("html2canvas");
 
-  // Build styled HTML from text
-  const htmlContent = buildHtmlFromText(content);
+  const A4_W_PX = 794;
 
-  // Off-screen A4 container (794px = A4 width at 96 DPI)
-  const container = document.createElement("div");
-  Object.assign(container.style, {
-    position: "absolute",
-    top: "-99999px",
-    left: "-99999px",
-    width: "794px",
-    background: "#fff",
-    fontFamily: "Arial, Helvetica, sans-serif",
-    fontSize: "11px",
-    lineHeight: "1.6",
-    color: "#1a1a1a",
-    padding: "60px 65px",
-    boxSizing: "border-box",
-  });
-  container.innerHTML = htmlContent;
-  document.body.appendChild(container);
+  async function renderHtmlToCanvas(html: string, fixedHeight?: number): Promise<HTMLCanvasElement> {
+    const wrapper = document.createElement("div");
+    Object.assign(wrapper.style, {
+      position: "absolute",
+      top: "-99999px",
+      left: "-99999px",
+      width: `${A4_W_PX}px`,
+      background: "#fff",
+      boxSizing: "border-box",
+      ...(fixedHeight ? { height: `${fixedHeight}px`, overflow: "hidden" } : {}),
+    });
+    wrapper.innerHTML = html;
+    document.body.appendChild(wrapper);
+    const canvas = await html2canvas(wrapper, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      width: A4_W_PX,
+      ...(fixedHeight ? { height: fixedHeight } : {}),
+    });
+    document.body.removeChild(wrapper);
+    return canvas;
+  }
 
-  const canvas = await html2canvas(container, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#ffffff",
-    logging: false,
-    width: 794,
-  });
-
-  document.body.removeChild(container);
-
-  // A4 page height in canvas pixels (scale 2): 297mm / 210mm * canvas.width
-  const A4_W = canvas.width;
-  const A4_H = Math.round(A4_W * (297 / 210));
+  // Render cover page (fixed A4 height)
+  const coverCanvas = await renderHtmlToCanvas(buildCoverHtml(data, docType), 1123);
+  // Render body
+  const bodyCanvas = await renderHtmlToCanvas(buildBodyHtml(content));
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const A4_W = coverCanvas.width;
+  const A4_H = Math.round(A4_W * (297 / 210));
+
+  // ── Page 1: cover ──
+  const coverPage = document.createElement("canvas");
+  coverPage.width = A4_W;
+  coverPage.height = A4_H;
+  const cCtx = coverPage.getContext("2d")!;
+  cCtx.fillStyle = "#fff";
+  cCtx.fillRect(0, 0, A4_W, A4_H);
+  cCtx.drawImage(coverCanvas, 0, 0, A4_W, Math.min(A4_H, coverCanvas.height), 0, 0, A4_W, A4_H);
+  doc.addImage(coverPage.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
+
+  // ── Body pages ──
+  const bodyA4W = bodyCanvas.width;
+  const bodyA4H = Math.round(bodyA4W * (297 / 210));
   let pageTop = 0;
-  let pageNum = 1;
-  const totalPages = Math.ceil(canvas.height / A4_H);
+  let pageNum = 2;
+  const totalPages = Math.ceil(bodyCanvas.height / bodyA4H) + 1;
 
-  while (pageTop < canvas.height) {
-    if (pageNum > 1) doc.addPage();
-
-    const sliceH = Math.min(A4_H, canvas.height - pageTop);
+  while (pageTop < bodyCanvas.height) {
+    doc.addPage();
+    const sliceH = Math.min(bodyA4H, bodyCanvas.height - pageTop);
     const pageCanvas = document.createElement("canvas");
-    pageCanvas.width = A4_W;
-    pageCanvas.height = A4_H;
+    pageCanvas.width = bodyA4W;
+    pageCanvas.height = bodyA4H;
     const ctx = pageCanvas.getContext("2d")!;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, A4_W, A4_H);
-    ctx.drawImage(canvas, 0, pageTop, A4_W, sliceH, 0, 0, A4_W, sliceH);
-
-    const imgData = pageCanvas.toDataURL("image/jpeg", 0.93);
-    doc.addImage(imgData, "JPEG", 0, 0, 210, 297);
-
-    // Footer text overlay
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, bodyA4W, bodyA4H);
+    ctx.drawImage(bodyCanvas, 0, pageTop, bodyA4W, sliceH, 0, 0, bodyA4W, sliceH);
+    doc.addImage(pageCanvas.toDataURL("image/jpeg", 0.93), "JPEG", 0, 0, 210, 297);
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(`${pageNum} / ${totalPages}`, 105, 291, { align: "center" });
     doc.text("Document confidentiel — LegalCorners", 20, 291);
-
-    pageTop += A4_H;
+    pageTop += bodyA4H;
     pageNum++;
   }
 
@@ -934,13 +1042,13 @@ export default function CessionParts() {
                 )}
 
                 <button
-                  onClick={() => downloadPdf(acteText, `acte-cession-${data.societe.denomination || "societe"}.pdf`)}
+                  onClick={() => downloadPdf(acteText, `acte-cession-${data.societe.denomination || "societe"}.pdf`, data, "acte")}
                   className="w-full flex items-center gap-2 justify-center px-4 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors"
                 >
                   ⬇ Télécharger l&apos;acte de cession (PDF)
                 </button>
                 <button
-                  onClick={() => downloadPdf(pvText, `pv-ag-${data.societe.denomination || "societe"}.pdf`)}
+                  onClick={() => downloadPdf(pvText, `pv-ag-${data.societe.denomination || "societe"}.pdf`, data, "pv")}
                   className="w-full flex items-center gap-2 justify-center px-4 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors"
                 >
                   ⬇ Télécharger le PV AG (PDF)

@@ -1,143 +1,254 @@
 export const TEMPLATE_ACTE = `CESSION D'ACTIONS / DE PARTS SOCIALES
 
+Entre [NOM PRÉNOM / DÉNOMINATION DU CÉDANT] — Cédant
+ET
+Au profit de [NOM PRÉNOM / DÉNOMINATION DU CESSIONNAIRE] — Cessionnaire
+Société cible : [DÉNOMINATION SOCIALE]
+Fait à [VILLE], le [JJ/MM/AAAA]
+
+INDEX DES DÉFINITIONS
+| TERME DÉFINI | DÉFINITION |
+|---|---|
+| Acte / Présentes | Le présent acte de cession et l'ensemble de ses annexes. |
+| Titres | Les actions ou parts sociales faisant l'objet de la présente cession. |
+| Cédant / Vendeur | La partie qui cède les Titres aux termes des présentes. |
+| Cessionnaire / Acquéreur | La partie qui acquiert les Titres aux termes des présentes. |
+| Société / Cible | La société dont les Titres sont cédés. |
+| Prix Ferme | La partie fixe et certaine du Prix de Cession, payable à la Date d'Effet. |
+| Quittance | Reconnaissance par le Cédant du paiement intégral du Prix Ferme par le Cessionnaire. |
+| Plus-value de Cession | Différence entre le Prix de Cession et le Prix d'Acquisition des Titres, diminuée des frais. |
+| GAP | Garantie d'Actif et de Passif — engagement du Cédant de couvrir tout passif antérieur non révélé. |
+| Seuil de Déclenchement GAP | Montant minimal en-deçà duquel la GAP ne peut être mise en œuvre, évitant les micro-litiges. |
+| Séquestre / Escrow | Somme consignée auprès d'un tiers garant en couverture des obligations post-cession. |
+| Opposabilité | Caractère contraignant de l'acte vis-à-vis de la Société, des tiers et de l'administration. |
+| Date d'Effet | La date à laquelle le transfert de propriété des Titres est réalisé. |
+| Closing | Réalisation effective de l'ensemble des conditions préalables à la cession. |
+| MAC | Material Adverse Change — événement significatif défavorable affectant la Société. |
+| PFU | Prélèvement Forfaitaire Unique (Flat Tax) au taux global de 30 % (12,8 % IR + 17,2 % PS). |
+
 ARTICLE 1 – IDENTIFICATION DES PARTIES
 1.1 Le Cédant
-[Personne physique] : Civilité, Nom, Prénom, né(e) le [date] à [ville], de nationalité [nat], demeurant [adresse].
-[Régime matrimonial] : Marié(e)/Pacsé(e) sous le régime de [régime] avec [conjoint] / Célibataire.
-[Personne morale] : Société [dénomination], [forme], capital [montant], siège [adresse], RCS [ville] n° [xxx], représentée par [civilité] [nom] [prénom], [qualité].
-Propriétaire de [XXX] actions/parts sociales. Ci-après « le Cédant ».
+OPTION — Personne physique
+Monsieur/Madame [NOM PRÉNOM], né(e) le [JJ/MM/AAAA] à [VILLE], de nationalité [NATIONALITÉ], demeurant [ADRESSE COMPLÈTE],
+OPTION — Marié(e) ou pacsé(e)
+Marié(e) / Pacsé(e) sous le régime de [communauté de biens / séparation de biens / autre] avec M./Mme [CIVILITÉ NOM PRÉNOM DU CONJOINT/PARTENAIRE].
+OPTION — Célibataire / divorcé(e) / veuf(ve)
+Déclare n'être ni marié(e) ni pacsé(e) à la date de signature des présentes.
+OPTION — Personne morale
+La société [DÉNOMINATION], [FORME JURIDIQUE], au capital de [XXX €], dont le siège social est situé [ADRESSE], immatriculée au RCS de [VILLE RCS] sous le numéro [XXX XXX XXX], représentée par M./Mme [NOM PRÉNOM], en qualité de [QUALITÉ], qui déclare être dûment habilité(e) à l'effet des présentes,
+Propriétaire de [XXX] actions/parts sociales de la Société, ci-après dénommé(e) le « Cédant ».
+D'UNE PART,
 
 1.2 Le Cessionnaire
-[Mêmes options que le Cédant]
-Ci-après « le Cessionnaire ».
+OPTION — Personne physique
+M./Mme [NOM PRÉNOM], né(e) le [JJ/MM/AAAA] à [VILLE], de nationalité [NATIONALITÉ], demeurant [ADRESSE COMPLÈTE],
+OPTION — Marié(e) ou pacsé(e)
+Marié(e) / Pacsé(e) sous le régime de [communauté de biens / séparation de biens / autre] avec M./Mme [CIVILITÉ NOM PRÉNOM DU CONJOINT/PARTENAIRE].
+OPTION — Célibataire / divorcé(e) / veuf(ve)
+Déclare n'être ni marié(e) ni pacsé(e) à la date de signature des présentes.
+OPTION — Personne morale
+La société [DÉNOMINATION], [FORME JURIDIQUE], au capital de [XXX €], dont le siège social est situé [ADRESSE], immatriculée au RCS de [VILLE RCS] sous le numéro [XXX XXX XXX], représentée par M./Mme [NOM PRÉNOM], en qualité de [QUALITÉ], qui déclare être dûment habilité(e) à l'effet des présentes,
+Ci-après dénommé(e) le « Cessionnaire ».
+D'AUTRE PART,
 
 1.3 La Société Cible
-[Dénomination], [forme], capital [montant], divisé en [nb] actions/parts de [valeur] chacune, siège [adresse], RCS [ville] n° [xxx].
-[Si SPI] : La Société est à prépondérance immobilière au sens de l'article 219-I-a sexies-0 bis du CGI.
+La présente cession porte sur les titres de la société dénommée [DÉNOMINATION], [FORME JURIDIQUE], au capital de [XXX €], divisé en [XXX] actions/parts sociales de [XXX €] chacune, dont le siège social est situé [ADRESSE], immatriculée au RCS de [VILLE RCS] sous le numéro [XXX XXX XXX].
+OPTION — Si société à prépondérance immobilière (SPI)
+La Société est à prépondérance immobilière au sens de l'article 219-I-a sexies-0 bis du CGI et ne correspond pas aux catégories de l'article 1655 ter.
 
 ARTICLE 2 – DÉCLARATIONS PRÉALABLES DES PARTIES
 2.1 Déclarations du Cédant
-• Exactitude et exhaustivité des informations ;
-• Pleine capacité juridique d'aliéner les Titres ;
-• Absence de procédure collective ou d'interdiction ;
-• Titres libres de tout nantissement, gage ou saisie ;
-• Communication préalable de toutes informations nécessaires ;
-• Société régulièrement constituée et à jour de ses obligations.
+• Exactitude et exhaustivité des informations le concernant figurant aux présentes ;
+• Pleine capacité juridique d'aliéner les Titres et absence d'obstacle à la cession ;
+• Absence de procédure collective, de cessation de paiement ou de mesure d'interdiction ;
+• Titres cédés libres de tout nantissement, gage, saisie-attribution ou droit de préemption ;
+• Communication préalable de l'ensemble des informations nécessaires à une décision éclairée du Cessionnaire ;
+• Société régulièrement constituée, en activité et à jour de l'ensemble de ses obligations légales.
 
 2.2 Déclarations du Cessionnaire
-• Exactitude et exhaustivité des informations ;
-• Pleine capacité juridique d'acquérir ;
-• Prise de connaissance complète des éléments de la Société ;
-• Absence d'interdiction ou de procédure collective.
+• Exactitude et exhaustivité des informations le concernant figurant aux présentes ;
+• Pleine capacité juridique et pouvoirs nécessaires à l'acquisition des Titres ;
+• Prise de connaissance complète des éléments juridiques, financiers et comptables de la Société ;
+• Absence d'interdiction, d'empêchement ou de procédure collective.
 
 ARTICLE 3 – OBJET ET CONDITIONS DE LA CESSION
-Le Cédant cède, sous les garanties ordinaires de droit commun, au Cessionnaire qui accepte, [XXX] actions/parts sociales entièrement libérées.
+Le Cédant cède, sous les garanties ordinaires et de droit commun, au Cessionnaire qui accepte, [XXX] actions/parts sociales entièrement libérées.
+
 3.1 Nature du transfert
-[Pleine propriété] : Le Cessionnaire sera propriétaire EN PLEINE PROPRIÉTÉ des Titres cédés et subrogé dans tous les droits et obligations y attachés à compter de la Date d'Effet.
-[Usufruit/Nue-propriété] : Le Cédant cède à [nom cessionnaire] l'usufruit/la nue-propriété de [XXX] Titres numérotés de [X] à [X].
+OPTION — Pleine propriété (option standard)
+Le Cessionnaire sera propriétaire EN PLEINE PROPRIÉTÉ des Titres cédés et subrogé dans tous les droits et obligations y attachés à compter de la Date d'Effet.
+OPTION — Usufruit / Nue-propriété
+Le Cédant cède à [NOM CESSIONNAIRE] l'usufruit / la nue-propriété de [XXX] Titres numérotés de [X] à [X]. Le Cessionnaire sera subrogé dans les droits et obligations attachés à cette quote-part.
 
 ARTICLE 4 – PRIX DE CESSION, PAIEMENT ET QUITTANCE
 4.1 Prix ferme
 La présente cession est consentie moyennant le prix de [PRIX EN LETTRES] ([XXX,00 €]), soit [XXX,00 €] par action/part sociale.
-Les Parties affirment, sous les peines édictées par l'article 1837 du CGI, que le présent acte exprime l'intégralité du prix convenu.
+Les Parties affirment, sous les peines édictées par l'article 1837 du Code général des impôts, que le présent acte exprime l'intégralité du prix convenu entre elles.
 
 4.2 Modalités de paiement
-[Comptant] : Le Cessionnaire a payé ce jour la somme de [XXX €] au Cédant, par virement bancaire/chèque de banque, dont le Cédant reconnaît la réception et donne quittance entière, définitive et sans réserve.
-[Échelonné] : Le prix total est réglé selon l'échéancier suivant :
-• [Montant] — exigible le [date] — par virement
-Tout retard de paiement donnera lieu, de plein droit, à des intérêts de retard au taux légal.
-Clause de déchéance du terme : En cas de défaut de paiement non régularisé dans les 15 jours suivant mise en demeure par LRAR, l'intégralité des sommes restant dues deviendra immédiatement exigible.
+OPTION — Paiement comptant — QUITTANCE IMMÉDIATE
+Le Cessionnaire a payé ce jour la somme de [XXX €] au Cédant, par [virement bancaire / chèque de banque], dont le Cédant reconnaît la réception et donne quittance entière, définitive et sans réserve au Cessionnaire.
+OPTION — Paiement échelonné
+Le prix total est réglé selon l'échéancier suivant, chaque échéance constituant une quittance partielle :
+• [Montant €] — exigible le [JJ/MM/AAAA] — par virement
+• [Montant €] — exigible le [JJ/MM/AAAA] — par virement
+Tout retard de paiement d'une échéance donnera lieu, de plein droit et sans mise en demeure préalable, à des intérêts de retard au taux légal en vigueur par an, courant à compter de la date d'exigibilité.
+Clause de déchéance du terme : En cas de défaut de paiement par le Cessionnaire de l'une quelconque des échéances à sa date d'exigibilité, et à défaut de régularisation dans un délai de 15 jours suivant mise en demeure par lettre recommandée avec accusé de réception restée sans effet, l'intégralité des sommes restant dues au titre du prix de cession deviendra immédiatement exigible de plein droit, sans qu'il soit besoin d'une décision de justice. Le Cédant pourra en outre, à son choix, soit exiger le paiement immédiat du solde du prix majoré des intérêts de retard au taux légal en vigueur par an, soit demander la résolution de la cession aux torts exclusifs du Cessionnaire, avec restitution des Titres et conservation par le Cédant des sommes déjà perçues à titre d'indemnité.
+Les Parties régleront entre elles, de gré à gré, tout différend relatif aux conditions de paiement du prix de cession. À défaut d'accord amiable, tout litige portant sur le paiement sera soumis à la juridiction compétente conformément à l'Article 13 des présentes.
 
 ARTICLE 5 – PLUS-VALUE DE CESSION — RÉGIME FISCAL
 5.1 Calcul de la plus-value
-La présente cession est réalisée pour un prix de [XXX €]. Le Cédant reconnaît qu'il lui appartient personnellement de s'entretenir avec son conseil fiscal. Le Cessionnaire et le rédacteur sont expressément dégagés de toute responsabilité quant au traitement fiscal de la plus-value.
+La présente cession est réalisée pour un prix de [XXX €]. Le Cédant reconnaît qu'il lui appartient personnellement de s'entretenir avec son conseil préalablement aux présentes. En conséquence, le Cessionnaire et le rédacteur du présent acte sont expressément dégagés de toute responsabilité quant au traitement fiscal de la plus-value réalisée par le Cédant.
 
 5.2 Régime fiscal applicable
-[Personne physique] : Soumis au PFU au taux global de 30% (12,8% IR + 17,2% PS), conformément aux articles 150-0 A et suivants du CGI. Option possible pour le barème progressif si plus favorable. Abattements pour durée de détention (titres acquis avant 01/01/2018) : 50% entre 2 et 8 ans, 65% au-delà. Abattement renforcé 85% pour dirigeants PME partant en retraite (art. 150-0 D ter CGI).
-[Personne morale] : La plus-value est intégrée au résultat imposable et soumise à l'IS (15% ou 25%). Régime des plus-values à long terme (0% avec quote-part de frais 12%) pour titres de participation détenus plus de 2 ans.
+Option 1 — Cédant personne physique (IR / PFU)
+La plus-value de cession de valeurs mobilières réalisée par une personne physique est soumise, sauf option contraire, au Prélèvement Forfaitaire Unique (PFU) au taux global de 30 % (12,8 % d'impôt sur le revenu + 17,2 % de prélèvements sociaux), conformément aux articles 150-0 A et suivants du CGI.
+• Abattement pour durée de détention (titres acquis avant le 01/01/2018) : 50 % entre 2 et 8 ans de détention, 65 % au-delà de 8 ans.
+• Abattement renforcé de 85 % pour les dirigeants de PME partant en retraite sous conditions (article 150-0 D ter du CGI).
+• Option possible pour le barème progressif de l'impôt sur le revenu si plus favorable.
+Option 2 — Cédant personne morale (IS)
+La plus-value de cession est en principe intégrée au résultat imposable de la société cédante et soumise à l'impôt sur les sociétés au taux de droit commun (15 % ou 25 %). Le régime des plus-values à long terme (taux de 0 % avec quote-part de frais de 12 %) s'applique exclusivement aux titres de participation détenus depuis plus de 2 ans, sous conditions.
 
 5.3 Droits d'enregistrement
-[SA/SAS/SASU] : 0,1% du prix de cession.
-[SARL/EURL/SNC] : 3% du prix, après abattement de 23 000€ proratisé au nombre de parts cédées.
-À la charge du [Cessionnaire/Cédant]. Enregistrement dans le délai d'un mois (art. 635 CGI).
+Conformément aux articles 726 et suivants du CGI, la présente cession est soumise aux droits d'enregistrement suivants, à la charge du [Cessionnaire / Cédant] :
+• Actions de SA/SAS : 0,1 % du prix de cession ;
+• Parts sociales de SARL/SNC : 3 % du prix, après application d'un abattement de 23 000 € proratisé au nombre de parts cédées.
+Les droits d'enregistrement sont liquidés et payés lors de l'enregistrement de l'acte auprès du service des impôts des entreprises compétente.
 
 ARTICLE 6 – RÉGIME MATRIMONIAL
 6.1 Cédant
-[Communauté] : Marié(e)/Pacsé(e) sous le régime de la communauté de biens avec [conjoint]. Le conjoint commun en biens donne son consentement exprès.
-[Séparation] : Marié(e)/Pacsé(e) sous le régime de la séparation de biens. Aucune intervention du conjoint n'est requise.
-[Célibataire] : Déclare n'être ni marié(e) ni pacsé(e).
+OPTION — Communauté de biens
+Le Cédant déclare être marié/pacsé sous le régime de la communauté de biens avec M./Mme [NOM PRÉNOM CONJOINT]. Son époux(se)/partenaire commun(e) en biens, intervenant aux présentes, déclare avoir pris connaissance de la présente cession et y donner son consentement exprès.
+OPTION — Séparation de biens
+Le Cédant déclare être marié/pacsé sous le régime de la séparation de biens avec Monsieur/Madame [NOM PRÉNOM CONJOINT/PACSE]. Aucune intervention de son conjoint n'est requise.
+OPTION — Célibataire / non pacsé
+Le Cédant déclare n'être ni marié ni pacsé à la date de signature des présentes.
 
 6.2 Cessionnaire
-[Communauté — biens propres] : Marié(e) sous la communauté. Acquisition effectuée sur biens propres, le conjoint en ayant été dûment informé.
-[Communauté — biens communs] : Marié(e) sous la communauté. Acquisition effectuée sur biens communs.
-[Séparation] : Acquisition sur biens propres sous le régime de séparation de biens.
-[Célibataire] : Déclare n'être ni marié(e) ni pacsé(e).
+OPTION — Communauté — acquisition sur biens propres
+Le Cessionnaire déclare être marié/pacsé sous le régime de la communauté de biens avec Monsieur/Madame [NOM PRÉNOM CONJOINT/PACSE]. L'acquisition est effectuée avec ses biens propres, le conjoint en ayant été dûment informé.
+OPTION — Communauté — acquisition sur biens communs
+Le Cessionnaire déclare acquérir les Titres avec des biens communs du ménage, conformément à la lettre d'information de son époux(se) demeurée annexée.
+OPTION — Séparation de biens
+Le Cessionnaire déclare acquérir les Titres avec ses biens propres sous le régime de la séparation de biens.
+OPTION — Célibataire / non pacsé
+Le Cessionnaire déclare n'être ni marié ni pacsé à la date de signature des présentes.
 
 ARTICLE 7 – AGRÉMENT DE LA CESSION
-[Associé unique] : Aux termes de la décision de l'associé unique en date du [date], la cession a été autorisée dans les formes prévues par les statuts.
-[Pluralité d'associés] : Aux termes de la délibération de l'assemblée générale en date du [date], la cession a été autorisée à la majorité requise.
+OPTION — Associé unique (cession partielle)
+Aux termes de la décision de l'associé unique en date du [JJ/MM/AAAA], la présente cession a été autorisée dans les formes et conditions prévues par les statuts.
+OPTION — Pluralité d'associés
+Aux termes de la délibération de l'assemblée générale des associés en date du [JJ/MM/AAAA], la présente cession a été autorisée à la majorité requise par les statuts.
 
 ARTICLE 8 – COMPTES COURANTS D'ASSOCIÉS
-[Absence] : Le Cédant déclare ne pas posséder de compte courant d'associé, ou y renoncer expressément au profit de la Société.
-[Cession] : Le Cédant cède au Cessionnaire son compte courant (solde créditeur : [XXX €]). Le Cessionnaire est subrogé dans tous les droits attachés.
-[Conservation] : Le Cédant conserve son compte courant (solde : [XXX €]). Ce montant lui sera remboursé par la Société dans un délai de [X mois].
+OPTION — Absence de compte courant
+Le Cédant déclare ne pas posséder de compte courant d'associé dans la Société, ou y renoncer expressément au profit de la Société.
+OPTION — Cession du compte courant au Cessionnaire
+Le Cédant cède au Cessionnaire, qui accepte, son compte courant d'associé dont le solde créditeur s'élève à [XXX €] à la date des présentes. Le Cessionnaire est subrogé dans tous les droits et obligations qui y sont attachés.
+OPTION — Conservation du compte courant par le Cédant
+Le Cédant conserve son compte courant d'associé (solde : [XXX €]). Ce montant lui sera remboursé par la Société dans un délai de [X mois] à compter de la Date d'Effet.
 
 ARTICLE 9 – TRANSFERT DE PROPRIÉTÉ ET JOUISSANCE
-Le Cessionnaire devient propriétaire des Titres à compter de la Date d'Effet, avec tous les droits et obligations y attachés, notamment quant à la distribution des bénéfices. Le Cédant le subroge dans l'ensemble de ses droits. Le Cessionnaire reconnaît avoir reçu un exemplaire des statuts.
+Le Cessionnaire devient propriétaire des Titres cédés à compter de la Date d'Effet, avec tous les droits et obligations qui y sont attachés, notamment quant à la distribution des bénéfices réalisés lors de l'exercice en cours et des exercices suivants.
+Le Cédant le subroge dans l'ensemble de ses droits et actions attachés aux Titres cédés.
+Le Cessionnaire reconnaît avoir reçu communication d'un exemplaire des statuts de la Société en vigueur, dont il déclare avoir pris connaissance.
 
 ARTICLE 10 – GARANTIE D'ACTIF ET DE PASSIF (GAP)
 10.1 Déclarations et garanties du Cédant
-À la Date d'Effet : Conformité légale de la Société ; Titres sans engagement ; Absence de procédure collective ; À jour des dettes fiscales/sociales/bancaires ; Comptes annuels fidèles ; Provisions comptabilisées ; Déclarations fiscales déposées ; Informations sur sûretés communiquées.
+Le Cédant déclare et garantit au Cessionnaire que, à la Date d'Effet :
+• La Société exerce son activité en totale conformité avec les lois et règlements applicables ;
+• Les Titres ne font l'objet d'aucun engagement, saisie, sûreté ou restriction susceptible d'affecter leur propriété ;
+• La Société n'est ni en état de cessation de paiement, ni en procédure de redressement ou liquidation judiciaire ;
+• La Société est à jour de l'ensemble de ses dettes fiscales, sociales, bancaires et commerciales ;
+• Les comptes annuels et bilans communiqués au Cessionnaire donnent une image fidèle et sincère de la situation financière de la Société ;
+• Toutes les provisions nécessaires pour couvrir les risques connus ont été comptabilisées ;
+• La Société a déposé dans les délais l'ensemble de ses déclarations fiscales et sociales ;
+• Le Cédant a informé le Cessionnaire de toute inscription ou sûreté existant sur les actifs de la Société.
 
 10.2 Étendue, plafond, seuil et durée
-Seuil de déclenchement (franchise) : [XXX €] par sinistre et [XXX €] en cumul annuel.
-Plafond global : [XXX €] ([XX%] du Prix de Cession).
-Durée : [X années] à compter de la Date d'Effet.
-Exclusions : éléments connus du Cessionnaire, faits résultant de décisions du Cessionnaire postérieures, variations de valeur de marché.
+Le Cédant s'engage à indemniser personnellement le Cessionnaire et/ou la Société de toute augmentation du passif ou diminution de l'actif dont l'origine est antérieure à la Date d'Effet et dont le Cessionnaire n'aurait pas eu connaissance lors de la signature des présentes.
+Seuil de déclenchement (franchise) : La GAP ne peut être mise en œuvre que si le préjudice excède [XXX €] par sinistre et [XXX €] en cumul annuel. En-deçà, les parties renoncent à tout recours (évite les micro-litiges).
+Plafond global : L'indemnisation totale est limitée à [XXX €], représentant [XX %] du Prix de Cession.
+Durée : La GAP est applicable pendant [X années] à compter de la Date d'Effet.
+Exclusions : Sont exclus de la GAP les éléments portés à la connaissance du Cessionnaire avant la signature, les faits résultant d'une décision du Cessionnaire postérieure à la Date d'Effet, et les variations de valeur de marché.
 
-10.3 Mécanisme de séquestre (Escrow) [si prévu]
-Somme de [XXX €] ([XX%] du Prix) séquestrée entre les mains de [séquestre]. Libération à l'expiration de la GAP sauf mise en œuvre.
+10.3 Mécanisme de séquestre (Escrow)
+OPTION — Si escrow prévu
+Afin de garantir les obligations du Cédant au titre de la GAP, une somme de [XXX €] ([XX %] du Prix de Cession) sera séquestrée entre les mains de [NOM DU SÉQUESTRE / ÉTABLISSEMENT], conformément à une convention de séquestre signée concomitamment. Les fonds seront libérés à l'expiration de la durée de la GAP, sauf mise en œuvre dans ce délai.
 
 10.4 Procédure de mise en œuvre
-Notification par LRAR dans un délai de [X mois] à compter de la découverte du fait générateur, sous peine de forclusion.
+Le Cessionnaire notifiera le Cédant de toute demande d'indemnisation par lettre recommandée avec accusé de réception.
+La notification devra intervenir dans un délai de [X mois] à compter de la découverte du fait générateur, sous peine de forclusion.
 
 ARTICLE 11 – CLAUSES DE NON-CONCURRENCE ET NON-SOLLICITATION
 11.1 Obligation du Cédant
-Pendant [X ans] à compter de la Date d'Effet, le Cédant s'interdit de participer à toute activité concurrente dans la zone : [zone géographique].
+Le Cédant s'interdit expressément, pendant [X ans] à compter de la Date d'Effet, de participer ou de s'intéresser directement ou indirectement à toute activité concurrente à celle de la Société dans la zone géographique suivante : [Zone géographique].
+
 11.2 Non-sollicitation
-Même durée : interdiction de débaucher ou solliciter tout salarié, prestataire ou client de la Société.
-[Si applicable au Cessionnaire] : Le Cessionnaire s'interdit également pendant [X ans] dans : [zone].
+Le Cédant s'interdit, pendant la même durée, de débaucher ou solliciter tout salarié, prestataire ou client de la Société, directement ou par personne interposée.
+OPTION — Si applicable au Cessionnaire
+Le Cessionnaire s'interdit également, pendant [X ans], d'exercer une activité concurrente dans : [Zone géographique].
 
 ARTICLE 12 – OPPOSABILITÉ ET FORMALITÉS LÉGALES
 12.1 Signification à la Société
-Conformément à l'article 1690 du Code civil (ou dépôt d'un original au siège contre attestation).
+Pour être opposable à la Société, la présente cession lui sera signifiée conformément aux dispositions de l'article 1690 du Code civil. Toutefois, cette signification pourra être remplacée par le dépôt d'un original du présent acte au siège social de la Société contre remise par le représentant légal d'une attestation de dépôt.
+
 12.2 Pouvoirs pour formalités
-Tous pouvoirs sont donnés pour : signification (art. 1690 CC) ; enregistrement fiscal (délai 1 mois) ; dépôt au Greffe ; modification des statuts ; publication légale si requise.
-12.3 Enregistrement fiscal
-Enregistrement dans le délai d'un mois (art. 635 CGI). Droits à la charge du [Cessionnaire/Cédant]. Défaut d'enregistrement → amende et inopposabilité à l'administration fiscale.
+Tous pouvoirs sont donnés au porteur d'un original ou d'une copie certifiée conforme des présentes pour :
+• Procéder à la signification de la présente cession au siège social de la Société conformément à l'article 1690 du Code civil ;
+• Effectuer l'enregistrement de l'acte auprès du service des impôts des entreprises compétent dans le délai légal d'un mois ;
+• Déposer au Greffe du Tribunal de Commerce tout document nécessaire à la mise à jour des registres ;
+• Modifier ou faire modifier les statuts de la Société si la cession l'exige ;
+• Procéder à toute publication légale requise.
+Les Parties donnent expressément mandat à LEGALCORNERS, 78 Avenue des Champs-Élysées, 75008 Paris, pour l'accomplissement de l'ensemble des formalités légales consécutives à la présente cession.
+
+12.3 Enregistrement fiscal et droits d'enregistrement
+Conformément à l'article 635 du CGI, la présente cession sera enregistrée auprès du service des impôts des entreprises dans le délai d'un mois à compter de la date de signature. Les droits d'enregistrement sont à la charge de [Cessionnaire / Cédant]. Le défaut d'enregistrement dans le délai d'un mois expose les parties à une amende et à l'inopposabilité de la cession à l'administration fiscale.
 
 ARTICLE 13 – DISPOSITIONS GÉNÉRALES
-13.1 Domicile élu aux adresses respectives.
-13.2 Frais à la charge du [Cessionnaire/Cédant], sauf frais de modification des statuts à la charge de la Société.
-13.3 Nullité relative : clause nulle réputée non écrite sans affecter les autres dispositions.
-13.4 Modifications uniquement par avenant écrit et signé de toutes les Parties.
-13.5 Non-renonciation : l'abstention n'emporte pas renonciation tacite.
-13.6 Droit applicable : droit français.
-13.7 Juridiction compétente : tribunaux du ressort de [ville], après tentative amiable.
-13.8 Exemplaires : 3 originaux.
+13.1 Domicile des parties
+Les Parties élisent domicile à leurs adresses respectives figurant aux présentes.
+
+13.2 Frais
+Tous les frais, droits et taxes liés aux présentes seront supportés par le(s) [Cessionnaire / Cédant], à l'exception des frais de modification des statuts qui seront à la charge de la Société.
+OPTION — Si droit à la jouissance d'immeubles
+Les participations cédées confèrent au Cessionnaire le droit à la jouissance d'immeubles au sens de l'article 728 du CGI.
+
+13.3 Nullité relative
+Toute stipulation reconnue nulle sera réputée non écrite sans affecter les autres dispositions. Les Parties s'engagent à la remplacer par une clause conforme à leur intention initiale.
+
+13.4 Modifications — Avenants
+Le présent acte ne pourra être modifié que par un avenant écrit et signé par l'ensemble des Parties.
+
+13.5 Non-renonciation
+L'abstention d'une Partie d'exercer un droit ne vaut pas renonciation tacite à ce droit.
+
+13.6 Droit applicable
+Le présent acte est exclusivement soumis au droit français et rédigé en langue française.
+
+13.7 Juridiction compétente
+En cas de litige, les Parties s'engagent à rechercher une solution amiable. À défaut, compétence exclusive est attribuée aux tribunaux du ressort de [VILLE].
+
+13.8 Exemplaires
+Le présent acte est établi en 3 exemplaires originaux, un remis à chaque Partie et un conservé pour les formalités d'enregistrement.
 
 SIGNATURES
-Fait à [ville], le [date].
+Fait à [VILLE], le [JJ/MM/AAAA].
 
-LE CÉDANT — "Lu et approuvé. Bon pour cession. Bon pour quittance."
-[Nom, Prénom] — Date : _____ — Signature : _____
+LE CÉDANT
+"Lu et approuvé. Bon pour cession. Bon pour quittance."
+[Nom, Prénom – Qualité]
+[Date : JJ/MM/AAAA]
 
-LE CESSIONNAIRE — "Lu et approuvé. Bon pour acceptation de la cession."
-[Nom, Prénom] — Date : _____ — Signature : _____
+LE CESSIONNAIRE
+"Lu et approuvé. Bon pour acceptation de la cession."
+[Nom, Prénom – Qualité]
+[Date : JJ/MM/AAAA]
 
-[Si conjoint commun en biens du cédant]
-LE CONJOINT COMMUN EN BIENS DU CÉDANT
-[Nom, Prénom] — Date : _____ — Signature : _____`;
+OPTION — Si conjoint commun en biens du Cédant
+Le conjoint commun en biens du Cédant, M./Mme [NOM PRÉNOM], soussigné(e), donne son consentement exprès à la présente cession.
+
+Document confidentiel — Template LegalTech Professionnel v2 — Usage strictement réservé aux professionnels — Ne constitue pas un conseil juridique ou fiscal`;
 
 export const TEMPLATE_PV = `[DÉNOMINATION SOCIALE]
 [FORME] — Capital : [XXX €] — RCS [VILLE] n° [XXX]

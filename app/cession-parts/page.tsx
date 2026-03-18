@@ -1,3358 +1,1281 @@
 "use client";
-// v5.1 - Cache bust: Fixed JSX structure
+
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  CheckCircle,
-  ChevronDown,
-  HelpCircle,
-  Info,
-  User,
-  Building2,
-  FileText,
-  CreditCard,
-  PenTool,
-  Plus,
-  Trash2,
-  AlertTriangle,
-  Shield,
-  Scale,
-  Users,
-  Briefcase,
-  Menu,
-  X,
-  Download,
-} from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { TooltipHelp, TOOLTIPS } from "@/components/ui/tooltip-help";
-import { SimulateurDroits } from "@/components/simulateur-droits";
-import { PdfPreviewModal } from "@/components/pdf-preview-modal";
-import { ExpertComptableInfo } from "@/components/cession/expert-comptable-info";
-// Types
-type TypeCession = "actions" | "parts-sociales";
-type TypePropriete = "pleine-propriete" | "usufruit" | "nue-propriete";
-type TypePersonne = "physique" | "morale";
-type RegimeMatrimonial = "communaute" | "separation" | "celibataire";
-type ModePaiement = "comptant" | "echeances";
-type ComptesCourants = "aucun" | "cede" | "conserve";
-interface Echeance {
-  montant: string;
-  date: string;
-}
-interface PersonnePhysique {
-  civilite: "M." | "Mme" | "";
-  nom: string;
-  prenom: string;
-  dateNaissance: string;
-  lieuNaissance: string;
-  nationalite: string;
-  adresse: string;
-  codePostal: string;
-  ville: string;
-  pays: string;
-  email: string;
-}
-interface PersonneMorale {
-  denomination: string;
-  formeJuridique: string;
-  siegeAdresse: string;
-  siegeCP: string;
-  siegeVille: string;
-  siegePays: string;
-  capital: string;
-  rcsVille: string;
-  rcsNumero: string;
-  representantCivilite: "M." | "Mme" | "";
-  representantNom: string;
-  representantPrenom: string;
-  representantQualite: string;
-  email: string;
-}
-// Étapes
-const STEPS = [
-  { id: 1, label: "Type de cession", icon: FileText },
-  { id: 2, label: "Les parties", icon: Users },
-  { id: 3, label: "Paiement", icon: CreditCard },
-  { id: 4, label: "Société concernée", icon: Building2 },
-  { id: 5, label: "Informations cédant", icon: User },
-  { id: 6, label: "Informations cessionnaire", icon: User },
-  { id: 7, label: "Conditions de cession", icon: Scale },
-  { id: 8, label: "Clauses & Options", icon: Shield },
-  { id: 9, label: "Récapitulatif", icon: CheckCircle },
-  { id: 10, label: "Signature", icon: PenTool },
-];
-export default function CessionPartsPage() {
-  // Navigation
-  const [step, setStep] = useState(1);
-  const [paymentComplete, setPaymentComplete] = useState(false);
-  const [selectedFormule, setSelectedFormule] = useState<"essentiel" | "premium" | null>(null);
-  
-  // Step 1: Type de cession
-  const [typeCession, setTypeCession] = useState<TypeCession | null>(null);
-  const [typePropriete, setTypePropriete] = useState<TypePropriete | null>(null);
-  // Step 2: Les parties (avant paiement)
-  const [cedantType, setCedantType] = useState<TypePersonne | null>(null);
-  const [cessionnaireType, setCessionnaireType] = useState<TypePersonne | null>(null);
-  const [nombrePartsApprox, setNombrePartsApprox] = useState("");
-const [prixApprox, setPrixApprox] = useState("");
-  const [besoinExpertComptable, setBesoinExpertComptable] = useState<"oui" | "deja" | "non" | null>(null);
-  const [includChangementDirigeant, setIncludChangementDirigeant] = useState(false);
-  const [nouveauDirigeantPhysique, setNouveauDirigeantPhysique] = useState<PersonnePhysique>({
-    civilite: "",
-    nom: "",
-    prenom: "",
-    dateNaissance: "",
-    lieuNaissance: "",
-    nationalite: "française",
-    adresse: "",
-    codePostal: "",
-    ville: "",
-    pays: "France",
-    email: "",
-  });
-  const [nouveauDirigeantQualite, setNouveauDirigeantQualite] = useState("Gerant");
-  const [nouveauDirigeantType, setNouveauDirigeantType] = useState<"physique" | "morale">("physique");
-  
-  // Filiation du nouveau dirigeant
-  const [nouveauDirigeantPereNom, setNouveauDirigeantPereNom] = useState("");
-  const [nouveauDirigeantPerePrenom, setNouveauDirigeantPerePrenom] = useState("");
-  const [nouveauDirigeantMereNom, setNouveauDirigeantMereNom] = useState("");
-  const [nouveauDirigeantMerePrenom, setNouveauDirigeantMerePrenom] = useState("");
-  
-  // Déclaration de non-condamnation
-  const [nouveauDirigeantNonCondamnation, setNouveauDirigeantNonCondamnation] = useState(false);
-  
-  // Personne morale nouveau dirigeant
-  const [nouveauDirigeantMorale, setNouveauDirigeantMorale] = useState({
-    denomination: "",
-    formeJuridique: "",
-    siren: "",
-    siegeAdresse: "",
-    siegeCP: "",
-    siegeVille: "",
-  });
-  
-  // Représentant permanent (si nouveau dirigeant = personne morale)
-  const [representantPermanent, setRepresentantPermanent] = useState<PersonnePhysique>({
-    civilite: "",
-    nom: "",
-    prenom: "",
-    dateNaissance: "",
-    lieuNaissance: "",
-    nationalite: "française",
-    adresse: "",
-    codePostal: "",
-    ville: "",
-    pays: "France",
-    email: "",
-  });
-  const [representantPermanentPereNom, setRepresentantPermanentPereNom] = useState("");
-  const [representantPermanentPerePrenom, setRepresentantPermanentPerePrenom] = useState("");
-  const [representantPermanentMereNom, setRepresentantPermanentMereNom] = useState("");
-  const [representantPermanentMerePrenom, setRepresentantPermanentMerePrenom] = useState("");
-  const [representantPermanentNonCondamnation, setRepresentantPermanentNonCondamnation] = useState(false);
-  
-// Step 4: Société concernée
-  const [sirenSearch, setSirenSearch] = useState("");
-  const [sirenLoading, setSirenLoading] = useState(false);
-  const [sirenFound, setSirenFound] = useState(false);
-  const [sirenError, setSirenError] = useState<string | null>(null);
-  const [searchResults, setSearchResults] = useState<Array<{siren: string, nom: string, ville?: string}>>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [societe, setSociete] = useState({
-    denomination: "",
-    formeJuridique: "",
-    siegeAdresse: "",
-    siegeCP: "",
-    siegeVille: "",
-    siegePays: "France",
-    capital: "",
-    nombreTotalParts: "",
-    rcsVille: "",
-    rcsNumero: "",
-  });
-  // Step 5: Cédant
-const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
-  civilite: "",
-  nom: "",
-  prenom: "",
-  dateNaissance: "",
-  lieuNaissance: "",
-  nationalite: "française",
-  adresse: "",
-  codePostal: "",
+import { FormData, StepId } from "../types/form";
+import { generateActeDocx, generatePVDocx, generateDeclarationDocx } from "../lib/generateDocx";
+
+// ─── Initial state ───────────────────────────────────────────────────────────
+const initialData: FormData = {
+  societe: {},
+  cedant: { typePersonne: "physique", physique: { civilite: "M.", nom: "", prenom: "", dateNaissance: "", villeNaissance: "", nationalite: "française", adresse: "", regime: "celibataire" }, nombreTitresCedes: "" },
+  cessionnaire: { typePersonne: "physique", physique: { civilite: "M.", nom: "", prenom: "", dateNaissance: "", villeNaissance: "", nationalite: "française", adresse: "", regime: "celibataire" } },
+  prix: { typePaiement: "comptant", echeances: [{ montant: "", date: "" }] },
+  natureCession: { type: "pleine_propriete" },
+  gap: { active: false, escrow: false },
+  comptesCourants: { option: "absent" },
+  nonConcurrence: { active: false },
+  pv: { typeAssemblee: "associe_unique", ville: "", date: "", changementDirigeant: false, questionsEcrites: false, dureeMandat: "illimitée" },
   ville: "",
-  pays: "France",
-  email: "",
-  });
-  const [cedantMorale, setCedantMorale] = useState<PersonneMorale>({
-    denomination: "",
-    formeJuridique: "",
-    siegeAdresse: "",
-    siegeCP: "",
-    siegeVille: "",
-    siegePays: "France",
-    capital: "",
-    rcsVille: "",
-    rcsNumero: "",
-    representantCivilite: "",
-    representantNom: "",
-    representantPrenom: "",
-    representantQualite: "",
-    email: "",
-  });
-  // Cedant morale SIREN search
-  const [cedantSirenSearch, setCedantSirenSearch] = useState("");
-  const [cedantSirenLoading, setCedantSirenLoading] = useState(false);
-  const [cedantSirenFound, setCedantSirenFound] = useState(false);
-  const [cedantSearchResults, setCedantSearchResults] = useState<Array<{siren: string, nom: string, ville?: string}>>([]);
-  const [showCedantResults, setShowCedantResults] = useState(false);
-  const [cedantNombreParts, setCedantNombreParts] = useState("");
-  const [cedantRegimeMatrimonial, setCedantRegimeMatrimonial] = useState<RegimeMatrimonial | null>(null);
-  const [cedantConjointNom, setCedantConjointNom] = useState("");
-  const [cedantConjointPrenom, setCedantConjointPrenom] = useState("");
-  // Step 6: Cessionnaire
-  const [cessionnairePhysique, setCessionnairePhysique] = useState<PersonnePhysique>({
-    civilite: "",
-    nom: "",
-    prenom: "",
-    dateNaissance: "",
-    lieuNaissance: "",
-    nationalite: "française",
-    adresse: "",
-    codePostal: "",
-    ville: "",
-    pays: "France",
-    email: "",
-  });
-  const [cessionnaireMorale, setCessionnaireMorale] = useState<PersonneMorale>({
-    denomination: "",
-    formeJuridique: "",
-    siegeAdresse: "",
-    siegeCP: "",
-    siegeVille: "",
-    siegePays: "France",
-    capital: "",
-    rcsNumero: "",
-    rcsVille: "",
-    representantCivilite: "",
-    representantNom: "",
-    representantPrenom: "",
-    representantQualite: "",
-    email: "",
-  });
-  const [cessionnaireSirenSearch, setCessionnaireSirenSearch] = useState("");
-  const [cessionnaireSirenFound, setCessionnaireSirenFound] = useState(false);
-  const [cessionnaireSirenLoading, setCessionnaireSirenLoading] = useState(false);
-  const [cessionnaireSearchResults, setCessionnaireSearchResults] = useState<Array<{siren: string, nom: string, ville?: string}>>([]);
-  const [showCessionnaireResults, setShowCessionnaireResults] = useState(false);
-  const [cessionnaireRegimeMatrimonial, setCessionnaireRegimeMatrimonial] = useState<RegimeMatrimonial | null>(null);
-  const [cessionnaireConjointNom, setCessionnaireConjointNom] = useState("");
-  const [cessionnaireConjointPrenom, setCessionnaireConjointPrenom] = useState("");
-  const [cessionnaireAchatBiensPropres, setCessionnaireAchatBiensPropres] = useState<boolean | null>(null);
-  // Step 7: Conditions de cession
-  const [nombrePartsCedees, setNombrePartsCedees] = useState("");
-  const [numeroPartsDe, setNumeroPartsDe] = useState("");
-  const [numeroPartsA, setNumeroPartsA] = useState("");
-  const [prixParPart, setPrixParPart] = useState("");
-  const [prixTotal, setPrixTotal] = useState("");
-  const [modePaiement, setModePaiement] = useState<ModePaiement | null>(null);
-  const [echeances, setEcheances] = useState<Array<{ montant: string; date: string; modePaiement: "virement" | "cheque" }>>([{ montant: "", date: "", modePaiement: "virement" }]);
-  const [mandataireFormalities, setMandataireFormalities] = useState("LEGALCORNERS, 78 avenue des Champs-Elysees, 75008 Paris");
-  const [modificationValeurNominale, setModificationValeurNominale] = useState(false);
-  // Step 8: Clauses & Options
-  const [associeUnique, setAssocieUnique] = useState<boolean | null>(null);
-  const [dateDeliberation, setDateDeliberation] = useState("");
-  const [clauseNonConcurrenceVendeur, setClauseNonConcurrenceVendeur] = useState(false);
-  const [clauseNCVZone, setClauseNCVZone] = useState("");
-  const [clauseNCVDuree, setClauseNCVDuree] = useState("");
-  const [clauseNonConcurrenceAcheteur, setClauseNonConcurrenceAcheteur] = useState(false);
-  const [clauseNCAZone, setClauseNCAZone] = useState("");
-  const [clauseNCADuree, setClauseNCADuree] = useState("");
-  const [comptesCourants, setComptesCourants] = useState<ComptesCourants | null>(null);
-  const [garantieActifPassif, setGarantieActifPassif] = useState(true);
-  const [garantieMontantMax, setGarantieMontantMax] = useState("");
-  const [garantieDuree, setGarantieDuree] = useState("");
-  const [garantieSeuilDeclenchement, setGarantieSeuilDeclenchement] = useState("");
-  const [garantieAdresse, setGarantieAdresse] = useState("");
-  const [garantieEmail, setGarantieEmail] = useState("");
-  const [tribunalCompetent, setTribunalCompetent] = useState("");
-  const [fraisACharge, setFraisACharge] = useState<"cessionnaire" | "cedant" | null>(null);
-  const [droitJouissanceImmeubles, setDroitJouissanceImmeubles] = useState(false);
-  // Signature
-  const [lieuSignature, setLieuSignature] = useState("");
-  const [dateSignature, setDateSignature] = useState("");
-  const [documentGenere, setDocumentGenere] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
-  const [showPdfPreview, setShowPdfPreview] = useState(false);
-  
-  // Documents a generer
-  const [generateAgrement, setGenerateAgrement] = useState(true);
-  const [generateConstatation, setGenerateConstatation] = useState(true);
-  // Navigation functions
-  const handleNext = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    if (step === 3 && !paymentComplete) {
-      setPaymentComplete(true);
-      setStep(4);
-      return;
-    }
-    
-    // Gerer le step 8.5 (changement dirigeant)
-    if (step === 8 && includChangementDirigeant) {
-      setStep(8.5 as any);
-      return;
-    }
-    
-    if (step === 8.5 && includChangementDirigeant) {
-      setStep(9);
-      return;
-    }
-    
-    if (step < 10) {
-      setStep(step + 1);
-    }
-  };
-  const handlePrev = () => {
-    if (step > 1) {
-      if (step === 4 && paymentComplete) {
-        return;
-      }
-      if (step === 8.5 && includChangementDirigeant) {
-        setStep(8);
-        return;
-      }
-      if (step === 9 && includChangementDirigeant) {
-        setStep(8.5 as any);
-        return;
-      }
-      setStep(step - 1);
-    }
-  };
-  const canProceed = (): boolean => {
-    switch (step) {
-      case 1:
-        return typeCession !== null && typePropriete !== null;
-      case 2:
-        return cedantType !== null && cessionnaireType !== null;
-      case 3:
-        return true; // Payment step
-      case 4:
-        return societe.denomination !== "" && societe.formeJuridique !== "" && societe.rcsNumero !== "";
-      case 5:
-        if (cedantType === "physique") {
-          return cedantPhysique.nom !== "" && cedantPhysique.prenom !== "" && cedantRegimeMatrimonial !== null;
-        }
-        return cedantMorale.denomination !== "" && cedantMorale.representantNom !== "";
-      case 6:
-        if (cessionnaireType === "physique") {
-          return cessionnairePhysique.nom !== "" && cessionnairePhysique.prenom !== "";
-        }
-        return cessionnaireMorale.denomination !== "" && cessionnaireMorale.representantNom !== "";
-      case 7:
-        return nombrePartsCedees !== "" && prixTotal !== "" && modePaiement !== null;
-      case 8:
-        return comptesCourants !== null && fraisACharge !== null;
-      default:
-        return true;
-    }
-  };
-  // Add/remove echeances
-  const addEcheance = () => {
-    setEcheances([...echeances, { montant: "", date: "", modePaiement: "virement" }]);
-  };
-  const removeEcheance = (index: number) => {
-    setEcheances(echeances.filter((_, i) => i !== index));
-  };
-  const updateEcheance = (index: number, field: "montant" | "date" | "modePaiement", value: string) => {
-    const newEcheances = [...echeances];
-    (newEcheances[index] as Record<string, string>)[field] = value;
-    setEcheances(newEcheances);
-  };
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+  date: "",
+  fraisALaCharge: "Cessionnaire",
+};
+
+const STEPS: { id: StepId; label: string }[] = [
+  { id: "societe", label: "Société cible" },
+  { id: "cedant", label: "Informations cédant" },
+  { id: "cessionnaire", label: "Informations cessionnaire" },
+  { id: "prix", label: "Conditions de cession" },
+  { id: "options", label: "Clauses & Options" },
+  { id: "pv", label: "PV Assemblée" },
+  { id: "recap", label: "Récapitulatif" },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function Field({ label, children, required }: { label: string; children: React.ReactNode; required?: boolean }) {
   return (
-  <>
-  <div className="min-h-screen bg-white" suppressHydrationWarning>
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="block h-12 w-auto" style={{ aspectRatio: 'auto' }}>
-            <Image 
-              src="/images/logo-legal-corners.png" 
-              alt="Legal Corners" 
-              width={160} 
-              height={50} 
-              className="h-full w-auto !w-auto object-contain"
-              style={{ width: 'auto', height: '100%' }}
-              priority
-            />
-          </Link>
-          
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/connexion" className="text-sm text-[#1E3A8A]/80 hover:text-[#1E3A8A] flex items-center gap-1">
-              <User className="w-4 h-4" />
-              Connexion
-            </Link>
-          </nav>
-          
-          <button 
-            className="md:hidden p-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function Input({ value, onChange, placeholder, type = "text" }: { value?: string; onChange: (v: string) => void; placeholder?: string; type?: string }) {
+  return (
+    <input
+      type={type}
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744] focus:border-transparent"
+    />
+  );
+}
+
+function Select({ value, onChange, options }: { value?: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
+  return (
+    <select
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2744] bg-white"
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
+  );
+}
+
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <label className="flex items-center gap-3 cursor-pointer">
+      <div
+        onClick={() => onChange(!checked)}
+        className={`relative w-11 h-6 rounded-full transition-colors ${checked ? "bg-[#1a2744]" : "bg-gray-300"}`}
+      >
+        <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${checked ? "translate-x-5" : ""}`} />
+      </div>
+      <span className="text-sm text-gray-700">{label}</span>
+    </label>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h3 className="font-semibold text-[#1a2744] text-base mb-4 mt-6 border-b border-gray-200 pb-2">{children}</h3>;
+}
+
+// ─── Step components ──────────────────────────────────────────────────────────
+function StepSociete({ data, set }: { data: FormData; set: (d: Partial<FormData>) => void }) {
+  const s = data.societe;
+  const upd = (k: string, v: string | boolean) => set({ societe: { ...s, [k]: v } });
+  return (
+    <div>
+      <SectionTitle>Informations sur la société cible</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <Field label="Dénomination sociale" required><Input value={s.denomination} onChange={v => upd("denomination", v)} placeholder="Ex: DUPONT SAS" /></Field>
+        <Field label="Forme juridique" required>
+          <Select value={s.formeJuridique} onChange={v => upd("formeJuridique", v)} options={[
+            { value: "", label: "Choisir..." },
+            { value: "SARL", label: "SARL" }, { value: "EURL", label: "EURL" },
+            { value: "SAS", label: "SAS" }, { value: "SASU", label: "SASU" },
+            { value: "SA", label: "SA" }, { value: "SCI", label: "SCI" },
+            { value: "SNC", label: "SNC" }, { value: "Autre", label: "Autre" },
+          ]} />
+        </Field>
+        <Field label="Capital social (ex: 10 000 €)" required><Input value={s.capital} onChange={v => upd("capital", v)} placeholder="10 000 €" /></Field>
+        <Field label="Ville RCS" required><Input value={s.rcsVille} onChange={v => upd("rcsVille", v)} placeholder="Paris" /></Field>
+        <Field label="Numéro RCS" required><Input value={s.rcsNumero} onChange={v => upd("rcsNumero", v)} placeholder="XXX XXX XXX" /></Field>
+        <Field label="Nombre total de titres" required><Input value={s.nombreTitresTotal} onChange={v => upd("nombreTitresTotal", v)} placeholder="100" type="number" /></Field>
+        <Field label="Valeur nominale par titre" required><Input value={s.valeurNominale} onChange={v => upd("valeurNominale", v)} placeholder="100 €" /></Field>
+        <Field label="Adresse du siège social" required><Input value={s.adresse} onChange={v => upd("adresse", v)} placeholder="1 rue de la Paix, 75001 Paris" /></Field>
+      </div>
+      <div className="mt-2">
+        <Toggle checked={!!s.estSPI} onChange={v => upd("estSPI", v)} label="Société à prépondérance immobilière (SPI)" />
+      </div>
+    </div>
+  );
+}
+
+function PersonneForm({ data, onChange, label }: {
+  data: FormData["cedant"] | FormData["cessionnaire"];
+  onChange: (d: typeof data) => void;
+  label: string;
+}) {
+  const isPhysique = data.typePersonne === "physique";
+  const p = data.physique || { civilite: "M.", nom: "", prenom: "", dateNaissance: "", villeNaissance: "", nationalite: "française", adresse: "", regime: "celibataire" as const };
+  const m = data.morale || { denomination: "", formeJuridique: "", capital: "", adresse: "", rcsVille: "", rcsNumero: "", representantCivilite: "M." as const, representantNom: "", representantPrenom: "", representantQualite: "" };
+
+  const updP = (k: string, v: string) => onChange({ ...data, physique: { ...p, [k]: v } });
+  const updM = (k: string, v: string) => onChange({ ...data, morale: { ...m, [k]: v } });
+
+  return (
+    <div>
+      <SectionTitle>{label}</SectionTitle>
+      <Field label="Type de personne">
+        <div className="flex gap-4">
+          {(["physique", "morale"] as const).map(t => (
+            <label key={t} className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" checked={data.typePersonne === t} onChange={() => onChange({ ...data, typePersonne: t })} className="accent-[#1a2744]" />
+              <span className="text-sm capitalize">{t === "physique" ? "Personne physique" : "Personne morale"}</span>
+            </label>
+          ))}
+        </div>
+      </Field>
+
+      {isPhysique ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <Field label="Civilité">
+            <Select value={p.civilite} onChange={v => updP("civilite", v)} options={[{ value: "M.", label: "M." }, { value: "Mme", label: "Mme" }]} />
+          </Field>
+          <Field label="Nom" required><Input value={p.nom} onChange={v => updP("nom", v)} placeholder="DUPONT" /></Field>
+          <Field label="Prénom" required><Input value={p.prenom} onChange={v => updP("prenom", v)} placeholder="Jean" /></Field>
+          <Field label="Date de naissance" required><Input type="date" value={p.dateNaissance} onChange={v => updP("dateNaissance", v)} /></Field>
+          <Field label="Ville de naissance" required><Input value={p.villeNaissance} onChange={v => updP("villeNaissance", v)} placeholder="Paris" /></Field>
+          <Field label="Nationalité"><Input value={p.nationalite} onChange={v => updP("nationalite", v)} placeholder="française" /></Field>
+          <Field label="Adresse complète" required><Input value={p.adresse} onChange={v => updP("adresse", v)} placeholder="1 rue de la Paix, 75001 Paris" /></Field>
+          <Field label="Situation maritale">
+            <Select value={p.regime} onChange={v => updP("regime", v)} options={[
+              { value: "celibataire", label: "Célibataire / Divorcé(e) / Veuf(ve)" },
+              { value: "communaute", label: "Marié(e) — Communauté de biens" },
+              { value: "separation", label: "Marié(e)/Pacsé(e) — Séparation de biens" },
+            ]} />
+          </Field>
+          {(p.regime === "communaute" || p.regime === "separation") && (
+            <>
+              <Field label="Civilité du conjoint">
+                <Select value={p.conjointCivilite} onChange={v => updP("conjointCivilite", v)} options={[{ value: "M.", label: "M." }, { value: "Mme", label: "Mme" }]} />
+              </Field>
+              <Field label="Nom du conjoint"><Input value={p.conjointNom} onChange={v => updP("conjointNom", v)} /></Field>
+              <Field label="Prénom du conjoint"><Input value={p.conjointPrenom} onChange={v => updP("conjointPrenom", v)} /></Field>
+              {p.regime === "communaute" && (
+                <Field label="Type de régime">
+                  <Select value={p.typeRegime} onChange={v => updP("typeRegime", v)} options={[
+                    { value: "communauté de biens", label: "Communauté légale (réduite aux acquêts)" },
+                    { value: "communauté universelle", label: "Communauté universelle" },
+                  ]} />
+                </Field>
+              )}
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <Field label="Dénomination" required><Input value={m.denomination} onChange={v => updM("denomination", v)} /></Field>
+          <Field label="Forme juridique"><Input value={m.formeJuridique} onChange={v => updM("formeJuridique", v)} placeholder="SAS" /></Field>
+          <Field label="Capital"><Input value={m.capital} onChange={v => updM("capital", v)} placeholder="10 000 €" /></Field>
+          <Field label="Adresse"><Input value={m.adresse} onChange={v => updM("adresse", v)} /></Field>
+          <Field label="Ville RCS"><Input value={m.rcsVille} onChange={v => updM("rcsVille", v)} /></Field>
+          <Field label="Numéro RCS"><Input value={m.rcsNumero} onChange={v => updM("rcsNumero", v)} /></Field>
+          <Field label="Civilité du représentant">
+            <Select value={m.representantCivilite} onChange={v => updM("representantCivilite", v)} options={[{ value: "M.", label: "M." }, { value: "Mme", label: "Mme" }]} />
+          </Field>
+          <Field label="Nom du représentant"><Input value={m.representantNom} onChange={v => updM("representantNom", v)} /></Field>
+          <Field label="Prénom du représentant"><Input value={m.representantPrenom} onChange={v => updM("representantPrenom", v)} /></Field>
+          <Field label="Qualité du représentant"><Input value={m.representantQualite} onChange={v => updM("representantQualite", v)} placeholder="Président, Gérant..." /></Field>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StepCedant({ data, set }: { data: FormData; set: (d: Partial<FormData>) => void }) {
+  return (
+    <div>
+      <PersonneForm
+        data={data.cedant}
+        onChange={d => set({ cedant: { ...d } })}
+        label="Le Cédant (vendeur)"
+      />
+      <SectionTitle>Titres cédés</SectionTitle>
+      <Field label="Nombre de titres cédés" required>
+        <Input
+          type="number"
+          value={data.cedant.nombreTitresCedes}
+          onChange={v => set({ cedant: { ...data.cedant, nombreTitresCedes: v } })}
+          placeholder="Ex: 50"
+        />
+      </Field>
+      {data.societe.nombreTitresTotal && data.cedant.nombreTitresCedes && (
+        <p className="text-sm text-gray-500 mt-1">
+          → {((parseInt(data.cedant.nombreTitresCedes) / parseInt(data.societe.nombreTitresTotal)) * 100).toFixed(2)} % du capital social
+        </p>
+      )}
+    </div>
+  );
+}
+
+function StepCessionnaire({ data, set }: { data: FormData; set: (d: Partial<FormData>) => void }) {
+  return (
+    <div>
+      <PersonneForm
+        data={data.cessionnaire}
+        onChange={d => set({ cessionnaire: { ...d } })}
+        label="Le Cessionnaire (acheteur)"
+      />
+      {data.cessionnaire.typePersonne === "physique" &&
+        data.cessionnaire.physique?.regime === "communaute" && (
+          <div className="mt-4">
+            <SectionTitle>Acquisition sur biens...</SectionTitle>
+            <Field label="Les titres sont acquis sur">
+              <Select
+                value={data.cessionnaire.acquisitionBiens || "propres"}
+                onChange={v => set({ cessionnaire: { ...data.cessionnaire, acquisitionBiens: v as "propres" | "communs" } })}
+                options={[
+                  { value: "propres", label: "Biens propres du cessionnaire" },
+                  { value: "communs", label: "Biens communs du ménage" },
+                ]}
+              />
+            </Field>
+          </div>
+        )}
+    </div>
+  );
+}
+
+function StepPrix({ data, set }: { data: FormData; set: (d: Partial<FormData>) => void }) {
+  const p = data.prix;
+  const upd = (k: string, v: unknown) => set({ prix: { ...p, [k]: v } });
+
+  return (
+    <div>
+      <SectionTitle>Prix et paiement</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <Field label="Prix total de cession (ex: 50 000 €)" required>
+          <Input value={p.prixTotal} onChange={v => upd("prixTotal", v)} placeholder="50 000 €" />
+        </Field>
+        <Field label="Modalité de paiement">
+          <Select value={p.typePaiement} onChange={v => upd("typePaiement", v)} options={[
+            { value: "comptant", label: "Paiement comptant (quittance immédiate)" },
+            { value: "echelonne", label: "Paiement échelonné" },
+          ]} />
+        </Field>
+      </div>
+
+      {p.typePaiement === "echelonne" && (
+        <div className="mt-4">
+          <SectionTitle>Échéancier</SectionTitle>
+          {(p.echeances || []).map((e, i) => (
+            <div key={i} className="grid grid-cols-2 gap-4 mb-3 p-3 bg-gray-50 rounded-lg">
+              <Field label={`Montant échéance ${i + 1}`}>
+                <Input value={e.montant} onChange={v => {
+                  const arr = [...(p.echeances || [])];
+                  arr[i] = { ...arr[i], montant: v };
+                  upd("echeances", arr);
+                }} placeholder="10 000 €" />
+              </Field>
+              <Field label="Date d'exigibilité">
+                <Input type="date" value={e.date} onChange={v => {
+                  const arr = [...(p.echeances || [])];
+                  arr[i] = { ...arr[i], date: v };
+                  upd("echeances", arr);
+                }} />
+              </Field>
+            </div>
+          ))}
+          <button
+            onClick={() => upd("echeances", [...(p.echeances || []), { montant: "", date: "" }])}
+            className="text-sm text-[#1a2744] underline mt-1"
           >
-            {mobileMenuOpen ? <X /> : <Menu />}
+            + Ajouter une échéance
           </button>
         </div>
-      </header>
-      {/* Mobile Progress Bar */}
-      <div className="lg:hidden bg-white border-b border-gray-100 sticky top-[57px] z-40">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-[#1E3A8A]">Etape {step} sur {STEPS.length}</span>
-            <span className="text-sm text-[#1E3A8A]/60">{STEPS.find(s => s.id === step)?.label}</span>
+      )}
+
+      <SectionTitle>Nature de la cession</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <Field label="Type de transfert">
+          <Select value={data.natureCession.type} onChange={v => set({ natureCession: { ...data.natureCession, type: v as "pleine_propriete" | "usufruit" | "nue_propriete" } })} options={[
+            { value: "pleine_propriete", label: "Pleine propriété (standard)" },
+            { value: "usufruit", label: "Usufruit seulement" },
+            { value: "nue_propriete", label: "Nue-propriété seulement" },
+          ]} />
+        </Field>
+        <div />
+        <Field label="Numéro du premier titre cédé">
+          <Input type="number" value={data.natureCession.numeroDe} onChange={v => set({ natureCession: { ...data.natureCession, numeroDe: v } })} placeholder="ex : 1" />
+        </Field>
+        <Field label="Numéro du dernier titre cédé">
+          <Input type="number" value={data.natureCession.numeroA} onChange={v => set({ natureCession: { ...data.natureCession, numeroA: v } })} placeholder="ex : 100" />
+        </Field>
+      </div>
+
+      <SectionTitle>Informations de signature</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <Field label="Ville de signature" required>
+          <Input value={data.ville} onChange={v => set({ ville: v, pv: { ...data.pv, ville: v } })} placeholder="Paris" />
+        </Field>
+        <Field label="Date de signature" required>
+          <Input type="date" value={data.date} onChange={v => set({ date: v, pv: { ...data.pv, date: v } })} />
+        </Field>
+        <Field label="Frais à la charge de">
+          <Select value={data.fraisALaCharge} onChange={v => set({ fraisALaCharge: v as "Cessionnaire" | "Cédant" })} options={[
+            { value: "Cessionnaire", label: "Cessionnaire" },
+            { value: "Cédant", label: "Cédant" },
+          ]} />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
+function StepOptions({ data, set }: { data: FormData; set: (d: Partial<FormData>) => void }) {
+  const gap = data.gap;
+  const nc = data.nonConcurrence;
+  const cc = data.comptesCourants;
+
+  return (
+    <div>
+      {/* GAP */}
+      <SectionTitle>Garantie d&apos;Actif et de Passif (GAP)</SectionTitle>
+      <Toggle checked={!!gap.active} onChange={v => set({ gap: { ...gap, active: v } })} label="Activer la GAP" />
+
+      {gap.active && (
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <Field label="Seuil par sinistre (franchise)">
+            <Input value={gap.seuilParSinistre} onChange={v => set({ gap: { ...gap, seuilParSinistre: v } })} placeholder="1 000 €" />
+          </Field>
+          <Field label="Seuil annuel cumulé">
+            <Input value={gap.seuilAnnuel} onChange={v => set({ gap: { ...gap, seuilAnnuel: v } })} placeholder="5 000 €" />
+          </Field>
+          <Field label="Plafond global d'indemnisation">
+            <Input value={gap.plafond} onChange={v => set({ gap: { ...gap, plafond: v } })} placeholder="50 000 €" />
+          </Field>
+          <Field label="Durée (années)">
+            <Input type="number" value={gap.dureeAnnees} onChange={v => set({ gap: { ...gap, dureeAnnees: v } })} placeholder="3" />
+          </Field>
+          <Field label="Délai de notification (mois)">
+            <Input type="number" value={gap.notificationDelaiMois} onChange={v => set({ gap: { ...gap, notificationDelaiMois: v } })} placeholder="3" />
+          </Field>
+          <Field label="Adresse de notification">
+            <Input value={gap.notificationAdresse} onChange={v => set({ gap: { ...gap, notificationAdresse: v } })} placeholder="Adresse postale du cédant" />
+          </Field>
+          <Field label="Email de notification">
+            <Input type="email" value={gap.notificationEmail} onChange={v => set({ gap: { ...gap, notificationEmail: v } })} placeholder="cedant@email.com" />
+          </Field>
+          <div className="col-span-2 mt-2">
+            <Toggle checked={!!gap.escrow} onChange={v => set({ gap: { ...gap, escrow: v } })} label="Mettre en place un séquestre (Escrow)" />
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-[#5D9CEC] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(step / STEPS.length) * 100}%` }}
-            />
+          {gap.escrow && (
+            <>
+              <Field label="Montant du séquestre">
+                <Input value={gap.escrowMontant} onChange={v => set({ gap: { ...gap, escrowMontant: v } })} placeholder="10 000 €" />
+              </Field>
+              <Field label="Bénéficiaire / établissement séquestre">
+                <Input value={gap.escrowBeneficiaire} onChange={v => set({ gap: { ...gap, escrowBeneficiaire: v } })} placeholder="Maître X, Notaire" />
+              </Field>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Compte courant */}
+      <SectionTitle>Compte courant d&apos;associé</SectionTitle>
+      <Field label="Situation du compte courant du cédant">
+        <Select value={cc.option} onChange={v => set({ comptesCourants: { ...cc, option: v as "absent" | "cede" | "conserve" } })} options={[
+          { value: "absent", label: "Aucun compte courant (ou renonciation)" },
+          { value: "cede", label: "Cession du compte courant au cessionnaire" },
+          { value: "conserve", label: "Conservation du compte courant par le cédant" },
+        ]} />
+      </Field>
+      {(cc.option === "cede" || cc.option === "conserve") && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mt-2">
+          <Field label="Solde du compte courant">
+            <Input value={cc.solde} onChange={v => set({ comptesCourants: { ...cc, solde: v } })} placeholder="5 000 €" />
+          </Field>
+          {cc.option === "conserve" && (
+            <Field label="Délai de remboursement (mois)">
+              <Input type="number" value={cc.delaiRemboursementMois} onChange={v => set({ comptesCourants: { ...cc, delaiRemboursementMois: v } })} placeholder="6" />
+            </Field>
+          )}
+        </div>
+      )}
+
+      {/* Non-concurrence */}
+      <SectionTitle>Clause de non-concurrence</SectionTitle>
+      <Toggle checked={!!nc.active} onChange={v => set({ nonConcurrence: { ...nc, active: v } })} label="Inclure une clause de non-concurrence" />
+
+      {nc.active && (
+        <div className="mt-4 p-4 bg-gray-50 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <Field label="Durée (années)">
+            <Input type="number" value={nc.dureeAns} onChange={v => set({ nonConcurrence: { ...nc, dureeAns: v } })} placeholder="2" />
+          </Field>
+          <Field label="Zone géographique">
+            <Input value={nc.zoneGeographique} onChange={v => set({ nonConcurrence: { ...nc, zoneGeographique: v } })} placeholder="France entière" />
+          </Field>
+          <div className="col-span-2 mt-2">
+            <Toggle checked={!!nc.appliqueAuCessionnaire} onChange={v => set({ nonConcurrence: { ...nc, appliqueAuCessionnaire: v } })} label="Appliquer aussi au cessionnaire" />
+          </div>
+          {nc.appliqueAuCessionnaire && (
+            <>
+              <Field label="Durée pour le cessionnaire (années)">
+                <Input type="number" value={nc.dureeAnsCessionnaire} onChange={v => set({ nonConcurrence: { ...nc, dureeAnsCessionnaire: v } })} placeholder="2" />
+              </Field>
+              <Field label="Zone géo cessionnaire">
+                <Input value={nc.zoneGeoCessionnaire} onChange={v => set({ nonConcurrence: { ...nc, zoneGeoCessionnaire: v } })} placeholder="France entière" />
+              </Field>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StepPV({ data, set }: { data: FormData; set: (d: Partial<FormData>) => void }) {
+  const pv = data.pv;
+  const upd = (k: string, v: unknown) => set({ pv: { ...pv, [k]: v } });
+
+  return (
+    <div>
+      <SectionTitle>Procès-Verbal d&apos;Assemblée</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+        <Field label="Type d'assemblée">
+          <Select value={pv.typeAssemblee} onChange={v => upd("typeAssemblee", v)} options={[
+            { value: "associe_unique", label: "Décision de l'associé unique" },
+            { value: "unanime", label: "Décisions unanimes des associés" },
+            { value: "AGE", label: "Assemblée Générale Extraordinaire (AGE)" },
+          ]} />
+        </Field>
+        <Field label="Ville" required>
+          <Input value={pv.ville} onChange={v => set({ pv: { ...pv, ville: v }, ville: data.ville || v })} placeholder="Paris" />
+        </Field>
+        <Field label="Date" required>
+          <Input type="date" value={pv.date} onChange={v => set({ pv: { ...pv, date: v }, date: data.date || v })} />
+        </Field>
+
+        {pv.typeAssemblee === "AGE" && (
+          <>
+            <Field label="Heure de la réunion">
+              <Input type="time" value={pv.heure} onChange={v => upd("heure", v)} />
+            </Field>
+            <Field label="Mode de convocation">
+              <Select value={pv.convocationMode || ""} onChange={v => upd("convocationMode", v)} options={[
+                { value: "lettre recommandée", label: "Lettre recommandée" },
+                { value: "lettre simple", label: "Lettre simple" },
+                { value: "mail", label: "Email" },
+                { value: "remise en mains propres", label: "Remise en mains propres" },
+              ]} />
+            </Field>
+            <Field label="Date de convocation">
+              <Input type="date" value={pv.convocationDate} onChange={v => upd("convocationDate", v)} />
+            </Field>
+            <Field label="Civilité du président">
+              <Select value={pv.presidentCivilite || "M."} onChange={v => upd("presidentCivilite", v)} options={[{ value: "M.", label: "M." }, { value: "Mme", label: "Mme" }]} />
+            </Field>
+            <Field label="Nom du président de séance">
+              <Input value={pv.presidentNom} onChange={v => upd("presidentNom", v)} />
+            </Field>
+            <Field label="Prénom du président">
+              <Input value={pv.presidentPrenom} onChange={v => upd("presidentPrenom", v)} />
+            </Field>
+            <Field label="Qualité du président">
+              <Select value={pv.presidentQualite || ""} onChange={v => upd("presidentQualite", v)} options={[
+                { value: "gérant", label: "Gérant" },
+                { value: "président", label: "Président" },
+                { value: "associé", label: "Associé" },
+              ]} />
+            </Field>
+            <div className="col-span-2 mt-2">
+              <Toggle checked={!!pv.questionsEcrites} onChange={v => upd("questionsEcrites", v)} label="Des questions écrites ont été adressées préalablement" />
+            </div>
+          </>
+        )}
+      </div>
+
+      <SectionTitle>Changement de dirigeant</SectionTitle>
+      <Toggle checked={!!pv.changementDirigeant} onChange={v => upd("changementDirigeant", v)} label="Changement de dirigeant lors de cette cession" />
+
+      {pv.changementDirigeant && (
+        <div className="mt-4 space-y-6">
+          <div className="p-4 bg-red-50 rounded-lg">
+            <p className="text-sm font-semibold text-red-700 mb-3">Dirigeant sortant</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <Field label="Civilité">
+                <Select value={pv.ancienDirigeantCivilite || "M."} onChange={v => upd("ancienDirigeantCivilite", v)} options={[{ value: "M.", label: "M." }, { value: "Mme", label: "Mme" }]} />
+              </Field>
+              <Field label="Nom"><Input value={pv.ancienDirigeantNom} onChange={v => upd("ancienDirigeantNom", v)} /></Field>
+              <Field label="Prénom"><Input value={pv.ancienDirigeantPrenom} onChange={v => upd("ancienDirigeantPrenom", v)} /></Field>
+              <Field label="Date de naissance"><Input type="date" value={pv.ancienDirigeantDateNaissance} onChange={v => upd("ancienDirigeantDateNaissance", v)} /></Field>
+              <Field label="Fonction">
+                <Select value={pv.ancienDirigeantFonction || ""} onChange={v => upd("ancienDirigeantFonction", v)} options={[
+                  { value: "gérant", label: "Gérant" },
+                  { value: "président", label: "Président" },
+                  { value: "directeur général", label: "Directeur Général" },
+                ]} />
+              </Field>
+            </div>
+          </div>
+
+          <div className="p-4 bg-green-50 rounded-lg space-y-4">
+            <p className="text-sm font-semibold text-green-700">Nouveau dirigeant</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <Field label="Type de dirigeant">
+                <Select value={pv.nouveauDirigeantTypePersonne || "physique"} onChange={v => upd("nouveauDirigeantTypePersonne", v)} options={[
+                  { value: "physique", label: "Personne physique" },
+                  { value: "morale", label: "Personne morale (PM)" },
+                ]} />
+              </Field>
+              <Field label="Fonction attribuée">
+                <Select value={pv.nouveauDirigeantFonction || ""} onChange={v => upd("nouveauDirigeantFonction", v)} options={[
+                  { value: "gérant", label: "Gérant" },
+                  { value: "président", label: "Président" },
+                  { value: "directeur général", label: "Directeur Général" },
+                  { value: "directeur général délégué", label: "Directeur Général Délégué" },
+                ]} />
+              </Field>
+              <Field label="Durée du mandat">
+                <Select value={pv.dureeMandat || "illimitée"} onChange={v => upd("dureeMandat", v)} options={[
+                  { value: "illimitée", label: "Durée illimitée" },
+                  { value: "1 an", label: "1 an" },
+                  { value: "2 ans", label: "2 ans" },
+                  { value: "3 ans", label: "3 ans" },
+                  { value: "6 ans", label: "6 ans" },
+                ]} />
+              </Field>
+            </div>
+
+            {(!pv.nouveauDirigeantTypePersonne || pv.nouveauDirigeantTypePersonne === "physique") && (
+              <>
+                <p className="text-xs text-green-600">Identité du cessionnaire reprise automatiquement. Complétez les champs ci-dessous pour la déclaration.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                  <Field label="Ville de naissance">
+                    <Input value={pv.nouveauDirigeantVilleNaissance} onChange={v => upd("nouveauDirigeantVilleNaissance", v)} placeholder="Paris (75001)" />
+                  </Field>
+                  <Field label="Nationalité">
+                    <Input value={pv.nouveauDirigeantNationalite} onChange={v => upd("nouveauDirigeantNationalite", v)} placeholder="française" />
+                  </Field>
+                </div>
+
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <p className="text-xs font-semibold text-green-800 mb-3">Déclaration de non-condamnation — Filiation</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <Field label="Nom du père">
+                      <Input value={pv.nouveauDirigeantNomPere} onChange={v => upd("nouveauDirigeantNomPere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom du père">
+                      <Input value={pv.nouveauDirigeantPrenomPere} onChange={v => upd("nouveauDirigeantPrenomPere", v)} placeholder="Prénom" />
+                    </Field>
+                    <Field label="Nom de la mère (naissance)">
+                      <Input value={pv.nouveauDirigeantNomMere} onChange={v => upd("nouveauDirigeantNomMere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom de la mère">
+                      <Input value={pv.nouveauDirigeantPrenomMere} onChange={v => upd("nouveauDirigeantPrenomMere", v)} placeholder="Prénom" />
+                    </Field>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {pv.nouveauDirigeantTypePersonne === "morale" && (
+              <>
+                <div className="p-3 bg-white border border-green-200 rounded-lg">
+                  <p className="text-xs font-semibold text-green-800 mb-3">Personne morale dirigeante</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <Field label="Dénomination sociale">
+                      <Input value={pv.nouveauDirigeantDenomination} onChange={v => upd("nouveauDirigeantDenomination", v)} placeholder="Ma Société SAS" />
+                    </Field>
+                    <Field label="Forme juridique">
+                      <Input value={pv.nouveauDirigeantFormeJuridiqueStr} onChange={v => upd("nouveauDirigeantFormeJuridiqueStr", v)} placeholder="SAS" />
+                    </Field>
+                    <Field label="Capital">
+                      <Input value={pv.nouveauDirigeantCapitalStr} onChange={v => upd("nouveauDirigeantCapitalStr", v)} placeholder="10 000 €" />
+                    </Field>
+                    <Field label="Ville RCS">
+                      <Input value={pv.nouveauDirigeantRCSSiege} onChange={v => upd("nouveauDirigeantRCSSiege", v)} placeholder="Paris" />
+                    </Field>
+                    <Field label="Numéro RCS">
+                      <Input value={pv.nouveauDirigeantRCSNum} onChange={v => upd("nouveauDirigeantRCSNum", v)} placeholder="123 456 789" />
+                    </Field>
+                    <Field label="Siège social">
+                      <Input value={pv.nouveauDirigeantSiegeSocial} onChange={v => upd("nouveauDirigeantSiegeSocial", v)} placeholder="1 rue de la Paix, 75001 Paris" />
+                    </Field>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <p className="text-xs font-semibold text-green-800 mb-3">Représentant permanent — Déclaration de non-condamnation</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <Field label="Civilité">
+                      <Select value={pv.rpCivilite || "M."} onChange={v => upd("rpCivilite", v)} options={[{ value: "M.", label: "M." }, { value: "Mme", label: "Mme" }]} />
+                    </Field>
+                    <Field label="Nom">
+                      <Input value={pv.rpNom} onChange={v => upd("rpNom", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom(s)">
+                      <Input value={pv.rpPrenom} onChange={v => upd("rpPrenom", v)} placeholder="Prénom(s)" />
+                    </Field>
+                    <Field label="Date de naissance">
+                      <Input type="date" value={pv.rpDateNaissance} onChange={v => upd("rpDateNaissance", v)} />
+                    </Field>
+                    <Field label="Ville de naissance">
+                      <Input value={pv.rpVilleNaissance} onChange={v => upd("rpVilleNaissance", v)} placeholder="Paris (75001)" />
+                    </Field>
+                    <Field label="Nationalité">
+                      <Input value={pv.rpNationalite} onChange={v => upd("rpNationalite", v)} placeholder="française" />
+                    </Field>
+                    <Field label="Adresse">
+                      <Input value={pv.rpAdresse} onChange={v => upd("rpAdresse", v)} placeholder="1 rue de la Paix, 75001 Paris" />
+                    </Field>
+                    <div />
+                    <Field label="Nom du père">
+                      <Input value={pv.rpNomPere} onChange={v => upd("rpNomPere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom du père">
+                      <Input value={pv.rpPrenomPere} onChange={v => upd("rpPrenomPere", v)} placeholder="Prénom" />
+                    </Field>
+                    <Field label="Nom de la mère (naissance)">
+                      <Input value={pv.rpNomMere} onChange={v => upd("rpNomMere", v)} placeholder="NOM" />
+                    </Field>
+                    <Field label="Prénom de la mère">
+                      <Input value={pv.rpPrenomMere} onChange={v => upd("rpPrenomMere", v)} placeholder="Prénom" />
+                    </Field>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        {/* Mini steps indicator */}
-        <div className="flex justify-center gap-1.5 pb-3 overflow-x-auto px-2">
-          {STEPS.map((s) => (
-            <div 
-              key={s.id}
-              className={cn(
-                "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all flex-shrink-0",
-                s.id === step ? "bg-[#5D9CEC] text-white" :
-                s.id < step ? "bg-green-500 text-white" :
-                "bg-gray-100 text-gray-400"
+      )}
+    </div>
+  );
+}
+
+function StepRecap({ data, onGenerate }: { data: FormData; onGenerate: () => void }) {
+  const cedantNom = data.cedant.typePersonne === "physique"
+    ? `${data.cedant.physique?.civilite} ${data.cedant.physique?.nom} ${data.cedant.physique?.prenom}`
+    : data.cedant.morale?.denomination;
+  const cessNom = data.cessionnaire.typePersonne === "physique"
+    ? `${data.cessionnaire.physique?.civilite} ${data.cessionnaire.physique?.nom} ${data.cessionnaire.physique?.prenom}`
+    : data.cessionnaire.morale?.denomination;
+
+  const rows = [
+    ["Société", data.societe.denomination || "—", data.societe.formeJuridique || "—"],
+    ["Cédant", cedantNom || "—", `${data.cedant.nombreTitresCedes || "?"} titres`],
+    ["Cessionnaire", cessNom || "—", ""],
+    ["Prix", data.prix.prixTotal || "—", data.prix.typePaiement === "comptant" ? "Comptant" : "Échelonné"],
+    ["GAP", data.gap.active ? "Oui" : "Non", data.gap.active ? `Plafond : ${data.gap.plafond || "?"}` : ""],
+    ["Non-concurrence", data.nonConcurrence.active ? `${data.nonConcurrence.dureeAns} ans` : "Non", ""],
+    ["PV", data.pv.typeAssemblee === "AGE" ? "AGE" : data.pv.typeAssemblee === "associe_unique" ? "Associé unique" : "Unanime", data.pv.changementDirigeant ? "Changement de dirigeant" : ""],
+    ["Signature", `${data.ville || "—"}, le ${data.date || "—"}`, ""],
+  ];
+
+  return (
+    <div>
+      <SectionTitle>Récapitulatif de la cession</SectionTitle>
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <table className="w-full text-sm">
+          <tbody>
+            {rows.map(([label, val1, val2], i) => (
+              <tr key={i} className={i % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                <td className="px-4 py-3 font-medium text-gray-600 w-36">{label}</td>
+                <td className="px-4 py-3 text-gray-900">{val1}</td>
+                <td className="px-4 py-3 text-gray-500">{val2}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-6 p-4 bg-blue-50 rounded-xl text-sm text-blue-700">
+        <p>Les documents générés sont fournis à titre informatif. Faites-les vérifier par un professionnel du droit avant signature.</p>
+      </div>
+      <button
+        onClick={onGenerate}
+        className="mt-6 w-full bg-[#1a2744] text-white py-3 rounded-xl font-semibold hover:bg-[#2a3754] transition-colors"
+      >
+        Générer les documents avec Claude AI
+      </button>
+    </div>
+  );
+}
+
+// ─── Cover page builder ───────────────────────────────────────────────────────
+function buildCoverHtml(data: FormData, docType: "acte" | "pv"): string {
+  function esc(s: string) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  const typeTitre = ["SARL", "EURL", "SNC", "SCI"].includes(data.societe.formeJuridique || "")
+    ? "parts sociales" : "actions";
+  const nomCedant = data.cedant.typePersonne === "physique" && data.cedant.physique
+    ? `${data.cedant.physique.civilite} ${data.cedant.physique.nom} ${data.cedant.physique.prenom}`.trim()
+    : data.cedant.morale?.denomination || "—";
+  const nomCessionnaire = data.cessionnaire.typePersonne === "physique" && data.cessionnaire.physique
+    ? `${data.cessionnaire.physique.civilite} ${data.cessionnaire.physique.nom} ${data.cessionnaire.physique.prenom}`.trim()
+    : data.cessionnaire.morale?.denomination || "—";
+  const dateFormatted = data.date
+    ? new Date(data.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" })
+    : "—";
+  const title = docType === "acte"
+    ? `ACTE DE CESSION<br>DE ${typeTitre.toUpperCase()}`
+    : `PROC&Egrave;S-VERBAL<br>${data.pv.typeAssemblee === "AGE" ? "D&apos;ASSEMBL&Eacute;E G&Eacute;N&Eacute;RALE EXTRAORDINAIRE" : data.pv.typeAssemblee === "associe_unique" ? "DE L&apos;ASSOCI&Eacute; UNIQUE" : "DE D&Eacute;CISIONS UNANIMES"}`;
+
+  const partiesBlock = docType === "acte" ? `
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">C&Eacute;DANT (VENDEUR)</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCedant)}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">CESSIONNAIRE (ACH&Egrave;TEUR)</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCessionnaire)}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">SOCI&Eacute;T&Eacute; CIBLE</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(data.societe.denomination || "—")}</div>
+      <div style="font-size:11px;color:#666;margin-top:3px">${esc(data.societe.formeJuridique || "")} &mdash; Capital&nbsp;: ${esc(data.societe.capital || "—")} &mdash; ${esc(data.cedant.nombreTitresCedes || "—")} ${typeTitre} c&eacute;d&eacute;es</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div>
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">PRIX DE CESSION</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(data.prix.prixTotal || "—")}</div>
+      <div style="font-size:11px;color:#666;margin-top:3px">${data.prix.typePaiement === "comptant" ? "Paiement comptant" : "Paiement &eacute;chelonn&eacute;"}</div>
+    </div>` : `
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">SOCI&Eacute;T&Eacute;</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(data.societe.denomination || "—")}</div>
+      <div style="font-size:11px;color:#666;margin-top:3px">${esc(data.societe.formeJuridique || "")} &mdash; Capital&nbsp;: ${esc(data.societe.capital || "—")}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div style="margin-bottom:22px">
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">C&Eacute;DANT</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCedant)}</div>
+    </div>
+    <div style="height:1px;background:#f0f0f0;margin-bottom:22px"></div>
+    <div>
+      <div style="font-size:8px;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:5px">CESSIONNAIRE</div>
+      <div style="font-size:15px;font-weight:bold;color:#1a2744">${esc(nomCessionnaire)}</div>
+    </div>`;
+
+  return `<div style="width:794px;height:1123px;background:#fff;position:relative;overflow:hidden;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif">
+  <div style="position:absolute;left:0;top:0;width:6px;height:100%;background:#1a2744"></div>
+  <div style="position:absolute;top:0;left:6px;right:0;height:3px;background:#22c55e"></div>
+  <div style="padding:65px 65px 50px 78px;height:100%;box-sizing:border-box;display:flex;flex-direction:column">
+    <div style="margin-bottom:60px">
+      <span style="font-size:22px;color:#1a2744;font-weight:bold;letter-spacing:-0.5px">Legal<span style="color:#22c55e">Corners</span></span>
+    </div>
+    <div style="margin-bottom:42px">
+      <span style="display:inline-block;border:1px solid #1a2744;padding:4px 14px;font-size:9px;letter-spacing:2px;color:#1a2744;text-transform:uppercase">Confidentiel</span>
+    </div>
+    <div style="font-size:9px;letter-spacing:2px;color:#22c55e;text-transform:uppercase;margin-bottom:10px;font-weight:bold">Document Juridique</div>
+    <div style="font-size:24px;font-weight:bold;color:#1a2744;line-height:1.25;margin-bottom:10px;font-family:Georgia,serif">${title}</div>
+    <div style="width:48px;height:3px;background:#22c55e;margin-bottom:44px"></div>
+    <div style="flex:1">${partiesBlock}</div>
+    <div style="border-top:1px solid #e5e7eb;padding-top:18px;margin-top:16px;display:flex;justify-content:space-between;align-items:flex-end">
+      <div>
+        <div style="font-size:10px;color:#444;font-weight:bold">Fait &agrave; ${esc(data.ville || "—")}, le ${esc(dateFormatted)}</div>
+        <div style="font-size:8px;color:#aaa;margin-top:3px">Document confidentiel &mdash; LegalCorners &mdash; Usage r&eacute;serv&eacute; aux professionnels</div>
+      </div>
+      <div style="font-size:8px;color:#ccc">Page de garde</div>
+    </div>
+  </div>
+</div>`;
+}
+
+// ─── Body HTML builder ────────────────────────────────────────────────────────
+function buildBodyHtml(text: string): string {
+  const lines = text.split("\n");
+  const parts: string[] = [];
+  let inList = false;
+  let inTable = false;
+  let tableRows: string[] = [];
+  let isFirstTableRow = true;
+
+  function flushList() {
+    if (inList) { parts.push(`</ul>`); inList = false; }
+  }
+  function flushTable() {
+    if (inTable) {
+      parts.push(`<table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:10px">${tableRows.join("")}</table>`);
+      tableRows = []; inTable = false; isFirstTableRow = true;
+    }
+  }
+  function esc(s: string) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    const isTableLine = t.startsWith("|") && t.endsWith("|") && t.length > 2;
+    const isBullet = t.startsWith("•") || t.startsWith("*") || t.startsWith("-\u00a0") || /^[-*]\s/.test(t);
+
+    if (!isTableLine) flushTable();
+    if (!isBullet) flushList();
+
+    // Separators
+    if (/^═{5,}/.test(t)) { parts.push(`<div style="border-top:2px solid #1a2744;margin:10px 0"></div>`); continue; }
+    if (/^─{5,}/.test(t)) { parts.push(`<div style="border-top:1px solid #ddd;margin:6px 0"></div>`); continue; }
+    // Markdown table separator
+    if (/^\|[-|: ]+\|$/.test(t)) continue;
+
+    // Table rows
+    if (isTableLine) {
+      const cells = t.split("|").map(c => c.trim()).filter(c => c !== "");
+      const nextLine = lines[i + 1]?.trim() || "";
+      const isHeader = isFirstTableRow || /^\|[-|: ]+\|$/.test(nextLine);
+      if (!inTable) inTable = true;
+      if (isHeader) {
+        tableRows.push(`<tr>${cells.map(c => `<th style="border:1px solid #1a2744;padding:7px 10px;background:#1a2744;color:#fff;font-weight:bold;text-align:left;font-size:10px">${esc(c)}</th>`).join("")}</tr>`);
+      } else {
+        const bg = tableRows.length % 2 === 1 ? "#f8f9fc" : "#fff";
+        tableRows.push(`<tr style="background:${bg}">${cells.map((c, ci) => `<td style="border:1px solid #dde;padding:6px 10px;text-align:left;font-size:10px;${ci === 0 ? "font-weight:bold;color:#1a2744;width:35%" : "color:#333"}">${esc(c)}</td>`).join("")}</tr>`);
+      }
+      if (isFirstTableRow) isFirstTableRow = false;
+      continue;
+    }
+
+    if (t === "") { parts.push(`<div style="height:6px"></div>`); continue; }
+
+    // INDEX DES DÉFINITIONS section title
+    if (/^INDEX DES D[EÉ]FINITIONS/.test(t)) {
+      parts.push(`<div style="margin:18px 0 8px;padding:10px 14px;background:#1a2744;color:#fff;font-size:11px;font-weight:bold;font-family:Georgia,serif;letter-spacing:0.5px;text-transform:uppercase">${esc(t)}</div>`);
+      continue;
+    }
+    // Main doc title (CESSION D'ACTIONS / PROCÈS-VERBAL)
+    if (/^(CESSION D|ACTE DE CESSION|PROC[EÈ]S-VERBAL|D[EÉ]CISIONS UNANIMES)/i.test(t)) {
+      parts.push(`<div style="font-size:13px;color:#1a2744;font-weight:bold;text-align:center;margin:12px 0 4px;font-family:Georgia,serif;text-transform:uppercase">${esc(t)}</div>`);
+      continue;
+    }
+    // ARTICLE / RÉSOLUTION headers
+    if (/^(ARTICLE \d+|R[EÉ]SOLUTION \d+|OUVERTURE|SIGNATURES|ORDRE DU JOUR)/i.test(t)) {
+      parts.push(`<div style="margin:16px 0 4px;padding:6px 12px;border-left:4px solid #22c55e;background:#f8f9fc;font-size:10.5px;color:#1a2744;font-weight:bold;text-transform:uppercase;letter-spacing:0.4px">${esc(t)}</div>`);
+      continue;
+    }
+    // Sub-section X.X
+    if (/^\d+\.\d+\s/.test(t)) {
+      parts.push(`<div style="font-size:10.5px;color:#1a2744;font-weight:bold;margin:10px 0 3px;padding-left:2px">${esc(t)}</div>`);
+      continue;
+    }
+    // OPTION lines
+    if (/^OPTION\s*[—\-–]/.test(t) || /^Option\s+\d/.test(t)) {
+      parts.push(`<div style="font-size:9.5px;color:#666;font-style:italic;margin:8px 0 2px;padding:3px 8px;border-left:2px solid #22c55e;background:#f0fdf4">${esc(t)}</div>`);
+      continue;
+    }
+    // D'UNE PART / D'AUTRE PART
+    if (/^D[''']?(UNE|AUTRE) PART/.test(t)) {
+      parts.push(`<div style="font-size:10px;font-weight:bold;color:#1a2744;margin:6px 0;text-align:right;font-style:italic">${esc(t)}</div>`);
+      continue;
+    }
+    // Signature blocks
+    if (/^(LE C[EÉ]DANT|LE CESSIONNAIRE|LE PR[EÉ]SIDENT|LE CONJOINT|L[''']ASSOCI[EÉ]|LE G[EÉ]RANT)/i.test(t)) {
+      parts.push(`<div style="font-weight:bold;color:#1a2744;margin:14px 0 3px;font-size:10.5px">${esc(t)}</div>`);
+      continue;
+    }
+    // Quote lines (Lu et approuvé / Bon pour)
+    if (/^["""«]/.test(t) || /^(Lu et approuv|Bon pour)/.test(t)) {
+      parts.push(`<div style="font-size:10px;color:#555;font-style:italic;margin:2px 0">${esc(t)}</div>`);
+      continue;
+    }
+    // Bullet points
+    if (isBullet) {
+      if (!inList) { parts.push(`<ul style="margin:4px 0;padding-left:20px">`); inList = true; }
+      const content = t.replace(/^[•*-]\s*/, "");
+      parts.push(`<li style="margin:2px 0;font-size:10.5px;color:#333">${esc(content)}</li>`);
+      continue;
+    }
+    // Signature fill-in lines
+    if (/^\[.*(Date|Signature|Nom|Pr[eé]nom).*\]/.test(t)) {
+      parts.push(`<div style="font-size:10px;color:#888;margin:2px 0;font-style:italic">${esc(t)}</div>`);
+      continue;
+    }
+    // Document confidentiel footer line
+    if (/^Document confidentiel/.test(t)) {
+      parts.push(`<div style="font-size:9px;color:#aaa;margin:10px 0 2px;text-align:center;border-top:1px solid #eee;padding-top:6px">${esc(t)}</div>`);
+      continue;
+    }
+    // Regular paragraph
+    parts.push(`<p style="margin:3px 0;font-size:10.5px;color:#222;line-height:1.55">${esc(t)}</p>`);
+  }
+
+  flushList();
+  flushTable();
+  return `<div style="padding:55px 65px;font-family:Arial,Helvetica,sans-serif;line-height:1.55;color:#222">${parts.join("")}</div>`;
+}
+
+// ─── PDF helper ───────────────────────────────────────────────────────────────
+async function downloadPdf(content: string, filename: string, data: FormData, docType: "acte" | "pv") {
+  const { jsPDF } = await import("jspdf");
+  const { default: html2canvas } = await import("html2canvas");
+
+  const A4_W_PX = 794;
+
+  async function renderHtmlToCanvas(html: string, fixedHeight?: number): Promise<HTMLCanvasElement> {
+    const wrapper = document.createElement("div");
+    Object.assign(wrapper.style, {
+      position: "absolute",
+      top: "-99999px",
+      left: "-99999px",
+      width: `${A4_W_PX}px`,
+      background: "#fff",
+      boxSizing: "border-box",
+      ...(fixedHeight ? { height: `${fixedHeight}px`, overflow: "hidden" } : {}),
+    });
+    wrapper.innerHTML = html;
+    document.body.appendChild(wrapper);
+    const canvas = await html2canvas(wrapper, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      width: A4_W_PX,
+      ...(fixedHeight ? { height: fixedHeight } : {}),
+    });
+    document.body.removeChild(wrapper);
+    return canvas;
+  }
+
+  // Render cover page (fixed A4 height)
+  const coverCanvas = await renderHtmlToCanvas(buildCoverHtml(data, docType), 1123);
+  // Render body
+  const bodyCanvas = await renderHtmlToCanvas(buildBodyHtml(content));
+
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const A4_W = coverCanvas.width;
+  const A4_H = Math.round(A4_W * (297 / 210));
+
+  // ── Page 1: cover ──
+  const coverPage = document.createElement("canvas");
+  coverPage.width = A4_W;
+  coverPage.height = A4_H;
+  const cCtx = coverPage.getContext("2d")!;
+  cCtx.fillStyle = "#fff";
+  cCtx.fillRect(0, 0, A4_W, A4_H);
+  cCtx.drawImage(coverCanvas, 0, 0, A4_W, Math.min(A4_H, coverCanvas.height), 0, 0, A4_W, A4_H);
+  doc.addImage(coverPage.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
+
+  // ── Body pages ──
+  const bodyA4W = bodyCanvas.width;
+  const bodyA4H = Math.round(bodyA4W * (297 / 210));
+  let pageTop = 0;
+  let pageNum = 2;
+  const totalPages = Math.ceil(bodyCanvas.height / bodyA4H) + 1;
+
+  while (pageTop < bodyCanvas.height) {
+    doc.addPage();
+    const sliceH = Math.min(bodyA4H, bodyCanvas.height - pageTop);
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = bodyA4W;
+    pageCanvas.height = bodyA4H;
+    const ctx = pageCanvas.getContext("2d")!;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, bodyA4W, bodyA4H);
+    ctx.drawImage(bodyCanvas, 0, pageTop, bodyA4W, sliceH, 0, 0, bodyA4W, sliceH);
+    doc.addImage(pageCanvas.toDataURL("image/jpeg", 0.93), "JPEG", 0, 0, 210, 297);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`${pageNum} / ${totalPages}`, 105, 291, { align: "center" });
+    doc.text("Document confidentiel — LegalCorners", 20, 291);
+    pageTop += bodyA4H;
+    pageNum++;
+  }
+
+  doc.save(filename);
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+export default function CessionParts() {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [data, setData] = useState<FormData>(initialData);
+  const [generated, setGenerated] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("");
+  const [error, setError] = useState("");
+  const [acteText, setActeText] = useState("");
+  const [pvText, setPvText] = useState("");
+  const [declarationText, setDeclarationText] = useState("");
+  const [preview, setPreview] = useState<"acte" | "pv" | "declaration" | null>(null);
+
+  const currentStep = STEPS[stepIndex];
+
+  function set(partial: Partial<FormData>) {
+    setData(prev => ({ ...prev, ...partial }));
+  }
+
+  async function handleGenerate() {
+    setLoading(true);
+    setError("");
+    setLoadingMsg("Claude rédige l'acte de cession...");
+
+    try {
+      const res = await fetch("/api/generate-documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formData: data, type: "both" }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erreur serveur");
+      }
+
+      setLoadingMsg("Claude rédige le PV AG...");
+      const result = await res.json();
+      setActeText(result.acte || "");
+      setPvText(result.pv || "");
+      setDeclarationText(result.declaration || "");
+      setGenerated(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur inconnue");
+    } finally {
+      setLoading(false);
+      setLoadingMsg("");
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-[#1a2744] text-white px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="text-white font-bold text-xl tracking-tight">
+            Legal<span className="text-green-400">Corners</span>
+          </div>
+        </div>
+        <span className="text-sm text-gray-300">Cession de parts sociales / actions</span>
+        <a href="#" className="text-sm text-gray-300 hover:text-white">Connexion</a>
+      </header>
+
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        {/* Step progress */}
+        <div className="flex items-start gap-2 mb-8 overflow-x-auto pb-2">
+          {STEPS.map((step, i) => (
+            <div key={step.id} className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => i < stepIndex && setStepIndex(i)}
+                className="flex flex-col items-center gap-1"
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                  i < stepIndex ? "bg-green-500 text-white" :
+                  i === stepIndex ? "bg-[#1a2744] text-white" :
+                  "bg-gray-200 text-gray-500"
+                }`}>
+                  {i < stepIndex ? "✓" : i + 1}
+                </div>
+                <span className={`text-xs text-center max-w-[70px] leading-tight ${i === stepIndex ? "text-[#1a2744] font-semibold" : "text-gray-500"}`}>
+                  {step.label}
+                </span>
+              </button>
+              {i < STEPS.length - 1 && (
+                <div className={`w-8 h-0.5 mt-[-10px] ${i < stepIndex ? "bg-green-500" : "bg-gray-200"}`} />
               )}
-            >
-              {s.id < step ? <Check className="w-3 h-3" /> : s.id}
             </div>
           ))}
         </div>
-      </div>
-      <div className="flex">
-        {/* Sidebar - Desktop */}
-        <aside className="hidden lg:block w-72 bg-white border-r border-gray-100 min-h-[calc(100vh-73px)] sticky top-[73px]">
-          <div className="p-6 pt-4">
-            <h2 className="text-[#1E3A8A] font-semibold mb-1">Cession de parts</h2>
-            <p className="text-sm text-gray-500 mb-6">Document juridique</p>
-            
-            {/* Steps */}
-            <div className="space-y-1">
-              {STEPS.map((s, index) => {
-                const isActive = s.id === step;
-                const isCompleted = s.id < step;
-                
-                return (
-                  <div key={s.id} className="flex items-start gap-3">
-                    <div className="flex flex-col items-center">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all",
-                        isActive ? "bg-[#5D9CEC] text-white" : 
-                        isCompleted ? "bg-green-500 text-white" : 
-                        "bg-gray-100 text-gray-400"
-                      )}>
-                        {isCompleted ? <Check className="w-5 h-5" /> : s.id}
-                      </div>
-                      {index < STEPS.length - 1 && (
-                        <div className={cn(
-                          "w-0.5 h-6 mt-1",
-                          isCompleted ? "bg-green-500" : "bg-gray-200"
-                        )} />
-                      )}
-                    </div>
-                    <div className="pt-2">
-                      <p className={cn(
-                        "text-sm font-medium",
-                        isActive ? "text-[#1E3A8A]" : "text-gray-500"
-                      )}>
-                        {s.label}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
+
+        {/* Loading overlay */}
+        {loading && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 text-center shadow-2xl">
+              <div className="w-12 h-12 border-4 border-[#1a2744] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="font-semibold text-[#1a2744]">{loadingMsg || "Génération en cours..."}</p>
+              <p className="text-sm text-gray-500 mt-2">Claude rédige vos documents juridiques</p>
             </div>
           </div>
-          
-          {/* Help Box */}
-          <div className="absolute bottom-6 left-6 right-6">
-            <div className="bg-slate-50 rounded-xl p-4">
-              <h3 className="font-semibold text-[#1E3A8A] mb-2">Besoin d&apos;aide ?</h3>
-              <p className="text-xs text-[#1E3A8A]/80 mb-3">
-                Notre equipe est disponible pour vous accompagner
-              </p>
-              <a href="mailto:support@legalcorners.fr" className="text-[#5D9CEC] text-sm font-medium">
-                support@legalcorners.fr
-              </a>
+        )}
+
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+              ⚠ {error}
             </div>
-          </div>
-        </aside>
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-12">
-          <div className="max-w-4xl mx-auto">
-        <AnimatePresence mode="wait">
-          {/* STEP 1: Type de cession */}
-          {step === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
-            >
-              {/* Titre centre */}
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A]">
-                  Cession d&apos;actions / parts sociales
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Generez votre acte de cession en quelques minutes
-                </p>
-              </div>
-  {/* Type de cession */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-xl font-semibold text-[#3B6FD9]">Que souhaitez-vous ceder ?</h2>
-                  <TooltipHelp title={TOOLTIPS.typeCession.title} content={TOOLTIPS.typeCession.content} />
-                </div>
-                <p className="text-gray-600 mb-6">Selectionnez le type de titres concernes par la cession</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setTypeCession("actions")}
-                    className={cn(
-                      "p-6 rounded-xl border-2 text-left transition-all",
-                      typeCession === "actions"
-                        ? "border-[#3B6FD9] bg-[#5D9CEC]/10 shadow-md"
-                        : "border-gray-200 hover:border-[#3B6FD9]/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Briefcase className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <span className="font-bold text-lg text-[#1E3A8A]">Actions</span>
-                    </div>
-                    <p className="text-sm text-gray-600">SAS, SASU, SA, SCA</p>
-                  </button>
-                  <button
-                    onClick={() => setTypeCession("parts-sociales")}
-                    className={cn(
-                      "p-6 rounded-xl border-2 text-left transition-all",
-                      typeCession === "parts-sociales"
-                        ? "border-[#3B6FD9] bg-[#5D9CEC]/10 shadow-md"
-                        : "border-gray-200 hover:border-[#3B6FD9]/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-indigo-600" />
-                      </div>
-                      <span className="font-bold text-lg text-[#1E3A8A]">Parts sociales</span>
-                    </div>
-                    <p className="text-sm text-gray-600">SARL, EURL, SCI, SNC</p>
-                  </button>
-                </div>
-              </div>
-              {/* Option changement de dirigeant */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-blue-50 rounded-xl p-6 border border-blue-200"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <input
-                    type="checkbox"
-                    id="changement-dirigeant"
-                    checked={includChangementDirigeant}
-                    onChange={(e) => setIncludChangementDirigeant(e.target.checked)}
-                    className="w-5 h-5 rounded cursor-pointer accent-[#3B6FD9]"
-                  />
-                  <label htmlFor="changement-dirigeant" className="cursor-pointer flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-[#1E3A8A]">Incluire un changement de dirigeant</h3>
-                    <TooltipHelp title="Changement de dirigeant" content="Genere egalement un PV de changement de dirigeant (ancien dirigeant part, nouveau dirigeant arrive)" />
-                  </label>
-                </div>
-                <p className="text-sm text-gray-600">La cession peut s'accompagner d'un changement de gerant/president. Un PV sera genere pour ce changement.</p>
-              </motion.div>
-              {/* Type de propriété */}
-              {typeCession && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl p-6 border border-gray-200"
-                >
-                  <h2 className="text-xl font-semibold text-[#1E3A8A] mb-2">Type de transfert de propriété</h2>
-                  <p className="text-gray-600 mb-6">Comment souhaitez-vous transférer les {typeCession === "actions" ? "actions" : "parts sociales"} ?</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button
-                      onClick={() => setTypePropriete("pleine-propriete")}
-                      className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
-                        typePropriete === "pleine-propriete"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Pleine propriété</span>
-                      <span className="text-xs text-gray-500">Transfert total</span>
-                    </button>
-                    <button
-                      onClick={() => setTypePropriete("usufruit")}
-                      className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
-                        typePropriete === "usufruit"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Usufruit</span>
-                      <span className="text-xs text-gray-500">Droit d&apos;usage</span>
-                    </button>
-                    <button
-                      onClick={() => setTypePropriete("nue-propriete")}
-                      className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
-                        typePropriete === "nue-propriete"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Nue-propriété</span>
-                      <span className="text-xs text-gray-500">Sans usufruit</span>
-                    </button>
-                  </div>
-                  <Collapsible className="mt-4">
-                    <CollapsibleTrigger className="flex items-center gap-2 text-sm text-[#1E3A8A]">
-                      <HelpCircle className="w-4 h-4" />
-                      <span>Quelle différence ?</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700 space-y-2">
-                      <p><strong>Pleine propriété :</strong> Le cessionnaire acquiert tous les droits (vote, dividendes, vente).</p>
-                      <p><strong>Usufruit :</strong> Le cessionnaire perçoit les dividendes mais le nu-propriétaire conserve le titre.</p>
-                      <p><strong>Nue-propriété :</strong> Le cessionnaire devient propriétaire mais l&apos;usufruitier conserve les revenus.</p>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </motion.div>
-              )}
-            </motion.div>
           )}
-          {/* STEP 2: Les parties (avant paiement) */}
-          {step === 2 && (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Qui sont les parties ?</h1>
-                <p className="text-gray-600">Quelques informations pour préparer votre document</p>
-              </div>
-              {/* Cédant */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cédant (vendeur)</h3>
-                <div className="grid grid-cols-2 gap-4">
+          {!generated ? (
+            <>
+              {currentStep.id === "societe" && <StepSociete data={data} set={set} />}
+              {currentStep.id === "cedant" && <StepCedant data={data} set={set} />}
+              {currentStep.id === "cessionnaire" && <StepCessionnaire data={data} set={set} />}
+              {currentStep.id === "prix" && <StepPrix data={data} set={set} />}
+              {currentStep.id === "options" && <StepOptions data={data} set={set} />}
+              {currentStep.id === "pv" && <StepPV data={data} set={set} />}
+              {currentStep.id === "recap" && <StepRecap data={data} onGenerate={handleGenerate} />}
+
+              {/* Navigation */}
+              <div className="flex justify-between mt-8 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => setStepIndex(i => Math.max(0, i - 1))}
+                  disabled={stepIndex === 0}
+                  className="px-5 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  ← Précédent
+                </button>
+                {stepIndex < STEPS.length - 1 && (
                   <button
-                    onClick={() => setCedantType("physique")}
-                    className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
-                      cedantType === "physique"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
+                    onClick={() => setStepIndex(i => Math.min(STEPS.length - 1, i + 1))}
+                    className="px-5 py-2 rounded-lg bg-[#1a2744] text-white text-sm font-medium hover:bg-[#2a3754]"
                   >
-                    <User className="w-8 h-8 mx-auto mb-2 text-[#1E3A8A]" />
-                    <span className="font-medium text-[#1E3A8A] block">Personne physique</span>
-                    <span className="text-xs text-gray-500">Un particulier</span>
+                    Suivant →
                   </button>
-                  <button
-                    onClick={() => setCedantType("morale")}
-                    className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
-                      cedantType === "morale"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    <Building2 className="w-8 h-8 mx-auto mb-2 text-[#1E3A8A]" />
-                    <span className="font-medium text-[#1E3A8A] block">Personne morale</span>
-                    <span className="text-xs text-gray-500">Une société</span>
-                  </button>
-                </div>
-              </div>
-              {/* Cessionnaire */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cessionnaire (acheteur)</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <button
-                    onClick={() => setCessionnaireType("physique")}
-                    className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
-                      cessionnaireType === "physique"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    <User className="w-8 h-8 mx-auto mb-2 text-[#1E3A8A]" />
-                    <span className="font-medium text-[#1E3A8A] block">Personne physique</span>
-                  </button>
-                  <button
-                    onClick={() => setCessionnaireType("morale")}
-                    className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
-                      cessionnaireType === "morale"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    <Building2 className="w-8 h-8 mx-auto mb-2 text-[#1E3A8A]" />
-                    <span className="font-medium text-[#1E3A8A] block">Personne morale</span>
-                  </button>
-                </div>
-              </div>
-              {/* Estimation */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-[#1E3A8A] mb-4">Estimation de la cession</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre de {typeCession === "actions" ? "actions" : "parts"} à céder
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="Ex: 100"
-                      value={nombrePartsApprox}
-                      onChange={(e) => setNombrePartsApprox(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Prix total estimé (€)
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="Ex: 10000"
-                      value={prixApprox}
-                      onChange={(e) => setPrixApprox(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* Expert-comptable pour évaluation */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-[#1E3A8A] mb-2">Évaluation des parts/actions</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Avez-vous besoin d&apos;un expert-comptable pour évaluer la valeur des parts ou actions ?
-                </p>
-                
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setBesoinExpertComptable("oui")}
-                    className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4",
-                      besoinExpertComptable === "oui"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                      <Scale className="w-5 h-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <span className="font-medium text-[#1E3A8A] block">Oui, je souhaite une évaluation</span>
-                      <span className="text-xs text-gray-500">Un expert-comptable partenaire vous contactera (+150€)</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setBesoinExpertComptable("deja")}
-                    className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4",
-                      besoinExpertComptable === "deja"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <span className="font-medium text-[#1E3A8A] block">J&apos;ai déjà un expert-comptable</span>
-                      <span className="text-xs text-gray-500">L&apos;évaluation sera faite de mon côté</span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => setBesoinExpertComptable("non")}
-                    className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4",
-                      besoinExpertComptable === "non"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <span className="font-medium text-[#1E3A8A] block">Non merci, je connais déjà le prix</span>
-                      <span className="text-xs text-gray-500">Le prix a deja ete convenu entre les parties</span>
-                    </div>
-                  </button>
-                </div>
-                
-                {besoinExpertComptable === "oui" && (
-                  <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-sm text-amber-800">
-                      <Info className="w-4 h-4 inline mr-1" />
-                      Un expert-comptable vous contactera sous 24h pour réaliser l&apos;évaluation. Ce service est facturé 150€ HT en supplément.
-                    </p>
-                  </div>
                 )}
               </div>
-            </motion.div>
-          )}
-          {/* STEP 3: Paiement */}
-          {step === 3 && (
-            <motion.div
-              key="step3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Choisissez votre formule</h1>
-                <p className="text-gray-600">Sélectionnez l&apos;offre adaptée à vos besoins</p>
-              </div>
-              {/* Deux formules */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {/* Formule Essentiel - 199€ */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedFormule("essentiel")}
-                  className={cn(
-                    "relative p-6 rounded-2xl border-2 text-left transition-all",
-                    selectedFormule === "essentiel"
-                      ? "border-[#5D9CEC] bg-[#5D9CEC]/5 shadow-lg"
-                      : "border-gray-200 hover:border-[#5D9CEC]/50 hover:shadow-md"
-                  )}
-                >
-                  {selectedFormule === "essentiel" && (
-                    <div className="absolute top-4 right-4">
-                      <CheckCircle className="w-6 h-6 text-[#5D9CEC]" />
-                    </div>
-                  )}
-                  
-                  <p className="text-sm font-medium text-[#5D9CEC] mb-2">ESSENTIEL</p>
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold text-[#1E3A8A]">199€</span>
-                    <span className="text-gray-500">HT</span>
-                  </div>
-                  
-                  <ul className="space-y-3 text-sm">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Acte de cession complet</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">PV d&apos;assemblée</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Registre des mouvements de titres</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Formulaire d&apos;enregistrement fiscal</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-gray-400">
-                      <X className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Vérification par un juriste</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-gray-400">
-                      <X className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Accompagnement téléphonique</span>
-                    </li>
-                  </ul>
-                </button>
-                {/* Formule Premium - 299€ */}
-                <button
-                  type="button"
-                  onClick={() => setSelectedFormule("premium")}
-                  className={cn(
-                    "relative p-6 rounded-2xl border-2 text-left transition-all",
-                    selectedFormule === "premium"
-                      ? "border-[#5D9CEC] bg-[#5D9CEC]/5 shadow-lg"
-                      : "border-gray-200 hover:border-[#5D9CEC]/50 hover:shadow-md"
-                  )}
-                >
-                  {/* Badge recommandé */}
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-[#5D9CEC] to-[#3B6FD9] text-white text-xs font-semibold px-3 py-1 rounded-full">
-                      RECOMMANDÉ
-                    </span>
-                  </div>
-                  
-                  {selectedFormule === "premium" && (
-                    <div className="absolute top-4 right-4">
-                      <CheckCircle className="w-6 h-6 text-[#5D9CEC]" />
-                    </div>
-                  )}
-                  
-                  <p className="text-sm font-medium text-[#5D9CEC] mb-2">PREMIUM</p>
-                  <div className="flex items-baseline gap-1 mb-4">
-                    <span className="text-3xl font-bold text-[#1E3A8A]">299€</span>
-                    <span className="text-gray-500">HT</span>
-                  </div>
-                  
-                  <ul className="space-y-3 text-sm">
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Acte de cession complet</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">PV d&apos;assemblée</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Registre des mouvements de titres</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">Formulaire d&apos;enregistrement fiscal</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700 font-medium">Vérification par un juriste</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700 font-medium">Accompagnement téléphonique</span>
-                    </li>
-                  </ul>
-                </button>
-              </div>
-              {/* Simulateur frais d'État */}
-              <div className="bg-amber-50 rounded-xl p-6 border border-amber-200 mb-6">
-                <h2 className="font-semibold text-amber-800 mb-4 flex items-center gap-2">
-                  <Scale className="w-5 h-5" />
-                  Frais obligatoires (versés aux administrations)
-                </h2>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Frais de Greffe</p>
-                    <p className="font-semibold text-amber-900">~180€</p>
-                  </div>
-                  <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Annonce légale</p>
-                    <p className="font-semibold text-amber-900">~200€</p>
-                  </div>
-                  <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Droits d&apos;enregistrement</p>
-                    <p className="font-semibold text-amber-900">
-                      {(() => {
-                        const prix = parseFloat(prixTotal) || 0;
-                        if (prix <= 0) return "3% du prix";
-                        const droits = Math.max(25, prix * 0.03);
-                        return `~${Math.round(droits)}€`;
-                      })()}
-                    </p>
-                  </div>
+            </>
+          ) : (
+            /* ── Generated documents ── */
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xl">✓</div>
+                <div>
+                  <h2 className="font-bold text-[#1a2744] text-lg">Document généré avec succès !</h2>
+                  <p className="text-sm text-gray-500">Votre acte de cession et PV AG sont prêts</p>
                 </div>
-                
-                <p className="text-xs text-amber-600 text-center">
-                  Ces frais ne nous reviennent pas. Ils sont versés directement aux administrations.
-                </p>
               </div>
-              {/* Paiement */}
-              {selectedFormule && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl p-6 border border-gray-200"
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => setPreview(preview === "acte" ? null : "acte")}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[#1a2744] text-white rounded-xl font-medium hover:bg-[#2a3754]"
                 >
-                  <h2 className="font-semibold text-[#1E3A8A] mb-4">Paiement sécurisé</h2>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                      <Input type="email" placeholder="votre@email.com" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de carte</label>
-                      <Input placeholder="4242 4242 4242 4242" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date d&apos;expiration</label>
-                        <Input placeholder="MM/AA" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
-                        <Input placeholder="123" />
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={handleNext}
-                    className="w-full mt-6 bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white py-6 text-lg"
+                  <span>👁 Aperçu — Acte de cession</span>
+                  <span>{preview === "acte" ? "▲" : "▼"}</span>
+                </button>
+                {preview === "acte" && (
+                  <pre className="text-xs bg-gray-50 border rounded-xl p-4 max-h-96 overflow-y-auto whitespace-pre-wrap font-mono">{acteText}</pre>
+                )}
+
+                <button
+                  onClick={() => setPreview(preview === "pv" ? null : "pv")}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-[#1a2744] text-white rounded-xl font-medium hover:bg-[#2a3754]"
+                >
+                  <span>👁 Aperçu — PV Assemblée Générale</span>
+                  <span>{preview === "pv" ? "▲" : "▼"}</span>
+                </button>
+                {preview === "pv" && (
+                  <pre className="text-xs bg-gray-50 border rounded-xl p-4 max-h-96 overflow-y-auto whitespace-pre-wrap font-mono">{pvText}</pre>
+                )}
+
+                {/* Acte download */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => downloadPdf(acteText, `acte-cession-${data.societe.denomination || "societe"}.pdf`, data, "acte")}
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
                   >
-                    Payer {selectedFormule === "essentiel" ? "199" : "299"}€ HT et continuer
-                  </Button>
-                  <p className="text-center text-xs text-gray-500 mt-3">
-                    Soit {selectedFormule === "essentiel" ? "238,80" : "358,80"}€ TTC (TVA 20%)
-                  </p>
-                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500">
-                    <Shield className="w-4 h-4" />
-                    <span>Paiement sécurisé par Stripe</span>
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-          {/* STEP 4: Société concernée */}
-          {step === 4 && (
-            <motion.div
-              key="step4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">La sociét�� concernée</h1>
-                <p className="text-gray-600">Recherchez la société par son numéro SIREN</p>
-              </div>
-              {/* Recherche par SIREN ou Nom */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
-                <h3 className="font-semibold text-[#1E3A8A] mb-4 flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
-                  Recherche par SIREN ou Nom
-                </h3>
-                
-                <div className="flex gap-3">
-                  <div className="flex-1 relative">
-                    <Input
-                      placeholder="Entrez le SIREN (9 chiffres) ou le nom de la société"
-                      value={sirenSearch}
-                      onChange={(e) => {
-                        setSirenSearch(e.target.value);
-                        setShowResults(false);
-                        setSearchResults([]);
-                      }}
-                      className="text-lg"
-                    />
-                    
-                    {/* Liste déroulante des résultats */}
-                    {showResults && searchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {searchResults.map((result, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 flex justify-between items-center"
-                            onClick={async () => {
-                              // Sélectionner cette société et charger ses détails
-                              setSirenLoading(true);
-                              setShowResults(false);
-                              try {
-                                const response = await fetch(`/api/siren?siren=${result.siren}`);
-                                if (response.ok) {
-                                  const data = await response.json();
-                                  setSociete({
-                                    ...societe,
-                                    denomination: data.denominationSociale || result.nom,
-                                    formeJuridique: data.formeJuridique?.toUpperCase() || "",
-                                    siegeAdresse: data.siegeSocial || "",
-                                    siegeCP: data.codePostal || "",
-                                    siegeVille: data.ville || result.ville || "",
-                                    capital: data.capitalSocial || "",
-                                    rcsNumero: result.siren,
-                                    rcsVille: data.ville || result.ville || "",
-                                  });
-                                  setSirenFound(true);
-                                  setSirenSearch(result.nom);
-                                }
-                              } catch {
-                                // Utiliser les infos de base
-                                setSociete({...societe, denomination: result.nom, rcsNumero: result.siren, siegeVille: result.ville || ""});
-                                setSirenFound(true);
-                              } finally {
-                                setSirenLoading(false);
-                              }
-                            }}
-                          >
-                            <div>
-                              <div className="font-medium text-gray-900">{result.nom}</div>
-                              {result.ville && <div className="text-sm text-gray-500">{result.ville}</div>}
-                            </div>
-                            <div className="text-sm text-blue-600 font-mono">{result.siren}</div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <Button
+                    ⬇ Acte (.pdf)
+                  </button>
+                  <button
                     onClick={async () => {
-                      if (sirenSearch.length < 2) {
-                        alert("Entrez au moins 2 caractères pour rechercher");
-                        return;
-                      }
-                      setSirenLoading(true);
-                      setSirenError(null);
-                      setSearchResults([]);
-                      setShowResults(false);
-                      try {
-                        // Détecter si c'est un SIREN (9 chiffres) ou un nom
-                        const cleanValue = sirenSearch.replace(/\s/g, '');
-                        const isSiren = /^\d{9}$/.test(cleanValue);
-                        
-                        if (isSiren) {
-                          // Recherche directe par SIREN
-                          const response = await fetch(`/api/siren?siren=${cleanValue}`);
-                          if (response.ok) {
-                            const data = await response.json();
-                            setSociete({
-                              ...societe,
-                              denomination: data.denominationSociale || "",
-                              formeJuridique: data.formeJuridique?.toUpperCase() || "",
-                              siegeAdresse: data.siegeSocial || "",
-                              siegeCP: data.codePostal || "",
-                              siegeVille: data.ville || "",
-                              capital: data.capitalSocial || "",
-                              rcsNumero: cleanValue,
-                              rcsVille: data.ville || "",
-                            });
-                            setSirenFound(true);
-                          } else {
-                            setSirenError("SIREN non trouvé");
-                          }
-                        } else {
-                          // Recherche par nom - afficher la liste des résultats
-                          const response = await fetch(`/api/siren?nom=${encodeURIComponent(sirenSearch)}&list=true`);
-                          if (response.ok) {
-                            const data = await response.json();
-                            if (data.resultats && data.resultats.length > 0) {
-                              setSearchResults(data.resultats);
-                              setShowResults(true);
-                            } else {
-                              setSirenError("Aucune société trouvée");
-                            }
-                          } else {
-                            setSirenError("Aucune société trouvée avec ce nom");
-                          }
-                        }
-                      } catch {
-                        setSirenError("Erreur lors de la recherche");
-                      } finally {
-                        setSirenLoading(false);
-                      }
+                      const blob = await generateActeDocx(acteText, data);
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `acte-cession-${data.societe.denomination || "societe"}.docx`;
+                      a.click();
+                      URL.revokeObjectURL(url);
                     }}
-                    disabled={sirenSearch.length < 2 || sirenLoading}
-                    className="bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white px-6"
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
                   >
-                    {sirenLoading ? "Recherche..." : "Rechercher"}
-                  </Button>
-                </div>
-                
-                {sirenError && (
-                  <p className="text-amber-600 text-sm mt-2 flex items-center gap-1">
-                    <Info className="w-4 h-4" />
-                    {sirenError}
-                  </p>
-                )}
-                
-                <p className="text-xs text-gray-500 mt-2">
-                  Recherchez par SIREN (9 chiffres) ou par nom de société (ex: LAW AND CO, LEGALCORNERS)</p>
-              </div>
-              {/* Formulaire société - affiché après recherche ou directement */}
-              {(sirenFound || societe.rcsNumero) && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl p-6 border border-gray-200 space-y-4"
-                >
-                  <h3 className="font-semibold text-[#1E3A8A] mb-2">Informations de la société</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Dénomination sociale *</label>
-                      <Input
-                        placeholder="Nom de la société"
-                        value={societe.denomination}
-                        onChange={(e) => setSociete({...societe, denomination: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Forme juridique *</label>
-                      <Select value={societe.formeJuridique} onValueChange={(v) => setSociete({...societe, formeJuridique: v})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="SAS">SAS</SelectItem>
-                          <SelectItem value="SASU">SASU</SelectItem>
-                          <SelectItem value="SARL">SARL</SelectItem>
-                          <SelectItem value="EURL">EURL</SelectItem>
-                          <SelectItem value="SA">SA</SelectItem>
-                          <SelectItem value="SCI">SCI</SelectItem>
-                          <SelectItem value="SNC">SNC</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Adresse du siège social *</label>
-                    <Input
-                      placeholder="Numéro et rue"
-                      value={societe.siegeAdresse}
-                      onChange={(e) => setSociete({...societe, siegeAdresse: e.target.value})}
-                    />
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
-                      <Input
-                        placeholder="75001"
-                        value={societe.siegeCP}
-                        onChange={(e) => setSociete({...societe, siegeCP: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
-                      <Input
-                        placeholder="Paris"
-                        value={societe.siegeVille}
-                        onChange={(e) => setSociete({...societe, siegeVille: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
-                      <Input
-                        value={societe.siegePays}
-                        onChange={(e) => setSociete({...societe, siegePays: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Capital social (€) *</label>
-                      <Input
-                        type="number"
-                        placeholder="10000"
-                        value={societe.capital}
-                        onChange={(e) => setSociete({...societe, capital: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Nombre total de {typeCession === "actions" ? "actions" : "parts"} *</label>
-                      <Input
-                        type="number"
-                        placeholder="1000"
-                        value={societe.nombreTotalParts}
-                        onChange={(e) => setSociete({...societe, nombreTotalParts: e.target.value})}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">RCS (ville) *</label>
-                      <Input
-                        placeholder="Paris"
-                        value={societe.rcsVille}
-                        onChange={(e) => setSociete({...societe, rcsVille: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Numéro SIREN *</label>
-                      <Input
-                        placeholder="123456789"
-                        value={societe.rcsNumero}
-                        onChange={(e) => setSociete({...societe, rcsNumero: e.target.value})}
-                        disabled
-                        className="bg-gray-50"
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-              
-              {/* Lien pour saisie manuelle si pas de SIREN */}
-              {!sirenFound && !societe.rcsNumero && (
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setSirenFound(true)}
-                    className="text-[#5D9CEC] hover:underline text-sm"
-                  >
-                    Je ne connais pas le SIREN, saisir manuellement
+                    ⬇ Acte (.docx)
                   </button>
                 </div>
-              )}
-            </motion.div>
-          )}
-          {/* STEP 5: Informations cédant */}
-          {step === 5 && (
-            <motion.div
-              key="step5"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Informations du Cédant</h1>
-                <p className="text-gray-600">Le vendeur des {typeCession === "actions" ? "actions" : "parts sociales"}</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-                {cedantType === "physique" ? (
+
+                {/* PV download */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => downloadPdf(pvText, `pv-ag-${data.societe.denomination || "societe"}.pdf`, data, "pv")}
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
+                  >
+                    ⬇ PV AG (.pdf)
+                  </button>
+                  <button
+                    onClick={async () => {
+                      const blob = await generatePVDocx(pvText, data);
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `pv-ag-${data.societe.denomination || "societe"}.docx`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-[#1a2744] text-[#1a2744] rounded-xl font-medium hover:bg-[#1a2744] hover:text-white transition-colors text-sm"
+                  >
+                    ⬇ PV AG (.docx)
+                  </button>
+                </div>
+
+                {declarationText && (
                   <>
-                    <div className="grid grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Civilité *</label>
-                        <Select value={cedantPhysique.civilite} onValueChange={(v) => setCedantPhysique({...cedantPhysique, civilite: v as "M." | "Mme"})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="--" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="M.">M.</SelectItem>
-                            <SelectItem value="Mme">Mme</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="col-span-3 grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                          <Input
-                            placeholder="Nom"
-                            value={cedantPhysique.nom}
-                            onChange={(e) => setCedantPhysique({...cedantPhysique, nom: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Qualite *</label>
-                          <Input
-                            placeholder="Président"
-                            value={cedantMorale.representantQualite}
-                            onChange={(e) => setCedantMorale({...cedantMorale, representantQualite: e.target.value})}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email de la société</label>
-                      <Input
-                        type="email"
-                        placeholder="contact@societe.com"
-                        value={cedantMorale.email}
-                        onChange={(e) => setCedantMorale({...cedantMorale, email: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre de {typeCession === "actions" ? "actions" : "parts"} detenues *
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="100"
-                        value={cedantNombreParts}
-                        onChange={(e) => setCedantNombreParts(e.target.value)}
-                      />
-                    </div>
-                    {/* Regime matrimonial */}
-                    <div className="pt-4 border-t">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h4 className="font-medium text-[#1E3A8A]">Regime matrimonial *</h4>
-                        <TooltipHelp title={TOOLTIPS.regimeMatrimonial.title} content={TOOLTIPS.regimeMatrimonial.content} />
-                      </div>
-                      <div className="grid grid-cols-3 gap-3">
-                        <button
-                          onClick={() => setCedantRegimeMatrimonial("communaute")}
-                          className={cn(
-                            "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                            cedantRegimeMatrimonial === "communaute"
-                              ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                              : "border-gray-200 hover:border-[#1E3A8A]/50"
-                          )}
-                        >
-                          Communauté de biens
-                        </button>
-                        <button
-                          onClick={() => setCedantRegimeMatrimonial("separation")}
-                          className={cn(
-                            "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                            cedantRegimeMatrimonial === "separation"
-                              ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                              : "border-gray-200 hover:border-[#1E3A8A]/50"
-                          )}
-                        >
-                          Séparation de biens
-                        </button>
-                        <button
-                          onClick={() => setCedantRegimeMatrimonial("celibataire")}
-                          className={cn(
-                            "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                            cedantRegimeMatrimonial === "celibataire"
-                              ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                              : "border-gray-200 hover:border-[#1E3A8A]/50"
-                          )}
-                        >
-                          Ni marié ni pacsé
-                        </button>
-                      </div>
-                      {cedantRegimeMatrimonial === "communaute" && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200"
-                        >
-                          <p className="text-sm text-amber-800 mb-3">
-                            <AlertTriangle className="w-4 h-4 inline mr-1" />
-                            Le conjoint doit consentir à la cession
-                          </p>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-amber-800 mb-1">Nom du conjoint *</label>
-                              <Input
-                                placeholder="Nom"
-                                value={cedantConjointNom}
-                                onChange={(e) => setCedantConjointNom(e.target.value)}
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-medium text-amber-800 mb-1">Prénom du conjoint *</label>
-                              <Input
-                                placeholder="Prénom"
-                                value={cedantConjointPrenom}
-                                onChange={(e) => setCedantConjointPrenom(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    {/* Recherche par SIREN ou Nom pour cedant morale */}
-                    {!cedantSirenFound && !cedantMorale.rcsNumero && (
-                      <div className="bg-slate-50 rounded-xl p-4 mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Recherche par SIREN ou Nom du cédant
-                        </label>
-                        <div className="flex gap-2">
-                          <div className="flex-1 relative">
-                            <Input
-                              placeholder="SIREN (9 chiffres) ou nom de la société"
-                              value={cedantSirenSearch}
-                              onChange={(e) => {
-                                setCedantSirenSearch(e.target.value);
-                                setShowCedantResults(false);
-                                setCedantSearchResults([]);
-                              }}
-                            />
-                            {/* Liste déroulante des résultats */}
-                            {showCedantResults && cedantSearchResults.length > 0 && (
-                              <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                                {cedantSearchResults.map((result, idx) => (
-                                  <button
-                                    key={idx}
-                                    type="button"
-                                    className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 flex justify-between items-center"
-                                    onClick={async () => {
-                                      setCedantSirenLoading(true);
-                                      setShowCedantResults(false);
-                                      try {
-                                        const response = await fetch(`/api/siren?siren=${result.siren}`);
-                                        if (response.ok) {
-                                          const data = await response.json();
-                                          setCedantMorale({
-                                            ...cedantMorale,
-                                            denomination: data.denominationSociale || result.nom,
-                                            formeJuridique: data.formeJuridique?.toUpperCase() || "",
-                                            siegeAdresse: data.siegeSocial || "",
-                                            siegeCP: data.codePostal || "",
-                                            siegeVille: data.ville || result.ville || "",
-                                            capital: data.capitalSocial || "",
-                                            rcsNumero: result.siren,
-                                            rcsVille: data.ville || result.ville || "",
-                                          });
-                                          setCedantSirenFound(true);
-                                          setCedantSirenSearch(result.nom);
-                                        }
-                                      } catch {
-                                        setCedantMorale({...cedantMorale, denomination: result.nom, rcsNumero: result.siren});
-                                        setCedantSirenFound(true);
-                                      } finally {
-                                        setCedantSirenLoading(false);
-                                      }
-                                    }}
-                                  >
-                                    <div>
-                                      <div className="font-medium text-gray-900">{result.nom}</div>
-                                      {result.ville && <div className="text-sm text-gray-500">{result.ville}</div>}
-                                    </div>
-                                    <div className="text-sm text-blue-600 font-mono">{result.siren}</div>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <Button
-                            onClick={async () => {
-                              if (cedantSirenSearch.length < 2) {
-                                alert("Entrez au moins 2 caractères");
-                                return;
-                              }
-                              setCedantSirenLoading(true);
-                              setCedantSearchResults([]);
-                              setShowCedantResults(false);
-                              try {
-                                const cleanValue = cedantSirenSearch.replace(/\s/g, '');
-                                const isSiren = /^\d{9}$/.test(cleanValue);
-                                
-                                if (isSiren) {
-                                  const response = await fetch(`/api/siren?siren=${cleanValue}`);
-                                  if (response.ok) {
-                                    const data = await response.json();
-                                    setCedantMorale({
-                                      ...cedantMorale,
-                                      denomination: data.denominationSociale || "",
-                                      formeJuridique: data.formeJuridique?.toUpperCase() || "",
-                                      siegeAdresse: data.siegeSocial || "",
-                                      siegeCP: data.codePostal || "",
-                                      siegeVille: data.ville || "",
-                                      capital: data.capitalSocial || "",
-                                      rcsNumero: cleanValue,
-                                      rcsVille: data.ville || "",
-                                    });
-                                    setCedantSirenFound(true);
-                                  } else {
-                                    alert("SIREN non trouvé");
-                                  }
-                                } else {
-                                  const response = await fetch(`/api/siren?nom=${encodeURIComponent(cedantSirenSearch)}&list=true`);
-                                  if (response.ok) {
-                                    const data = await response.json();
-                                    if (data.resultats && data.resultats.length > 0) {
-                                      setCedantSearchResults(data.resultats);
-                                      setShowCedantResults(true);
-                                    } else {
-                                      alert("Aucune société trouvée");
-                                    }
-                                  } else {
-                                    alert("Aucune société trouvée");
-                                  }
-                                }
-                              } catch {
-                                alert("Erreur lors de la recherche");
-                              }
-                              setCedantSirenLoading(false);
-                            }}
-                            disabled={cedantSirenSearch.length < 2 || cedantSirenLoading}
-                            className="bg-[#5D9CEC] hover:bg-[#4A89DC]"
-                          >
-                            {cedantSirenLoading ? "Recherche..." : "Rechercher"}
-                          </Button>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Recherchez par SIREN ou par nom (ex: LEGALCORNERS, DANONE)
-                        </p>
-                        <button
-                          type="button"
-                          className="text-sm text-[#5D9CEC] hover:underline mt-2"
-                          onClick={() => setCedantSirenFound(true)}
-                        >
-                          Je ne connais pas le SIREN, saisir manuellement
-                        </button>
-                      </div>
+                    <button
+                      onClick={() => setPreview(preview === "declaration" ? null : "declaration")}
+                      className="w-full flex items-center justify-between px-4 py-3 bg-amber-700 text-white rounded-xl font-medium hover:bg-amber-800"
+                    >
+                      <span>👁 Aperçu — Déclaration de non-condamnation</span>
+                      <span>{preview === "declaration" ? "▲" : "▼"}</span>
+                    </button>
+                    {preview === "declaration" && (
+                      <pre className="text-xs bg-gray-50 border rounded-xl p-4 max-h-96 overflow-y-auto whitespace-pre-wrap font-mono">{declarationText}</pre>
                     )}
-                    {(cedantSirenFound || cedantMorale.rcsNumero) && (
-                      <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Denomination sociale *</label>
-                        <Input
-                          placeholder="Nom de la societe"
-                          value={cedantMorale.denomination}
-                          onChange={(e) => setCedantMorale({...cedantMorale, denomination: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Forme juridique *</label>
-                        <Select value={cedantMorale.formeJuridique} onValueChange={(v) => setCedantMorale({...cedantMorale, formeJuridique: v})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selectionnez" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="SAS">SAS</SelectItem>
-                            <SelectItem value="SASU">SASU</SelectItem>
-                            <SelectItem value="SARL">SARL</SelectItem>
-                            <SelectItem value="EURL">EURL</SelectItem>
-                            <SelectItem value="SA">SA</SelectItem>
-                            <SelectItem value="SCI">SCI</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse du siege social *</label>
-                      <Input
-                        placeholder="Numero et rue"
-                        value={cedantMorale.siegeAdresse}
-                        onChange={(e) => setCedantMorale({...cedantMorale, siegeAdresse: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
-                        <Input
-                          placeholder="75001"
-                          value={cedantMorale.siegeCP}
-                          onChange={(e) => setCedantMorale({...cedantMorale, siegeCP: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
-                        <Input
-                          placeholder="Paris"
-                          value={cedantMorale.siegeVille}
-                          onChange={(e) => setCedantMorale({...cedantMorale, siegeVille: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
-                        <Input
-                          value={cedantMorale.siegePays}
-                          onChange={(e) => setCedantMorale({...cedantMorale, siegePays: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Capital social (euros) *</label>
-                        <Input
-                          type="number"
-                          placeholder="10000"
-                          value={cedantMorale.capital}
-                          onChange={(e) => setCedantMorale({...cedantMorale, capital: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Numero SIREN *</label>
-                        <Input
-                          placeholder="123 456 789"
-                          value={cedantMorale.rcsNumero}
-                          onChange={(e) => setCedantMorale({...cedantMorale, rcsNumero: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t">
-                      <h4 className="font-medium text-[#1E3A8A] mb-3">Representant legal</h4>
-                      <div className="grid grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Civilite</label>
-                          <Select value={cedantMorale.representantCivilite} onValueChange={(v) => setCedantMorale({...cedantMorale, representantCivilite: v as "M." | "Mme"})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="--" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="M.">M.</SelectItem>
-                              <SelectItem value="Mme">Mme</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                          <Input
-                            placeholder="Nom"
-                            value={cedantMorale.representantNom}
-                            onChange={(e) => setCedantMorale({...cedantMorale, representantNom: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Prenom *</label>
-                          <Input
-                            placeholder="Prenom"
-                            value={cedantMorale.representantPrenom}
-                            onChange={(e) => setCedantMorale({...cedantMorale, representantPrenom: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Qualite *</label>
-                          <Input
-                            placeholder="President"
-                            value={cedantMorale.representantQualite}
-                            onChange={(e) => setCedantMorale({...cedantMorale, representantQualite: e.target.value})}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre de {typeCession === "actions" ? "actions" : "parts"} detenues *
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="100"
-                        value={cedantNombreParts}
-                        onChange={(e) => setCedantNombreParts(e.target.value)}
-                      />
-                    </div>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            </motion.div>
-          )}
-          {/* STEP 6: Informations cessionnaire */}
-          {step === 6 && (
-            <motion.div
-              key="step6"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Informations cessionnaire</h1>
-                <p className="text-gray-600">Renseignez les coordonnees de l&apos;acheteur</p>
-              </div>
-              {cessionnaireType === "morale" && (
-                <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-                  <h3 className="font-semibold text-[#1E3A8A]">Recherche SIREN cessionnaire</h3>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Entrez le SIREN ou nom de la societe"
-                      value={cessionnaireSirenSearch}
-                      onChange={(e) => setCessionnaireSirenSearch(e.target.value)}
-                    />
-                    <Button
-                      onClick={async () => {
-                              if (!cessionnaireSirenSearch.trim()) {
-                                alert("Veuillez entrer un SIREN ou un nom de société");
-                                return;
-                              }
-                              setCessionnaireSirenLoading(true);
-                              setCessionnaireSearchResults([]);
-                              setShowCessionnaireResults(false);
-                              try {
-                                const cleanValue = cessionnaireSirenSearch.replace(/\s/g, "");
-                                const isSiren = /^\d{9}$/.test(cleanValue);
-                                
-                                if (isSiren) {
-                                  const response = await fetch(`/api/siren?siren=${cleanValue}`);
-                                  if (response.ok) {
-                                    const data = await response.json();
-                                    setCessionnaireMorale({
-                                      ...cessionnaireMorale,
-                                      denomination: data.denominationSociale || "",
-                                      formeJuridique: data.formeJuridique?.toUpperCase() || "",
-                                      siegeAdresse: data.siegeSocial || "",
-                                      siegeCP: data.codePostal || "",
-                                      siegeVille: data.ville || "",
-                                      capital: data.capitalSocial || "",
-                                      rcsNumero: cleanValue,
-                                      rcsVille: data.ville || "",
-                                    });
-                                    setCessionnaireSirenFound(true);
-                                  } else {
-                                    alert("SIREN non trouvé");
-                                  }
-                                } else {
-                                  const response = await fetch(`/api/siren?nom=${encodeURIComponent(cessionnaireSirenSearch)}&list=true`);
-                                  if (response.ok) {
-                                    const data = await response.json();
-                                    if (data.resultats && data.resultats.length > 0) {
-                                      setCessionnaireSearchResults(data.resultats);
-                                      setShowCessionnaireResults(true);
-                                    } else {
-                                      alert("Aucune société trouvée");
-                                    }
-                                  } else {
-                                    alert("Aucune société trouvée");
-                                  }
-                                }
-                              } catch {
-                                alert("Erreur lors de la recherche");
-                              }
-                              setCessionnaireSirenLoading(false);
-                            }}
-                            disabled={!cessionnaireSirenSearch.trim() || cessionnaireSirenLoading}
-                            className="bg-[#5D9CEC] hover:bg-[#4A89DC]"
-                          >
-                            {cessionnaireSirenLoading ? "Recherche..." : "Rechercher"}
-                          </Button>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Recherchez par SIREN (9 chiffres) ou par nom de société
-                        </p>
-                      </div>
-                    )}
-                    {(cessionnaireSirenFound || cessionnaireMorale.rcsNumero) && (
-                      <>
-                    {/* Bouton pour refaire une recherche */}
-                    <div className="flex justify-end mb-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <button
-                        type="button"
-                        className="text-sm text-[#5D9CEC] hover:underline"
-                        onClick={() => {
-                          setCessionnaireSirenFound(false);
-                          setCessionnaireSirenSearch("");
-                          setCessionnaireMorale({
-                            denomination: "",
-                            formeJuridique: "",
-                            siegeAdresse: "",
-                            siegeCP: "",
-                            siegeVille: "",
-                            siegePays: "France",
-                            capital: "",
-                            rcsNumero: "",
-                            rcsVille: "",
-                            representantCivilite: "",
-                            representantNom: "",
-                            representantPrenom: "",
-                            representantQualite: "",
-                            email: "",
-                          });
-                        }}
+                        onClick={() => downloadPdf(declarationText, `declaration-non-condamnation-${data.societe.denomination || "societe"}.pdf`, data, "pv")}
+                        className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-amber-700 text-amber-700 rounded-xl font-medium hover:bg-amber-700 hover:text-white transition-colors text-sm"
                       >
-                        Rechercher une autre societe
+                        ⬇ Déclaration (.pdf)
+                      </button>
+                      <button
+                        onClick={async () => {
+                          const blob = await generateDeclarationDocx(declarationText, data);
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `declaration-non-condamnation-${data.societe.denomination || "societe"}.docx`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="flex items-center gap-1 justify-center px-3 py-3 border-2 border-amber-700 text-amber-700 rounded-xl font-medium hover:bg-amber-700 hover:text-white transition-colors text-sm"
+                      >
+                        ⬇ Déclaration (.docx)
                       </button>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Denomination sociale *</label>
-                        <Input
-                          value={cessionnaireMorale.denomination}
-                          disabled={cessionnaireSirenFound}
-                          className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                          onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, denomination: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Forme juridique *</label>
-                        <Input
-                          value={cessionnaireMorale.formeJuridique}
-                          disabled={cessionnaireSirenFound}
-                          className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                          onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, formeJuridique: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse du siege *</label>
-                      <Input
-                        value={cessionnaireMorale.siegeAdresse}
-                        disabled={cessionnaireSirenFound}
-                        className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                        onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, siegeAdresse: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
-                        <Input
-                          value={cessionnaireMorale.siegeCP}
-                          disabled={cessionnaireSirenFound}
-                          className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                          onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, siegeCP: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
-                        <Input
-                          value={cessionnaireMorale.siegeVille}
-                          disabled={cessionnaireSirenFound}
-                          className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                          onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, siegeVille: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
-                        <Input
-                          value={cessionnaireMorale.siegePays}
-                          disabled={cessionnaireSirenFound}
-                          className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                          onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, siegePays: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Capital social (euros) *</label>
-                        <Input
-                          type="number"
-                          value={cessionnaireMorale.capital}
-                          disabled={cessionnaireSirenFound}
-                          className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                          onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, capital: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Numero SIREN *</label>
-                        <Input
-                          value={cessionnaireMorale.rcsNumero}
-                          disabled={cessionnaireSirenFound}
-                          className={cessionnaireSirenFound ? "bg-gray-100" : ""}
-                          onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, rcsNumero: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t">
-                      <h4 className="font-medium text-[#1E3A8A] mb-3">Représentant légal</h4>
-                      <div className="grid grid-cols-4 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Civilité</label>
-                          <Select value={cessionnaireMorale.representantCivilite} onValueChange={(v) => setCessionnaireMorale({...cessionnaireMorale, representantCivilite: v as "M." | "Mme"})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="--" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="M.">M.</SelectItem>
-                              <SelectItem value="Mme">Mme</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                          <Input
-                            placeholder="Nom"
-                            value={cessionnaireMorale.representantNom}
-                            onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, representantNom: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
-                          <Input
-                            placeholder="Prénom"
-                            value={cessionnaireMorale.representantPrenom}
-                            onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, representantPrenom: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Qualité *</label>
-                          <Input
-                            placeholder="Gérant"
-                            value={cessionnaireMorale.representantQualite}
-                            onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, representantQualite: e.target.value})}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    </>
-                    )}
-                {/* Dépliant Expert-Comptable */}
-                <div className="mt-6">
-                  <ExpertComptableInfo typeCession={typeCession === "actions" ? "actions" : "parts"} />
-                </div>
-            </motion.div>
-          )}
-          {/* STEP 7: Conditions de cession */}
-          {step === 7 && (
-            <motion.div
-              key="step7"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Conditions de la cession</h1>
-                <p className="text-gray-600">Définissez les termes financiers de la transaction</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre de {typeCession === "actions" ? "actions" : "parts"} cedees *
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="100"
-                      value={nombrePartsCedees}
-                      onChange={(e) => setNombrePartsCedees(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Prix unitaire (euros) *
-                      </label>
-                      <TooltipHelp title={TOOLTIPS.prixParPart.title} content={TOOLTIPS.prixParPart.content} />
-                    </div>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="10.00"
-                      value={prixParPart}
-                      onChange={(e) => {
-                        setPrixParPart(e.target.value);
-                        if (nombrePartsCedees && e.target.value) {
-                          setPrixTotal((parseFloat(nombrePartsCedees) * parseFloat(e.target.value)).toFixed(2));
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-                {/* Numérotation des parts (pour usufruit/nue-propriété) */}
-                {(typePropriete === "usufruit" || typePropriete === "nue-propriete") && (
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <label className="block text-sm font-medium text-[#1E3A8A] mb-3">
-                      Numérotation des {typeCession === "actions" ? "actions" : "parts"} cédées *
-                    </label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Du numéro</label>
-                        <Input
-                          type="number"
-                          placeholder="1"
-                          value={numeroPartsDe}
-                          onChange={(e) => setNumeroPartsDe(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Au numéro</label>
-                        <Input
-                          type="number"
-                          placeholder="100"
-                          value={numeroPartsA}
-                          onChange={(e) => setNumeroPartsA(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <p className="text-xs text-blue-600 mt-2">
-                      <Info className="w-3 h-3 inline mr-1" />
-                      Indiquez la numérotation des {typeCession === "actions" ? "actions" : "parts"} pour le démembrement ({typePropriete === "usufruit" ? "usufruit" : "nue-propriété"})
-                    </p>
-                  </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Prix total (€) *</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="1000.00"
-                    value={prixTotal}
-                    onChange={(e) => setPrixTotal(e.target.value)}
-                    className="text-lg font-semibold"
-                  />
-                </div>
-                <div className="pt-4 border-t">
-                  <h4 className="font-medium text-[#1E3A8A] mb-3">Mode de paiement *</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() => setModePaiement("comptant")}
-                      className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
-                        modePaiement === "comptant"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Comptant</span>
-                      <span className="text-xs text-gray-500">Paiement intégral à la signature</span>
-                    </button>
-                    <button
-                      onClick={() => setModePaiement("echeances")}
-                      className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
-                        modePaiement === "echeances"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Échéances</span>
-                      <span className="text-xs text-gray-500">Paiement en plusieurs fois</span>
-                    </button>
-                  </div>
-                  {modePaiement === "echeances" && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="mt-4 space-y-3"
-                    >
-                      {echeances.map((echeance, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg flex-wrap">
-                          <span className="text-sm font-medium text-gray-500 w-20">Echeance {index + 1}</span>
-                          <Input
-                            type="number"
-                            placeholder="Montant (Euros)"
-                            value={echeance.montant}
-                            onChange={(e) => updateEcheance(index, "montant", e.target.value)}
-                            className="flex-1 min-w-[120px]"
-                          />
-                          <Input
-                            type="date"
-                            value={echeance.date}
-                            onChange={(e) => updateEcheance(index, "date", e.target.value)}
-                            className="flex-1 min-w-[140px]"
-                          />
-                          <Select
-                            value={echeance.modePaiement || "virement"}
-                            onValueChange={(value) => updateEcheance(index, "modePaiement", value)}
-                          >
-                            <SelectTrigger className="w-[130px]">
-                              <SelectValue placeholder="Mode" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="virement">Virement</SelectItem>
-                              <SelectItem value="cheque">Cheque</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {echeances.length > 1 && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeEcheance(index)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        onClick={addEcheance}
-                        className="w-full"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Ajouter une échéance
-                      </Button>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-              {/* Simulateur droits d'enregistrement */}
-              {prixTotal && (
-                <SimulateurDroits
-                  typeCession={typeCession}
-                  prixTotal={prixTotal}
-                  nombrePartsCedees={nombrePartsCedees}
-                  nombrePartsTotal={societe.nombreTotalParts || "1"}
-                />
-              )}
-            </motion.div>
-          )}
-          {/* STEP 8: Clauses & Options */}
-          {step === 8 && (
-            <motion.div
-              key="step8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Clauses et options</h1>
-                <p className="text-gray-600">Personnalisez votre acte de cession</p>
-              </div>
-              {/* Agrement */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-[#1E3A8A]">Agrement de la cession</h3>
-                  <TooltipHelp title={TOOLTIPS.agrement.title} content={TOOLTIPS.agrement.content} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Structure de l&apos;actionnariat *</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => setAssocieUnique(true)}
-                      className={cn(
-                        "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                        associeUnique === true
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      Associé unique
-                    </button>
-                    <button
-                      onClick={() => setAssocieUnique(false)}
-                      className={cn(
-                        "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                        associeUnique === false
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      Plusieurs associés
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date de la délibération d&apos;agrément *</label>
-                  <Input
-                    type="date"
-                    value={dateDeliberation}
-                    onChange={(e) => setDateDeliberation(e.target.value)}
-                  />
-                </div>
-              </div>
-{/* Clauses de non-concurrence */}
-  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-  <div className="flex items-center gap-2">
-    <h3 className="font-semibold text-[#1E3A8A]">Clauses de non-concurrence</h3>
-    <TooltipHelp title={TOOLTIPS.nonConcurrence.title} content={TOOLTIPS.nonConcurrence.content} />
-  </div>
-                
-                {/* Vendeur */}
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="ncv"
-                    checked={clauseNonConcurrenceVendeur}
-                    onCheckedChange={(checked) => setClauseNonConcurrenceVendeur(checked === true)}
-                  />
-                  <label htmlFor="ncv" className="text-sm text-gray-700 cursor-pointer">
-                    Clause de non-concurrence pour le <strong>vendeur</strong>
-                  </label>
-                </div>
-                {clauseNonConcurrenceVendeur && (
-                  <div className="ml-7 grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Zone géographique</label>
-                      <Input
-                        placeholder="Ex: France métropolitaine"
-                        value={clauseNCVZone}
-                        onChange={(e) => setClauseNCVZone(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Durée</label>
-                      <Input
-                        placeholder="Ex: 2 ans"
-                        value={clauseNCVDuree}
-                        onChange={(e) => setClauseNCVDuree(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
-                {/* Acheteur */}
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="nca"
-                    checked={clauseNonConcurrenceAcheteur}
-                    onCheckedChange={(checked) => setClauseNonConcurrenceAcheteur(checked === true)}
-                  />
-                  <label htmlFor="nca" className="text-sm text-gray-700 cursor-pointer">
-                    Clause de non-concurrence pour l&apos;<strong>acheteur</strong>
-                  </label>
-                </div>
-                {clauseNonConcurrenceAcheteur && (
-                  <div className="ml-7 grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Zone géographique</label>
-                      <Input
-                        placeholder="Ex: Île-de-France"
-                        value={clauseNCAZone}
-                        onChange={(e) => setClauseNCAZone(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Durée</label>
-                      <Input
-                        placeholder="Ex: 3 ans"
-                        value={clauseNCADuree}
-                        onChange={(e) => setClauseNCADuree(e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  </>
                 )}
               </div>
-{/* Comptes courants */}
-  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-  <div className="flex items-center gap-2">
-    <h3 className="font-semibold text-[#1E3A8A]">Comptes courants d&apos;associes *</h3>
-    <TooltipHelp title={TOOLTIPS.comptesCourants.title} content={TOOLTIPS.comptesCourants.content} />
-  </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => setComptesCourants("aucun")}
-                    className={cn(
-                      "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                      comptesCourants === "aucun"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    Pas de compte courant
-                  </button>
-                  <button
-                    onClick={() => setComptesCourants("cede")}
-                    className={cn(
-                      "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                      comptesCourants === "cede"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    Cédé au cessionnaire
-                  </button>
-                  <button
-                    onClick={() => setComptesCourants("conserve")}
-                    className={cn(
-                      "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                      comptesCourants === "conserve"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    Conservé par le cédant
-                  </button>
-                </div>
+
+              <div className="mt-6 p-4 bg-blue-50 rounded-xl text-sm text-blue-700 flex gap-2">
+                <span>ℹ</span>
+                <span>Formule Premium : Un juriste vérifiera votre dossier sous 24h.</span>
               </div>
-              {/* Garantie actif/passif */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="garantie"
-                    checked={garantieActifPassif}
-                    onCheckedChange={(checked) => setGarantieActifPassif(checked === true)}
-                  />
-<label htmlFor="garantie" className="font-semibold text-[#1E3A8A] cursor-pointer">
-  Garantie d&apos;actif et de passif
-  </label>
-  <TooltipHelp title={TOOLTIPS.garantieActifPassif.title} content={TOOLTIPS.garantieActifPassif.content} />
-  </div>
-                
-                {garantieActifPassif && (
-                  <div className="ml-7 space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Seuil de déclenchement (€)</label>
-                        <Input
-                          type="number"
-                          placeholder="Ex: 5000"
-                          value={garantieSeuilDeclenchement}
-                          onChange={(e) => setGarantieSeuilDeclenchement(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Montant maximum (€)</label>
-                        <Input
-                          type="number"
-                          placeholder="Ex: 50000"
-                          value={garantieMontantMax}
-                          onChange={(e) => setGarantieMontantMax(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Durée (années)</label>
-                        <Input
-                          placeholder="Ex: 3"
-                          value={garantieDuree}
-                          onChange={(e) => setGarantieDuree(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse de notification du cédant</label>
-                      <Input
-                        placeholder="Adresse complète"
-                        value={garantieAdresse}
-                        onChange={(e) => setGarantieAdresse(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email de notification</label>
-                      <Input
-                        type="email"
-                        placeholder="email@exemple.com"
-                        value={garantieEmail}
-                        onChange={(e) => setGarantieEmail(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-{/* Frais */}
-  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-  <div className="flex items-center gap-2">
-    <h3 className="font-semibold text-[#1E3A8A]">Frais de la cession *</h3>
-    <TooltipHelp title={TOOLTIPS.fraisCharge.title} content={TOOLTIPS.fraisCharge.content} />
-  </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setFraisACharge("cessionnaire")}
-                    className={cn(
-                      "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                      fraisACharge === "cessionnaire"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    �� la charge du cessionnaire (acheteur)
-                  </button>
-                  <button
-                    onClick={() => setFraisACharge("cedant")}
-                    className={cn(
-                      "p-3 rounded-lg border-2 text-center transition-all text-sm",
-                      fraisACharge === "cedant"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
-                    )}
-                  >
-                    À la charge du cédant (vendeur)
-                  </button>
-                </div>
-                <div className="flex items-start gap-3 pt-2">
-                  <Checkbox
-                    id="jouissance"
-                    checked={droitJouissanceImmeubles}
-                    onCheckedChange={(checked) => setDroitJouissanceImmeubles(checked === true)}
-                  />
-                  <label htmlFor="jouissance" className="text-sm text-gray-700 cursor-pointer">
-                    Les participations cedees conferent un droit a la jouissance d&apos;immeubles (art. 728 CGI)
-                  </label>
-                </div>
-                <div className="flex items-start gap-3 pt-2">
-                  <Checkbox
-                    id="modifValeurNominale"
-                    checked={modificationValeurNominale}
-                    onCheckedChange={(checked) => setModificationValeurNominale(checked === true)}
-                  />
-                  <label htmlFor="modifValeurNominale" className="text-sm text-gray-700 cursor-pointer">
-                    Modification de la valeur nominale des parts/actions
-                  </label>
-                </div>
-              </div>
-              {/* Mandataire des formalites */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-                <h3 className="font-semibold text-[#1E3A8A]">Mandataire pour les formalites</h3>
-                <p className="text-sm text-gray-600">
-                  Le mandataire sera charge d&apos;accomplir les formalites legales (enregistrement, depot au greffe, etc.)
-                </p>
-                <Input
-                  placeholder="Nom et adresse du mandataire"
-                  value={mandataireFormalities}
-                  onChange={(e) => setMandataireFormalities(e.target.value)}
-                />
-              </div>
-            </motion.div>
-          )}
-          {/* STEP 8bis: Changement de dirigeant (optionnel) */}
-          {includChangementDirigeant && step === 8.5 && (
-            <motion.div
-              key="step8bis"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Changement de dirigeant</h1>
-                <p className="text-gray-600">Informations du nouveau dirigeant</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
-                <h3 className="font-semibold text-[#1E3A8A] mb-4">Nouveau dirigeant</h3>
-                
-                {/* Type de dirigeant */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type de nouveau dirigeant *</label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="nouveauDirigeantType"
-                        checked={nouveauDirigeantType === "physique"}
-                        onChange={() => setNouveauDirigeantType("physique")}
-                        className="w-4 h-4 text-[#1E3A8A]"
-                      />
-                      <span>Personne physique</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="nouveauDirigeantType"
-                        checked={nouveauDirigeantType === "morale"}
-                        onChange={() => setNouveauDirigeantType("morale")}
-                        className="w-4 h-4 text-[#1E3A8A]"
-                      />
-                      <span>Personne morale</span>
-                    </label>
-                  </div>
-                </div>
-                {/* ═══════════ PERSONNE PHYSIQUE ═══════════ */}
-                {nouveauDirigeantType === "physique" && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Civilite *</label>
-                        <Select value={nouveauDirigeantPhysique.civilite} onValueChange={(v) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, civilite: v as "M." | "Mme"})}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="--" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="M.">M.</SelectItem>
-                            <SelectItem value="Mme">Mme</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                        <Input
-                          placeholder="Nom"
-                          value={nouveauDirigeantPhysique.nom}
-                          onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, nom: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Prenom *</label>
-                        <Input
-                          placeholder="Prenom"
-                          value={nouveauDirigeantPhysique.prenom}
-                          onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, prenom: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualite *</label>
-                        <Select value={nouveauDirigeantQualite} onValueChange={setNouveauDirigeantQualite}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selectionnez" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Gerant">Gerant</SelectItem>
-                            <SelectItem value="President">President</SelectItem>
-                            <SelectItem value="Directeur General">Directeur General</SelectItem>
-                            <SelectItem value="Directeur General Delegue">Directeur General Delegue</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance *</label>
-                        <Input
-                          type="date"
-                          value={nouveauDirigeantPhysique.dateNaissance}
-                          onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, dateNaissance: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de naissance *</label>
-                        <Input
-                          placeholder="Paris (75)"
-                          value={nouveauDirigeantPhysique.lieuNaissance}
-                          onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, lieuNaissance: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nationalite *</label>
-                        <Input
-                          placeholder="Francaise"
-                          value={nouveauDirigeantPhysique.nationalite}
-                          onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, nationalite: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
-                      <Input
-                        placeholder="Numero, rue"
-                        value={nouveauDirigeantPhysique.adresse}
-                        onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, adresse: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
-                        <Input
-                          placeholder="75008"
-                          value={nouveauDirigeantPhysique.codePostal}
-                          onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, codePostal: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
-                        <Input
-                          placeholder="Paris"
-                          value={nouveauDirigeantPhysique.ville}
-                          onChange={(e) => setNouveauDirigeantPhysique({...nouveauDirigeantPhysique, ville: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                    {/* FILIATION */}
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                      <h4 className="font-semibold text-[#1E3A8A] mb-4">Filiation (obligatoire pour le greffe)</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nom du pere *</label>
-                          <Input
-                            placeholder="Nom du pere"
-                            value={nouveauDirigeantPereNom}
-                            onChange={(e) => setNouveauDirigeantPereNom(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Prenom du pere *</label>
-                          <Input
-                            placeholder="Prenom du pere"
-                            value={nouveauDirigeantPerePrenom}
-                            onChange={(e) => setNouveauDirigeantPerePrenom(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nom de naissance de la mere *</label>
-                          <Input
-                            placeholder="Nom de naissance"
-                            value={nouveauDirigeantMereNom}
-                            onChange={(e) => setNouveauDirigeantMereNom(e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Prenom de la mere *</label>
-                          <Input
-                            placeholder="Prenom de la mere"
-                            value={nouveauDirigeantMerePrenom}
-                            onChange={(e) => setNouveauDirigeantMerePrenom(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    {/* DECLARATION NON-CONDAMNATION */}
-                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={nouveauDirigeantNonCondamnation}
-                          onChange={(e) => setNouveauDirigeantNonCondamnation(e.target.checked)}
-                          className="w-5 h-5 mt-0.5 text-[#1E3A8A] rounded"
-                        />
-                        <div>
-                          <span className="font-medium text-gray-900">Declaration de non-condamnation *</span>
-                          <p className="text-sm text-gray-600 mt-1">
-                            Je declare sur l&apos;honneur n&apos;avoir fait l&apos;objet d&apos;aucune condamnation penale ni de sanction civile ou administrative de nature a m&apos;interdire de gerer, administrer ou diriger une personne morale (art. A 123-51 du Code de commerce).
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-                )}
-                {/* ═══════════ PERSONNE MORALE ═══════════ */}
-                {nouveauDirigeantType === "morale" && (
-                  <div className="space-y-6">
-                    {/* Infos personne morale */}
-                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-4">
-                      <h4 className="font-semibold text-[#1E3A8A]">Personne morale dirigeante</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Denomination *</label>
-                          <Input
-                            placeholder="SOCIETE XYZ"
-                            value={nouveauDirigeantMorale.denomination}
-                            onChange={(e) => setNouveauDirigeantMorale({...nouveauDirigeantMorale, denomination: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Forme juridique *</label>
-                          <Select value={nouveauDirigeantMorale.formeJuridique} onValueChange={(v) => setNouveauDirigeantMorale({...nouveauDirigeantMorale, formeJuridique: v})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selectionnez" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="SAS">SAS</SelectItem>
-                              <SelectItem value="SASU">SASU</SelectItem>
-                              <SelectItem value="SARL">SARL</SelectItem>
-                              <SelectItem value="EURL">EURL</SelectItem>
-                              <SelectItem value="SA">SA</SelectItem>
-                              <SelectItem value="SCI">SCI</SelectItem>
-                              <SelectItem value="SNC">SNC</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">SIREN *</label>
-                        <Input
-                          placeholder="123 456 789"
-                          value={nouveauDirigeantMorale.siren}
-                          onChange={(e) => setNouveauDirigeantMorale({...nouveauDirigeantMorale, siren: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Adresse du siege *</label>
-                        <Input
-                          placeholder="Numero, rue"
-                          value={nouveauDirigeantMorale.siegeAdresse}
-                          onChange={(e) => setNouveauDirigeantMorale({...nouveauDirigeantMorale, siegeAdresse: e.target.value})}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
-                          <Input
-                            placeholder="75008"
-                            value={nouveauDirigeantMorale.siegeCP}
-                            onChange={(e) => setNouveauDirigeantMorale({...nouveauDirigeantMorale, siegeCP: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
-                          <Input
-                            placeholder="Paris"
-                            value={nouveauDirigeantMorale.siegeVille}
-                            onChange={(e) => setNouveauDirigeantMorale({...nouveauDirigeantMorale, siegeVille: e.target.value})}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualite *</label>
-                        <Select value={nouveauDirigeantQualite} onValueChange={setNouveauDirigeantQualite}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selectionnez" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Gerant">Gerant</SelectItem>
-                            <SelectItem value="President">President</SelectItem>
-                            <SelectItem value="Directeur General">Directeur General</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    {/* Representant permanent */}
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-4">
-                      <h4 className="font-semibold text-[#1E3A8A]">Representant permanent</h4>
-                      <p className="text-sm text-gray-600">La personne physique qui represente la personne morale dirigeante</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Civilite *</label>
-                          <Select value={representantPermanent.civilite} onValueChange={(v) => setRepresentantPermanent({...representantPermanent, civilite: v as "M." | "Mme"})}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="--" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="M.">M.</SelectItem>
-                              <SelectItem value="Mme">Mme</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                          <Input
-                            placeholder="Nom"
-                            value={representantPermanent.nom}
-                            onChange={(e) => setRepresentantPermanent({...representantPermanent, nom: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Prenom *</label>
-                          <Input
-                            placeholder="Prenom"
-                            value={representantPermanent.prenom}
-                            onChange={(e) => setRepresentantPermanent({...representantPermanent, prenom: e.target.value})}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance *</label>
-                          <Input
-                            type="date"
-                            value={representantPermanent.dateNaissance}
-                            onChange={(e) => setRepresentantPermanent({...representantPermanent, dateNaissance: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de naissance *</label>
-                          <Input
-                            placeholder="Paris (75)"
-                            value={representantPermanent.lieuNaissance}
-                            onChange={(e) => setRepresentantPermanent({...representantPermanent, lieuNaissance: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Nationalite *</label>
-                          <Input
-                            placeholder="Francaise"
-                            value={representantPermanent.nationalite}
-                            onChange={(e) => setRepresentantPermanent({...representantPermanent, nationalite: e.target.value})}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
-                        <Input
-                          placeholder="Numero, rue"
-                          value={representantPermanent.adresse}
-                          onChange={(e) => setRepresentantPermanent({...representantPermanent, adresse: e.target.value})}
-                        />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
-                          <Input
-                            placeholder="75008"
-                            value={representantPermanent.codePostal}
-                            onChange={(e) => setRepresentantPermanent({...representantPermanent, codePostal: e.target.value})}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
-                          <Input
-                            placeholder="Paris"
-                            value={representantPermanent.ville}
-                            onChange={(e) => setRepresentantPermanent({...representantPermanent, ville: e.target.value})}
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Filiation RP */}
-                      <div className="mt-4 pt-4 border-t border-blue-200">
-                        <h5 className="font-medium text-gray-700 mb-3">Filiation du representant permanent</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nom du pere *</label>
-                            <Input
-                              placeholder="Nom du pere"
-                              value={representantPermanentPereNom}
-                              onChange={(e) => setRepresentantPermanentPereNom(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Prenom du pere *</label>
-                            <Input
-                              placeholder="Prenom du pere"
-                              value={representantPermanentPerePrenom}
-                              onChange={(e) => setRepresentantPermanentPerePrenom(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nom de naissance de la mere *</label>
-                            <Input
-                              placeholder="Nom de naissance"
-                              value={representantPermanentMereNom}
-                              onChange={(e) => setRepresentantPermanentMereNom(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Prenom de la mere *</label>
-                            <Input
-                              placeholder="Prenom de la mere"
-                              value={representantPermanentMerePrenom}
-                              onChange={(e) => setRepresentantPermanentMerePrenom(e.target.value)}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Declaration non-condamnation RP */}
-                      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                        <label className="flex items-start gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={representantPermanentNonCondamnation}
-                            onChange={(e) => setRepresentantPermanentNonCondamnation(e.target.checked)}
-                            className="w-5 h-5 mt-0.5 text-[#1E3A8A] rounded"
-                          />
-                          <div>
-                            <span className="font-medium text-gray-900">Declaration de non-condamnation *</span>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Je declare sur l&apos;honneur n&apos;avoir fait l&apos;objet d&apos;aucune condamnation penale ni de sanction civile ou administrative de nature a m&apos;interdire de gerer, administrer ou diriger une personne morale.
-                            </p>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-          {/* STEP 9: Récapitulatif */}
-          {step === 9 && (
-            <motion.div
-              key="step9"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Récapitulatif</h1>
-                <p className="text-gray-600">Vérifiez les informations avant de générer votre document</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
-                {/* Type de cession */}
-                <div className="pb-4 border-b">
-                  <h3 className="font-semibold text-[#1E3A8A] mb-2">Type de cession</h3>
-                  <p className="text-sm">
-                    Cession de <strong>{typeCession === "actions" ? "actions" : "parts sociales"}</strong> en <strong>{typePropriete === "pleine-propriete" ? "pleine propriété" : typePropriete}</strong>
-                  </p>
-                </div>
-                {/* Société */}
-                <div className="pb-4 border-b">
-                  <h3 className="font-semibold text-[#1E3A8A] mb-2">Société concernée</h3>
-                  <p className="text-sm"><strong>{societe.denomination}</strong> ({societe.formeJuridique})</p>
-                  <p className="text-sm text-gray-600">{societe.siegeAdresse}, {societe.siegeCP} {societe.siegeVille}</p>
-                  <p className="text-sm text-gray-600">RCS {societe.rcsVille} {societe.rcsNumero} - Capital : {societe.capital}€</p>
-                </div>
-                {/* Cédant */}
-                <div className="pb-4 border-b">
-                  <h3 className="font-semibold text-[#1E3A8A] mb-2">Cédant (vendeur)</h3>
-                  {cedantType === "physique" ? (
-                    <p className="text-sm"><strong>{cedantPhysique.civilite} {cedantPhysique.prenom} {cedantPhysique.nom}</strong></p>
-                  ) : (
-                    <p className="text-sm"><strong>{cedantMorale.denomination}</strong> représentée par {cedantMorale.representantCivilite} {cedantMorale.representantPrenom} {cedantMorale.representantNom}</p>
-                  )}
-                  <p className="text-sm text-gray-600">Propriétaire de {cedantNombreParts} {typeCession === "actions" ? "actions" : "parts"}</p>
-                </div>
-                {/* Cessionnaire */}
-                <div className="pb-4 border-b">
-                  <h3 className="font-semibold text-[#1E3A8A] mb-2">Cessionnaire (acheteur)</h3>
-                  {cessionnaireType === "physique" ? (
-                    <p className="text-sm"><strong>{cessionnairePhysique.civilite} {cessionnairePhysique.prenom} {cessionnairePhysique.nom}</strong></p>
-                  ) : (
-                    <p className="text-sm"><strong>{cessionnaireMorale.denomination}</strong> représentée par {cessionnaireMorale.representantCivilite} {cessionnaireMorale.representantPrenom} {cessionnaireMorale.representantNom}</p>
-                  )}
-                </div>
-                {/* Conditions */}
-                <div className="pb-4 border-b space-y-4">
-                  <h3 className="font-semibold text-[#1E3A8A] mb-2">Conditions financières</h3>
-                  <p className="text-sm"><strong>{nombrePartsCedees}</strong> {typeCession === "actions" ? "actions" : "parts"} cédées</p>
-                  <p className="text-sm">Prix unitaire : <strong>{prixParPart}€</strong></p>
-                  <p className="text-sm">Prix total : <strong>{prixTotal}€</strong></p>
-                  <p className="text-sm">Paiement : <strong>{modePaiement === "comptant" ? "Comptant" : `En ${echeances.length} échéances`}</strong></p>
-                  
-                  <div className="pt-4 border-t">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tribunal compétent *</label>
-                    <Input
-                      placeholder="Ex: Tribunal de Commerce de Paris"
-                      value={tribunalCompetent}
-                      onChange={(e) => setTribunalCompetent(e.target.value)}
-                    />
-                  </div>
-                </div>
-                {/* Options */}
-                <div>
-                  <h3 className="font-semibold text-[#1E3A8A] mb-2">Options</h3>
-                  <ul className="text-sm space-y-1">
-                    <li className="flex items-center gap-2">
-                      {clauseNonConcurrenceVendeur ? <Check className="w-4 h-4 text-green-500" /> : <span className="w-4 h-4 text-gray-300">-</span>}
-                      Clause de non-concurrence vendeur
-                    </li>
-                    <li className="flex items-center gap-2">
-                      {garantieActifPassif ? <Check className="w-4 h-4 text-green-500" /> : <span className="w-4 h-4 text-gray-300">-</span>}
-                      Garantie d&apos;actif et de passif
-                    </li>
-                    <li className="flex items-center gap-2">
-                      Frais à la charge du <strong>{fraisACharge === "cessionnaire" ? "cessionnaire" : "cédant"}</strong>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          {/* STEP 10: Signature */}
-          {step === 10 && (
-            <motion.div
-              key="step10"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Signature</h1>
-                <p className="text-gray-600">Finalisez votre acte de cession</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de signature *</label>
-                    <Input
-                      placeholder="Paris"
-                      value={lieuSignature}
-                      onChange={(e) => setLieuSignature(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Date de signature *</label>
-                    <Input
-                      type="date"
-                      value={dateSignature}
-                      onChange={(e) => setDateSignature(e.target.value)}
-                    />
-                  </div>
-                </div>
-  {/* Selection des documents a generer */}
-  <div className="pt-4 border-t mb-6">
-    <h3 className="font-semibold text-[#1E3A8A] mb-4">Documents a generer</h3>
-    <div className="space-y-3">
-      <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={generateAgrement}
-          onChange={(e) => setGenerateAgrement(e.target.checked)}
-          className="w-5 h-5 rounded accent-[#3B6FD9]"
-        />
-        <span className="text-sm">PV d&apos;agrement (autorisation de la cession)</span>
-      </label>
-      <label className="flex items-center gap-3 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={generateConstatation}
-          onChange={(e) => setGenerateConstatation(e.target.checked)}
-          className="w-5 h-5 rounded accent-[#3B6FD9]"
-        />
-        <span className="text-sm">PV de constatation de la cession</span>
-      </label>
-      {includChangementDirigeant && (
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={true}
-            disabled
-            className="w-5 h-5 rounded accent-[#3B6FD9]"
-          />
-          <span className="text-sm">PV de changement de dirigeant</span>
-        </label>
-      )}
-    </div>
-  </div>
-  <div className="pt-4 border-t">
-  {!documentGenere ? (
-    <>
-      <p className="text-sm text-gray-600 mb-4">
-        En cliquant sur &quot;Generer les documents&quot;, vous confirmez que toutes les informations fournies sont exactes.
-      </p>
-      <Button 
-        onClick={async () => {
-          console.log("[v0] Starting PDF generation...");
-          setIsGenerating(true);
-          try {
-              const payload = {
-                docType: 'pv',
-                typeSociete: societe.formeJuridique,
-                nomSociete: societe.denomination,
-              capitalSocial: societe.capital,
-              rcsVille: societe.rcsVille,
-              rcsNumero: societe.rcsNumero,
-              siegeSocial: `${societe.siegeAdresse}, ${societe.siegeCP} ${societe.siegeVille}`,
-              datePV: dateSignature,
-              presidentCivilite: cedantType === "physique" ? cedantPhysique.civilite : cedantMorale.representantCivilite,
-              presidentNom: cedantType === "physique" ? cedantPhysique.nom : cedantMorale.representantNom,
-              presidentPrenom: cedantType === "physique" ? cedantPhysique.prenom : cedantMorale.representantPrenom,
-              presidentQualite: societe.formeJuridique?.includes("SAS") ? "President" : "Gerant",
-              cedantCivilite: cedantType === "physique" ? cedantPhysique.civilite : "",
-              cedantNom: cedantType === "physique" ? cedantPhysique.nom : cedantMorale.denomination,
-              cedantPrenom: cedantType === "physique" ? cedantPhysique.prenom : "",
-              cedantDateNaissance: cedantType === "physique" ? cedantPhysique.dateNaissance : "",
-              cedantLieuNaissance: cedantType === "physique" ? cedantPhysique.lieuNaissance : "",
-              cedantNationalite: cedantType === "physique" ? cedantPhysique.nationalite : "",
-              cedantAdresse: cedantType === "physique" ? `${cedantPhysique.adresse}, ${cedantPhysique.codePostal} ${cedantPhysique.ville}` : "",
-              cessionnaireCivilite: cessionnaireType === "physique" ? cessionnairePhysique.civilite : "",
-              cessionnaireNom: cessionnaireType === "physique" ? cessionnairePhysique.nom : cessionnaireMorale.denomination,
-              cessionnairePrenom: cessionnaireType === "physique" ? cessionnairePhysique.prenom : "",
-              cessionnaireDateNaissance: cessionnaireType === "physique" ? cessionnairePhysique.dateNaissance : "",
-              cessionnaireLieuNaissance: cessionnaireType === "physique" ? cessionnairePhysique.lieuNaissance : "",
-              cessionnaireNationalite: cessionnaireType === "physique" ? cessionnairePhysique.nationalite : "",
-              cessionnaireAdresse: cessionnaireType === "physique" ? `${cessionnairePhysique.adresse}, ${cessionnairePhysique.codePostal} ${cessionnairePhysique.ville}` : "",
-              cessionnaireRcs: cessionnaireType === "morale" ? cessionnaireMorale.rcsNumero : "",
-              nombreParts: nombrePartsCedees,
-              prixUnitaire: prixParPart,
-              prixTotal: prixTotal,
-              dateCession: dateSignature,
-              typeTitres: typeCession === "actions" ? "actions" : "parts",
-              nouveauDirigeantCivilite: nouveauDirigeantPhysique.civilite,
-              nouveauDirigeantNom: nouveauDirigeantPhysique.nom,
-              nouveauDirigeantPrenom: nouveauDirigeantPhysique.prenom,
-              nouveauDirigeantQualite: nouveauDirigeantQualite,
-              nouveauDirigeantDateNaissance: nouveauDirigeantPhysique.dateNaissance,
-              nouveauDirigeantNationalite: nouveauDirigeantPhysique.nationalite,
-              ancienDirigeantNom: cedantType === "physique" ? cedantPhysique.nom : cedantMorale.representantNom,
-              ancienDirigeantPrenom: cedantType === "physique" ? cedantPhysique.prenom : cedantMorale.representantPrenom,
-              typeVote: "unanime",
-              typeDecision: associeUnique ? "associe_unique" : "age",
-              generateAgrement,
-              generateConstatation,
-              generateChangementDirigeant: includChangementDirigeant,
-              mandataireFormalities,
-              modificationValeurNominale,
-            };
-            
-            const response = await fetch('/api/generate-pv', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-            });
-            
-            if (response.ok) {
-              const contentType = response.headers.get('content-type');
-              if (contentType?.includes('application/json')) {
-                const data = await response.json();
-                // Plusieurs documents - telecharger chacun
-                for (const doc of data.documents) {
-                  const blob = new Blob([doc.content], { type: 'text/plain;charset=utf-8' });
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = doc.name;
-                  document.body.appendChild(a);
-                  a.click();
-                  document.body.removeChild(a);
-                  window.URL.revokeObjectURL(url);
-                }
-              } else {
-                // Un seul document
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `PV-${societe.denomination.replace(/\s+/g, '-')}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-              }
-              alert('PV telecharge(s) avec succes !');
-            } else {
-              alert('Erreur lors de la generation des PV');
-            }
-          } catch (error) {
-            console.error('[v0] PV generation error:', error);
-            alert(`Erreur: ${error}`);
-          } finally {
-            setIsGenerating(false);
-          }
-        }}
-        disabled={!lieuSignature || !dateSignature || isGenerating || (!generateAgrement && !generateConstatation && !includChangementDirigeant)}
-        variant="outline"
-        className="w-full mt-3 border-[#5D9CEC] text-[#5D9CEC] hover:bg-[#5D9CEC]/10 py-6 text-lg"
-      >
-        <Download className="w-5 h-5 mr-2" />
-        Telecharger les PV d&apos;assemblee
-      </Button>
-    </>
-  ) : (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-6 bg-green-50 border border-green-200 rounded-xl"
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-          <Check className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h3 className="font-bold text-green-800">Document genere avec succes !</h3>
-          <p className="text-sm text-green-600">Votre acte de cession est pret</p>
-        </div>
-      </div>
-      
-      <div className="space-y-3">
-        {/* Apercu plein ecran */}
-        <Button
-          className="w-full bg-[#0D2459] hover:bg-[#1a3a7a] text-white gap-2"
-          onClick={() => setShowPdfPreview(true)}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          Apercu du document
-        </Button>
-        {/* Telechargement */}
-        {pdfBlobUrl && (
-          <a href={pdfBlobUrl} download={`acte-cession-${societe.denomination || 'document'}.pdf`} className="block">
-            <Button
-              variant="outline"
-              className="w-full border-green-300 text-green-700 hover:bg-green-100 gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              Telecharger l&apos;acte de cession (PDF)
-            </Button>
-          </a>
-        )}
-        {/* Bouton PV AG */}
-        <Button
-          onClick={async () => {
-            setIsGenerating(true);
-            try {
-              const payload = {
-                docType: 'pv',
-                typeCession,
-                typePropriete,
-                cedantType,
-                cedantPhysique,
-                cedantMorale,
-                cedantRegimeMatrimonial,
-                cedantConjointNom,
-                cedantConjointPrenom,
-                cessionnaireType,
-                cessionnairePhysique,
-                cessionnaireMorale,
-                cessionnaireRegimeMatrimonial,
-                cessionnaireAchatBiensPropres,
-                societe,
-                nombrePartsCedees,
-                numeroPartsDe,
-                numeroPartsA,
-                prixParPart,
-                prixTotal,
-                modePaiement,
-                echeances,
-                comptesCourants,
-                garantieActifPassif,
-                garantieSeuilDeclenchement,
-                garantieMontantMax,
-                garantieDuree,
-                garantieAdresse,
-                garantieEmail,
-                droitJouissanceImmeubles,
-                mandataireFormalities,
-                modificationValeurNominale,
-                fraisACharge,
-                tribunalCompetent,
-                lieuSignature,
-                dateSignature,
-                includChangementDirigeant,
-                nouveauDirigeantPhysique,
-                nouveauDirigeantQualite,
-              };
-              const response = await fetch('/api/generate-cession-pdf', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-              });
-              if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `PV-AG-${societe.denomination || 'document'}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-              } else {
-                alert('Erreur lors de la génération du PV AG');
-              }
-            } catch (error) {
-              console.error('[v0] PV AG generation error:', error);
-              alert(`Erreur: ${error}`);
-            } finally {
-              setIsGenerating(false);
-            }
-          }}
-          variant="outline"
-          className="w-full border-blue-300 text-blue-700 hover:bg-blue-100 gap-2"
-          disabled={isGenerating}
-        >
-          <FileText className="w-4 h-4" />
-          Telecharger le PV AG (PDF)
-        </Button>
-        {selectedFormule === "premium" && (
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 mt-4">
-            <p className="text-sm text-blue-800">
-              <Info className="w-4 h-4 inline mr-1" />
-              Formule Premium : Un juriste verifiera votre dossier sous 24h.
-            </p>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  )}
-  </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-            {/* Navigation buttons */}
-            <div className="flex justify-between mt-8 pt-6 border-t border-gray-100">
-              <Button
-                variant="outline"
-                onClick={handlePrev}
-                disabled={step === 1 || (step === 4 && paymentComplete)}
-                className="gap-2"
+
+              <button
+                onClick={() => { setGenerated(false); setStepIndex(0); setData(initialData); }}
+                className="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-700 underline"
               >
-                <ArrowLeft className="w-4 h-4" />
-                Précédent
-              </Button>
-              {step !== 3 && step !== 10 && (
-                <Button
-                  onClick={handleNext}
-                  disabled={!canProceed()}
-                  className="gap-2 bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white"
-                >
-                  Suivant
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              )}
+                Recommencer un nouveau dossier
+              </button>
             </div>
-          </div>
-        </main>
-      </div>
-      
-  {/* Footer */}
-  <footer className="bg-white border-t border-gray-100 py-4">
-    <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-[#1E3A8A]/60">
-      <div className="flex items-center gap-2">
-        <Shield className="w-4 h-4" />
-        <span>Securise</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <CheckCircle className="w-4 h-4" />
-        <span>Rapide</span>
-      </div>
-      <div className="flex items-center gap-2">
-        <HelpCircle className="w-4 h-4" />
-        <span>Support</span>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-center gap-6 mt-8 text-xs text-gray-400">
+          <span>🔒 Sécurisé</span>
+          <span>⚡ Rapide</span>
+          <span>💬 Support</span>
+        </div>
+        <p className="text-center text-xs text-gray-400 mt-3">
+          Besoin d&apos;aide ? <a href="mailto:support@legalcorners.fr" className="underline">support@legalcorners.fr</a>
+        </p>
       </div>
     </div>
-  </footer>
-  </div>
-  {/* Apercu PDF plein ecran */}
-  {pdfBlobUrl && (
-    <PdfPreviewModal
-      isOpen={showPdfPreview}
-      onClose={() => setShowPdfPreview(false)}
-      pdfUrl={pdfBlobUrl}
-      fileName={`acte-cession-${societe.denomination || 'document'}.pdf`}
-    />
-  )}
-  </>
   );
 }

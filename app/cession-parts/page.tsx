@@ -589,103 +589,176 @@ function StepRecap({ data, onGenerate }: { data: FormData; onGenerate: () => voi
   );
 }
 
+// ─── HTML converter ───────────────────────────────────────────────────────────
+function buildHtmlFromText(text: string): string {
+  const lines = text.split("\n");
+  const parts: string[] = [];
+  let inList = false;
+  let inTable = false;
+  let tableRows: string[] = [];
+  let isFirstTableRow = true;
+
+  function flushList() {
+    if (inList) { parts.push("</ul>"); inList = false; }
+  }
+  function flushTable() {
+    if (inTable) {
+      parts.push(`<table style="width:100%;border-collapse:collapse;margin:6px 0;font-size:10px">${tableRows.join("")}</table>`);
+      tableRows = []; inTable = false; isFirstTableRow = true;
+    }
+  }
+  function esc(s: string) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const t = raw.trim();
+    const isTableLine = t.startsWith("|") && t.endsWith("|") && t.length > 1;
+    const isBullet = t.startsWith("•");
+
+    if (!isTableLine) flushTable();
+    if (!isBullet) flushList();
+
+    // Double separator ═════
+    if (/^═{5,}/.test(t)) {
+      parts.push(`<div style="border-top:2px solid #1a2744;margin:8px 0"></div>`);
+      continue;
+    }
+    // Single separator ─────
+    if (/^─{5,}/.test(t)) {
+      parts.push(`<div style="border-top:1px solid #bbb;margin:5px 0"></div>`);
+      continue;
+    }
+    // Markdown table separator |---|---|
+    if (/^\|[-|: ]+\|$/.test(t)) continue;
+
+    // Markdown table data row
+    if (isTableLine) {
+      const cells = t.split("|").map(c => c.trim()).filter(c => c !== "");
+      const nextLine = lines[i + 1]?.trim() || "";
+      const isHeader = isFirstTableRow || /^\|[-|: ]+\|$/.test(nextLine);
+      if (!inTable) inTable = true;
+      const tag = isHeader ? "th" : "td";
+      const cellStyle = isHeader
+        ? `border:1px solid #1a2744;padding:5px 8px;background:#1a2744;color:white;font-weight:bold;text-align:left`
+        : `border:1px solid #ccc;padding:4px 8px;text-align:left`;
+      tableRows.push(`<tr>${cells.map(c => `<${tag} style="${cellStyle}">${esc(c)}</${tag}>`).join("")}</tr>`);
+      if (isFirstTableRow) isFirstTableRow = false;
+      continue;
+    }
+
+    // Empty line
+    if (t === "") { parts.push(`<div style="height:5px"></div>`); continue; }
+
+    // Document main title
+    if (/^(CESSION D['''`]ACTIONS|ACTE DE CESSION|PROCÈS-VERBAL|DÉCISIONS UNANIMES)/.test(t)) {
+      parts.push(`<div style="font-size:13px;color:#1a2744;font-weight:bold;text-align:center;margin:10px 0 5px;font-family:Georgia,serif;text-transform:uppercase">${esc(t)}</div>`);
+      continue;
+    }
+    // ARTICLE / RÉSOLUTION / block headers
+    if (/^(ARTICLE \d+|RÉSOLUTION \d+|OUVERTURE|SIGNATURES|ORDRE DU JOUR)/.test(t)) {
+      parts.push(`<div style="font-size:10.5px;color:#1a2744;font-weight:bold;margin:10px 0 3px;text-transform:uppercase;letter-spacing:0.3px">${esc(t)}</div>`);
+      continue;
+    }
+    // Sub-section X.X headers
+    if (/^\d+\.\d+ /.test(t)) {
+      parts.push(`<div style="font-size:10.5px;color:#333;font-weight:bold;margin:6px 0 2px">${esc(t)}</div>`);
+      continue;
+    }
+    // Signature labels
+    if (/^(LE CÉDANT|LE CESSIONNAIRE|LE PRÉSIDENT|LE CONJOINT|L['']ASSOCIÉ)/.test(t)) {
+      parts.push(`<div style="font-weight:bold;color:#1a2744;margin:10px 0 2px">${esc(t)}</div>`);
+      continue;
+    }
+    // Bullet points
+    if (isBullet) {
+      if (!inList) { parts.push(`<ul style="margin:3px 0;padding-left:18px">`); inList = true; }
+      parts.push(`<li style="margin:1px 0;font-size:10.5px">${esc(t.slice(1).trim())}</li>`);
+      continue;
+    }
+    // Date / signature fill-in lines
+    if (/^(Date\s*:|Signature\s*:|"Lu et approuvé|"Bon pour)/.test(t)) {
+      parts.push(`<div style="font-size:10px;color:#555;margin:1px 0;font-style:italic">${esc(t)}</div>`);
+      continue;
+    }
+    // Regular paragraph
+    parts.push(`<p style="margin:2px 0;font-size:10.5px">${esc(t)}</p>`);
+  }
+
+  flushList();
+  flushTable();
+  return parts.join("");
+}
+
 // ─── Download helper ──────────────────────────────────────────────────────────
 async function downloadPdf(content: string, filename: string) {
   const { jsPDF } = await import("jspdf");
+  const { default: html2canvas } = await import("html2canvas");
+
+  // Build styled HTML from text
+  const htmlContent = buildHtmlFromText(content);
+
+  // Off-screen A4 container (794px = A4 width at 96 DPI)
+  const container = document.createElement("div");
+  Object.assign(container.style, {
+    position: "absolute",
+    top: "-99999px",
+    left: "-99999px",
+    width: "794px",
+    background: "#fff",
+    fontFamily: "Arial, Helvetica, sans-serif",
+    fontSize: "11px",
+    lineHeight: "1.6",
+    color: "#1a1a1a",
+    padding: "60px 65px",
+    boxSizing: "border-box",
+  });
+  container.innerHTML = htmlContent;
+  document.body.appendChild(container);
+
+  const canvas = await html2canvas(container, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    logging: false,
+    width: 794,
+  });
+
+  document.body.removeChild(container);
+
+  // A4 page height in canvas pixels (scale 2): 297mm / 210mm * canvas.width
+  const A4_W = canvas.width;
+  const A4_H = Math.round(A4_W * (297 / 210));
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  let pageTop = 0;
+  let pageNum = 1;
+  const totalPages = Math.ceil(canvas.height / A4_H);
 
-  const marginLeft = 20;
-  const marginRight = 20;
-  const marginTop = 20;
-  const pageWidth = 210;
-  const usableWidth = pageWidth - marginLeft - marginRight;
-  const lineHeight = 5.5;
-  const pageHeight = 297;
-  const marginBottom = 20;
+  while (pageTop < canvas.height) {
+    if (pageNum > 1) doc.addPage();
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+    const sliceH = Math.min(A4_H, canvas.height - pageTop);
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = A4_W;
+    pageCanvas.height = A4_H;
+    const ctx = pageCanvas.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, A4_W, A4_H);
+    ctx.drawImage(canvas, 0, pageTop, A4_W, sliceH, 0, 0, A4_W, sliceH);
 
-  let y = marginTop;
-  const lines = content.split("\n");
+    const imgData = pageCanvas.toDataURL("image/jpeg", 0.93);
+    doc.addImage(imgData, "JPEG", 0, 0, 210, 297);
 
-  for (const rawLine of lines) {
-    // Detect section headers (═══ or ───)
-    const isSeparatorDouble = /^═{10,}/.test(rawLine);
-    const isSeparatorSingle = /^─{10,}/.test(rawLine);
-
-    if (isSeparatorDouble) {
-      // Draw a thick rule
-      if (y + 2 > pageHeight - marginBottom) { doc.addPage(); y = marginTop; }
-      doc.setDrawColor(26, 39, 68);
-      doc.setLineWidth(0.5);
-      doc.line(marginLeft, y, pageWidth - marginRight, y);
-      y += 3;
-      continue;
-    }
-    if (isSeparatorSingle) {
-      if (y + 2 > pageHeight - marginBottom) { doc.addPage(); y = marginTop; }
-      doc.setDrawColor(180, 180, 180);
-      doc.setLineWidth(0.2);
-      doc.line(marginLeft, y, pageWidth - marginRight, y);
-      y += 3;
-      continue;
-    }
-
-    // Detect main title (all caps, centred)
-    const isMainTitle = /^(CESSION D'ACTIONS|ACTE DE CESSION|PROCÈS-VERBAL)/.test(rawLine.trim());
-    // Detect article headers like "ARTICLE X –"
-    const isArticle = /^ARTICLE \d+/.test(rawLine.trim());
-    // Detect sub-headers like "1.1 Le Cédant"
-    const isSubHeader = /^\d+\.\d+ /.test(rawLine.trim());
-    // Detect SIGNATURES block
-    const isSignatures = /^SIGNATURES$/.test(rawLine.trim());
-
-    if (isMainTitle) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(13);
-      doc.setTextColor(26, 39, 68);
-    } else if (isArticle || isSignatures) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(26, 39, 68);
-    } else if (isSubHeader) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.setTextColor(50, 50, 50);
-    } else {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(30, 30, 30);
-    }
-
-    const wrapped = doc.splitTextToSize(rawLine || " ", usableWidth);
-    for (const wLine of wrapped) {
-      if (y + lineHeight > pageHeight - marginBottom) {
-        doc.addPage();
-        y = marginTop;
-      }
-      if (isMainTitle) {
-        doc.text(wLine, pageWidth / 2, y, { align: "center" });
-      } else {
-        doc.text(wLine, marginLeft, y);
-      }
-      y += isMainTitle ? lineHeight + 1 : lineHeight;
-    }
-
-    // Extra space after blank lines
-    if (rawLine.trim() === "") y += 1;
-  }
-
-  // Page numbers
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFont("helvetica", "normal");
+    // Footer text overlay
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
-    doc.text(`${i} / ${totalPages}`, pageWidth / 2, pageHeight - 8, { align: "center" });
-    doc.text("Document confidentiel — LegalCorners", marginLeft, pageHeight - 8);
+    doc.text(`${pageNum} / ${totalPages}`, 105, 291, { align: "center" });
+    doc.text("Document confidentiel — LegalCorners", 20, 291);
+
+    pageTop += A4_H;
+    pageNum++;
   }
 
   doc.save(filename);

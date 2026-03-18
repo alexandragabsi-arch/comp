@@ -1377,72 +1377,39 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
-                        <Input
-                          type="date"
-                          value={cedantPhysique.dateNaissance}
-                          onChange={(e) => setCedantPhysique({...cedantPhysique, dateNaissance: e.target.value})}
-                        />
+                        <Input type="date" value={cedantPhysique.dateNaissance} onChange={(e) => setCedantPhysique({...cedantPhysique, dateNaissance: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de naissance</label>
-                        <Input
-                          placeholder="Paris"
-                          value={cedantPhysique.lieuNaissance}
-                          onChange={(e) => setCedantPhysique({...cedantPhysique, lieuNaissance: e.target.value})}
-                        />
+                        <Input placeholder="Paris" value={cedantPhysique.lieuNaissance} onChange={(e) => setCedantPhysique({...cedantPhysique, lieuNaissance: e.target.value})} />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
-                        <Input
-                          placeholder="française"
-                          value={cedantPhysique.nationalite}
-                          onChange={(e) => setCedantPhysique({...cedantPhysique, nationalite: e.target.value})}
-                        />
+                        <Input placeholder="française" value={cedantPhysique.nationalite} onChange={(e) => setCedantPhysique({...cedantPhysique, nationalite: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <Input
-                          type="email"
-                          placeholder="prenom@email.com"
-                          value={cedantPhysique.email}
-                          onChange={(e) => setCedantPhysique({...cedantPhysique, email: e.target.value})}
-                        />
+                        <Input type="email" placeholder="prenom@email.com" value={cedantPhysique.email} onChange={(e) => setCedantPhysique({...cedantPhysique, email: e.target.value})} />
                       </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-                      <Input
-                        placeholder="12 rue de la Paix"
-                        value={cedantPhysique.adresse}
-                        onChange={(e) => setCedantPhysique({...cedantPhysique, adresse: e.target.value})}
-                      />
+                      <Input placeholder="12 rue de la Paix" value={cedantPhysique.adresse} onChange={(e) => setCedantPhysique({...cedantPhysique, adresse: e.target.value})} />
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Code postal</label>
-                        <Input
-                          placeholder="75001"
-                          value={cedantPhysique.codePostal}
-                          onChange={(e) => setCedantPhysique({...cedantPhysique, codePostal: e.target.value})}
-                        />
+                        <Input placeholder="75001" value={cedantPhysique.codePostal} onChange={(e) => setCedantPhysique({...cedantPhysique, codePostal: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
-                        <Input
-                          placeholder="Paris"
-                          value={cedantPhysique.ville}
-                          onChange={(e) => setCedantPhysique({...cedantPhysique, ville: e.target.value})}
-                        />
+                        <Input placeholder="Paris" value={cedantPhysique.ville} onChange={(e) => setCedantPhysique({...cedantPhysique, ville: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
-                        <Input
-                          placeholder="France"
-                          value={cedantPhysique.pays}
-                          onChange={(e) => setCedantPhysique({...cedantPhysique, pays: e.target.value})}
-                        />
+                        <Input placeholder="France" value={cedantPhysique.pays} onChange={(e) => setCedantPhysique({...cedantPhysique, pays: e.target.value})} />
                       </div>
                     </div>
                     <div>
@@ -3194,7 +3161,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 acquisitionBiens: cessionnaireAchatBiensPropres ? "propres" : "communs",
               },
               prix: {
-                prixTotal: prixTotal,
+                prixTotal,
                 typePaiement: (modePaiement === "echeances" ? "echelonne" : "comptant") as any,
                 echeances: modePaiement === "echeances" ? echeances.map(e => ({ montant: e.montant, date: e.date })) : undefined,
               },
@@ -3212,9 +3179,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 notificationEmail: garantieEmail,
                 escrow: false,
               },
-              comptesCourants: {
-                option: (comptesCourants || "absent") as any,
-              },
+              comptesCourants: { option: (comptesCourants || "absent") as any },
               nonConcurrence: {
                 active: clauseNonConcurrenceVendeur || clauseNonConcurrenceAcheteur,
                 dureeAns: clauseNCVDuree,
@@ -3257,24 +3222,21 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
             });
 
             if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
-
             const result = await response.json();
 
-            const downloadBlob = (blob: Blob, filename: string) => {
+            const dl = (blob: Blob, name: string) => {
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement('a');
-              a.href = url;
-              a.download = filename;
-              document.body.appendChild(a);
-              a.click();
+              a.href = url; a.download = name;
+              document.body.appendChild(a); a.click();
               document.body.removeChild(a);
               window.URL.revokeObjectURL(url);
             };
 
-            const nomSociete = (societe.denomination || "societe").replace(/\s+/g, '-');
-            if (result.acte) downloadBlob(await generateActeDocx(result.acte, formData as any), `Acte-Cession-${nomSociete}.docx`);
-            if (result.pv) downloadBlob(await generatePVDocx(result.pv, formData as any), `PV-AG-${nomSociete}.docx`);
-            if (result.declaration) downloadBlob(await generateDeclarationDocx(result.declaration, formData as any), `Declaration-${nomSociete}.docx`);
+            const nom = (societe.denomination || "societe").replace(/\s+/g, '-');
+            if (result.acte) dl(await generateActeDocx(result.acte, formData as any), `Acte-Cession-${nom}.docx`);
+            if (result.pv) dl(await generatePVDocx(result.pv, formData as any), `PV-AG-${nom}.docx`);
+            if (result.declaration) dl(await generateDeclarationDocx(result.declaration, formData as any), `Declaration-${nom}.docx`);
 
             setDocumentGenere(true);
           } catch (error) {

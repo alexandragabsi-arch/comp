@@ -80,6 +80,8 @@ export interface GAPInfo {
   escrowMontant?: string;
   escrowBeneficiaire?: string;
   notificationDelaiMois?: string;
+  notificationAdresse?: string;
+  notificationEmail?: string;
 }
 
 export interface ComptesCourantsInfo {
@@ -121,11 +123,40 @@ export interface PVInfo {
   ancienDirigeantPrenom?: string;
   ancienDirigeantDateNaissance?: string;
   ancienDirigeantFonction?: string;
+  // Nouveau dirigeant — type
+  nouveauDirigeantTypePersonne?: "physique" | "morale";
+  // Nouveau dirigeant — personne physique (repris du cessionnaire + champs déclaration)
   nouveauDirigeantCivilite?: "M." | "Mme";
   nouveauDirigeantNom?: string;
   nouveauDirigeantPrenom?: string;
   nouveauDirigeantDateNaissance?: string;
+  nouveauDirigeantVilleNaissance?: string;
+  nouveauDirigeantNationalite?: string;
   nouveauDirigeantAdresse?: string;
+  nouveauDirigeantNomPere?: string;
+  nouveauDirigeantPrenomPere?: string;
+  nouveauDirigeantNomMere?: string;
+  nouveauDirigeantPrenomMere?: string;
+  // Nouveau dirigeant — personne morale
+  nouveauDirigeantDenomination?: string;
+  nouveauDirigeantFormeJuridiqueStr?: string;
+  nouveauDirigeantCapitalStr?: string;
+  nouveauDirigeantRCSSiege?: string;
+  nouveauDirigeantRCSNum?: string;
+  nouveauDirigeantSiegeSocial?: string;
+  // Représentant permanent (si PM dirigeant)
+  rpCivilite?: "M." | "Mme";
+  rpNom?: string;
+  rpPrenom?: string;
+  rpDateNaissance?: string;
+  rpVilleNaissance?: string;
+  rpNationalite?: string;
+  rpAdresse?: string;
+  rpNomPere?: string;
+  rpPrenomPere?: string;
+  rpNomMere?: string;
+  rpPrenomMere?: string;
+  // Mandat
   nouveauDirigeantFonction?: string;
   dureeMandat?: "illimitée" | string;
   mandataireFormalities?: string;

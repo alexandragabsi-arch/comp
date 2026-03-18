@@ -1376,7 +1376,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
                         <Input
                           type="date"
                           value={cedantPhysique.dateNaissance}
@@ -1384,9 +1384,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de naissance *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de naissance</label>
                         <Input
-                          placeholder="Paris (75)"
+                          placeholder="Paris"
                           value={cedantPhysique.lieuNaissance}
                           onChange={(e) => setCedantPhysique({...cedantPhysique, lieuNaissance: e.target.value})}
                         />
@@ -1394,7 +1394,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nationalité *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
                         <Input
                           placeholder="française"
                           value={cedantPhysique.nationalite}
@@ -1405,23 +1405,23 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <Input
                           type="email"
-                          placeholder="email@exemple.com"
+                          placeholder="prenom@email.com"
                           value={cedantPhysique.email}
                           onChange={(e) => setCedantPhysique({...cedantPhysique, email: e.target.value})}
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
                       <Input
-                        placeholder="Numéro et rue"
+                        placeholder="12 rue de la Paix"
                         value={cedantPhysique.adresse}
                         onChange={(e) => setCedantPhysique({...cedantPhysique, adresse: e.target.value})}
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Code postal</label>
                         <Input
                           placeholder="75001"
                           value={cedantPhysique.codePostal}
@@ -1429,7 +1429,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
                         <Input
                           placeholder="Paris"
                           value={cedantPhysique.ville}
@@ -1439,6 +1439,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
                         <Input
+                          placeholder="France"
                           value={cedantPhysique.pays}
                           onChange={(e) => setCedantPhysique({...cedantPhysique, pays: e.target.value})}
                         />
@@ -1446,7 +1447,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nombre de {typeCession === "actions" ? "actions" : "parts"} détenues *
+                        Nombre de {typeCession === "actions" ? "actions" : "parts"} detenues *
                       </label>
                       <Input
                         type="number"
@@ -3255,9 +3256,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               body: JSON.stringify({ formData, type: "both" }),
             });
 
-            if (!response.ok) {
-              throw new Error(`Erreur serveur: ${response.status}`);
-            }
+            if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
 
             const result = await response.json();
 
@@ -3273,19 +3272,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
             };
 
             const nomSociete = (societe.denomination || "societe").replace(/\s+/g, '-');
-
-            if (result.acte) {
-              const acteBlob = await generateActeDocx(result.acte, formData as any);
-              downloadBlob(acteBlob, `Acte-Cession-${nomSociete}.docx`);
-            }
-            if (result.pv) {
-              const pvBlob = await generatePVDocx(result.pv, formData as any);
-              downloadBlob(pvBlob, `PV-AG-${nomSociete}.docx`);
-            }
-            if (result.declaration) {
-              const declBlob = await generateDeclarationDocx(result.declaration, formData as any);
-              downloadBlob(declBlob, `Declaration-Non-Condamnation-${nomSociete}.docx`);
-            }
+            if (result.acte) downloadBlob(await generateActeDocx(result.acte, formData as any), `Acte-Cession-${nomSociete}.docx`);
+            if (result.pv) downloadBlob(await generatePVDocx(result.pv, formData as any), `PV-AG-${nomSociete}.docx`);
+            if (result.declaration) downloadBlob(await generateDeclarationDocx(result.declaration, formData as any), `Declaration-${nomSociete}.docx`);
 
             setDocumentGenere(true);
           } catch (error) {

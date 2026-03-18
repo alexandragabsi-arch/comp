@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { FormData, StepId } from "../types/form";
-import { generateActeCession } from "../lib/generateActe";
-import { generatePV } from "../lib/generatePV";
 
 // ─── Initial state ───────────────────────────────────────────────────────────
 const initialData: FormData = {
@@ -585,7 +583,7 @@ function StepRecap({ data, onGenerate }: { data: FormData; onGenerate: () => voi
         onClick={onGenerate}
         className="mt-6 w-full bg-[#1a2744] text-white py-3 rounded-xl font-semibold hover:bg-[#2a3754] transition-colors"
       >
-        Générer les documents
+        Générer les documents avec Claude AI
       </button>
     </div>
   );
@@ -607,6 +605,9 @@ export default function CessionParts() {
   const [stepIndex, setStepIndex] = useState(0);
   const [data, setData] = useState<FormData>(initialData);
   const [generated, setGenerated] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState("");
+  const [error, setError] = useState("");
   const [acteText, setActeText] = useState("");
   const [pvText, setPvText] = useState("");
   const [preview, setPreview] = useState<"acte" | "pv" | null>(null);
@@ -617,12 +618,34 @@ export default function CessionParts() {
     setData(prev => ({ ...prev, ...partial }));
   }
 
-  function handleGenerate() {
-    const acte = generateActeCession(data);
-    const pv = generatePV(data);
-    setActeText(acte);
-    setPvText(pv);
-    setGenerated(true);
+  async function handleGenerate() {
+    setLoading(true);
+    setError("");
+    setLoadingMsg("Claude rédige l'acte de cession...");
+
+    try {
+      const res = await fetch("/api/generate-documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formData: data, type: "both" }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erreur serveur");
+      }
+
+      setLoadingMsg("Claude rédige le PV AG...");
+      const result = await res.json();
+      setActeText(result.acte || "");
+      setPvText(result.pv || "");
+      setGenerated(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur inconnue");
+    } finally {
+      setLoading(false);
+      setLoadingMsg("");
+    }
   }
 
   return (
@@ -665,8 +688,24 @@ export default function CessionParts() {
           ))}
         </div>
 
+        {/* Loading overlay */}
+        {loading && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 text-center shadow-2xl">
+              <div className="w-12 h-12 border-4 border-[#1a2744] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+              <p className="font-semibold text-[#1a2744]">{loadingMsg || "Génération en cours..."}</p>
+              <p className="text-sm text-gray-500 mt-2">Claude rédige vos documents juridiques</p>
+            </div>
+          </div>
+        )}
+
         {/* Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+              ⚠ {error}
+            </div>
+          )}
           {!generated ? (
             <>
               {currentStep.id === "societe" && <StepSociete data={data} set={set} />}

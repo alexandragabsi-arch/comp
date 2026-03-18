@@ -260,6 +260,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
     representantNom: "",
     representantPrenom: "",
     representantQualite: "",
+    email: "",
   });
   const [cessionnaireSirenSearch, setCessionnaireSirenSearch] = useState("");
   const [cessionnaireSirenFound, setCessionnaireSirenFound] = useState(false);
@@ -1847,6 +1848,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                             representantNom: "",
                             representantPrenom: "",
                             representantQualite: "",
+                            email: "",
                           });
                         }}
                       >
@@ -2164,7 +2166,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   typeCession={typeCession}
                   prixTotal={prixTotal}
                   nombrePartsCedees={nombrePartsCedees}
-                  nombrePartsTotal={societe.nombreParts || "1"}
+                  nombrePartsTotal={societe.nombreTotalParts || "1"}
                 />
               )}
             </motion.div>
@@ -3065,7 +3067,6 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 docType: 'pv',
                 typeSociete: societe.formeJuridique,
                 nomSociete: societe.denomination,
-              typeSociete: societe.formeJuridique,
               capitalSocial: societe.capital,
               rcsVille: societe.rcsVille,
               rcsNumero: societe.rcsNumero,
@@ -3115,7 +3116,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
             const response = await fetch('/api/generate-pv', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(pvPayload),
+              body: JSON.stringify(payload),
             });
             
             if (response.ok) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { X, FileText, Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
@@ -44,11 +45,6 @@ function stripCoverBlock(text: string): string {
   return text.slice(second + 4).trimStart();
 }
 
-/** Remove **...** markers so they don't show as literal asterisks */
-function cleanBold(text: string): string {
-  return text.replace(/\*\*(.+?)\*\*/g, "$1");
-}
-
 /** Convert box-drawing separators (═══, ───, ___) to markdown --- */
 function normalizeMarkdown(text: string): string {
   return text
@@ -70,6 +66,8 @@ export function DocumentPreviewPanel({
   pdfFileName,
   onClose,
 }: DocumentPreviewPanelProps) {
+  const pagesRef = useRef<HTMLDivElement>(null);
+
   const isDeclaration = /^#\s+DÉCLARATION/i.test(text.trimStart());
   const cover = parseCoverData(text);
   const bodyText = isDeclaration
@@ -77,99 +75,28 @@ export function DocumentPreviewPanel({
     : normalizeMarkdown(stripCoverBlock(text));
 
   const handleDownloadPdf = async () => {
+    if (!pagesRef.current) return;
+    const html2canvas = (await import("html2canvas")).default;
     const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const marginL = 22;
-    const marginR = 22;
-    const marginT = 22;
-    const pageWidth = 210 - marginL - marginR;
-    const pageHeight = 297 - marginT * 2;
-    let y = marginT;
 
-    const addPage = () => { doc.addPage(); y = marginT; };
-    const checkPage = (needed: number) => { if (y + needed > marginT + pageHeight) addPage(); };
+    const pages = pagesRef.current.querySelectorAll<HTMLElement>("[data-a4-page]");
+    if (!pages.length) return;
 
-    const lines = text.split("\n");
-    for (const line of lines) {
-      const raw = line.trimEnd();
-      const isH1 = /^#{1}\s/.test(raw);
-      const isH2 = /^#{2}\s/.test(raw);
-      const isH3 = /^#{3,}\s/.test(raw);
-      const trimmed = raw.replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "").trim();
-      const isArticle = /^(ARTICLE \d+|RÉSOLUTION \d+)/i.test(trimmed);
-      const isEmpty = !trimmed;
-      const isSep = /^[-=─═]{3,}$/.test(trimmed);
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
 
-      if (isEmpty) { y += 3; continue; }
-      if (isSep) {
-        checkPage(4);
-        doc.setDrawColor(180, 180, 180);
-        doc.line(marginL, y, 210 - marginR, y);
-        y += 4;
-        continue;
-      }
-
-      if (isH1) {
-        checkPage(14);
-        y += 4;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(15);
-        doc.setTextColor(26, 39, 68);
-        const wrapped = doc.splitTextToSize(trimmed, pageWidth);
-        for (const wl of wrapped) { doc.text(wl, 105, y, { align: "center" }); y += 7; }
-        y += 4;
-      } else if (isH2 || isArticle) {
-        checkPage(12);
-        y += 5;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-        doc.setTextColor(26, 39, 68);
-        if (isArticle) {
-          doc.setFillColor(245, 246, 250);
-          const wrapped = doc.splitTextToSize(trimmed, pageWidth - 6);
-          doc.rect(marginL, y - 4, pageWidth, wrapped.length * 6 + 4, "F");
-          doc.setDrawColor(34, 197, 94);
-          doc.setLineWidth(0.8);
-          doc.line(marginL, y - 4, marginL, y + wrapped.length * 6);
-          doc.setLineWidth(0.2);
-          for (const wl of wrapped) { doc.text(wl, marginL + 4, y); y += 6; }
-        } else {
-          const wrapped = doc.splitTextToSize(trimmed, pageWidth);
-          for (const wl of wrapped) { doc.text(wl, marginL, y); y += 6; }
-        }
-        y += 3;
-      } else if (isH3) {
-        checkPage(10);
-        y += 3;
-        doc.setFont("helvetica", "bold"); doc.setFontSize(10);
-        doc.setTextColor(26, 39, 68);
-        const wrapped = doc.splitTextToSize(trimmed, pageWidth);
-        for (const wl of wrapped) { doc.text(wl, marginL, y); y += 5.5; }
-        y += 2;
-      } else if (/^\|/.test(trimmed)) {
-        // Table row — skip (handled as group below via previous logic, simplified here)
-        doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-        doc.setTextColor(50, 50, 50);
-        const cells = trimmed.replace(/^\|/, "").replace(/\|$/, "").split("|").map(c => c.trim());
-        const colW = pageWidth / Math.max(cells.length, 1);
-        checkPage(6);
-        cells.forEach((cell, ci) => {
-          const wrapped = doc.splitTextToSize(cell, colW - 2);
-          doc.text(wrapped[0] || "", marginL + ci * colW + 1, y);
-        });
-        y += 6;
-      } else {
-        // Body paragraph
-        doc.setFont("helvetica", "normal"); doc.setFontSize(10);
-        doc.setTextColor(40, 40, 40);
-        const wrapped = doc.splitTextToSize(trimmed, pageWidth);
-        for (const wl of wrapped) {
-          checkPage(5.5);
-          doc.text(wl, marginL, y);
-          y += 5.5;
-        }
-        y += 1.5;
-      }
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i], {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
     }
-    doc.save(pdfFileName);
+
+    pdf.save(pdfFileName);
   };
 
   return (
@@ -196,7 +123,7 @@ export function DocumentPreviewPanel({
 
       {/* ── Pages scroll area ── */}
       <div className="flex-1 overflow-y-auto py-8 px-4" style={{ background: "#F8F8F5" }}>
-        <div className="flex flex-col items-center gap-8 max-w-[900px] mx-auto">
+        <div ref={pagesRef} className="flex flex-col items-center gap-8 max-w-[900px] mx-auto">
 
           {/* ══ PAGE DE GARDE (acte/PV seulement) ══ */}
           {!isDeclaration && (
@@ -309,6 +236,7 @@ function A4Page({ children, pageNumber }: { children: React.ReactNode; pageNumbe
   return (
     <div className="relative w-full" style={{ maxWidth: "794px" }}>
       <div
+        data-a4-page=""
         className="bg-white shadow-xl rounded-sm w-full"
         style={{ minHeight: "1123px", padding: "60px 72px" }}
       >

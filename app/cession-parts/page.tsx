@@ -693,7 +693,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               {/* Cédant */}
               <div className="bg-white rounded-xl p-6 border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cédant (vendeur)</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
                     onClick={() => setCedantType("physique")}
                     className={cn(
@@ -725,7 +725,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               {/* Cessionnaire */}
               <div className="bg-white rounded-xl p-6 border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cessionnaire (acheteur)</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
                     onClick={() => setCessionnaireType("physique")}
                     className={cn(
@@ -755,7 +755,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               {/* Estimation */}
               <div className="bg-white rounded-xl p-6 border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Estimation de la cession</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Nombre de {typeCession === "actions" ? "actions" : "parts"} à céder
@@ -1026,7 +1026,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de carte</label>
                       <Input placeholder="4242 4242 4242 4242" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date d&apos;expiration</label>
                         <Input placeholder="MM/AA" />
@@ -1253,7 +1253,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       onChange={(e) => setSociete({...societe, siegeAdresse: e.target.value})}
                     />
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
                       <Input
@@ -1351,7 +1351,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
                 {cedantType === "physique" ? (
                   <>
-                    <div className="grid grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Civilité *</label>
                         <Select value={cedantPhysique.civilite} onValueChange={(v) => setCedantPhysique({...cedantPhysique, civilite: v as "M." | "Mme"})}>
@@ -1364,7 +1364,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="col-span-3 grid grid-cols-2 gap-4">
+                      <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
                           <Input
@@ -1383,7 +1383,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
                         <Input
@@ -1401,7 +1401,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
                         <Input
@@ -1428,7 +1428,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         onChange={(e) => setCedantPhysique({...cedantPhysique, adresse: e.target.value})}
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Code postal</label>
                         <Input
@@ -1471,7 +1471,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         <h4 className="font-medium text-[#1E3A8A]">Regime matrimonial *</h4>
                         <TooltipHelp title={TOOLTIPS.regimeMatrimonial.title} content={TOOLTIPS.regimeMatrimonial.content} />
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <button
                           onClick={() => setCedantRegimeMatrimonial("communaute")}
                           className={cn(
@@ -1516,7 +1516,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                             <AlertTriangle className="w-4 h-4 inline mr-1" />
                             Le conjoint doit consentir à la cession
                           </p>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-amber-800 mb-1">Nom du conjoint *</label>
                               <Input
@@ -1709,7 +1709,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         onChange={(e) => setCedantMorale({...cedantMorale, siegeAdresse: e.target.value})}
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
                         <Input
@@ -1734,7 +1734,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Capital social (euros) *</label>
                         <Input
@@ -1755,7 +1755,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     </div>
                     <div className="pt-4 border-t">
                       <h4 className="font-medium text-[#1E3A8A] mb-3">Representant legal</h4>
-                      <div className="grid grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Civilite</label>
                           <Select value={cedantMorale.representantCivilite} onValueChange={(v) => setCedantMorale({...cedantMorale, representantCivilite: v as "M." | "Mme"})}>
@@ -2008,7 +2008,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         onChange={(e) => setCessionnaireMorale({...cessionnaireMorale, siegeAdresse: e.target.value})}
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Code postal *</label>
                         <Input
@@ -2037,7 +2037,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Capital social (euros) *</label>
                         <Input
@@ -2060,7 +2060,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     </div>
                     <div className="pt-4 border-t">
                       <h4 className="font-medium text-[#1E3A8A] mb-3">Représentant légal</h4>
-                      <div className="grid grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Civilité</label>
                           <Select value={cessionnaireMorale.representantCivilite} onValueChange={(v) => setCessionnaireMorale({...cessionnaireMorale, representantCivilite: v as "M." | "Mme"})}>
@@ -2160,7 +2160,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <label className="block text-sm font-medium text-[#1E3A8A] mb-3">
                       Numérotation des {typeCession === "actions" ? "actions" : "parts"} cédées *
                     </label>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Du numéro</label>
                         <Input
@@ -2199,7 +2199,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
                 <div className="pt-4 border-t">
                   <h4 className="font-medium text-[#1E3A8A] mb-3">Mode de paiement *</h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <button
                       onClick={() => setModePaiement("comptant")}
                       className={cn(
@@ -2315,7 +2315,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Structure de l&apos;actionnariat *</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button
                       onClick={() => setAssocieUnique(true)}
                       className={cn(
@@ -2368,7 +2368,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   </label>
                 </div>
                 {clauseNonConcurrenceVendeur && (
-                  <div className="ml-7 grid grid-cols-2 gap-4">
+                  <div className="ml-0 sm:ml-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Zone géographique</label>
                       <Input
@@ -2399,7 +2399,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   </label>
                 </div>
                 {clauseNonConcurrenceAcheteur && (
-                  <div className="ml-7 grid grid-cols-2 gap-4">
+                  <div className="ml-0 sm:ml-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Zone géographique</label>
                       <Input
@@ -2425,7 +2425,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
     <h3 className="font-semibold text-[#1E3A8A]">Comptes courants d&apos;associes *</h3>
     <TooltipHelp title={TOOLTIPS.comptesCourants.title} content={TOOLTIPS.comptesCourants.content} />
   </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     onClick={() => setComptesCourants("aucun")}
                     className={cn(
@@ -2477,7 +2477,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 
                 {garantieActifPassif && (
                   <div className="ml-7 space-y-4">
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Seuil de déclenchement (€)</label>
                         <Input
@@ -2531,7 +2531,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
     <h3 className="font-semibold text-[#1E3A8A]">Frais de la cession *</h3>
     <TooltipHelp title={TOOLTIPS.fraisCharge.title} content={TOOLTIPS.fraisCharge.content} />
   </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => setFraisACharge("cessionnaire")}
                     className={cn(
@@ -3122,7 +3122,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <p className="text-gray-600">Finalisez votre acte de cession</p>
               </div>
               <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de signature *</label>
                     <Input

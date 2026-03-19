@@ -1839,6 +1839,74 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Informations cessionnaire</h1>
                 <p className="text-gray-600">Renseignez les coordonnees de l&apos;acheteur</p>
               </div>
+              {cessionnaireType === "physique" && (
+                <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                  <h3 className="font-semibold text-[#1E3A8A] flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Informations personnelles du cessionnaire
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Civilité *</label>
+                      <Select value={cessionnairePhysique.civilite} onValueChange={(v) => setCessionnairePhysique({...cessionnairePhysique, civilite: v as "M." | "Mme"})}>
+                        <SelectTrigger><SelectValue placeholder="--" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="M.">M.</SelectItem>
+                          <SelectItem value="Mme">Mme</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="sm:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                        <Input placeholder="Nom" value={cessionnairePhysique.nom} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, nom: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+                        <Input placeholder="Prénom" value={cessionnairePhysique.prenom} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, prenom: e.target.value})} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
+                      <Input type="date" value={cessionnairePhysique.dateNaissance} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, dateNaissance: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de naissance</label>
+                      <Input placeholder="Paris" value={cessionnairePhysique.lieuNaissance} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, lieuNaissance: e.target.value})} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Nationalité</label>
+                      <Input placeholder="française" value={cessionnairePhysique.nationalite} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, nationalite: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <Input type="email" placeholder="prenom@email.com" value={cessionnairePhysique.email} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, email: e.target.value})} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                    <Input placeholder="12 rue de la Paix" value={cessionnairePhysique.adresse} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, adresse: e.target.value})} />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Code postal</label>
+                      <Input placeholder="75001" value={cessionnairePhysique.codePostal} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, codePostal: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Ville</label>
+                      <Input placeholder="Paris" value={cessionnairePhysique.ville} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, ville: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Pays</label>
+                      <Input placeholder="France" value={cessionnairePhysique.pays} onChange={(e) => setCessionnairePhysique({...cessionnairePhysique, pays: e.target.value})} />
+                    </div>
+                  </div>
+                </div>
+              )}
               {cessionnaireType === "morale" && (
                 <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
                   <h3 className="font-semibold text-[#1E3A8A]">Recherche SIREN cessionnaire</h3>

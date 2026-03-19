@@ -1962,40 +1962,90 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200"
+                        className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-4"
                       >
-                        <p className="text-sm text-amber-800 mb-3">
-                          <AlertTriangle className="w-4 h-4 inline mr-1" />
-                          Le conjoint doit consentir à l&apos;acquisition
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-amber-800 mb-1">Civilité *</label>
-                            <Select value={cessionnaireConjointCivilite} onValueChange={(v) => setCessionnaireConjointCivilite(v as "M." | "Mme")}>
-                              <SelectTrigger><SelectValue placeholder="--" /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="M.">M.</SelectItem>
-                                <SelectItem value="Mme">Mme</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-amber-800 mb-1">Nom *</label>
-                            <Input
-                              placeholder="Nom"
-                              value={cessionnaireConjointNom}
-                              onChange={(e) => setCessionnaireConjointNom(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-amber-800 mb-1">Prénom *</label>
-                            <Input
-                              placeholder="Prénom"
-                              value={cessionnaireConjointPrenom}
-                              onChange={(e) => setCessionnaireConjointPrenom(e.target.value)}
-                            />
+                        {/* Biens communs ou biens propres / remploi ? */}
+                        <div>
+                          <p className="text-sm font-medium text-amber-800 mb-2">L&apos;acquisition est financée par :</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setCessionnaireAchatBiensPropres(false)}
+                              className={cn(
+                                "p-3 rounded-lg border-2 text-center transition-all text-sm",
+                                cessionnaireAchatBiensPropres === false
+                                  ? "border-amber-600 bg-amber-100"
+                                  : "border-amber-300 hover:border-amber-500"
+                              )}
+                            >
+                              Biens communs
+                            </button>
+                            <button
+                              onClick={() => setCessionnaireAchatBiensPropres(true)}
+                              className={cn(
+                                "p-3 rounded-lg border-2 text-center transition-all text-sm",
+                                cessionnaireAchatBiensPropres === true
+                                  ? "border-amber-600 bg-amber-100"
+                                  : "border-amber-300 hover:border-amber-500"
+                              )}
+                            >
+                              Biens propres / remploi
+                            </button>
                           </div>
                         </div>
+
+                        {/* Biens communs → conjoint intervient */}
+                        {cessionnaireAchatBiensPropres === false && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="space-y-2"
+                          >
+                            <p className="text-sm text-amber-800">
+                              <AlertTriangle className="w-4 h-4 inline mr-1" />
+                              Le conjoint doit intervenir à l&apos;acte
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-amber-800 mb-1">Civilité *</label>
+                                <Select value={cessionnaireConjointCivilite} onValueChange={(v) => setCessionnaireConjointCivilite(v as "M." | "Mme")}>
+                                  <SelectTrigger><SelectValue placeholder="--" /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="M.">M.</SelectItem>
+                                    <SelectItem value="Mme">Mme</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-amber-800 mb-1">Nom *</label>
+                                <Input
+                                  placeholder="Nom"
+                                  value={cessionnaireConjointNom}
+                                  onChange={(e) => setCessionnaireConjointNom(e.target.value)}
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-amber-800 mb-1">Prénom *</label>
+                                <Input
+                                  placeholder="Prénom"
+                                  value={cessionnaireConjointPrenom}
+                                  onChange={(e) => setCessionnaireConjointPrenom(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {/* Biens propres / remploi → pas d'intervention */}
+                        {cessionnaireAchatBiensPropres === true && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                          >
+                            <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
+                              Le conjoint n&apos;intervient pas à l&apos;acte. Une déclaration de remploi / emploi de biens propres sera insérée dans l&apos;acte.
+                            </p>
+                          </motion.div>
+                        )}
                       </motion.div>
                     )}
                   </div>

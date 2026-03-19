@@ -57,18 +57,23 @@ INSTRUCTIONS :
 2. Modifications à effectuer :
    a. Dans l'article sur la répartition du capital / liste des associés : remplace les parts de ${nomCedant} par ${nomCessionnaire} (${nbParts} ${typeTitre}). Si ${nomCedant} n'a plus de parts, retire-le de la liste.
    ${includChangementDirigeant ? `b. Dans l'article sur la gérance/présidence : remplace ${ancienDirigeantNom || nomCedant} par ${nouveauDirigeantCivilite || ""} ${nouveauDirigeantNom} ${nouveauDirigeantPrenom} en qualité de ${nouveauDirigeantFonction || "Gérant"}.` : ""}
-3. À la toute fin des statuts, avant toute signature existante, ajoute cette mention de certification :
+3. À la toute fin des statuts, ajoute cette mention de mise à jour et de certification conforme :
 
 ---
 MISE À JOUR DES STATUTS
 Statuts mis à jour le ${date} à ${ville}, suite à :
 - Cession de ${nbParts} ${typeTitre} de ${nomCedant} à ${nomCessionnaire}${includChangementDirigeant ? `\n- Nomination de ${nouveauDirigeantCivilite || ""} ${nouveauDirigeantNom} ${nouveauDirigeantPrenom} en qualité de ${nouveauDirigeantFonction || "Gérant"} en remplacement de ${ancienDirigeantNom || nomCedant}` : ""}
 
-Certifié conforme à la décision prise le ${date}
+CERTIFICATION DE CONFORMITÉ
+Je soussigné(e), ${includChangementDirigeant ? `${nouveauDirigeantCivilite || ""} ${nouveauDirigeantNom} ${nouveauDirigeantPrenom}, ${nouveauDirigeantFonction || "Gérant"}` : "le représentant légal"} de la société ${denomination}, certifie que les présents statuts sont certifiés conformes à l'original et reflètent fidèlement la situation de la société à la date du ${date}.
+
+Fait à ${ville}, le ${date}
 
 Pour la société ${denomination},
-${includChangementDirigeant ? `${nouveauDirigeantCivilite || ""} ${nouveauDirigeantNom} ${nouveauDirigeantPrenom}, ${nouveauDirigeantFonction || "Gérant"}` : `Le Gérant`}
+${includChangementDirigeant ? `${nouveauDirigeantCivilite || ""} ${nouveauDirigeantNom} ${nouveauDirigeantPrenom}` : "Le représentant légal"}
+${includChangementDirigeant ? nouveauDirigeantFonction || "Gérant" : ""}
 
+Nom : _______________________
 Signature : _______________________
 ---
 

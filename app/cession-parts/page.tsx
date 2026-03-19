@@ -3793,8 +3793,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
             );
           })()}
 
-          {/* Mise à jour des statuts — uniquement SARL/EURL/SNC/SCI */}
-          {["SARL", "EURL", "SNC", "SCI"].includes(societe.formeJuridique || "") && (
+          {/* Mise à jour des statuts */}
+          {(
             <StatutsUpdater
               cessionData={{
                 nomCedant: cedantType === "physique"

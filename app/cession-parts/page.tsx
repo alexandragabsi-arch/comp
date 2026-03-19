@@ -1,6 +1,6 @@
 "use client";
 // v5.1 - Cache bust: Fixed JSX structure
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StatutsUpdater } from "@/components/statuts-updater";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -109,6 +109,7 @@ const STEPS = [
 export default function CessionPartsPage() {
   // Navigation
   const [step, setStep] = useState(1);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [selectedFormule, setSelectedFormule] = useState<"essentiel" | "premium" | null>(null);
   
@@ -327,7 +328,6 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const [generateConstatation, setGenerateConstatation] = useState(true);
   // Navigation functions
   const handleNext = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
     if (step === 3 && !paymentComplete) {
       setPaymentComplete(true);
       setStep(4);

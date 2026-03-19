@@ -3304,13 +3304,20 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               fraisALaCharge: fraisACharge === "cedant" ? "Cédant" : "Cessionnaire",
             };
 
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 120000);
             const response = await fetch('/api/generate-documents', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ formData, type: "both" }),
+              signal: controller.signal,
             });
+            clearTimeout(timeout);
 
-            if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
+            if (!response.ok) {
+              const errData = await response.json().catch(() => ({}));
+              throw new Error(errData.error || `Erreur serveur: ${response.status}`);
+            }
 
             const result = await response.json();
 

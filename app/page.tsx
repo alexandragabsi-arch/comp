@@ -35,7 +35,6 @@ export default function Home() {
             { label: "Prendre rendez-vous", href: "#" },
             { label: "Céder mes parts", href: "/cession-parts" },
             { label: "Céder mes actions", href: "/cession-action" },
-            { label: "Modifier mes statuts", href: "#" },
           ].map((item) => (
             <Link
               key={item.label}
@@ -54,21 +53,21 @@ export default function Home() {
           Cédez vos parts ou actions en toute sécurité
         </h1>
         <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto">
-          Générez en quelques minutes tous les documents nécessaires à votre cession : acte de cession, PV d&apos;AG, déclaration de non-condamnation.
+          Générez en quelques minutes tous les documents nécessaires à votre cession : acte de cession, PV d&apos;AG, déclaration de non-condamnation du nouveau dirigeant.
         </p>
 
         {/* CTA buttons */}
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
             href="/cession-parts"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#1E3A8A] text-white font-semibold hover:bg-[#16317A] transition-colors shadow-md text-sm"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#5B8DEF] text-white font-semibold hover:bg-[#4A7DE0] transition-colors shadow-md text-sm"
           >
             Céder des parts sociales
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/cession-action"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold hover:bg-[#EFF4FF] transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#5B8DEF] text-white font-semibold hover:bg-[#4A7DE0] transition-colors shadow-md text-sm"
           >
             Céder des actions
             <ArrowRight className="w-4 h-4" />

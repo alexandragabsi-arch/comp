@@ -37,12 +37,16 @@ function parseCoverData(text: string) {
 
 /** Strip the very first header block (cover info) so we don't duplicate it */
 function stripCoverBlock(text: string): string {
-  // Remove everything up to and including the first horizontal rule after the date
   const idx = text.indexOf("\n---");
   if (idx === -1) return text;
   const second = text.indexOf("\n---", idx + 4);
   if (second === -1) return text.slice(idx + 4);
   return text.slice(second + 4).trimStart();
+}
+
+/** Remove **...** markers so they don't show as literal asterisks */
+function cleanBold(text: string): string {
+  return text.replace(/\*\*(.+?)\*\*/g, "$1");
 }
 
 export function DocumentPreviewPanel({
@@ -54,7 +58,7 @@ export function DocumentPreviewPanel({
   onClose,
 }: DocumentPreviewPanelProps) {
   const cover = parseCoverData(text);
-  const bodyText = stripCoverBlock(text);
+  const bodyText = cleanBold(stripCoverBlock(text));
 
   const handleDownloadPdf = async () => {
     const { jsPDF } = await import("jspdf");
@@ -114,7 +118,7 @@ export function DocumentPreviewPanel({
       </div>
 
       {/* ── Pages scroll area ── */}
-      <div className="flex-1 overflow-y-auto py-8 px-4" style={{ background: "#e8e8e8" }}>
+      <div className="flex-1 overflow-y-auto py-8 px-4" style={{ background: "#F8F8F5" }}>
         <div className="flex flex-col items-center gap-8 max-w-[900px] mx-auto">
 
           {/* ══ PAGE DE GARDE ══ */}
@@ -180,7 +184,24 @@ export function DocumentPreviewPanel({
 
           {/* ══ PAGES DE CONTENU ══ */}
           <A4Page pageNumber={2}>
-            <article className="prose prose-sm max-w-none prose-headings:text-[#0D2459] prose-h1:text-xl prose-h2:text-base prose-h2:mt-6 prose-h2:mb-2 prose-p:text-gray-800 prose-p:leading-relaxed prose-strong:text-[#0D2459] prose-table:text-xs prose-th:bg-[#F7F9FF] prose-th:text-[#1E3A8A] prose-td:border-gray-200 prose-hr:border-gray-200 [&_blockquote]:text-gray-400 [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-[#5B8DEF]">
+            <article className="
+              prose prose-sm max-w-none
+              prose-headings:text-[#0D2459]
+              prose-headings:underline
+              prose-headings:decoration-[#5B8DEF]
+              prose-headings:underline-offset-4
+              prose-h1:text-lg prose-h1:font-bold
+              prose-h2:text-base prose-h2:font-semibold prose-h2:mt-7 prose-h2:mb-2
+              prose-h3:text-sm prose-h3:font-semibold prose-h3:mt-5
+              prose-p:text-[#0D2459] prose-p:leading-relaxed prose-p:text-sm
+              prose-li:text-[#0D2459] prose-li:text-sm
+              prose-strong:text-[#0D2459]
+              prose-table:text-xs
+              prose-th:bg-[#F7F9FF] prose-th:text-[#1E3A8A] prose-th:font-semibold
+              prose-td:text-[#0D2459] prose-td:border-gray-200
+              prose-hr:border-gray-200
+              [&_blockquote]:text-[#0D2459]/60 [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-[#5B8DEF]
+            ">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {bodyText}
               </ReactMarkdown>

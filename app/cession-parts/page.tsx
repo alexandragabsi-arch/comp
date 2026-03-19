@@ -979,7 +979,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <span className="text-xs text-gray-500">Une société</span>
                   </button>
                 </div>
-                {cedantType === "morale" && societe.denomination && (
+                {cedantType === "morale" && (
                   <button
                     onClick={() => {
                       setCedantIsSocieteCible(!cedantIsSocieteCible);
@@ -1010,7 +1010,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     )}
                   >
                     <Building2 className="w-5 h-5 text-[#1E3A8A] shrink-0" />
-                    <span className="text-sm font-medium text-[#1E3A8A]">Il s'agit de la société cible ({societe.denomination})</span>
+                    <span className="text-sm font-medium text-[#1E3A8A]">
+                      Il s&apos;agit de la société cible{societe.denomination ? ` (${societe.denomination})` : ""}
+                    </span>
                   </button>
                 )}
               </div>
@@ -1043,7 +1045,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <span className="font-medium text-[#1E3A8A] block">Personne morale</span>
                   </button>
                 </div>
-                {cessionnaireType === "morale" && societe.denomination && (
+                {cessionnaireType === "morale" && (
                   <button
                     onClick={() => {
                       setCessionnaireIsSocieteCible(!cessionnaireIsSocieteCible);
@@ -1074,7 +1076,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     )}
                   >
                     <Building2 className="w-5 h-5 text-[#1E3A8A] shrink-0" />
-                    <span className="text-sm font-medium text-[#1E3A8A]">Il s'agit de la société cible ({societe.denomination})</span>
+                    <span className="text-sm font-medium text-[#1E3A8A]">
+                      Il s&apos;agit de la société cible{societe.denomination ? ` (${societe.denomination})` : ""}
+                    </span>
                   </button>
                 )}
               </div>

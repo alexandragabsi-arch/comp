@@ -15,7 +15,6 @@ interface DocumentPreviewPanelProps {
   onClose: () => void;
 }
 
-/** Extract key metadata from the markdown text for the cover page */
 function parseCoverData(text: string) {
   const h1 = text.match(/^#\s+(.+)$/m);
   const h2 = text.match(/^##\s+(.+)$/m);
@@ -36,7 +35,6 @@ function parseCoverData(text: string) {
   };
 }
 
-/** Strip the very first header block (cover info) so we don't duplicate it */
 function stripCoverBlock(text: string): string {
   const idx = text.indexOf("\n---");
   if (idx === -1) return text;
@@ -45,7 +43,6 @@ function stripCoverBlock(text: string): string {
   return text.slice(second + 4).trimStart();
 }
 
-/** Convert box-drawing separators (═══, ───, ___) to markdown --- */
 function normalizeMarkdown(text: string): string {
   return text
     .split("\n")
@@ -57,6 +54,437 @@ function normalizeMarkdown(text: string): string {
     })
     .join("\n");
 }
+
+// ─── PDF GENERATION ──────────────────────────────────────────────────────────
+
+async function generatePDF(
+  text: string,
+  pdfFileName: string,
+  isDeclaration: boolean,
+  cover: ReturnType<typeof parseCoverData>,
+  bodyText: string
+) {
+  const { jsPDF } = await import("jspdf");
+
+  const PW = 210, PH = 297;
+  const ML = 25, MR = 25, MT = 25, MB = 22;
+  const CW = PW - ML - MR; // 160 mm
+  const NAVY: [number, number, number] = [13, 36, 89];
+  const BLUE: [number, number, number] = [91, 141, 239];
+
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+  let pageNum = 1;
+
+  const addFooter = () => {
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(0.2);
+    doc.line(ML, PH - MB + 4, PW - MR, PH - MB + 4);
+    doc.setFont("times", "italic");
+    doc.setFontSize(7.5);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`— ${isDeclaration ? pageNum : pageNum - 1} —`, PW / 2, PH - MB + 10, { align: "center" });
+  };
+
+  let y = MT;
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed > PH - MB) {
+      addFooter();
+      doc.addPage();
+      pageNum++;
+      y = MT;
+    }
+  };
+
+  // Strip **bold** markers from a string
+  const plain = (s: string) => s.replace(/\*\*/g, "").replace(/\*/g, "");
+
+  // Render paragraph with justified text, returns new y
+  const renderPara = (raw: string, indent = ML, extraColor?: [number, number, number]) => {
+    const stripped = plain(raw);
+    if (!stripped.trim()) return;
+
+    const isSubHead = /^\d+\.\d+/.test(stripped) || /^\*\*[^*]+\*\*$/.test(raw.trim());
+
+    if (isSubHead) {
+      doc.setFont("times", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...(extraColor ?? NAVY));
+    } else {
+      doc.setFont("times", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...(extraColor ?? ([30, 30, 30] as [number, number, number])));
+    }
+
+    const lineW = PW - indent - MR;
+    const lines = doc.splitTextToSize(stripped, lineW);
+    const h = lines.length * 5.2;
+    ensureSpace(h + 4);
+
+    if (isSubHead) {
+      doc.text(lines, indent, y + 5.2);
+    } else {
+      doc.text(lines, indent, y + 5.2, { align: "justify", maxWidth: lineW });
+    }
+    y += h + 4;
+  };
+
+  // ── COVER PAGE (acte/PV) ─────────────────────────────────────────────────
+  if (!isDeclaration) {
+    // Top bar
+    doc.setFillColor(...NAVY);
+    doc.rect(0, 0, PW, 5, "F");
+
+    // Logo
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text("Legal", 15, 14);
+    doc.setFont("helvetica", "normal");
+    doc.text("corners", 28.5, 14);
+
+    // Title
+    const titleText = plain(cover.doctitle).toUpperCase();
+    const titleLines = doc.splitTextToSize(titleText, CW);
+    const titleY = 68;
+
+    doc.setDrawColor(...BLUE);
+    doc.setLineWidth(1.2);
+    doc.line(ML + 8, titleY - 8, PW - MR - 8, titleY - 8);
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...NAVY);
+    doc.text(titleLines, PW / 2, titleY, { align: "center" });
+
+    const afterTitle = titleY + titleLines.length * 9;
+    doc.setDrawColor(...BLUE);
+    doc.line(ML + 8, afterTitle + 2, PW - MR - 8, afterTitle + 2);
+
+    // Subtitle
+    if (cover.subtitle) {
+      doc.setFont("times", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(50, 80, 150);
+      doc.text(plain(cover.subtitle), PW / 2, afterTitle + 13, { align: "center" });
+    }
+
+    // Parties boxes
+    if (cover.cedant || cover.cessionnaire) {
+      const bW = 58, bH = 26, bY = afterTitle + 30;
+
+      const drawBox = (x: number, label: string, name: string) => {
+        doc.setFillColor(247, 249, 255);
+        doc.setDrawColor(...BLUE);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(x, bY, bW, bH, 2, 2, "FD");
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...BLUE);
+        doc.text(label, x + bW / 2, bY + 7, { align: "center" });
+
+        doc.setFont("times", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...NAVY);
+        const nLines = doc.splitTextToSize(name, bW - 6);
+        doc.text(nLines, x + bW / 2, bY + 15, { align: "center" });
+      };
+
+      if (cover.cedant) drawBox(ML, "CÉDANT", cover.cedant);
+
+      doc.setFont("times", "normal");
+      doc.setFontSize(16);
+      doc.setTextColor(...BLUE);
+      doc.text("→", PW / 2, bY + 15, { align: "center" });
+
+      if (cover.cessionnaire) drawBox(PW - MR - bW, "CESSIONNAIRE", cover.cessionnaire);
+    }
+
+    // Société cible
+    if (cover.societe) {
+      const socY = afterTitle + 75;
+      doc.setFont("times", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(130, 130, 130);
+      doc.text("SOCIÉTÉ CIBLE", PW / 2, socY, { align: "center" });
+      doc.setFont("times", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(...NAVY);
+      doc.text(plain(cover.societe), PW / 2, socY + 7, { align: "center" });
+    }
+
+    // Date
+    if (cover.date) {
+      doc.setFont("times", "italic");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text(cover.date, PW / 2, 240, { align: "center" });
+    }
+
+    // Disclaimer
+    if (cover.disclaimer) {
+      doc.setFont("times", "italic");
+      doc.setFontSize(6.5);
+      doc.setTextColor(185, 185, 185);
+      const dLines = doc.splitTextToSize(cover.disclaimer, CW);
+      doc.text(dLines, PW / 2, 262, { align: "center" });
+    }
+
+    // Bottom bar
+    doc.setFillColor(...NAVY);
+    doc.rect(0, PH - 5, PW, 5, "F");
+
+    // Start content on page 2
+    doc.addPage();
+    pageNum = 2;
+    y = MT;
+  }
+
+  // ── CONTENT ──────────────────────────────────────────────────────────────
+  const lines = bodyText.split("\n");
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Empty line
+    if (!trimmed) {
+      y += 1.5;
+      i++;
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^[-─═_]{3,}$/.test(trimmed)) {
+      ensureSpace(5);
+      y += 1;
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(ML, y, PW - MR, y);
+      y += 4;
+      i++;
+      continue;
+    }
+
+    // H1
+    if (trimmed.startsWith("# ")) {
+      const txt = plain(trimmed.slice(2)).toUpperCase();
+      const lns = doc.splitTextToSize(txt, CW);
+      ensureSpace(lns.length * 8 + 10);
+      y += 5;
+      doc.setFont("times", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(...NAVY);
+      doc.text(lns, PW / 2, y + 8, { align: "center" });
+      y += lns.length * 8 + 3;
+      doc.setDrawColor(...NAVY);
+      doc.setLineWidth(0.5);
+      doc.line(ML, y, PW - MR, y);
+      y += 5;
+      i++;
+      continue;
+    }
+
+    // H2
+    if (trimmed.startsWith("## ")) {
+      const txt = plain(trimmed.slice(3)).toUpperCase();
+      const lns = doc.splitTextToSize(txt, CW);
+      ensureSpace(lns.length * 7 + 10);
+      y += 6;
+      doc.setFont("times", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(...NAVY);
+      doc.text(lns, ML, y + 7);
+      y += lns.length * 7 + 1;
+      doc.setDrawColor(180, 190, 220);
+      doc.setLineWidth(0.3);
+      doc.line(ML, y, PW - MR, y);
+      y += 4;
+      i++;
+      continue;
+    }
+
+    // H3
+    if (trimmed.startsWith("### ")) {
+      const txt = plain(trimmed.slice(4));
+      const lns = doc.splitTextToSize(txt, CW);
+      ensureSpace(lns.length * 5.5 + 6);
+      y += 4;
+      doc.setFont("times", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(...NAVY);
+      doc.text(lns, ML, y + 5.5);
+      y += lns.length * 5.5 + 3;
+      i++;
+      continue;
+    }
+
+    // Table
+    if (trimmed.startsWith("|")) {
+      const rawTable: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        rawTable.push(lines[i].trim());
+        i++;
+      }
+
+      const rows = rawTable
+        .filter((l) => !/^\|[\s\-:|]+\|$/.test(l))
+        .map((l) =>
+          l.split("|").slice(1, -1).map((c) => plain(c.trim()))
+        );
+
+      if (rows.length < 1) continue;
+
+      const cols = rows[0].length;
+      // First column wider for definition tables
+      const col0W = cols === 2 ? CW * 0.35 : CW / cols;
+      const otherW = cols === 2 ? CW * 0.65 : CW / cols;
+      const getColW = (ci: number) => (ci === 0 ? col0W : otherW);
+      const getColX = (ci: number) => {
+        let x = ML;
+        for (let k = 0; k < ci; k++) x += getColW(k);
+        return x;
+      };
+
+      const HEADER_H = 8;
+      const ROW_H = 6;
+
+      const [headerRow, ...dataRows] = rows;
+
+      // Check space for header + at least 1 row
+      ensureSpace(HEADER_H + ROW_H + 4);
+      y += 3;
+
+      const tableStartY = y;
+
+      const drawHeader = (startY: number) => {
+        doc.setFillColor(...NAVY);
+        doc.rect(ML, startY, CW, HEADER_H, "F");
+        doc.setFont("times", "bold");
+        doc.setFontSize(8.5);
+        doc.setTextColor(255, 255, 255);
+        headerRow.forEach((cell, ci) => {
+          const cw = getColW(ci) - 4;
+          const cx = getColX(ci) + 2;
+          const cLines = doc.splitTextToSize(cell, cw);
+          doc.text(cLines, cx, startY + 5.5);
+        });
+        return startY + HEADER_H;
+      };
+
+      y = drawHeader(y);
+
+      dataRows.forEach((row, ri) => {
+        if (y + ROW_H > PH - MB) {
+          addFooter();
+          doc.addPage();
+          pageNum++;
+          y = MT;
+          y = drawHeader(y);
+        }
+
+        // Alternate rows
+        if (ri % 2 === 0) {
+          doc.setFillColor(249, 250, 255);
+        } else {
+          doc.setFillColor(255, 255, 255);
+        }
+        doc.rect(ML, y, CW, ROW_H, "F");
+
+        row.forEach((cell, ci) => {
+          const cw = getColW(ci) - 4;
+          const cx = getColX(ci) + 2;
+          if (ci === 0) {
+            doc.setFont("times", "bold");
+            doc.setTextColor(...NAVY);
+          } else {
+            doc.setFont("times", "normal");
+            doc.setTextColor(30, 30, 30);
+          }
+          doc.setFontSize(8);
+          const cLines = doc.splitTextToSize(cell, cw);
+          doc.text(cLines, cx, y + 4);
+        });
+
+        // Row separator
+        doc.setDrawColor(215, 215, 225);
+        doc.setLineWidth(0.2);
+        doc.line(ML, y + ROW_H, ML + CW, y + ROW_H);
+
+        // Column separators
+        for (let ci = 1; ci < cols; ci++) {
+          doc.line(getColX(ci), tableStartY, getColX(ci), y + ROW_H);
+        }
+
+        y += ROW_H;
+      });
+
+      // Outer border
+      doc.setDrawColor(...NAVY);
+      doc.setLineWidth(0.4);
+      doc.rect(ML, tableStartY, CW, y - tableStartY, "D");
+
+      y += 5;
+      continue;
+    }
+
+    // Blockquote
+    if (trimmed.startsWith(">")) {
+      const qText = trimmed.replace(/^>\s*\*?/, "").replace(/\*?$/, "");
+      const qStripped = plain(qText);
+      const qLines = doc.splitTextToSize(qStripped, CW - 8);
+      const qH = qLines.length * 4.5 + 6;
+      ensureSpace(qH + 3);
+
+      doc.setFillColor(248, 249, 255);
+      doc.rect(ML, y, CW, qH, "F");
+      doc.setFillColor(...BLUE);
+      doc.rect(ML, y, 1.5, qH, "F");
+
+      doc.setFont("times", "italic");
+      doc.setFontSize(8);
+      doc.setTextColor(70, 70, 110);
+      doc.text(qLines, ML + 5, y + 4);
+      y += qH + 3;
+      i++;
+      continue;
+    }
+
+    // List item
+    if (trimmed.startsWith("- ") || /^\d+\.\s/.test(trimmed)) {
+      const isNum = /^(\d+)\.\s/.exec(trimmed);
+      const bullet = isNum ? `${isNum[1]}.` : "–";
+      const txt = plain(isNum ? trimmed.replace(/^\d+\.\s/, "") : trimmed.slice(2));
+      const listLines = doc.splitTextToSize(txt, CW - 7);
+      const lh = listLines.length * 5 + 2;
+      ensureSpace(lh);
+
+      doc.setFont("times", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(30, 30, 30);
+      doc.text(bullet, ML, y + 5);
+      doc.text(listLines, ML + 6, y + 5, { align: "justify", maxWidth: CW - 7 });
+      y += lh;
+      i++;
+      continue;
+    }
+
+    // Regular paragraph
+    renderPara(trimmed);
+    i++;
+  }
+
+  // Footer on last page
+  addFooter();
+
+  doc.save(pdfFileName);
+}
+
+// ─── COMPONENT ───────────────────────────────────────────────────────────────
 
 export function DocumentPreviewPanel({
   title,
@@ -74,29 +502,8 @@ export function DocumentPreviewPanel({
     ? normalizeMarkdown(text)
     : normalizeMarkdown(stripCoverBlock(text));
 
-  const handleDownloadPdf = async () => {
-    if (!pagesRef.current) return;
-    const html2canvas = (await import("html2canvas")).default;
-    const { jsPDF } = await import("jspdf");
-
-    const pages = pagesRef.current.querySelectorAll<HTMLElement>("[data-a4-page]");
-    if (!pages.length) return;
-
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-
-    for (let i = 0; i < pages.length; i++) {
-      const canvas = await html2canvas(pages[i], {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-      });
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
-    }
-
-    pdf.save(pdfFileName);
+  const handleDownloadPdf = () => {
+    generatePDF(text, pdfFileName, isDeclaration, cover, bodyText);
   };
 
   return (
@@ -125,7 +532,7 @@ export function DocumentPreviewPanel({
       <div className="flex-1 overflow-y-auto py-8 px-4" style={{ background: "#F8F8F5" }}>
         <div ref={pagesRef} className="flex flex-col items-center gap-8 max-w-[900px] mx-auto">
 
-          {/* ══ PAGE DE GARDE (acte/PV seulement) ══ */}
+          {/* ══ PAGE DE GARDE ══ */}
           {!isDeclaration && (
             <A4Page pageNumber={1}>
               <div className="h-full flex flex-col">
@@ -232,7 +639,6 @@ export function DocumentPreviewPanel({
   );
 }
 
-/** Wrapper that renders an A4-sized page card */
 function A4Page({ children, pageNumber }: { children: React.ReactNode; pageNumber: number }) {
   return (
     <div className="relative w-full" style={{ maxWidth: "794px" }}>
@@ -243,7 +649,6 @@ function A4Page({ children, pageNumber }: { children: React.ReactNode; pageNumbe
       >
         {children}
       </div>
-      {/* Page number */}
       <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 select-none">
         — {pageNumber} —
       </div>

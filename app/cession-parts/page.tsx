@@ -1820,11 +1820,62 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
                   <h3 className="font-semibold text-[#1E3A8A]">Recherche SIREN cessionnaire</h3>
                   <div className="flex gap-2">
+                    <div className="flex-1 relative">
                     <Input
                       placeholder="Entrez le SIREN ou nom de la societe"
                       value={cessionnaireSirenSearch}
-                      onChange={(e) => setCessionnaireSirenSearch(e.target.value)}
+                      onChange={(e) => {
+                        setCessionnaireSirenSearch(e.target.value);
+                        setShowCessionnaireResults(false);
+                        setCessionnaireSearchResults([]);
+                      }}
                     />
+                    {showCessionnaireResults && cessionnaireSearchResults.length > 0 && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {cessionnaireSearchResults.map((result, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 border-b border-gray-100 last:border-b-0 flex justify-between items-center"
+                            onClick={async () => {
+                              setCessionnaireSirenLoading(true);
+                              setShowCessionnaireResults(false);
+                              try {
+                                const response = await fetch(`/api/siren?siren=${result.siren}`);
+                                if (response.ok) {
+                                  const data = await response.json();
+                                  setCessionnaireMorale({
+                                    ...cessionnaireMorale,
+                                    denomination: data.denominationSociale || result.nom,
+                                    formeJuridique: data.formeJuridique?.toUpperCase() || "",
+                                    siegeAdresse: data.siegeSocial || "",
+                                    siegeCP: data.codePostal || "",
+                                    siegeVille: data.ville || result.ville || "",
+                                    capital: data.capitalSocial || "",
+                                    rcsNumero: result.siren,
+                                    rcsVille: data.ville || result.ville || "",
+                                  });
+                                  setCessionnaireSirenFound(true);
+                                  setCessionnaireSirenSearch(result.nom);
+                                }
+                              } catch {
+                                setCessionnaireMorale({...cessionnaireMorale, denomination: result.nom, rcsNumero: result.siren, siegeVille: result.ville || ""});
+                                setCessionnaireSirenFound(true);
+                              } finally {
+                                setCessionnaireSirenLoading(false);
+                              }
+                            }}
+                          >
+                            <div>
+                              <div className="font-medium text-gray-900">{result.nom}</div>
+                              {result.ville && <div className="text-sm text-gray-500">{result.ville}</div>}
+                            </div>
+                            <div className="text-sm text-blue-600 font-mono">{result.siren}</div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    </div>
                     <Button
                       onClick={async () => {
                               if (!cessionnaireSirenSearch.trim()) {

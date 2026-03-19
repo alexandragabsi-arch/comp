@@ -3296,7 +3296,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 nouveauDirigeantDateNaissance: nouveauDirigeantPhysique.dateNaissance,
                 nouveauDirigeantVilleNaissance: nouveauDirigeantPhysique.lieuNaissance,
                 nouveauDirigeantNationalite: nouveauDirigeantPhysique.nationalite,
-                nouveauDirigeantAdresse: nouveauDirigeantPhysique.adresse,
+                nouveauDirigeantAdresse: `${nouveauDirigeantPhysique.adresse}, ${nouveauDirigeantPhysique.codePostal} ${nouveauDirigeantPhysique.ville}`.trim(),
                 nouveauDirigeantNomPere: nouveauDirigeantPereNom,
                 nouveauDirigeantPrenomPere: nouveauDirigeantPerePrenom,
                 nouveauDirigeantNomMere: nouveauDirigeantMereNom,

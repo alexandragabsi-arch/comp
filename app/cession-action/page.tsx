@@ -414,7 +414,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="block h-12 w-auto" style={{ aspectRatio: 'auto' }}>
             <Image 
-              src="/images/logo-legal-corners.png" 
+              src="/images/logo-legal-corners.svg" 
               alt="Legal Corners" 
               width={160} 
               height={50} 

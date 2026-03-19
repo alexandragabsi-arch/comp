@@ -22,7 +22,7 @@ export default function InfoPage() {
       <header className="border-b border-zinc-200 bg-white px-6 py-4">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <Link href="/" className="block h-10 w-auto">
-            <Image src="/images/logo-legal-corners.png" alt="LegalCorners" width={160} height={40} className="h-full w-auto object-contain" priority />
+            <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={160} height={40} className="h-full w-auto object-contain" priority />
           </Link>
           <Link
             href="/"

@@ -10,7 +10,7 @@ export default function Home() {
       {/* ── NAV ── */}
       <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
         <Link href="/" className="block h-10 w-auto">
-          <Image src="/images/logo-legal-corners.png" alt="LegalCorners" width={160} height={40} className="h-full w-auto object-contain" priority />
+          <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={160} height={40} className="h-full w-auto object-contain" priority />
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
           <span className="cursor-pointer hover:text-[#1E3A8A] transition-colors">Nos services ▾</span>
@@ -150,7 +150,7 @@ export default function Home() {
       <footer className="border-t border-gray-100 py-8 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
           <div className="flex items-center gap-1.5">
-            <Image src="/images/logo-legal-corners.png" alt="LegalCorners" width={120} height={32} className="h-8 w-auto object-contain opacity-70" />
+            <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={120} height={32} className="h-8 w-auto object-contain opacity-70" />
           </div>
           <div className="flex gap-6">
             <span className="flex items-center gap-1.5"><Scale className="w-3.5 h-3.5" /> Sécurisé</span>

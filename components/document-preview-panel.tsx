@@ -15,23 +15,45 @@ interface DocumentPreviewPanelProps {
   onClose: () => void;
 }
 
+/** Extract short party name from whatever precedes "— Rôle" */
+function extractPartyName(text: string, role: string): string | null {
+  // Try bold format first: **NAME** — Rôle
+  const bold = text.match(new RegExp(`\\*\\*(.+?)\\*\\*[^\\n]*[—–-]\\s*${role}`, "i"));
+  if (bold) return bold[1].trim();
+
+  // Plain format: find line(s) before "— Rôle"
+  const idx = text.search(new RegExp(`[—–-]\\s*${role}`, "im"));
+  if (idx === -1) return null;
+
+  const before = text.slice(0, idx).trimEnd();
+  // Get last non-empty line
+  const lines = before.split("\n").filter((l) => l.trim());
+  const lastLine = lines[lines.length - 1] || "";
+  const cleaned = lastLine
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/^(?:La société|la société|Entre la société|M\.|Mme)\s+/i, "")
+    .trim();
+  return cleaned.split(",")[0].trim() || null;
+}
+
 function parseCoverData(text: string) {
   const h1 = text.match(/^#\s+(.+)$/m);
   const h2 = text.match(/^##\s+(.+)$/m);
-  const cedant = text.match(/\*\*(.+?)\*\*\s*[—–-]\s*Cédant/);
-  const cess = text.match(/\*\*(.+?)\*\*\s*[—–-]\s*Cessionnaire/);
-  const soc = text.match(/\*\*Société cible\s*[:\s]+(.+?)\*\*/);
+  const soc =
+    text.match(/\*\*Société cible\s*[:\s]+(.+?)\*\*/) ||
+    text.match(/Soci[eé]t[eé] cible\s*:\s*([^\n]+)/i);
   const date = text.match(/Fait à\s+(.+?),?\s+le\s+(\d{1,2}\s+\w+\s+\d{4})/);
-  const disclaimer = text.match(/>\s*\*([^*]+)\*/);
+  const disclaimer = text.match(/>\s*\*?([^*\n]{10,})\*?/);
 
   return {
     doctitle: h1 ? h1[1] : "Document juridique",
     subtitle: h2 ? h2[1] : null,
-    cedant: cedant ? cedant[1] : null,
-    cessionnaire: cess ? cess[1] : null,
-    societe: soc ? soc[1] : null,
+    cedant: extractPartyName(text, "Cédant"),
+    cessionnaire: extractPartyName(text, "Cessionnaire"),
+    societe: soc ? soc[1].trim() : null,
     date: date ? `Fait à ${date[1]}, le ${date[2]}` : null,
-    disclaimer: disclaimer ? disclaimer[1] : null,
+    disclaimer: disclaimer ? disclaimer[1].trim() : null,
   };
 }
 
@@ -502,8 +524,13 @@ export function DocumentPreviewPanel({
     ? normalizeMarkdown(text)
     : normalizeMarkdown(stripCoverBlock(text));
 
-  const handleDownloadPdf = () => {
-    generatePDF(text, pdfFileName, isDeclaration, cover, bodyText);
+  const handleDownloadPdf = async () => {
+    try {
+      await generatePDF(text, pdfFileName, isDeclaration, cover, bodyText);
+    } catch (err) {
+      console.error("Erreur génération PDF:", err);
+      alert("Erreur lors de la génération du PDF : " + (err instanceof Error ? err.message : String(err)));
+    }
   };
 
   return (

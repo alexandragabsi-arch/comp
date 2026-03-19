@@ -183,6 +183,7 @@ const [prixApprox, setPrixApprox] = useState("");
   const [sirenError, setSirenError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<Array<{siren: string, nom: string, ville?: string}>>([]);
   const [showResults, setShowResults] = useState(false);
+  const [societeDirigeants, setSocieteDirigeants] = useState<Array<{nom: string, prenom: string, qualite: string}>>([]);
   const [societe, setSociete] = useState({
     denomination: "",
     formeJuridique: "",
@@ -1064,7 +1065,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               className="space-y-6"
             >
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">La sociét�� concernée</h1>
+                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">La société concernée</h1>
                 <p className="text-gray-600">Recherchez la société par son numéro SIREN</p>
               </div>
               {/* Recherche par SIREN ou Nom */}
@@ -1114,6 +1115,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                                     rcsNumero: result.siren,
                                     rcsVille: data.ville || result.ville || "",
                                   });
+                                  setSocieteDirigeants(data.dirigeants || []);
                                   setSirenFound(true);
                                   setSirenSearch(result.nom);
                                 }
@@ -1167,6 +1169,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                               rcsNumero: cleanValue,
                               rcsVille: data.ville || "",
                             });
+                            setSocieteDirigeants(data.dirigeants || []);
                             setSirenFound(true);
                           } else {
                             setSirenError("SIREN non trouvé");
@@ -1218,32 +1221,13 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 >
                   <h3 className="font-semibold text-[#1E3A8A] mb-2">Informations de la société</h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Dénomination sociale *</label>
-                      <Input
-                        placeholder="Nom de la société"
-                        value={societe.denomination}
-                        onChange={(e) => setSociete({...societe, denomination: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Forme juridique *</label>
-                      <Select value={societe.formeJuridique} onValueChange={(v) => setSociete({...societe, formeJuridique: v})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionnez" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="SAS">SAS</SelectItem>
-                          <SelectItem value="SASU">SASU</SelectItem>
-                          <SelectItem value="SARL">SARL</SelectItem>
-                          <SelectItem value="EURL">EURL</SelectItem>
-                          <SelectItem value="SA">SA</SelectItem>
-                          <SelectItem value="SCI">SCI</SelectItem>
-                          <SelectItem value="SNC">SNC</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Dénomination sociale *</label>
+                    <Input
+                      placeholder="Nom de la société"
+                      value={societe.denomination}
+                      onChange={(e) => setSociete({...societe, denomination: e.target.value})}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Adresse du siège social *</label>
@@ -1318,9 +1302,39 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       />
                     </div>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Forme juridique *</label>
+                    <Select value={societe.formeJuridique} onValueChange={(v) => setSociete({...societe, formeJuridique: v})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SAS">SAS</SelectItem>
+                        <SelectItem value="SASU">SASU</SelectItem>
+                        <SelectItem value="SARL">SARL</SelectItem>
+                        <SelectItem value="EURL">EURL</SelectItem>
+                        <SelectItem value="SA">SA</SelectItem>
+                        <SelectItem value="SCI">SCI</SelectItem>
+                        <SelectItem value="SNC">SNC</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {societeDirigeants.length > 0 && (
+                    <div className="pt-4 border-t">
+                      <h4 className="font-medium text-[#1E3A8A] mb-3">Dirigeants</h4>
+                      <div className="space-y-2">
+                        {societeDirigeants.map((dir, idx) => (
+                          <div key={idx} className="flex items-center gap-3 bg-blue-50 rounded-lg px-4 py-2 text-sm">
+                            <span className="font-medium text-gray-900">{dir.prenom} {dir.nom}</span>
+                            <span className="text-[#1E3A8A] bg-white border border-blue-200 rounded px-2 py-0.5 text-xs">{dir.qualite}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
               )}
-              
+
               {/* Lien pour saisie manuelle si pas de SIREN */}
               {!sirenFound && !societe.rcsNumero && (
                 <div className="text-center">
@@ -2581,16 +2595,29 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualite *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualité *</label>
                         <Select value={nouveauDirigeantQualite} onValueChange={setNouveauDirigeantQualite}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selectionnez" />
+                            <SelectValue placeholder="Sélectionnez" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Gerant">Gerant</SelectItem>
-                            <SelectItem value="President">President</SelectItem>
-                            <SelectItem value="Directeur General">Directeur General</SelectItem>
-                            <SelectItem value="Directeur General Delegue">Directeur General Delegue</SelectItem>
+                            {["SAS", "SASU"].includes(societe.formeJuridique) ? (
+                              <>
+                                <SelectItem value="Président">Président</SelectItem>
+                                <SelectItem value="Directeur Général">Directeur Général</SelectItem>
+                              </>
+                            ) : societe.formeJuridique === "SA" ? (
+                              <>
+                                <SelectItem value="Président du CA">Président du CA</SelectItem>
+                                <SelectItem value="Directeur Général">Directeur Général</SelectItem>
+                                <SelectItem value="Directeur Général Délégué">Directeur Général Délégué</SelectItem>
+                              </>
+                            ) : (
+                              <>
+                                <SelectItem value="Gérant">Gérant</SelectItem>
+                                <SelectItem value="Co-Gérant">Co-Gérant</SelectItem>
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
@@ -2777,15 +2804,29 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualite *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Qualité *</label>
                         <Select value={nouveauDirigeantQualite} onValueChange={setNouveauDirigeantQualite}>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selectionnez" />
+                            <SelectValue placeholder="Sélectionnez" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Gerant">Gerant</SelectItem>
-                            <SelectItem value="President">President</SelectItem>
-                            <SelectItem value="Directeur General">Directeur General</SelectItem>
+                            {["SAS", "SASU"].includes(societe.formeJuridique) ? (
+                              <>
+                                <SelectItem value="Président">Président</SelectItem>
+                                <SelectItem value="Directeur Général">Directeur Général</SelectItem>
+                              </>
+                            ) : societe.formeJuridique === "SA" ? (
+                              <>
+                                <SelectItem value="Président du CA">Président du CA</SelectItem>
+                                <SelectItem value="Directeur Général">Directeur Général</SelectItem>
+                                <SelectItem value="Directeur Général Délégué">Directeur Général Délégué</SelectItem>
+                              </>
+                            ) : (
+                              <>
+                                <SelectItem value="Gérant">Gérant</SelectItem>
+                                <SelectItem value="Co-Gérant">Co-Gérant</SelectItem>
+                              </>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>

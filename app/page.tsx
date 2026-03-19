@@ -51,11 +51,29 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center">
         <h1 className="text-5xl md:text-6xl font-bold text-[#1E3A8A] leading-tight max-w-3xl mx-auto">
-          Générez vos documents juridiques en quelques minutes
+          Cédez vos parts ou actions en toute sécurité
         </h1>
         <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto">
-          Découvrez comment Legal Corners vous aide à gérer efficacement les aspects juridiques de votre entreprise.
+          Générez en quelques minutes tous les documents nécessaires à votre cession : acte de cession, PV d&apos;AG, déclaration de non-condamnation.
         </p>
+
+        {/* CTA buttons */}
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
+          <Link
+            href="/cession-parts"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#1E3A8A] text-white font-semibold hover:bg-[#16317A] transition-colors shadow-md text-sm"
+          >
+            Céder des parts sociales
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/cession-action"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold hover:bg-[#EFF4FF] transition-colors text-sm"
+          >
+            Céder des actions
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
 
         {/* Service tags */}
         <div className="mt-12 flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
@@ -120,18 +138,27 @@ export default function Home() {
       <section className="py-20 px-6 text-center">
         <div className="max-w-xl mx-auto">
           <h2 className="text-3xl font-bold text-[#1E3A8A] mb-4">
-            Prêt à générer vos documents ?
+            Prêt à finaliser votre cession ?
           </h2>
           <p className="text-gray-500 mb-8">
-            Remplissez le formulaire guidé et téléchargez vos actes en DOCX ou PDF.
+            Formulaire guidé · Documents conformes · Téléchargement immédiat en DOCX ou PDF.
           </p>
-          <Link
-            href="/cession-parts"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#1E3A8A] text-white font-semibold hover:bg-[#16317A] transition-colors shadow-md"
-          >
-            Commencer la cession de parts
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/cession-parts"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#1E3A8A] text-white font-semibold hover:bg-[#16317A] transition-colors shadow-md"
+            >
+              Cession de parts
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/cession-action"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold hover:bg-[#EFF4FF] transition-colors"
+            >
+              Cession d&apos;actions
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
 

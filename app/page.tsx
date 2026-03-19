@@ -8,33 +8,35 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white font-sans">
       {/* ── NAV ── */}
-      <header className="border-b border-gray-100 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
-        <Link href="/" className="block h-10 w-auto">
-          <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={160} height={40} className="h-full w-auto object-contain" priority />
+      <header className="border-b border-gray-100 px-4 md:px-6 py-4 flex items-center justify-between max-w-7xl mx-auto">
+        <Link href="/" className="block h-9 w-auto">
+          <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={140} height={36} className="h-full w-auto object-contain" priority />
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
           <span className="cursor-pointer hover:text-[#1E3A8A] transition-colors">Nos services ▾</span>
         </nav>
-        <Link
-          href="#"
-          className="px-5 py-2 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-medium text-sm hover:opacity-90 transition-opacity shadow-sm"
-        >
-          Prendre rendez-vous
-        </Link>
-        <Link
-          href="/cession-parts"
-          className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          Connexion
-        </Link>
+        <div className="flex items-center gap-2 md:gap-3">
+          <Link
+            href="#"
+            className="hidden md:inline-flex px-5 py-2 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-medium text-sm hover:opacity-90 transition-opacity shadow-sm"
+          >
+            Prendre rendez-vous
+          </Link>
+          <Link
+            href="/cession-parts"
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span className="hidden sm:inline">Connexion</span>
+          </Link>
+        </div>
       </header>
 
       {/* ── HERO ── */}
-      <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold text-[#1E3A8A] leading-tight max-w-3xl mx-auto">
+      <section className="max-w-7xl mx-auto px-4 md:px-6 pt-12 md:pt-20 pb-10 md:pb-16 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#1E3A8A] leading-tight max-w-3xl mx-auto">
           Cédez vos parts ou actions en toute simplicité
         </h1>
         <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto">
@@ -80,9 +82,9 @@ export default function Home() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="bg-white py-20 px-6">
+      <section className="bg-white py-12 md:py-20 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-[#1E3A8A] text-center mb-12">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] text-center mb-8 md:mb-12">
             Tout ce dont vous avez besoin pour votre cession
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -119,9 +121,9 @@ export default function Home() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-20 px-6 text-center">
+      <section className="py-12 md:py-20 px-4 md:px-6 text-center">
         <div className="max-w-xl mx-auto">
-          <h2 className="text-3xl font-bold text-[#1E3A8A] mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] mb-4">
             Prêt à finaliser votre cession ?
           </h2>
           <p className="text-gray-500 mb-8">

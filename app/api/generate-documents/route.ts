@@ -300,41 +300,19 @@ function buildDeclarationNonCondamnation(data: FormData): string {
     ? `représentant permanent de ${pv.nouveauDirigeantDenomination || "[PM]"}, ${pv.nouveauDirigeantFonction || "dirigeant"}`
     : (pv.nouveauDirigeantFonction || "dirigeant");
 
-  return `# DÉCLARATION DE NON-CONDAMNATION ET DE FILIATION DU DIRIGEANT
+  return `# Déclaration de non-condamnation et de filiation du Dirigeant
+
+Je soussigné(e) : ${civilite} **${nom.toUpperCase()}**, ${prenom} né(e) le ${dateNaissance} à : ${villeNaissance} de nationalité ${nationalite} demeurant ${adresse}
+
+${genreFils} de : Monsieur **${nomPere.toUpperCase()}** ${prenomPere} et de Madame **${nomMere.toUpperCase()}** ${prenomMere} déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce, relatif au Registre du Commerce et des Sociétés,
+
+- n'avoir jamais fait l'objet d'aucune condamnation pénale ni de sanction civile ou administrative de nature à m'interdire, soit d'exercer une activité commerciale, soit de gérer, d'administrer ou de diriger une personne morale.
+
+Fait à ${ville}, le ${dateSignature},
 
 ---
 
-**Je soussigné(e) :** ${civilite} **${nom.toUpperCase()}**, ${prenom}
-
-**Né(e) le :** ${dateNaissance}
-
-**À :** ${villeNaissance}
-
-**De nationalité :** ${nationalite}
-
-**Demeurant :** ${adresse}
-
-**${genreFils} de :** Monsieur ${nomPere.toUpperCase()} ${prenomPere}
-
-**Et de :** Madame ${nomMere.toUpperCase()} ${prenomMere}
-
----
-
-En ma qualité de **${qualite}** de la société **${data.societe.denomination || "[Société]"}** (${data.societe.formeJuridique || ""}), immatriculée au RCS de ${data.societe.rcsVille || ""} sous le n° ${data.societe.rcsNumero || ""},
-
-Déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce, relatif au Registre du Commerce et des Sociétés,
-
-*n'avoir jamais fait l'objet d'aucune condamnation pénale ni de sanction civile ou administrative de nature à m'interdire, soit d'exercer une activité commerciale, soit de gérer, d'administrer ou de diriger une personne morale.*
-
----
-
-**Fait à** ${ville}, **le** ${dateSignature}
-
----
-
-**${nom.toUpperCase()} ${prenom}**
-
-*(Signature précédée de la mention manuscrite « Lu et approuvé »)*`;
+**${nom.toUpperCase()} ${prenom}**`;
 }
 
 export async function POST(request: NextRequest) {

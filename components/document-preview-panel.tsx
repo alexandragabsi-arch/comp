@@ -70,8 +70,11 @@ export function DocumentPreviewPanel({
   pdfFileName,
   onClose,
 }: DocumentPreviewPanelProps) {
+  const isDeclaration = /^#\s+DÉCLARATION/i.test(text.trimStart());
   const cover = parseCoverData(text);
-  const bodyText = normalizeMarkdown(stripCoverBlock(text));
+  const bodyText = isDeclaration
+    ? normalizeMarkdown(text)
+    : normalizeMarkdown(stripCoverBlock(text));
 
   const handleDownloadPdf = async () => {
     const { jsPDF } = await import("jspdf");
@@ -195,83 +198,85 @@ export function DocumentPreviewPanel({
       <div className="flex-1 overflow-y-auto py-8 px-4" style={{ background: "#F8F8F5" }}>
         <div className="flex flex-col items-center gap-8 max-w-[900px] mx-auto">
 
-          {/* ══ PAGE DE GARDE ══ */}
-          <A4Page pageNumber={1}>
-            <div className="h-full flex flex-col">
-              {/* Logo */}
-              <div className="flex items-center gap-1.5 mb-auto">
-                <Search className="w-4 h-4 text-[#1E3A8A]" />
-                <span className="text-sm font-bold text-[#1E3A8A]">Legal<span className="font-light">corners</span></span>
-              </div>
+          {/* ══ PAGE DE GARDE (acte/PV seulement) ══ */}
+          {!isDeclaration && (
+            <A4Page pageNumber={1}>
+              <div className="h-full flex flex-col">
+                {/* Logo */}
+                <div className="flex items-center gap-1.5 mb-auto">
+                  <Search className="w-4 h-4 text-[#1E3A8A]" />
+                  <span className="text-sm font-bold text-[#1E3A8A]">Legal<span className="font-light">corners</span></span>
+                </div>
 
-              {/* Main title block */}
-              <div className="text-center my-auto py-16">
-                <div className="inline-block border-t-4 border-[#5B8DEF] pt-6 mb-6">
-                  <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#5B8DEF] mb-3">Document juridique</p>
-                  <h1 className="text-3xl font-bold text-[#0D2459] leading-tight mb-3">{cover.doctitle}</h1>
-                  {cover.subtitle && (
-                    <p className="text-base font-medium text-[#1E3A8A] mt-2">{cover.subtitle}</p>
+                {/* Main title block */}
+                <div className="text-center my-auto py-16">
+                  <div className="inline-block border-t-4 border-[#5B8DEF] pt-6 mb-6">
+                    <p className="text-xs font-semibold tracking-[0.2em] uppercase text-[#5B8DEF] mb-3">Document juridique</p>
+                    <h1 className="text-3xl font-bold text-[#0D2459] leading-tight mb-3">{cover.doctitle}</h1>
+                    {cover.subtitle && (
+                      <p className="text-base font-medium text-[#1E3A8A] mt-2">{cover.subtitle}</p>
+                    )}
+                  </div>
+
+                  {/* Parties */}
+                  {(cover.cedant || cover.cessionnaire) && (
+                    <div className="mt-10 flex items-center justify-center gap-6">
+                      {cover.cedant && (
+                        <div className="text-center bg-[#F7F9FF] rounded-xl px-6 py-4 border border-[#DBEAFE] min-w-[160px]">
+                          <p className="text-[10px] uppercase tracking-wider text-[#5B8DEF] font-semibold mb-1">Cédant</p>
+                          <p className="text-sm font-bold text-[#0D2459]">{cover.cedant}</p>
+                        </div>
+                      )}
+                      {cover.cedant && cover.cessionnaire && (
+                        <div className="text-[#5B8DEF] text-xl font-light">→</div>
+                      )}
+                      {cover.cessionnaire && (
+                        <div className="text-center bg-[#F7F9FF] rounded-xl px-6 py-4 border border-[#DBEAFE] min-w-[160px]">
+                          <p className="text-[10px] uppercase tracking-wider text-[#5B8DEF] font-semibold mb-1">Cessionnaire</p>
+                          <p className="text-sm font-bold text-[#0D2459]">{cover.cessionnaire}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Société cible */}
+                  {cover.societe && (
+                    <div className="mt-5">
+                      <p className="text-xs text-gray-500 mb-1">Société cible</p>
+                      <p className="font-semibold text-[#1E3A8A] text-sm">{cover.societe}</p>
+                    </div>
                   )}
                 </div>
 
-                {/* Parties */}
-                {(cover.cedant || cover.cessionnaire) && (
-                  <div className="mt-10 flex items-center justify-center gap-6">
-                    {cover.cedant && (
-                      <div className="text-center bg-[#F7F9FF] rounded-xl px-6 py-4 border border-[#DBEAFE] min-w-[160px]">
-                        <p className="text-[10px] uppercase tracking-wider text-[#5B8DEF] font-semibold mb-1">Cédant</p>
-                        <p className="text-sm font-bold text-[#0D2459]">{cover.cedant}</p>
-                      </div>
-                    )}
-                    {cover.cedant && cover.cessionnaire && (
-                      <div className="text-[#5B8DEF] text-xl font-light">→</div>
-                    )}
-                    {cover.cessionnaire && (
-                      <div className="text-center bg-[#F7F9FF] rounded-xl px-6 py-4 border border-[#DBEAFE] min-w-[160px]">
-                        <p className="text-[10px] uppercase tracking-wider text-[#5B8DEF] font-semibold mb-1">Cessionnaire</p>
-                        <p className="text-sm font-bold text-[#0D2459]">{cover.cessionnaire}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Société cible */}
-                {cover.societe && (
-                  <div className="mt-5">
-                    <p className="text-xs text-gray-500 mb-1">Société cible</p>
-                    <p className="font-semibold text-[#1E3A8A] text-sm">{cover.societe}</p>
-                  </div>
-                )}
+                {/* Footer */}
+                <div className="border-t border-gray-200 pt-5 mt-auto">
+                  {cover.date && (
+                    <p className="text-sm text-gray-600 mb-2 font-medium">{cover.date}</p>
+                  )}
+                  {cover.disclaimer && (
+                    <p className="text-[9px] text-gray-400 leading-relaxed italic">{cover.disclaimer}</p>
+                  )}
+                </div>
               </div>
-
-              {/* Footer */}
-              <div className="border-t border-gray-200 pt-5 mt-auto">
-                {cover.date && (
-                  <p className="text-sm text-gray-600 mb-2 font-medium">{cover.date}</p>
-                )}
-                {cover.disclaimer && (
-                  <p className="text-[9px] text-gray-400 leading-relaxed italic">{cover.disclaimer}</p>
-                )}
-              </div>
-            </div>
-          </A4Page>
+            </A4Page>
+          )}
 
           {/* ══ PAGES DE CONTENU ══ */}
-          <A4Page pageNumber={2}>
+          <A4Page pageNumber={isDeclaration ? 1 : 2}>
             <article
-              className="
+              className={`
                 doc-prose prose prose-sm max-w-none
-                prose-headings:text-[#0D2459] prose-headings:font-bold
-                prose-h1:text-xl prose-h1:text-center prose-h1:border-b-2 prose-h1:border-[#0D2459] prose-h1:pb-2 prose-h1:mb-6
+                prose-headings:font-bold
+                prose-h1:text-xl prose-h1:text-center prose-h1:pb-4 prose-h1:mb-8
                 prose-h2:text-sm prose-h2:uppercase prose-h2:tracking-wide prose-h2:mt-8 prose-h2:mb-3
                 prose-h2:underline prose-h2:decoration-[#0D2459] prose-h2:underline-offset-4
                 prose-h3:text-sm prose-h3:font-bold prose-h3:text-[#0D2459] prose-h3:mt-5 prose-h3:mb-2
-                prose-p:text-[#0D2459] prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-3
-                prose-li:text-[#0D2459] prose-li:text-sm prose-li:leading-[1.8]
-                prose-strong:text-[#0D2459] prose-strong:font-bold
-                prose-hr:border-gray-300 prose-hr:my-5
-                [&_blockquote]:text-[#0D2459]/70 [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-2 [&_blockquote]:border-[#5B8DEF] [&_blockquote]:pl-3
-                [&_p]:text-justify [&_p]:hyphens-auto [&_p]:break-words
+                prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-4
+                prose-li:text-sm prose-li:leading-[1.8]
+                prose-strong:font-bold
+                prose-hr:border-gray-400 prose-hr:my-8
+                [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-2 [&_blockquote]:border-[#5B8DEF] [&_blockquote]:pl-3
+                [&_p]:hyphens-auto [&_p]:break-words
                 [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_table]:my-4
                 [&_thead_tr]:bg-[#0D2459]
                 [&_thead_th]:text-white [&_thead_th]:font-bold [&_thead_th]:px-3 [&_thead_th]:py-2 [&_thead_th]:text-left [&_thead_th]:border [&_thead_th]:border-[#0D2459]
@@ -280,7 +285,11 @@ export function DocumentPreviewPanel({
                 [&_td]:text-[#0D2459] [&_td]:px-3 [&_td]:py-2 [&_td]:border [&_td]:border-gray-300 [&_td]:align-top [&_td]:text-xs
                 [&_td:first-child]:font-semibold [&_td:first-child]:w-[32%]
                 [&_td:last-child]:w-[68%]
-              "
+                ${isDeclaration
+                  ? "prose-h1:text-[#1A3A6E] prose-p:text-gray-800 prose-p:text-justify prose-li:text-gray-800 prose-strong:text-gray-800"
+                  : "prose-headings:text-[#0D2459] prose-h1:border-b-2 prose-h1:border-[#0D2459] prose-h2:text-[#0D2459] prose-p:text-[#0D2459] prose-p:text-justify prose-li:text-[#0D2459] prose-strong:text-[#0D2459] [&_blockquote]:text-[#0D2459]/70"
+                }
+              `}
               lang="fr"
             >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>

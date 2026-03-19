@@ -99,8 +99,8 @@ export default function Home() {
               },
               {
                 icon: <Building2 className="w-6 h-6 text-[#5B8DEF]" />,
-                title: "SARL · SAS · SA",
-                desc: "Adapté à toutes les formes juridiques, cession de parts ou d'actions.",
+                title: "SARL · SAS · SA · EURL · SCI · SASU",
+                desc: "Adapté à toutes les formes juridiques : SARL, SAS, SA, EURL, SASU, SCI, SNC — cession de parts ou d'actions.",
               },
             ].map((f) => (
               <div

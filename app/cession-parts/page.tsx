@@ -3510,7 +3510,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
       
   {/* Footer */}
   <footer className="bg-white border-t border-gray-100 py-4">
-    <div className="max-w-7xl mx-auto px-4 flex flex-row flex-wrap items-center justify-center gap-4 text-sm text-[#1E3A8A]/60">
+    <div className="max-w-7xl mx-auto px-4 flex flex-row items-center justify-center gap-3 text-sm text-[#1E3A8A]/60">
       <div className="flex items-center gap-2">
         <Shield className="w-4 h-4" />
         <span>Securise</span>

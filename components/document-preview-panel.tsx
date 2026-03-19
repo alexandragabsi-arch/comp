@@ -46,12 +46,24 @@ function parseCoverData(text: string) {
   const date = text.match(/Fait à\s+(.+?),?\s+le\s+(\d{1,2}\s+\w+\s+\d{4})/);
   const disclaimer = text.match(/>\s*\*?([^*\n]{10,})\*?/);
 
+  const title = h1 ? h1[1] : "Document juridique";
+  const rawSubtitle = h2 ? h2[1] : null;
+  // Suppress subtitle if it's already contained in the title (avoids double display)
+  const subtitle =
+    rawSubtitle && !title.toLowerCase().includes(rawSubtitle.toLowerCase())
+      ? rawSubtitle
+      : null;
+
+  // Strip any remaining ** around société name
+  const societeRaw = soc ? soc[1].trim() : null;
+  const societe = societeRaw ? societeRaw.replace(/\*\*/g, "").trim() : null;
+
   return {
-    doctitle: h1 ? h1[1] : "Document juridique",
-    subtitle: h2 ? h2[1] : null,
+    doctitle: title,
+    subtitle,
     cedant: extractPartyName(text, "Cédant"),
     cessionnaire: extractPartyName(text, "Cessionnaire"),
-    societe: soc ? soc[1].trim() : null,
+    societe,
     date: date ? `Fait à ${date[1]}, le ${date[2]}` : null,
     disclaimer: disclaimer ? disclaimer[1].trim() : null,
   };

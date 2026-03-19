@@ -300,35 +300,41 @@ function buildDeclarationNonCondamnation(data: FormData): string {
     ? `représentant permanent de ${pv.nouveauDirigeantDenomination || "[PM]"}, ${pv.nouveauDirigeantFonction || "dirigeant"}`
     : (pv.nouveauDirigeantFonction || "dirigeant");
 
-  return `DÉCLARATION DE NON-CONDAMNATION ET DE FILIATION DU DIRIGEANT
+  return `# DÉCLARATION DE NON-CONDAMNATION ET DE FILIATION DU DIRIGEANT
 
-══════════════════════════════════════════════════════════════════
+---
 
-Je soussigné(e) : ${civilite} ${nom.toUpperCase()}, ${prenom}
+**Je soussigné(e) :** ${civilite} **${nom.toUpperCase()}**, ${prenom}
 
-Né(e) le : ${dateNaissance}
-À : ${villeNaissance}
-De nationalité : ${nationalite}
-Demeurant : ${adresse}
+**Né(e) le :** ${dateNaissance}
 
-${genreFils} de : Monsieur ${nomPere.toUpperCase()} ${prenomPere}
-Et de : Madame ${nomMere.toUpperCase()} ${prenomMere}
+**À :** ${villeNaissance}
 
-──────────────────────────────────────────────────────────────────
+**De nationalité :** ${nationalite}
 
-En ma qualité de ${qualite} de la société ${data.societe.denomination || "[Société]"} (${data.societe.formeJuridique || ""}), immatriculée au RCS de ${data.societe.rcsVille || ""} sous le n° ${data.societe.rcsNumero || ""},
+**Demeurant :** ${adresse}
+
+**${genreFils} de :** Monsieur ${nomPere.toUpperCase()} ${prenomPere}
+
+**Et de :** Madame ${nomMere.toUpperCase()} ${prenomMere}
+
+---
+
+En ma qualité de **${qualite}** de la société **${data.societe.denomination || "[Société]"}** (${data.societe.formeJuridique || ""}), immatriculée au RCS de ${data.societe.rcsVille || ""} sous le n° ${data.societe.rcsNumero || ""},
 
 Déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce, relatif au Registre du Commerce et des Sociétés,
 
-* n'avoir jamais fait l'objet d'aucune condamnation pénale ni de sanction civile ou administrative de nature à m'interdire, soit d'exercer une activité commerciale, soit de gérer, d'administrer ou de diriger une personne morale.
+*n'avoir jamais fait l'objet d'aucune condamnation pénale ni de sanction civile ou administrative de nature à m'interdire, soit d'exercer une activité commerciale, soit de gérer, d'administrer ou de diriger une personne morale.*
 
-──────────────────────────────────────────────────────────────────
+---
 
-Fait à ${ville}, le ${dateSignature}
+**Fait à** ${ville}, **le** ${dateSignature}
 
-__________________________
-${nom.toUpperCase()} ${prenom}
-(Signature précédée de la mention manuscrite "Lu et approuvé")`;
+---
+
+**${nom.toUpperCase()} ${prenom}**
+
+*(Signature précédée de la mention manuscrite « Lu et approuvé »)*`;
 }
 
 export async function POST(request: NextRequest) {

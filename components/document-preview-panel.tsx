@@ -49,6 +49,19 @@ function cleanBold(text: string): string {
   return text.replace(/\*\*(.+?)\*\*/g, "$1");
 }
 
+/** Convert box-drawing separators (═══, ───, ___) to markdown --- */
+function normalizeMarkdown(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      const t = line.trim();
+      if (/^[═=]{3,}$/.test(t)) return "---";
+      if (/^[─\-_]{3,}$/.test(t)) return "---";
+      return line;
+    })
+    .join("\n");
+}
+
 export function DocumentPreviewPanel({
   title,
   text,
@@ -58,7 +71,7 @@ export function DocumentPreviewPanel({
   onClose,
 }: DocumentPreviewPanelProps) {
   const cover = parseCoverData(text);
-  const bodyText = cleanBold(stripCoverBlock(text));
+  const bodyText = normalizeMarkdown(stripCoverBlock(text));
 
   const handleDownloadPdf = async () => {
     const { jsPDF } = await import("jspdf");
@@ -163,13 +176,13 @@ export function DocumentPreviewPanel({
         <h2 className="font-semibold text-white text-base truncate">{title}</h2>
         <div className="flex items-center gap-2 shrink-0">
           <a href={docxBlobUrl} download={docxFileName}>
-            <Button size="sm" variant="outline"
-              className="border-white/50 text-white hover:bg-white/10 hover:text-white gap-1.5 text-xs">
+            <Button size="sm"
+              className="bg-white/15 border border-white/50 text-white hover:bg-white/25 gap-1.5 text-xs font-medium">
               <FileText className="w-3.5 h-3.5" /> Word (.docx)
             </Button>
           </a>
-          <Button size="sm" variant="outline" onClick={handleDownloadPdf}
-            className="border-white/50 text-white hover:bg-white/10 hover:text-white gap-1.5 text-xs">
+          <Button size="sm" onClick={handleDownloadPdf}
+            className="bg-white/15 border border-white/50 text-white hover:bg-white/25 gap-1.5 text-xs font-medium">
             <Download className="w-3.5 h-3.5" /> PDF
           </Button>
           <button onClick={onClose} className="ml-3 text-white/60 hover:text-white transition-colors" aria-label="Fermer">
@@ -248,23 +261,25 @@ export function DocumentPreviewPanel({
             <article
               className="
                 doc-prose prose prose-sm max-w-none
-                prose-headings:text-[#0D2459]
-                prose-headings:underline
-                prose-headings:decoration-[#5B8DEF]
-                prose-headings:underline-offset-4
-                prose-h1:text-lg prose-h1:font-bold
-                prose-h2:text-base prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-3
-                prose-h3:text-sm prose-h3:font-semibold prose-h3:mt-6
-                prose-p:text-[#0D2459] prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-4
+                prose-headings:text-[#0D2459] prose-headings:font-bold
+                prose-h1:text-xl prose-h1:text-center prose-h1:border-b-2 prose-h1:border-[#0D2459] prose-h1:pb-2 prose-h1:mb-6
+                prose-h2:text-sm prose-h2:uppercase prose-h2:tracking-wide prose-h2:mt-8 prose-h2:mb-3
+                prose-h2:underline prose-h2:decoration-[#0D2459] prose-h2:underline-offset-4
+                prose-h3:text-sm prose-h3:font-bold prose-h3:text-[#0D2459] prose-h3:mt-5 prose-h3:mb-2
+                prose-p:text-[#0D2459] prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-3
                 prose-li:text-[#0D2459] prose-li:text-sm prose-li:leading-[1.8]
-                prose-strong:text-[#0D2459]
-                prose-table:text-xs
-                prose-th:bg-[#F7F9FF] prose-th:text-[#1E3A8A] prose-th:font-semibold
-                prose-td:text-[#0D2459] prose-td:border-gray-200
-                prose-hr:border-gray-200 prose-hr:my-6
-                [&_blockquote]:text-[#0D2459]/60 [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-[#5B8DEF]
+                prose-strong:text-[#0D2459] prose-strong:font-bold
+                prose-hr:border-gray-300 prose-hr:my-5
+                [&_blockquote]:text-[#0D2459]/70 [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-2 [&_blockquote]:border-[#5B8DEF] [&_blockquote]:pl-3
                 [&_p]:text-justify [&_p]:hyphens-auto [&_p]:break-words
-                [&_p]:orphans-3 [&_p]:widows-3
+                [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_table]:my-4
+                [&_thead_tr]:bg-[#0D2459]
+                [&_thead_th]:text-white [&_thead_th]:font-bold [&_thead_th]:px-3 [&_thead_th]:py-2 [&_thead_th]:text-left [&_thead_th]:border [&_thead_th]:border-[#0D2459]
+                [&_tbody_tr:nth-child(odd)]:bg-white
+                [&_tbody_tr:nth-child(even)]:bg-[#F5F6FA]
+                [&_td]:text-[#0D2459] [&_td]:px-3 [&_td]:py-2 [&_td]:border [&_td]:border-gray-300 [&_td]:align-top [&_td]:text-xs
+                [&_td:first-child]:font-semibold [&_td:first-child]:w-[32%]
+                [&_td:last-child]:w-[68%]
               "
               lang="fr"
             >

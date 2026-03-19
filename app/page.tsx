@@ -40,7 +40,7 @@ export default function Home() {
           Cédez vos parts ou actions en toute simplicité
         </h1>
         <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto">
-          Générez en quelques minutes tous les documents nécessaires à votre cession : acte de cession, PV d&apos;AG, déclaration de non-condamnation du nouveau dirigeant.
+          Générez en quelques minutes tous les documents nécessaires à votre cession : acte de cession, PV d&apos;AG, déclaration de non-condamnation du nouveau dirigeant — et envoyez-les directement au Greffe.
         </p>
 
         {/* CTA buttons */}

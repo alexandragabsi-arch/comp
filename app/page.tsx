@@ -18,6 +18,12 @@ export default function Home() {
           <span className="cursor-pointer hover:text-[#1E3A8A] transition-colors">Nos services ▾</span>
         </nav>
         <Link
+          href="#"
+          className="px-5 py-2 rounded-full bg-[#5B8DEF] text-white font-medium text-sm hover:bg-[#4A7DE0] transition-colors shadow-sm"
+        >
+          Prendre rendez-vous
+        </Link>
+        <Link
           href="/cession-parts"
           className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] transition-colors"
         >
@@ -28,29 +34,10 @@ export default function Home() {
         </Link>
       </header>
 
-      {/* ── QUICK PILLS ── */}
-      <div className="border-b border-gray-100 py-6">
-        <div className="max-w-7xl mx-auto px-6 flex flex-wrap justify-center gap-3">
-          {[
-            { label: "Prendre rendez-vous", href: "#" },
-            { label: "Céder mes parts", href: "/cession-parts" },
-            { label: "Céder mes actions", href: "/cession-action" },
-          ].map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="px-6 py-3 rounded-full bg-[#5B8DEF] text-white font-medium text-sm hover:bg-[#4A7DE0] transition-colors shadow-sm"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* ── HERO ── */}
       <section className="max-w-7xl mx-auto px-6 pt-20 pb-16 text-center">
         <h1 className="text-5xl md:text-6xl font-bold text-[#1E3A8A] leading-tight max-w-3xl mx-auto">
-          Cédez vos parts ou actions en toute sécurité
+          Cédez vos parts ou actions en toute simplicité
         </h1>
         <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto">
           Générez en quelques minutes tous les documents nécessaires à votre cession : acte de cession, PV d&apos;AG, déclaration de non-condamnation du nouveau dirigeant.

@@ -1556,7 +1556,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <>
                     {/* Recherche par SIREN ou Nom pour cedant morale */}
                     {!cedantSirenFound && !cedantMorale.rcsNumero && (
-                      <div className="bg-slate-50 rounded-xl p-4 mb-6">
+                      <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Recherche par SIREN ou Nom du cédant
                         </label>

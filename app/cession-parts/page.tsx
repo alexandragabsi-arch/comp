@@ -120,6 +120,7 @@ export default function CessionPartsPage() {
   const [cedantType, setCedantType] = useState<TypePersonne | null>(null);
   const [cedantIsSocieteCible, setCedantIsSocieteCible] = useState(false);
   const [cessionnaireType, setCessionnaireType] = useState<TypePersonne | null>(null);
+  const [cessionnaireIsSocieteCible, setCessionnaireIsSocieteCible] = useState(false);
   const [nombrePartsApprox, setNombrePartsApprox] = useState("");
 const [prixApprox, setPrixApprox] = useState("");
   const [besoinExpertComptable, setBesoinExpertComptable] = useState<"oui" | "deja" | "non" | null>(null);
@@ -766,7 +767,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cessionnaire (acheteur)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
-                    onClick={() => setCessionnaireType("physique")}
+                    onClick={() => { setCessionnaireType("physique"); setCessionnaireIsSocieteCible(false); }}
                     className={cn(
                       "p-4 rounded-xl border-2 text-center transition-all",
                       cessionnaireType === "physique"
@@ -778,7 +779,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <span className="font-medium text-[#1E3A8A] block">Personne physique</span>
                   </button>
                   <button
-                    onClick={() => setCessionnaireType("morale")}
+                    onClick={() => { setCessionnaireType("morale"); setCessionnaireIsSocieteCible(false); }}
                     className={cn(
                       "p-4 rounded-xl border-2 text-center transition-all",
                       cessionnaireType === "morale"
@@ -790,6 +791,40 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <span className="font-medium text-[#1E3A8A] block">Personne morale</span>
                   </button>
                 </div>
+                {cessionnaireType === "morale" && societe.denomination && (
+                  <button
+                    onClick={() => {
+                      setCessionnaireIsSocieteCible(!cessionnaireIsSocieteCible);
+                      if (!cessionnaireIsSocieteCible) {
+                        setCessionnaireMorale({
+                          denomination: societe.denomination,
+                          formeJuridique: societe.formeJuridique,
+                          siegeAdresse: societe.siegeAdresse,
+                          siegeCP: societe.siegeCP,
+                          siegeVille: societe.siegeVille,
+                          siegePays: societe.siegePays,
+                          capital: societe.capital,
+                          rcsVille: societe.rcsVille,
+                          rcsNumero: societe.rcsNumero,
+                          representantCivilite: "",
+                          representantNom: "",
+                          representantPrenom: "",
+                          representantQualite: "",
+                          email: "",
+                        });
+                      }
+                    }}
+                    className={cn(
+                      "mt-3 w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                      cessionnaireIsSocieteCible
+                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        : "border-gray-200 hover:border-[#1E3A8A]/50"
+                    )}
+                  >
+                    <Building2 className="w-5 h-5 text-[#1E3A8A] shrink-0" />
+                    <span className="text-sm font-medium text-[#1E3A8A]">Il s'agit de la société cible ({societe.denomination})</span>
+                  </button>
+                )}
               </div>
               {/* Estimation */}
               <div className="bg-white rounded-xl p-6 border border-gray-200">

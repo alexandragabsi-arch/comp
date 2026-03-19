@@ -308,6 +308,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [acteBlobUrl, setActeBlobUrl] = useState<string | null>(null);
+  const [pvBlobUrl, setPvBlobUrl] = useState<string | null>(null);
+  const [declarationBlobUrl, setDeclarationBlobUrl] = useState<string | null>(null);
   
   // Documents a generer
   const [generateAgrement, setGenerateAgrement] = useState(true);
@@ -3323,9 +3326,18 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
             };
 
             const nomSociete = (societe.denomination || "societe").replace(/\s+/g, '-');
-            if (result.acte) downloadBlob(await generateActeDocx(result.acte, formData as any), `Acte-Cession-${nomSociete}.docx`);
-            if (result.pv) downloadBlob(await generatePVDocx(result.pv, formData as any), `PV-AG-${nomSociete}.docx`);
-            if (result.declaration) downloadBlob(await generateDeclarationDocx(result.declaration, formData as any), `Declaration-${nomSociete}.docx`);
+            if (result.acte) {
+              const blob = await generateActeDocx(result.acte, formData as any);
+              setActeBlobUrl(window.URL.createObjectURL(blob));
+            }
+            if (result.pv) {
+              const blob = await generatePVDocx(result.pv, formData as any);
+              setPvBlobUrl(window.URL.createObjectURL(blob));
+            }
+            if (result.declaration) {
+              const blob = await generateDeclarationDocx(result.declaration, formData as any);
+              setDeclarationBlobUrl(window.URL.createObjectURL(blob));
+            }
 
             setDocumentGenere(true);
           } catch (error) {
@@ -3354,113 +3366,36 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
           <Check className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h3 className="font-bold text-green-800">Document genere avec succes !</h3>
-          <p className="text-sm text-green-600">Votre acte de cession est pret</p>
+          <h3 className="font-bold text-green-800">Documents generés avec succès !</h3>
+          <p className="text-sm text-green-600">Téléchargez chaque document ci-dessous</p>
         </div>
       </div>
-      
+
       <div className="space-y-3">
-        {/* Apercu plein ecran */}
-        <Button
-          className="w-full bg-[#0D2459] hover:bg-[#1a3a7a] text-white gap-2"
-          onClick={() => setShowPdfPreview(true)}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          Apercu du document
-        </Button>
-        {/* Telechargement */}
-        {pdfBlobUrl && (
-          <a href={pdfBlobUrl} download={`acte-cession-${societe.denomination || 'document'}.pdf`} className="block">
-            <Button
-              variant="outline"
-              className="w-full border-green-300 text-green-700 hover:bg-green-100 gap-2"
-            >
+        {acteBlobUrl && (
+          <a href={acteBlobUrl} download={`Acte-Cession-${(societe.denomination || 'document').replace(/\s+/g, '-')}.docx`} className="block">
+            <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-100 gap-2">
               <FileText className="w-4 h-4" />
-              Telecharger l&apos;acte de cession (PDF)
+              Télécharger l&apos;acte de cession (DOCX)
             </Button>
           </a>
         )}
-        {/* Bouton PV AG */}
-        <Button
-          onClick={async () => {
-            setIsGenerating(true);
-            try {
-              const payload = {
-                docType: 'pv',
-                typeCession,
-                typePropriete,
-                cedantType,
-                cedantPhysique,
-                cedantMorale,
-                cedantRegimeMatrimonial,
-                cedantConjointNom,
-                cedantConjointPrenom,
-                cessionnaireType,
-                cessionnairePhysique,
-                cessionnaireMorale,
-                cessionnaireRegimeMatrimonial,
-                cessionnaireAchatBiensPropres,
-                societe,
-                nombrePartsCedees,
-                numeroPartsDe,
-                numeroPartsA,
-                prixParPart,
-                prixTotal,
-                modePaiement,
-                echeances,
-                comptesCourants,
-                garantieActifPassif,
-                garantieSeuilDeclenchement,
-                garantieMontantMax,
-                garantieDuree,
-                garantieAdresse,
-                garantieEmail,
-                droitJouissanceImmeubles,
-                mandataireFormalities,
-                modificationValeurNominale,
-                fraisACharge,
-                tribunalCompetent,
-                lieuSignature,
-                dateSignature,
-                includChangementDirigeant,
-                nouveauDirigeantPhysique,
-                nouveauDirigeantQualite,
-              };
-              const response = await fetch('/api/generate-cession-pdf', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-              });
-              if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `PV-AG-${societe.denomination || 'document'}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-              } else {
-                alert('Erreur lors de la génération du PV AG');
-              }
-            } catch (error) {
-              console.error('[v0] PV AG generation error:', error);
-              alert(`Erreur: ${error}`);
-            } finally {
-              setIsGenerating(false);
-            }
-          }}
-          variant="outline"
-          className="w-full border-blue-300 text-blue-700 hover:bg-blue-100 gap-2"
-          disabled={isGenerating}
-        >
-          <FileText className="w-4 h-4" />
-          Telecharger le PV AG (PDF)
-        </Button>
+        {pvBlobUrl && (
+          <a href={pvBlobUrl} download={`PV-AG-${(societe.denomination || 'document').replace(/\s+/g, '-')}.docx`} className="block">
+            <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-100 gap-2">
+              <FileText className="w-4 h-4" />
+              Télécharger le PV d&apos;assemblée (DOCX)
+            </Button>
+          </a>
+        )}
+        {declarationBlobUrl && (
+          <a href={declarationBlobUrl} download={`Declaration-Non-Condamnation-${(societe.denomination || 'document').replace(/\s+/g, '-')}.docx`} className="block">
+            <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100 gap-2">
+              <FileText className="w-4 h-4" />
+              Télécharger la déclaration de non-condamnation (DOCX)
+            </Button>
+          </a>
+        )}
         {selectedFormule === "premium" && (
           <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 mt-4">
             <p className="text-sm text-blue-800">

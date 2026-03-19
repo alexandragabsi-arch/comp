@@ -1,6 +1,7 @@
 "use client";
 // v5.1 - Cache bust: Fixed JSX structure
 import { useState } from "react";
+import { StatutsUpdater } from "@/components/statuts-updater";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
@@ -3791,6 +3792,36 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               </div>
             );
           })()}
+
+          {/* Mise à jour des statuts — uniquement SARL/EURL/SNC/SCI */}
+          {["SARL", "EURL", "SNC", "SCI"].includes(societe.formeJuridique || "") && (
+            <StatutsUpdater
+              cessionData={{
+                nomCedant: cedantType === "physique"
+                  ? `${cedantPhysique.civilite} ${cedantPhysique.nom} ${cedantPhysique.prenom}`.trim()
+                  : cedantMorale.denomination,
+                nomCessionnaire: cessionnaireType === "physique"
+                  ? `${cessionnairePhysique.civilite} ${cessionnairePhysique.nom} ${cessionnairePhysique.prenom}`.trim()
+                  : cessionnaireMorale.denomination,
+                nbParts: nombrePartsCedees || "",
+                prixTotal: prixTotal || "",
+                date: dateSignature || "",
+                ville: lieuSignature || "",
+                formeJuridique: societe.formeJuridique || "",
+                denomination: societe.denomination || "",
+                capitalTotal: societe.capital || "",
+                nbTitresTotal: societe.nombreTitresTotal || "",
+                includChangementDirigeant,
+                nouveauDirigeantCivilite: nouveauDirigeantPhysique.civilite,
+                nouveauDirigeantNom: nouveauDirigeantPhysique.nom,
+                nouveauDirigeantPrenom: nouveauDirigeantPhysique.prenom,
+                nouveauDirigeantFonction: nouveauDirigeantQualite,
+                ancienDirigeantNom: cedantType === "physique"
+                  ? `${cedantPhysique.civilite} ${cedantPhysique.nom} ${cedantPhysique.prenom}`.trim()
+                  : cedantMorale.denomination,
+              }}
+            />
+          )}
 
           {selectedFormule === "premium" && (
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 mt-4">

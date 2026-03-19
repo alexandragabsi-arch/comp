@@ -624,41 +624,44 @@ export function DocumentPreviewPanel({
 
           {/* ══ PAGES DE CONTENU ══ */}
           <A4Page pageNumber={isDeclaration ? 1 : 2}>
-            <article
-              className={`
-                doc-prose prose prose-sm max-w-none
-                prose-headings:font-bold
-                prose-h1:text-xl prose-h1:text-center prose-h1:pb-4 prose-h1:mb-8
-                prose-h2:text-sm prose-h2:font-bold prose-h2:uppercase prose-h2:tracking-wide prose-h2:mt-8 prose-h2:mb-3
-                prose-h2:underline prose-h2:decoration-[#0D2459] prose-h2:underline-offset-4
-                prose-h3:text-sm prose-h3:font-bold prose-h3:text-[#0D2459] prose-h3:mt-6 prose-h3:mb-2
-                prose-h3:underline prose-h3:decoration-[#0D2459] prose-h3:underline-offset-2
-                prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-6
-                prose-li:text-sm prose-li:leading-[1.8]
-                prose-strong:font-bold
-                prose-hr:border-gray-400 prose-hr:my-8
-                [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-2 [&_blockquote]:border-[#5B8DEF] [&_blockquote]:pl-3
-                [&_p]:hyphens-auto [&_p]:break-words
-                [&_table]:w-full [&_table]:border-collapse [&_table]:text-xs [&_table]:my-4
-                [&_thead_tr]:bg-[#0D2459]
-                [&_thead_th]:text-white [&_thead_th]:font-bold [&_thead_th]:px-3 [&_thead_th]:py-2 [&_thead_th]:text-left [&_thead_th]:border [&_thead_th]:border-[#0D2459]
-                [&_tbody_tr:nth-child(odd)]:bg-white
-                [&_tbody_tr:nth-child(even)]:bg-[#F5F6FA]
-                [&_td]:text-[#0D2459] [&_td]:px-3 [&_td]:py-2 [&_td]:border [&_td]:border-gray-300 [&_td]:align-top [&_td]:text-xs
-                [&_td:first-child]:font-semibold [&_td:first-child]:w-[32%]
-                [&_td:last-child]:w-[68%]
-                ${isDeclaration
-                  ? "prose-h1:text-[#1A3A6E] prose-p:text-gray-800 prose-p:text-justify prose-li:text-gray-800 prose-strong:text-gray-800"
-                  : "prose-headings:text-[#0D2459] prose-h1:border-b-2 prose-h1:border-[#0D2459] prose-h2:text-[#0D2459] prose-p:text-[#0D2459] prose-p:text-justify prose-li:text-[#0D2459] prose-strong:text-[#0D2459] [&_blockquote]:text-[#0D2459]/70"
-                }
-              `}
-              lang="fr"
-            >
+            <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459" }}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
+                  h1: ({ children }) => (
+                    <h1 style={{ fontSize: "15px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "20px", marginTop: "8px", paddingBottom: "8px", borderBottom: "2px solid #0D2459" }}>
+                      {children}
+                    </h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 style={{ fontSize: "12px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "28px", marginBottom: "10px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "4px" }}>
+                      {children}
+                    </h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 style={{ fontSize: "11px", fontWeight: "bold", color: "#0D2459", marginTop: "18px", marginBottom: "8px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "3px" }}>
+                      {children}
+                    </h3>
+                  ),
+                  p: ({ children }) => (
+                    <p style={{ fontSize: "11.5px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify", hyphens: "auto" } as React.CSSProperties}>
+                      {children}
+                    </p>
+                  ),
+                  strong: ({ children }) => (
+                    <strong style={{ fontWeight: "bold", color: "#0D2459" }}>{children}</strong>
+                  ),
+                  ul: ({ children }) => (
+                    <ul style={{ paddingLeft: "18px", marginBottom: "14px" }}>{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol style={{ paddingLeft: "18px", marginBottom: "14px" }}>{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li style={{ fontSize: "11.5px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
+                  ),
                   table: ({ children }) => (
-                    <table style={{ width: "100%", borderCollapse: "collapse", margin: "16px 0", fontSize: "12px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", margin: "16px 0", fontSize: "11px" }}>
                       {children}
                     </table>
                   ),
@@ -671,17 +674,15 @@ export function DocumentPreviewPanel({
                     </th>
                   ),
                   tbody: ({ children }) => <tbody>{children}</tbody>,
-                  tr: ({ children }) => (
-                    <tr>{children}</tr>
-                  ),
+                  tr: ({ children }) => <tr>{children}</tr>,
                   td: ({ children }) => (
-                    <td style={{ padding: "7px 12px", border: "1px solid #e5e7eb", verticalAlign: "top", color: "#1e293b", lineHeight: "1.5" }}>
+                    <td style={{ padding: "7px 12px", border: "1px solid #e5e7eb", verticalAlign: "top", color: "#1e293b", lineHeight: "1.55", fontSize: "11px" }}>
                       {children}
                     </td>
                   ),
                   hr: () => <hr style={{ border: "none", borderTop: "1px solid #d1d5db", margin: "20px 0" }} />,
                   blockquote: ({ children }) => (
-                    <blockquote style={{ borderLeft: "3px solid #5B8DEF", paddingLeft: "12px", margin: "12px 0", color: "#64748b", fontStyle: "italic", fontSize: "11px" }}>
+                    <blockquote style={{ borderLeft: "3px solid #5B8DEF", paddingLeft: "12px", margin: "12px 0", color: "#64748b", fontStyle: "italic", fontSize: "10.5px" }}>
                       {children}
                     </blockquote>
                   ),

@@ -109,7 +109,7 @@ const STEPS = [
 export default function CessionPartsPage() {
   // Navigation
   const [step, setStep] = useState(1);
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
+  useEffect(() => { window.scrollTo(0, 0); }, [step]);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [selectedFormule, setSelectedFormule] = useState<"essentiel" | "premium" | null>(null);
   

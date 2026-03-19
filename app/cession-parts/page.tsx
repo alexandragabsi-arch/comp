@@ -984,16 +984,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <Scale className="w-5 h-5" />
                   Frais obligatoires (versés aux administrations)
                 </h2>
-                
+
+                {/* Frais cession */}
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Cession de titres</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Frais de Greffe</p>
-                    <p className="font-semibold text-amber-900">~180€</p>
-                  </div>
-                  <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Annonce légale</p>
-                    <p className="font-semibold text-amber-900">~200€</p>
-                  </div>
                   <div className="p-3 bg-white rounded-lg text-center">
                     <p className="text-xs text-amber-600 mb-1">Droits d&apos;enregistrement</p>
                     <p className="font-semibold text-amber-900">
@@ -1004,9 +998,52 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         return `~${Math.round(droits)}€`;
                       })()}
                     </p>
+                    <p className="text-[10px] text-amber-500">Service des impôts</p>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg text-center">
+                    <p className="text-xs text-amber-600 mb-1">Annonce légale (JAL)</p>
+                    <p className="font-semibold text-amber-900">~150€</p>
+                    <p className="text-[10px] text-amber-500">Journal officiel habilité</p>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg text-center">
+                    <p className="text-xs text-amber-600 mb-1">Frais de Greffe</p>
+                    <p className="font-semibold text-amber-900">~60€</p>
+                    <p className="text-[10px] text-amber-500">Tribunal de commerce</p>
                   </div>
                 </div>
-                
+
+                {/* Frais changement de dirigeant */}
+                {includChangementDirigeant && (
+                  <>
+                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2 mt-4 border-t border-amber-200 pt-3">
+                      + Changement de dirigeant
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                      <div className="p-3 bg-white rounded-lg text-center border border-amber-200">
+                        <p className="text-xs text-amber-600 mb-1">Annonce légale (JAL)</p>
+                        <p className="font-semibold text-amber-900">~150€</p>
+                        <p className="text-[10px] text-amber-500">Changement de gérant/président</p>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg text-center border border-amber-200">
+                        <p className="text-xs text-amber-600 mb-1">Frais de Greffe</p>
+                        <p className="font-semibold text-amber-900">~200€</p>
+                        <p className="text-[10px] text-amber-500">Modification au RCS</p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-amber-100 rounded-lg text-center mb-3">
+                      <p className="text-xs text-amber-700 font-medium">Total frais administratifs estimés</p>
+                      <p className="text-lg font-bold text-amber-900">
+                        ~{(() => {
+                          const prix = parseFloat(prixTotal) || 0;
+                          const droits = prix > 0 ? Math.max(25, Math.round(prix * 0.03)) : 0;
+                          return droits + 150 + 60 + 150 + 200;
+                        })()}€
+                        {!prixTotal && <span className="text-sm font-normal"> + droits d&apos;enregistrement</span>}
+                      </p>
+                    </div>
+                  </>
+                )}
+
                 <p className="text-xs text-amber-600 text-center">
                   Ces frais ne nous reviennent pas. Ils sont versés directement aux administrations.
                 </p>

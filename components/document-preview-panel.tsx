@@ -82,8 +82,9 @@ function normalizeMarkdown(text: string): string {
     .split("\n")
     .map((line) => {
       const t = line.trim();
-      if (/^[═=]{3,}$/.test(t)) return "---";
-      if (/^[─\-_]{3,}$/.test(t)) return "---";
+      // Remove separator lines entirely (═══, ───, ---) — don't convert to <hr>
+      if (/^[═=]{3,}$/.test(t)) return "";
+      if (/^[─\-_]{3,}$/.test(t)) return "";
       return line;
     })
     .join("\n");
@@ -693,7 +694,7 @@ export function DocumentPreviewPanel({
                       {children}
                     </td>
                   ),
-                  hr: () => <hr style={{ border: "none", borderTop: "1px solid #d1d5db", margin: "20px 0" }} />,
+                  hr: () => null,
                   blockquote: ({ children }) => (
                     <blockquote style={{ borderLeft: "3px solid #5B8DEF", paddingLeft: "12px", margin: "12px 0", color: "#64748b", fontStyle: "italic", fontSize: "10.5px" }}>
                       {children}

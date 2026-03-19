@@ -157,17 +157,22 @@ PV D'AGRÉMENT daté du : ${data.pv.date || data.date || "[date]"}
 Type d'assemblée : ${data.pv.typeAssemblee}
 
 INSTRUCTIONS DE RÉDACTION :
-1. Rédige l'acte COMPLET avec tous les articles numérotés
-2. Intègre toutes les informations ci-dessus EXACTEMENT (ne laisse aucun [À COMPLÉTER] si l'info est fournie)
-3. Utilise un style juridique professionnel français
-4. Inclus les articles : Identification des parties, Déclarations préalables, Objet, Prix & quittance, Fiscalité, Régime matrimonial, Agrément, Comptes courants, Transfert de propriété, GAP (selon paramètre), Non-concurrence (selon paramètre), Opposabilité & formalités, Dispositions générales, Signatures
-5. Adapte le régime fiscal selon le type de cédant (personne physique → PFU, personne morale → IS)
+1. Rédige l'acte COMPLET avec TOUS les articles numérotés jusqu'aux signatures — ne tronque jamais.
+2. Intègre toutes les informations ci-dessus EXACTEMENT (ne laisse aucun [À COMPLÉTER] si l'info est fournie).
+3. Utilise un style juridique professionnel français.
+4. Inclus les articles : Identification des parties, Déclarations préalables, Objet, Prix & quittance, Fiscalité, Régime matrimonial, Agrément, Comptes courants, Transfert de propriété, GAP (selon paramètre), Non-concurrence (selon paramètre), Opposabilité & formalités, Dispositions générales, Signatures.
+5. Adapte le régime fiscal selon le type de cédant (personne physique → PFU, personne morale → IS).
 6. Pour les droits d'enregistrement : ${
     ["SA", "SAS", "SASU"].includes(societe.formeJuridique || "")
       ? "0,1% (SA/SAS)"
       : "3% avec abattement 23 000€ proratisé (SARL/EURL)"
   }
-7. Termine par les blocs de signature avec les mentions manuscrites requises
+7. Termine OBLIGATOIREMENT par les blocs de signature avec les mentions manuscrites "Lu et approuvé" pour chaque partie.
+8. FORMATAGE STRICT — respecte ces règles absolument :
+   a. NE JAMAIS mettre de ligne de séparation (---, ══════, ──────) entre les articles ou sections.
+   b. Le régime matrimonial (marié/pacsé sous le régime de…) doit être sur la MÊME ligne que l'adresse, séparé par une virgule — PAS un paragraphe séparé.
+   c. "D'UNE PART," et "D'AUTRE PART," sont sur leur propre ligne, ALIGNÉS À GAUCHE, sans indentation ni guillemets.
+   d. Ne pas répéter le titre du document dans le corps de l'acte.
 ${nomCedant} ${nomCessionnaire}`;
 }
 
@@ -340,8 +345,8 @@ export async function POST(request: NextRequest) {
 
     async function generateActe(): Promise<string> {
       const stream = client.messages.stream({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 6000,
+        model: "claude-sonnet-4-6",
+        max_tokens: 16000,
         messages: [{ role: "user", content: buildPromptActe(formData) }],
       });
       const response = await stream.finalMessage();
@@ -352,7 +357,7 @@ export async function POST(request: NextRequest) {
     async function generatePV(): Promise<string> {
       const stream = client.messages.stream({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 4000,
+        max_tokens: 6000,
         messages: [{ role: "user", content: buildPromptPV(formData) }],
       });
       const response = await stream.finalMessage();

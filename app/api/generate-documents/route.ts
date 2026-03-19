@@ -345,7 +345,7 @@ export async function POST(request: NextRequest) {
 
     async function generateActe(): Promise<string> {
       const stream = client.messages.stream({
-        model: "claude-sonnet-4-6",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 6000,
         messages: [{ role: "user", content: buildPromptActe(formData) }],
       });
@@ -356,7 +356,7 @@ export async function POST(request: NextRequest) {
 
     async function generatePV(): Promise<string> {
       const stream = client.messages.stream({
-        model: "claude-sonnet-4-6",
+        model: "claude-haiku-4-5-20251001",
         max_tokens: 4000,
         messages: [{ role: "user", content: buildPromptPV(formData) }],
       });

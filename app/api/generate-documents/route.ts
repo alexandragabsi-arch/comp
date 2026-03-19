@@ -285,6 +285,17 @@ INSTRUCTIONS :
 8. IMPORTANT : Dans toutes les résolutions (agrément, approbation nouvel associé, constatation), le CESSIONNAIRE doit toujours être désigné par son nom complet : "${nomCessionnaire}". Ne jamais utiliser le nom du représentant légal à la place de la dénomination sociale.`;
 }
 
+function formatDate(d: string): string {
+  if (!d) return "[date]";
+  // Already formatted (e.g. "03 mars 2026")
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d) && !/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d;
+  const months = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  let day: number, month: number, year: number;
+  if (d.includes("-")) { [year, month, day] = d.split("-").map(Number); }
+  else { [day, month, year] = d.split("/").map(Number); }
+  return `${String(day).padStart(2,"0")} ${months[month - 1]} ${year}`;
+}
+
 function buildDeclarationNonCondamnation(data: FormData): string {
   const pv = data.pv;
   const cessionnaire = data.cessionnaire;
@@ -305,7 +316,10 @@ function buildDeclarationNonCondamnation(data: FormData): string {
   const prenomPere = isPM ? (pv.rpPrenomPere || "") : (pv.nouveauDirigeantPrenomPere || "");
   const nomMere = isPM ? (pv.rpNomMere || "") : (pv.nouveauDirigeantNomMere || "");
   const prenomMere = isPM ? (pv.rpPrenomMere || "") : (pv.nouveauDirigeantPrenomMere || "");
-  const genreFils = civilite === "Mme" ? "Fille" : "Fils";
+  const isFemme = civilite === "Mme";
+  const genreFils = isFemme ? "Fille" : "Fils";
+  const neNee = isFemme ? "née" : "né";
+  const soussigne = isFemme ? "soussignée" : "soussigné";
 
   // Qualité dans la société
   const qualite = isPM
@@ -316,19 +330,28 @@ function buildDeclarationNonCondamnation(data: FormData): string {
     ? `, représentant permanent de **${(pv.nouveauDirigeantDenomination || "[PM]").toUpperCase()}**`
     : "";
 
+  const dateNaissanceFormatted = formatDate(dateNaissance);
+  const dateSignatureFormatted = formatDate(dateSignature);
+
   return `# Déclaration de non-condamnation et de filiation du Dirigeant
 
-Je soussigné(e) : ${civilite} **${nom.toUpperCase()}**, ${prenom}${mentionPM} né(e) le ${dateNaissance} à : ${villeNaissance} de nationalité ${nationalite} demeurant ${adresse}
+Je ${soussigne} : ${civilite} **${nom.toUpperCase()}**, ${prenom}${mentionPM}, ${neNee} le ${dateNaissanceFormatted} à ${villeNaissance}, de nationalité ${nationalite}, demeurant ${adresse},
 
-${genreFils} de : Monsieur **${nomPere.toUpperCase()}** ${prenomPere} et de Madame **${nomMere.toUpperCase()}** ${prenomMere} déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce, relatif au Registre du Commerce et des Sociétés,
+${genreFils} de : Monsieur **${nomPere.toUpperCase()}** ${prenomPere} et de Madame **${nomMere.toUpperCase()}** ${prenomMere},
 
-- n'avoir jamais fait l'objet d'aucune condamnation pénale ni de sanction civile ou administrative de nature à m'interdire, soit d'exercer une activité commerciale, soit de gérer, d'administrer ou de diriger une personne morale.
+déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce relatif au Registre du Commerce et des Sociétés, n'avoir jamais fait l'objet d'aucune condamnation pénale ni de sanction civile ou administrative de nature à m'interdire, soit d'exercer une activité commerciale, soit de gérer, d'administrer ou de diriger une personne morale.
 
-Fait à ${ville}, le ${dateSignature},
+En foi de quoi, la présente déclaration est établie pour servir et valoir ce que de droit.
+
+Fait à ${ville}, le ${dateSignatureFormatted}
 
 ---
 
-**${nom.toUpperCase()} ${prenom}**`;
+${civilite} **${nom.toUpperCase()} ${prenom}**
+
+*${qualite}*
+
+Signature : _______________________`;
 }
 
 export async function POST(request: NextRequest) {

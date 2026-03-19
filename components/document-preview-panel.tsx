@@ -638,12 +638,12 @@ export function DocumentPreviewPanel({
 
           {/* ══ PAGES DE CONTENU ══ */}
           <A4Page pageNumber={isDeclaration ? 1 : 2}>
-            <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459" }}>
+            <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459", paddingTop: isDeclaration ? "40px" : "0" }}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
                   h1: ({ children }) => (
-                    <h1 style={{ fontSize: "15px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "20px", marginTop: "8px", paddingBottom: "8px", borderBottom: "2px solid #0D2459" }}>
+                    <h1 style={{ fontSize: "15px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: isDeclaration ? "48px" : "20px", marginTop: "8px", paddingBottom: "12px", borderBottom: "2px solid #0D2459" }}>
                       {children}
                     </h1>
                   ),

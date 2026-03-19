@@ -98,8 +98,8 @@ export function DocumentPreviewPanel({
       </div>
 
       {/* Document content */}
-      <div className="flex-1 overflow-auto bg-gray-100 p-8">
-        <div className="max-w-[210mm] mx-auto bg-white shadow-md rounded-sm px-[20mm] py-[20mm] min-h-[297mm]">
+      <div className="flex-1 overflow-auto bg-white p-8">
+        <div className="max-w-[210mm] mx-auto bg-white px-[20mm] py-[20mm] min-h-[297mm]">
           <pre className="whitespace-pre-wrap font-serif text-[10pt] text-gray-900 leading-[1.6]">
             {text}
           </pre>

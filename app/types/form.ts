@@ -167,6 +167,8 @@ export interface FormData {
   societe: Partial<SocieteInfo>;
   cedant: Partial<CedantInfo>;
   cessionnaire: Partial<CessionnaireInfo>;
+  cedantIsSocieteCible?: boolean;
+  cessionnaireIsSocieteCible?: boolean;
   prix: Partial<PrixInfo>;
   natureCession: Partial<NatureCessionInfo>;
   gap: Partial<GAPInfo>;

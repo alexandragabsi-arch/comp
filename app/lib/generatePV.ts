@@ -75,7 +75,9 @@ export function generatePV(data: FormData): string {
     doc += `• Fin des fonctions de dirigeant de ${pv.presidentCivilite || ""} ${n(pv.ancienDirigeantNom)} ${n(pv.ancienDirigeantPrenom)} ;\n`;
     doc += `• Nomination en tant que ${n(pv.nouveauDirigeantFonction)} de ${pv.nouveauDirigeantCivilite || ""} ${n(pv.nouveauDirigeantNom)} ${n(pv.nouveauDirigeantPrenom)} ;\n`;
   }
-  doc += `• Approbation de la qualité de nouvel associé à ${nomCessionnaire} ;\n`;
+  if (!data.cessionnaireIsSocieteCible) {
+    doc += `• Approbation de la qualité de nouvel associé à ${nomCessionnaire} ;\n`;
+  }
   doc += `• Agrément à la cession des ${typeTitre} ;\n`;
   doc += `• Constatation de la cession ;\n`;
   doc += `• Délégation des pouvoirs en vue des formalités.\n\n`;
@@ -109,46 +111,78 @@ export function generatePV(data: FormData): string {
     resNum++;
   }
 
-  // Résolution – Approbation du nouvel associé
-  doc += `${"─".repeat(60)}\n`;
-  doc += `RÉSOLUTION ${resNum} — APPROBATION DE LA QUALITÉ DE NOUVEL ASSOCIÉ\n`;
-  doc += `${"─".repeat(60)}\n\n`;
   const titreAss = pv.typeAssemblee === "AGE" ? "L'Assemblée" : pv.typeAssemblee === "associe_unique" ? "L'Associé unique" : "L'unanimité des associés";
-  doc += `${titreAss} décide de donner la qualité d'associé de la Société à :\n\n`;
-  if (cessionnaire.typePersonne === "physique" && cessionnaire.physique) {
-    const p = cessionnaire.physique;
-    doc += `${p.civilite} ${p.nom} ${p.prenom}, né(e) le ${n(p.dateNaissance)}, demeurant ${n(p.adresse)},\n\n`;
-  } else if (cessionnaire.morale) {
-    doc += `La société ${cessionnaire.morale.denomination}, immatriculée au RCS de ${n(cessionnaire.morale.rcsVille)} sous le numéro ${n(cessionnaire.morale.rcsNumero)},\n\n`;
-  }
-  doc += `à compter du jour de la cession.\n\n`;
-  doc += `La résolution est adoptée à l'unanimité des associés présents ou représentés.\n\n`;
-  resNum++;
 
-  // Résolution – Agrément
+  // Résolution – Approbation du nouvel associé (pas applicable si rachat par la société)
+  if (!data.cessionnaireIsSocieteCible) {
+    doc += `${"─".repeat(60)}\n`;
+    doc += `RÉSOLUTION ${resNum} — APPROBATION DE LA QUALITÉ DE NOUVEL ASSOCIÉ\n`;
+    doc += `${"─".repeat(60)}\n\n`;
+    doc += `${titreAss} décide de donner la qualité d'associé de la Société à :\n\n`;
+    if (cessionnaire.typePersonne === "physique" && cessionnaire.physique) {
+      const p = cessionnaire.physique;
+      doc += `${p.civilite} ${p.nom} ${p.prenom}, né(e) le ${n(p.dateNaissance)}, demeurant ${n(p.adresse)},\n\n`;
+    } else if (cessionnaire.morale) {
+      doc += `La société ${cessionnaire.morale.denomination}, immatriculée au RCS de ${n(cessionnaire.morale.rcsVille)} sous le numéro ${n(cessionnaire.morale.rcsNumero)},\n\n`;
+    }
+    doc += `à compter du jour de la cession.\n\n`;
+    doc += `La résolution est adoptée à l'unanimité des associés présents ou représentés.\n\n`;
+    resNum++;
+  }
+
+  // Résolution – Agrément / Autorisation rachat
   doc += `${"─".repeat(60)}\n`;
-  doc += `RÉSOLUTION ${resNum} — AGRÉMENT DE LA CESSION\n`;
-  doc += `${"─".repeat(60)}\n\n`;
-  doc += `${titreAss}, après avoir pris connaissance du projet de cession formé entre :\n`;
-  doc += `• Le Cédant : ${nomCedant}\n`;
-  doc += `• Le Cessionnaire : ${nomCessionnaire}\n\n`;
-  doc += `portant sur la cession de ${nbTitres} ${typeTitre} de la Société, représentant ${pct} % du capital social, autorise expressément cette cession dans les conditions prévues aux statuts et aux termes de l'acte de cession signé ce jour.\n\n`;
+  if (data.cessionnaireIsSocieteCible) {
+    doc += `RÉSOLUTION ${resNum} — AUTORISATION DU RACHAT DE ${typeTitre.toUpperCase()} PROPRES\n`;
+    doc += `${"─".repeat(60)}\n\n`;
+    doc += `${titreAss}, après avoir pris connaissance du projet de rachat de ${typeTitre} propres formé entre :\n`;
+    doc += `• Le Cédant : ${nomCedant}\n`;
+    doc += `• La Société (Cessionnaire) : ${n(s.denomination)}\n\n`;
+    doc += `portant sur le rachat de ${nbTitres} ${typeTitre} représentant ${pct} % du capital social, autorise expressément ce rachat conformément aux dispositions légales applicables et aux termes de l'acte signé ce jour.\n\n`;
+  } else {
+    doc += `RÉSOLUTION ${resNum} — AGRÉMENT DE LA CESSION\n`;
+    doc += `${"─".repeat(60)}\n\n`;
+    doc += `${titreAss}, après avoir pris connaissance du projet de cession formé entre :\n`;
+    doc += `• Le Cédant : ${nomCedant}\n`;
+    doc += `• Le Cessionnaire : ${nomCessionnaire}\n\n`;
+    doc += `portant sur la cession de ${nbTitres} ${typeTitre} de la Société, représentant ${pct} % du capital social, autorise expressément cette cession dans les conditions prévues aux statuts et aux termes de l'acte de cession signé ce jour.\n\n`;
+  }
   doc += `La résolution est adoptée à l'unanimité des associés présents ou représentés.\n\n`;
   resNum++;
 
   // Résolution – Constatation
   doc += `${"─".repeat(60)}\n`;
-  doc += `RÉSOLUTION ${resNum} — CONSTATATION DE LA CESSION\n`;
-  doc += `${"─".repeat(60)}\n\n`;
-  doc += `${titreAss} approuve et constate la cession de ${nbTitres} ${typeTitre} intervenue ce jour entre le Cédant et le Cessionnaire, conformément à l'acte de cession signé concomitamment aux présentes.\n\n`;
-  doc += `Suite à cette cession, la répartition du capital de la Société est désormais la suivante :\n\n`;
-  doc += `┌${"─".repeat(40)}┬${"─".repeat(12)}┬${"─".repeat(10)}┐\n`;
-  doc += `│ Associé${" ".repeat(33)}│ Nb titres  │ % capital│\n`;
-  doc += `├${"─".repeat(40)}┼${"─".repeat(12)}┼${"─".repeat(10)}┤\n`;
-  doc += `│ ${nomCessionnaire.padEnd(39)}│ ${nbTitres.padEnd(11)}│ ${pct} %  │\n`;
-  doc += `├${"─".repeat(40)}┼${"─".repeat(12)}┼${"─".repeat(10)}┤\n`;
-  doc += `│ TOTAL${" ".repeat(35)}│ ${totalTitres.padEnd(11)}│ 100 %    │\n`;
-  doc += `└${"─".repeat(40)}┴${"─".repeat(12)}┴${"─".repeat(10)}┘\n\n`;
+  if (data.cessionnaireIsSocieteCible) {
+    doc += `RÉSOLUTION ${resNum} — CONSTATATION DU RACHAT ET ANNULATION DES TITRES\n`;
+    doc += `${"─".repeat(60)}\n\n`;
+    doc += `${titreAss} approuve et constate le rachat de ${nbTitres} ${typeTitre} propres intervenu ce jour entre le Cédant (${nomCedant}) et la Société, conformément à l'acte signé concomitamment aux présentes.\n\n`;
+    doc += `Les ${typeTitre} rachetées sont annulées. Suite à cette opération, le capital social de la Société est réduit et la répartition du capital est désormais la suivante :\n\n`;
+    const restantTitres = s.nombreTitresTotal && cedant.nombreTitresCedes
+      ? String(parseInt(s.nombreTitresTotal) - parseInt(cedant.nombreTitresCedes))
+      : "[À COMPLÉTER]";
+    const pctRestant = s.nombreTitresTotal && cedant.nombreTitresCedes
+      ? (((parseInt(s.nombreTitresTotal) - parseInt(cedant.nombreTitresCedes)) / parseInt(s.nombreTitresTotal)) * 100).toFixed(2)
+      : "[XX]";
+    doc += `┌${"─".repeat(40)}┬${"─".repeat(12)}┬${"─".repeat(10)}┐\n`;
+    doc += `│ Associé${" ".repeat(33)}│ Nb titres  │ % capital│\n`;
+    doc += `├${"─".repeat(40)}┼${"─".repeat(12)}┼${"─".repeat(10)}┤\n`;
+    doc += `│ ${nomCedant.padEnd(39)}│ ${restantTitres.padEnd(11)}│ ${pctRestant} % │\n`;
+    doc += `├${"─".repeat(40)}┼${"─".repeat(12)}┼${"─".repeat(10)}┤\n`;
+    doc += `│ TOTAL${" ".repeat(35)}│ ${restantTitres.padEnd(11)}│ 100 %    │\n`;
+    doc += `└${"─".repeat(40)}┴${"─".repeat(12)}┴${"─".repeat(10)}┘\n\n`;
+  } else {
+    doc += `RÉSOLUTION ${resNum} — CONSTATATION DE LA CESSION\n`;
+    doc += `${"─".repeat(60)}\n\n`;
+    doc += `${titreAss} approuve et constate la cession de ${nbTitres} ${typeTitre} intervenue ce jour entre le Cédant et le Cessionnaire, conformément à l'acte de cession signé concomitamment aux présentes.\n\n`;
+    doc += `Suite à cette cession, la répartition du capital de la Société est désormais la suivante :\n\n`;
+    doc += `┌${"─".repeat(40)}┬${"─".repeat(12)}┬${"─".repeat(10)}┐\n`;
+    doc += `│ Associé${" ".repeat(33)}│ Nb titres  │ % capital│\n`;
+    doc += `├${"─".repeat(40)}┼${"─".repeat(12)}┼${"─".repeat(10)}┤\n`;
+    doc += `│ ${nomCessionnaire.padEnd(39)}│ ${nbTitres.padEnd(11)}│ ${pct} %  │\n`;
+    doc += `├${"─".repeat(40)}┼${"─".repeat(12)}┼${"─".repeat(10)}┤\n`;
+    doc += `│ TOTAL${" ".repeat(35)}│ ${totalTitres.padEnd(11)}│ 100 %    │\n`;
+    doc += `└${"─".repeat(40)}┴${"─".repeat(12)}┴${"─".repeat(10)}┘\n\n`;
+  }
   doc += `La résolution est adoptée à l'unanimité des associés présents ou représentés.\n\n`;
   resNum++;
 

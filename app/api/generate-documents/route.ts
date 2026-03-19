@@ -156,6 +156,9 @@ ${nc.appliqueAuCessionnaire ? `- S'applique aussi au cessionnaire : ${nc.dureeAn
 PV D'AGRÉMENT daté du : ${data.pv.date || data.date || "[date]"}
 Type d'assemblée : ${data.pv.typeAssemblee}
 
+${data.cessionnaireIsSocieteCible ? `⚠️ CAS SPÉCIAL — RACHAT DE PARTS PROPRES : Le Cessionnaire est la Société elle-même. Il s'agit d'un rachat de ${typeTitre} propres par la Société. Adapte l'acte en conséquence : Article 1.2 doit identifier la Société comme cessionnaire (rachat de ses propres titres), l'Article 1.3 n'est pas une 3ème partie distincte, l'Article 5 doit traiter du régime fiscal spécifique au rachat de parts propres.` : ""}
+${data.cedantIsSocieteCible ? `⚠️ CAS SPÉCIAL — CÉDANT = SOCIÉTÉ CIBLE : Le Cédant est la Société elle-même. Adapte l'identification des parties en conséquence.` : ""}
+
 INSTRUCTIONS DE RÉDACTION :
 1. Rédige l'acte COMPLET avec TOUS les articles numérotés jusqu'aux signatures — ne tronque jamais.
 2. Intègre toutes les informations ci-dessus EXACTEMENT (ne laisse aucun [À COMPLÉTER] si l'info est fournie).
@@ -274,9 +277,12 @@ ${nouveauDirigeantBlock}
     : ""
 }
 
+${data.cessionnaireIsSocieteCible ? `⚠️ CAS SPÉCIAL — RACHAT DE PARTS PROPRES : Le Cessionnaire est la Société elle-même. La résolution "Approbation du nouvel associé" ne doit PAS figurer (la société ne peut pas être son propre associé). La résolution d'agrément devient "Autorisation du rachat de parts/actions propres". La résolution de constatation doit indiquer l'annulation des titres rachetés et la réduction du capital.` : ""}
+${data.cedantIsSocieteCible ? `⚠️ CAS SPÉCIAL — CÉDANT = SOCIÉTÉ CIBLE : Le Cédant est la Société elle-même. Adapte le PV en conséquence.` : ""}
+
 INSTRUCTIONS :
 1. Rédige le PV COMPLET avec toutes les résolutions nécessaires dans l'ordre logique
-2. Résolutions obligatoires : ${pv.changementDirigeant ? "Démission dirigeant, Nomination nouveau dirigeant, " : ""}Approbation du nouvel associé, Agrément de la cession, Constatation de la cession (avec tableau de répartition du capital), Délégation de pouvoirs pour formalités
+2. Résolutions obligatoires : ${pv.changementDirigeant ? "Démission dirigeant, Nomination nouveau dirigeant, " : ""}${data.cessionnaireIsSocieteCible ? "" : "Approbation du nouvel associé, "}${data.cessionnaireIsSocieteCible ? "Autorisation du rachat de parts propres" : "Agrément de la cession"}, Constatation de la cession (avec tableau de répartition du capital), Délégation de pouvoirs pour formalités
 3. La résolution "Constatation de la cession" doit inclure un tableau de répartition du capital APRÈS cession
 4. La délégation de pouvoirs doit mentionner "LEGALCORNERS, 78 Avenue des Champs-Élysées, 75008 Paris"
 5. Toutes les résolutions sont adoptées à l'unanimité

@@ -3709,6 +3709,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               ville: lieuSignature,
               date: dateSignature,
               fraisALaCharge: fraisACharge === "cedant" ? "Cédant" : "Cessionnaire",
+              cedantIsSocieteCible,
+              cessionnaireIsSocieteCible,
             };
 
             const controller = new AbortController();

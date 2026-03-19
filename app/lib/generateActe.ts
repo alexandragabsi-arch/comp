@@ -88,7 +88,11 @@ export function generateActeCession(data: FormData): string {
   acte += `Ci-après dénommé(e) le « Cessionnaire ».\n\nD'AUTRE PART,\n\n`;
 
   acte += `1.3 La Société Cible\n\n`;
-  acte += `La présente cession porte sur les titres de la société dénommée ${n(societe.denomination)}, ${n(societe.formeJuridique)}, au capital de ${n(societe.capital)}, divisé en ${n(societe.nombreTitresTotal)} ${typeTitre} de ${n(societe.valeurNominale)} chacune, dont le siège social est situé ${n(societe.adresse)}, immatriculée au RCS de ${n(societe.rcsVille)} sous le numéro ${n(societe.rcsNumero)}.\n\n`;
+  if (data.cessionnaireIsSocieteCible || data.cedantIsSocieteCible) {
+    acte += `La présente cession constitue un rachat de ${typeTitre} propres par la Société elle-même. Les informations de la Société sont les suivantes : ${n(societe.denomination)}, ${n(societe.formeJuridique)}, au capital de ${n(societe.capital)}, divisé en ${n(societe.nombreTitresTotal)} ${typeTitre}, dont le siège social est situé ${n(societe.adresse)}, immatriculée au RCS de ${n(societe.rcsVille)} sous le numéro ${n(societe.rcsNumero)}.\n\n`;
+  } else {
+    acte += `La présente cession porte sur les titres de la société dénommée ${n(societe.denomination)}, ${n(societe.formeJuridique)}, au capital de ${n(societe.capital)}, divisé en ${n(societe.nombreTitresTotal)} ${typeTitre} de ${n(societe.valeurNominale)} chacune, dont le siège social est situé ${n(societe.adresse)}, immatriculée au RCS de ${n(societe.rcsVille)} sous le numéro ${n(societe.rcsNumero)}.\n\n`;
+  }
 
   if (societe.estSPI) {
     acte += `La Société est à prépondérance immobilière au sens de l'article 219-I-a sexies-0 bis du CGI.\n\n`;
@@ -154,7 +158,9 @@ export function generateActeCession(data: FormData): string {
   acte += `La présente cession est réalisée pour un prix de ${n(prix.prixTotal)}. Le Cédant reconnaît qu'il lui appartient personnellement de s'entretenir avec son conseil fiscal préalablement aux présentes. En conséquence, le Cessionnaire et le rédacteur du présent acte sont expressément dégagés de toute responsabilité quant au traitement fiscal de la plus-value réalisée par le Cédant.\n\n`;
 
   acte += `5.2 Régime fiscal applicable\n\n`;
-  if (cedant.typePersonne === "physique") {
+  if (data.cessionnaireIsSocieteCible) {
+    acte += `Dans le cadre d'un rachat de ses propres titres, la Société est soumise aux règles fiscales applicables aux rachats de parts/actions propres. Le cédant est imposé sur la différence entre le prix de rachat et le prix d'acquisition de ses titres selon son régime fiscal propre (PFU pour une personne physique, IS pour une personne morale). Les parties sont invitées à consulter leur conseil fiscal.\n\n`;
+  } else if (cedant.typePersonne === "physique") {
     acte += `La plus-value de cession est soumise, sauf option contraire, au Prélèvement Forfaitaire Unique (PFU) au taux global de 30 % (12,8 % IR + 17,2 % PS), conformément aux articles 150-0 A et suivants du CGI. Option possible pour le barème progressif de l'impôt sur le revenu si plus favorable.\n\n`;
   } else {
     acte += `La plus-value de cession est intégrée au résultat imposable de la société cédante et soumise à l'IS au taux de droit commun. Le régime des plus-values à long terme (taux de 0 % avec quote-part de frais de 12 %) s'applique aux titres de participation détenus depuis plus de 2 ans, sous conditions.\n\n`;

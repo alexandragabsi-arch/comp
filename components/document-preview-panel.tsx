@@ -195,10 +195,11 @@ export function DocumentPreviewPanel({
                 doc-prose prose prose-sm max-w-none
                 prose-headings:font-bold
                 prose-h1:text-xl prose-h1:text-center prose-h1:pb-4 prose-h1:mb-8
-                prose-h2:text-sm prose-h2:uppercase prose-h2:tracking-wide prose-h2:mt-8 prose-h2:mb-3
+                prose-h2:text-sm prose-h2:font-bold prose-h2:uppercase prose-h2:tracking-wide prose-h2:mt-8 prose-h2:mb-3
                 prose-h2:underline prose-h2:decoration-[#0D2459] prose-h2:underline-offset-4
-                prose-h3:text-sm prose-h3:font-bold prose-h3:text-[#0D2459] prose-h3:mt-5 prose-h3:mb-2
-                prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-4
+                prose-h3:text-sm prose-h3:font-bold prose-h3:text-[#0D2459] prose-h3:mt-6 prose-h3:mb-2
+                prose-h3:underline prose-h3:decoration-[#0D2459] prose-h3:underline-offset-2
+                prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-6
                 prose-li:text-sm prose-li:leading-[1.8]
                 prose-strong:font-bold
                 prose-hr:border-gray-400 prose-hr:my-8

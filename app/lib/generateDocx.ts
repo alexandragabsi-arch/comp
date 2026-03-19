@@ -11,12 +11,9 @@ import {
   HeadingLevel,
   ShadingType,
   BorderStyle,
-  PageOrientation,
   Header,
   Footer,
   PageNumber,
-  TabStopPosition,
-  TabStopType,
   TableLayoutType,
   VerticalAlign,
   convertInchesToTwip,
@@ -25,62 +22,41 @@ import { FormData } from "../types/form";
 
 // ── Brand colors ───────────────────────────────────────────────────────────────
 const NAVY = "1A2744";
-const YELLOW = "FFE900";
 const WHITE = "FFFFFF";
-const LIGHT_GRAY = "F8F9FC";
+const LIGHT_GRAY = "F5F6FA";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-function highlight(text: string): TextRun {
-  return new TextRun({
-    text,
-    bold: true,
-    highlight: "yellow",
-    color: "000000",
+function emptyLine(spaceAfter = 0): Paragraph {
+  return new Paragraph({ text: "", spacing: { after: spaceAfter } });
+}
+
+/** Parse inline **bold** and return TextRun array */
+function parseInline(text: string, baseSize = 22, baseColor = "222222"): TextRun[] {
+  const parts = text.split(/(\*\*[^*]+\*\*)/);
+  return parts.flatMap((part) => {
+    if (!part) return [];
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return [new TextRun({ text: part.slice(2, -2), bold: true, size: baseSize, color: baseColor })];
+    }
+    return [new TextRun({ text: part, size: baseSize, color: baseColor })];
   });
 }
 
-function navy(text: string, bold = false, size = 24): TextRun {
+function navyRun(text: string, bold = false, size = 22): TextRun {
   return new TextRun({ text, bold, color: NAVY, size });
 }
 
-function plain(text: string, size = 22): TextRun {
-  return new TextRun({ text, size, color: "222222" });
-}
-
-function emptyLine(): Paragraph {
-  return new Paragraph({ text: "" });
-}
-
 // ── Header ─────────────────────────────────────────────────────────────────────
-function buildHeader(typeTitre: string): Header {
+function buildHeader(): Header {
   return new Header({
     children: [
       new Paragraph({
         children: [
-          new TextRun({
-            text: `ACTE DE CESSION `,
-            bold: true,
-            size: 18,
-            color: NAVY,
-          }),
-          new TextRun({
-            text: `D'${typeTitre.toUpperCase()} / DE PARTS SOCIALES `,
-            bold: true,
-            size: 18,
-            color: NAVY,
-            highlight: "yellow",
-          }),
-          new TextRun({
-            text: "DOCUMENT CONFIDENTIEL",
-            italics: true,
-            size: 16,
-            color: "999999",
-          }),
+          new TextRun({ text: "LEGALCORNERS", bold: true, size: 18, color: NAVY }),
+          new TextRun({ text: "   —   DOCUMENT CONFIDENTIEL", italics: true, size: 16, color: "999999" }),
         ],
-        border: {
-          bottom: { style: BorderStyle.SINGLE, size: 6, color: NAVY },
-        },
-        spacing: { after: 120 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY } },
+        spacing: { after: 100 },
       }),
     ],
   });
@@ -118,122 +94,102 @@ function buildCoverPage(data: FormData, typeTitre: string): Paragraph[] {
       : data.cessionnaire.morale?.denomination || "[CESSIONNAIRE]";
 
   return [
-    emptyLine(),
-    emptyLine(),
-    emptyLine(),
-    emptyLine(),
+    emptyLine(600),
     new Paragraph({
       children: [
-        navy("CESSION ", true, 36),
-        new TextRun({ text: `D'${typeTitre.toUpperCase()} / DE PARTS SOCIALES`, bold: true, size: 36, color: NAVY, highlight: "yellow" }),
+        navyRun(`ACTE DE CESSION DE ${typeTitre.toUpperCase()}`, true, 36),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 400 },
+      spacing: { after: 80 },
       border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: NAVY } },
     }),
-    emptyLine(),
+    emptyLine(400),
     new Paragraph({
       children: [
-        plain("Entre "),
-        highlight(cedantName.toUpperCase()),
-        plain(" — Cédant"),
+        new TextRun({ text: "Entre   ", size: 24, color: "555555" }),
+        new TextRun({ text: cedantName.toUpperCase(), bold: true, size: 24, color: NAVY }),
+        new TextRun({ text: "   — Cédant", size: 24, color: "555555" }),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 60 },
+      spacing: { after: 120 },
     }),
     new Paragraph({
-      children: [navy("ET", true, 24)],
+      children: [navyRun("ET", true, 24)],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 60 },
-    }),
-    new Paragraph({
-      children: [
-        plain("Au profit de "),
-        highlight(cessionnaireName.toUpperCase()),
-        plain(" — Cessionnaire"),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 200 },
+      spacing: { after: 120 },
     }),
     new Paragraph({
       children: [
-        plain("Société cible : "),
-        highlight(data.societe.denomination || "[DÉNOMINATION SOCIALE]"),
+        new TextRun({ text: "Au profit de   ", size: 24, color: "555555" }),
+        new TextRun({ text: cessionnaireName.toUpperCase(), bold: true, size: 24, color: NAVY }),
+        new TextRun({ text: "   — Cessionnaire", size: 24, color: "555555" }),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 60 },
+      spacing: { after: 300 },
     }),
     new Paragraph({
       children: [
-        plain("Fait à "),
-        highlight(data.ville || "[VILLE]"),
-        plain(", le "),
-        highlight(data.date || "[JJ/MM/AAAA]"),
+        new TextRun({ text: "Société cible : ", size: 22, color: "555555" }),
+        new TextRun({ text: data.societe.denomination || "[DÉNOMINATION SOCIALE]", bold: true, size: 22, color: NAVY }),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 400 },
+      spacing: { after: 100 },
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: `Fait à ${data.ville || "[VILLE]"}, le ${data.date || "[DATE]"}`, size: 22, color: "555555" }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 0 },
     }),
   ];
 }
 
-// ── Index des définitions table ────────────────────────────────────────────────
-const DEFINITIONS = [
-  ["Acte / Présentes", "Le présent acte de cession et l'ensemble de ses annexes."],
-  ["Titres", "Les actions ou parts sociales faisant l'objet de la présente cession."],
-  ["Cédant / Vendeur", "La partie qui cède les Titres aux termes des présentes."],
-  ["Cessionnaire / Acquéreur", "La partie qui acquiert les Titres aux termes des présentes."],
-  ["Société / Cible", "La société dont les Titres sont cédés."],
-  ["Prix Ferme", "La partie fixe et certaine du Prix de Cession, payable à la Date d'Effet."],
-  ["Quittance", "Reconnaissance par le Cédant du paiement intégral du Prix Ferme par le Cessionnaire."],
-  ["Plus-value de Cession", "Différence entre le Prix de Cession et le Prix d'Acquisition des Titres, diminuée des frais."],
-  ["GAP", "Garantie d'Actif et de Passif — engagement du Cédant de couvrir tout passif antérieur non révélé."],
-  ["Seuil de Déclenchement GAP", "Montant minimal en-deçà duquel la GAP ne peut être mise en œuvre, évitant les micro-litiges."],
-];
+// ── Parse a markdown table into a DOCX Table ───────────────────────────────────
+function buildMarkdownTable(tableLines: string[]): Table | null {
+  // Remove separator rows (|---|---|)
+  const rows = tableLines
+    .filter((l) => !/^\|[\s\-:|]+\|$/.test(l.trim()))
+    .map((l) =>
+      l
+        .trim()
+        .replace(/^\|/, "")
+        .replace(/\|$/, "")
+        .split("|")
+        .map((c) => c.trim())
+    )
+    .filter((r) => r.length > 0);
 
-function buildDefinitionsTable(): Table {
-  const headerRow = new TableRow({
-    tableHeader: true,
-    children: [
-      new TableCell({
-        children: [new Paragraph({
-          children: [new TextRun({ text: "TERME DÉFINI", bold: true, color: WHITE, size: 20 })],
-          alignment: AlignmentType.LEFT,
-        })],
-        shading: { type: ShadingType.SOLID, color: NAVY, fill: NAVY },
-        columnSpan: 2,
-        verticalAlign: VerticalAlign.CENTER,
-        margins: { top: 100, bottom: 100, left: 150, right: 150 },
-      }),
-    ],
+  if (rows.length === 0) return null;
+
+  const colCount = Math.max(...rows.map((r) => r.length));
+  const colWidthPct = Math.floor(100 / colCount);
+
+  const docxRows = rows.map((row, rowIdx) => {
+    const isHeader = rowIdx === 0;
+    return new TableRow({
+      tableHeader: isHeader,
+      children: row.map((cell) =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: parseInline(cell, 20, isHeader ? WHITE : "333333"),
+              alignment: isHeader ? AlignmentType.CENTER : AlignmentType.LEFT,
+            }),
+          ],
+          shading: isHeader
+            ? { type: ShadingType.SOLID, color: NAVY, fill: NAVY }
+            : { type: ShadingType.SOLID, color: rowIdx % 2 === 0 ? WHITE : LIGHT_GRAY, fill: rowIdx % 2 === 0 ? WHITE : LIGHT_GRAY },
+          width: { size: colWidthPct, type: WidthType.PERCENTAGE },
+          margins: { top: 100, bottom: 100, left: 150, right: 150 },
+          verticalAlign: VerticalAlign.CENTER,
+        })
+      ),
+    });
   });
 
-  const dataRows = DEFINITIONS.map(([term, def], i) =>
-    new TableRow({
-      children: [
-        new TableCell({
-          children: [new Paragraph({
-            children: [new TextRun({ text: term, bold: true, color: NAVY, size: 20 })],
-          })],
-          shading: { type: ShadingType.SOLID, color: i % 2 === 0 ? WHITE : LIGHT_GRAY, fill: i % 2 === 0 ? WHITE : LIGHT_GRAY },
-          width: { size: 35, type: WidthType.PERCENTAGE },
-          margins: { top: 80, bottom: 80, left: 150, right: 150 },
-          verticalAlign: VerticalAlign.CENTER,
-        }),
-        new TableCell({
-          children: [new Paragraph({
-            children: [new TextRun({ text: def, size: 20, color: "333333" })],
-          })],
-          shading: { type: ShadingType.SOLID, color: i % 2 === 0 ? WHITE : LIGHT_GRAY, fill: i % 2 === 0 ? WHITE : LIGHT_GRAY },
-          width: { size: 65, type: WidthType.PERCENTAGE },
-          margins: { top: 80, bottom: 80, left: 150, right: 150 },
-          verticalAlign: VerticalAlign.CENTER,
-        }),
-      ],
-    })
-  );
-
   return new Table({
-    rows: [headerRow, ...dataRows],
+    rows: docxRows,
     width: { size: 100, type: WidthType.PERCENTAGE },
     layout: TableLayoutType.FIXED,
     borders: {
@@ -241,107 +197,207 @@ function buildDefinitionsTable(): Table {
       bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY },
       left: { style: BorderStyle.SINGLE, size: 4, color: NAVY },
       right: { style: BorderStyle.SINGLE, size: 4, color: NAVY },
+      insideH: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" },
+      insideV: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" },
     },
   });
 }
 
-// ── Parse text content into paragraphs ────────────────────────────────────────
+// ── Main body text parser ──────────────────────────────────────────────────────
 function parseBodyText(text: string): Array<Paragraph | Table> {
   const lines = text.split("\n");
   const result: Array<Paragraph | Table> = [];
+  let i = 0;
 
-  for (const line of lines) {
-    const t = line.trim();
-    if (!t) { result.push(emptyLine()); continue; }
+  while (i < lines.length) {
+    const raw = lines[i];
+    const t = raw.trim();
 
-    // Separator
-    if (/^[═─]{5,}/.test(t)) {
+    // ── Empty line ──
+    if (!t) {
+      result.push(emptyLine(80));
+      i++;
+      continue;
+    }
+
+    // ── Markdown table block ──
+    if (t.startsWith("|")) {
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      const tbl = buildMarkdownTable(tableLines);
+      if (tbl) {
+        result.push(tbl);
+        result.push(emptyLine(120));
+      }
+      continue;
+    }
+
+    // ── Separator lines: ===, ---, ───── ──
+    if (/^[═=]{3,}$/.test(t)) {
       result.push(new Paragraph({
-        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: t.startsWith("═") ? NAVY : "DDDDDD" } },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: NAVY } },
+        spacing: { after: 120 },
+        text: "",
+      }));
+      i++;
+      continue;
+    }
+    if (/^[-─]{3,}$/.test(t)) {
+      result.push(new Paragraph({
+        border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" } },
         spacing: { after: 80 },
         text: "",
       }));
+      i++;
       continue;
     }
 
-    // Main title
-    if (/^(CESSION D|ACTE DE CESSION|PROC[EÈ]S-VERBAL|D[EÉ]CISIONS UNANIMES|D[ÉE]CLARATION DE NON)/i.test(t)) {
+    // ── Strip markdown heading prefix ──
+    const mdH1 = /^#{1}\s+(.+)$/.exec(t);
+    const mdH2 = /^#{2}\s+(.+)$/.exec(t);
+    const mdH3 = /^#{3,}\s+(.+)$/.exec(t);
+
+    // H1 (# Title)
+    if (mdH1) {
+      const content = mdH1[1].replace(/\*\*/g, "");
       result.push(new Paragraph({
-        children: [navy(t, true, 28)],
+        children: [navyRun(content, true, 30)],
         alignment: AlignmentType.CENTER,
-        spacing: { before: 200, after: 160 },
+        spacing: { before: 280, after: 200 },
         heading: HeadingLevel.HEADING_1,
       }));
+      i++;
       continue;
     }
 
-    // INDEX DES DÉFINITIONS
-    if (/^INDEX DES D[EÉ]FINITIONS/.test(t)) {
+    // H2 (## ARTICLE or section)
+    if (mdH2) {
+      const content = mdH2[1].replace(/\*\*/g, "");
+      if (/^(ARTICLE |R[EÉ]SOLUTION |OUVERTURE|CLÔTURE|SIGNATURES|ORDRE DU JOUR)/i.test(content)) {
+        result.push(new Paragraph({
+          children: [navyRun(content, true, 22)],
+          spacing: { before: 300, after: 100 },
+          border: { left: { style: BorderStyle.THICK, size: 14, color: "22C55E" } },
+          indent: { left: 220 },
+          shading: { type: ShadingType.SOLID, color: LIGHT_GRAY, fill: LIGHT_GRAY },
+        }));
+      } else {
+        result.push(new Paragraph({
+          children: [navyRun(content, true, 24)],
+          spacing: { before: 260, after: 120 },
+          heading: HeadingLevel.HEADING_2,
+        }));
+      }
+      i++;
+      continue;
+    }
+
+    // H3 (### sub-section)
+    if (mdH3) {
+      const content = mdH3[1].replace(/\*\*/g, "");
       result.push(new Paragraph({
-        children: [new TextRun({ text: t, bold: true, size: 24, color: NAVY, underline: {} })],
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 200, after: 160 },
+        children: [navyRun(content, true, 22)],
+        spacing: { before: 200, after: 80 },
+        heading: HeadingLevel.HEADING_3,
       }));
-      result.push(buildDefinitionsTable());
-      result.push(emptyLine());
+      i++;
       continue;
     }
 
-    // ARTICLE / RÉSOLUTION
-    if (/^(ARTICLE \d+|R[EÉ]SOLUTION \d+|OUVERTURE|SIGNATURES|ORDRE DU JOUR)/i.test(t)) {
+    // Strip any remaining leading # (shouldn't happen but safety)
+    const cleanT = t.replace(/^#+\s*/, "");
+
+    // ── ARTICLE / RÉSOLUTION without ## ──
+    if (/^(ARTICLE \d+|R[EÉ]SOLUTION \d+|OUVERTURE|CLÔTURE|SIGNATURES|ORDRE DU JOUR)/i.test(cleanT)) {
       result.push(new Paragraph({
-        children: [navy(t, true, 22)],
-        spacing: { before: 240, after: 80 },
-        border: { left: { style: BorderStyle.THICK, size: 12, color: "22C55E" } },
-        indent: { left: 200 },
+        children: [navyRun(cleanT.replace(/\*\*/g, ""), true, 22)],
+        spacing: { before: 300, after: 100 },
+        border: { left: { style: BorderStyle.THICK, size: 14, color: "22C55E" } },
+        indent: { left: 220 },
         shading: { type: ShadingType.SOLID, color: LIGHT_GRAY, fill: LIGHT_GRAY },
       }));
+      i++;
       continue;
     }
 
-    // Sub-section X.X
-    if (/^\d+\.\d+\s/.test(t)) {
+    // ── Main document title (ALL-CAPS, no # prefix) ──
+    if (/^(CESSION D|ACTE DE CESSION|PROC[EÈ]S-VERBAL|D[EÉ]CISIONS UNANIMES|D[ÉE]CLARATION DE NON)/i.test(cleanT)) {
       result.push(new Paragraph({
-        children: [navy(t, true, 22)],
-        spacing: { before: 160, after: 60 },
+        children: [navyRun(cleanT, true, 28)],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 200, after: 180 },
+        heading: HeadingLevel.HEADING_1,
       }));
+      i++;
       continue;
     }
 
-    // Signature blocks
-    if (/^(LE C[EÉ]DANT|LE CESSIONNAIRE|LE PR[EÉ]SIDENT|LE CONJOINT|L[''']ASSOCI[EÉ]|LE G[EÉ]RANT)/i.test(t)) {
+    // ── Sub-section X.X ──
+    if (/^\d+\.\d+\s/.test(cleanT)) {
       result.push(new Paragraph({
-        children: [navy(t, true, 22)],
-        spacing: { before: 240, after: 60 },
+        children: parseInline(cleanT, 22, NAVY),
+        spacing: { before: 180, after: 80 },
       }));
+      i++;
       continue;
     }
 
-    // Bullet
-    if (/^[•*-]\s/.test(t)) {
+    // ── Signature block labels ──
+    if (/^(LE C[EÉ]DANT|LE CESSIONNAIRE|LE PR[EÉ]SIDENT|LE CONJOINT|L[''']ASSOCI[EÉ]|LE G[EÉ]RANT|L[''']ASSOCI[EÉ] UNIQUE)/i.test(cleanT)) {
       result.push(new Paragraph({
-        children: [plain(t.replace(/^[•*-]\s*/, ""))],
+        children: [navyRun(cleanT, true, 22)],
+        spacing: { before: 300, after: 80 },
+      }));
+      i++;
+      continue;
+    }
+
+    // ── Bullet ──
+    if (/^[•*]\s/.test(t) || (/^-\s/.test(t) && !t.startsWith("---"))) {
+      const bulletText = cleanT.replace(/^[•*\-]\s+/, "");
+      result.push(new Paragraph({
+        children: parseInline(bulletText),
         bullet: { level: 0 },
-        spacing: { after: 40 },
+        spacing: { after: 60 },
       }));
+      i++;
       continue;
     }
 
-    // Default paragraph
+    // ── Default paragraph ──
     result.push(new Paragraph({
-      children: [plain(t)],
-      spacing: { after: 60 },
+      children: parseInline(cleanT),
+      spacing: { after: 80 },
+      alignment: AlignmentType.JUSTIFIED,
     }));
+    i++;
   }
 
   return result;
 }
 
-// ── Main export: generate DOCX ─────────────────────────────────────────────────
-export async function generateActeDocx(
-  acteText: string,
-  data: FormData
-): Promise<Blob> {
+// ── Shared document styles ─────────────────────────────────────────────────────
+const DOC_STYLES = {
+  default: {
+    document: {
+      run: { font: "Arial", size: 22, color: "222222" },
+      paragraph: { spacing: { line: 340 } },
+    },
+  },
+};
+
+const PAGE_MARGINS = {
+  top: convertInchesToTwip(1.1),
+  right: convertInchesToTwip(1.1),
+  bottom: convertInchesToTwip(1.1),
+  left: convertInchesToTwip(1.2),
+};
+
+// ── Exports ────────────────────────────────────────────────────────────────────
+export async function generateActeDocx(acteText: string, data: FormData): Promise<Blob> {
   const typeTitre = ["SARL", "EURL", "SNC", "SCI"].includes(data.societe.formeJuridique || "")
     ? "parts sociales"
     : "actions";
@@ -352,112 +408,49 @@ export async function generateActeDocx(
   const doc = new Document({
     sections: [
       {
-        headers: { default: buildHeader(typeTitre) },
+        headers: { default: buildHeader() },
         footers: { default: buildFooter() },
-        properties: {
-          page: {
-            margin: {
-              top: convertInchesToTwip(1),
-              right: convertInchesToTwip(1),
-              bottom: convertInchesToTwip(1),
-              left: convertInchesToTwip(1),
-            },
-          },
-        },
-        children: [...coverChildren, ...bodyChildren],
+        properties: { page: { margin: PAGE_MARGINS } },
+        children: [...coverChildren, emptyLine(400), ...bodyChildren],
       },
     ],
-    styles: {
-      default: {
-        document: {
-          run: { font: "Arial", size: 22, color: "222222" },
-          paragraph: { spacing: { line: 360 } },
-        },
-      },
-    },
-  });
-
-  const buffer = await Packer.toBlob(doc);
-  return buffer;
-}
-
-export async function generatePVDocx(
-  pvText: string,
-  data: FormData
-): Promise<Blob> {
-  const typeTitre = ["SARL", "EURL", "SNC", "SCI"].includes(data.societe.formeJuridique || "")
-    ? "parts sociales"
-    : "actions";
-
-  const bodyChildren = parseBodyText(pvText);
-
-  const doc = new Document({
-    sections: [
-      {
-        headers: { default: buildHeader(typeTitre) },
-        footers: { default: buildFooter() },
-        properties: {
-          page: {
-            margin: {
-              top: convertInchesToTwip(1),
-              right: convertInchesToTwip(1),
-              bottom: convertInchesToTwip(1),
-              left: convertInchesToTwip(1),
-            },
-          },
-        },
-        children: bodyChildren,
-      },
-    ],
-    styles: {
-      default: {
-        document: {
-          run: { font: "Arial", size: 22, color: "222222" },
-          paragraph: { spacing: { line: 360 } },
-        },
-      },
-    },
+    styles: DOC_STYLES,
   });
 
   return Packer.toBlob(doc);
 }
 
-export async function generateDeclarationDocx(
-  declarationText: string,
-  data: FormData
-): Promise<Blob> {
-  const typeTitre = ["SARL", "EURL", "SNC", "SCI"].includes(data.societe.formeJuridique || "")
-    ? "parts sociales"
-    : "actions";
+export async function generatePVDocx(pvText: string, data: FormData): Promise<Blob> {
+  const bodyChildren = parseBodyText(pvText);
 
+  const doc = new Document({
+    sections: [
+      {
+        headers: { default: buildHeader() },
+        footers: { default: buildFooter() },
+        properties: { page: { margin: PAGE_MARGINS } },
+        children: bodyChildren,
+      },
+    ],
+    styles: DOC_STYLES,
+  });
+
+  return Packer.toBlob(doc);
+}
+
+export async function generateDeclarationDocx(declarationText: string, data: FormData): Promise<Blob> {
   const bodyChildren = parseBodyText(declarationText);
 
   const doc = new Document({
     sections: [
       {
-        headers: { default: buildHeader(typeTitre) },
+        headers: { default: buildHeader() },
         footers: { default: buildFooter() },
-        properties: {
-          page: {
-            margin: {
-              top: convertInchesToTwip(1),
-              right: convertInchesToTwip(1),
-              bottom: convertInchesToTwip(1),
-              left: convertInchesToTwip(1),
-            },
-          },
-        },
+        properties: { page: { margin: PAGE_MARGINS } },
         children: bodyChildren,
       },
     ],
-    styles: {
-      default: {
-        document: {
-          run: { font: "Arial", size: 22, color: "222222" },
-          paragraph: { spacing: { line: 360 } },
-        },
-      },
-    },
+    styles: DOC_STYLES,
   });
 
   return Packer.toBlob(doc);

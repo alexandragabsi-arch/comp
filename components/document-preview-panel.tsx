@@ -63,34 +63,95 @@ export function DocumentPreviewPanel({
   const handleDownloadPdf = async () => {
     const { jsPDF } = await import("jspdf");
     const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const margin = 20;
-    const pageWidth = 210 - margin * 2;
-    const pageHeight = 297 - margin * 2;
-    const lineHeight = 5.5;
-    let y = margin;
+    const marginL = 22;
+    const marginR = 22;
+    const marginT = 22;
+    const pageWidth = 210 - marginL - marginR;
+    const pageHeight = 297 - marginT * 2;
+    let y = marginT;
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
+    const addPage = () => { doc.addPage(); y = marginT; };
+    const checkPage = (needed: number) => { if (y + needed > marginT + pageHeight) addPage(); };
 
     const lines = text.split("\n");
     for (const line of lines) {
-      const trimmed = line.replace(/^#{1,6}\s*/, "").replace(/\*\*/g, "").trimEnd();
-      const isH1 = /^#\s/.test(line);
-      const isH2 = /^##\s/.test(line);
-      const isHeader = isH1 || isH2 || /^[A-ZÀÂÄÉÈÊËÎÏÔÙÛÜÇ\s\-–—]{6,}$/.test(trimmed);
+      const raw = line.trimEnd();
+      const isH1 = /^#{1}\s/.test(raw);
+      const isH2 = /^#{2}\s/.test(raw);
+      const isH3 = /^#{3,}\s/.test(raw);
+      const trimmed = raw.replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "").trim();
+      const isArticle = /^(ARTICLE \d+|RÉSOLUTION \d+)/i.test(trimmed);
+      const isEmpty = !trimmed;
+      const isSep = /^[-=─═]{3,}$/.test(trimmed);
 
-      if (isH1) { doc.setFont("helvetica", "bold"); doc.setFontSize(14); }
-      else if (isH2) { doc.setFont("helvetica", "bold"); doc.setFontSize(12); }
-      else if (isHeader && trimmed.length > 0) { doc.setFont("helvetica", "bold"); doc.setFontSize(11); }
-      else { doc.setFont("helvetica", "normal"); doc.setFontSize(10); }
-
-      const wrapped = doc.splitTextToSize(trimmed || " ", pageWidth);
-      for (const wl of wrapped) {
-        if (y + lineHeight > margin + pageHeight) { doc.addPage(); y = margin; }
-        doc.text(wl, margin, y);
-        y += lineHeight;
+      if (isEmpty) { y += 3; continue; }
+      if (isSep) {
+        checkPage(4);
+        doc.setDrawColor(180, 180, 180);
+        doc.line(marginL, y, 210 - marginR, y);
+        y += 4;
+        continue;
       }
-      if (isHeader) y += 1;
+
+      if (isH1) {
+        checkPage(14);
+        y += 4;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(15);
+        doc.setTextColor(26, 39, 68);
+        const wrapped = doc.splitTextToSize(trimmed, pageWidth);
+        for (const wl of wrapped) { doc.text(wl, 105, y, { align: "center" }); y += 7; }
+        y += 4;
+      } else if (isH2 || isArticle) {
+        checkPage(12);
+        y += 5;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+        doc.setTextColor(26, 39, 68);
+        if (isArticle) {
+          doc.setFillColor(245, 246, 250);
+          const wrapped = doc.splitTextToSize(trimmed, pageWidth - 6);
+          doc.rect(marginL, y - 4, pageWidth, wrapped.length * 6 + 4, "F");
+          doc.setDrawColor(34, 197, 94);
+          doc.setLineWidth(0.8);
+          doc.line(marginL, y - 4, marginL, y + wrapped.length * 6);
+          doc.setLineWidth(0.2);
+          for (const wl of wrapped) { doc.text(wl, marginL + 4, y); y += 6; }
+        } else {
+          const wrapped = doc.splitTextToSize(trimmed, pageWidth);
+          for (const wl of wrapped) { doc.text(wl, marginL, y); y += 6; }
+        }
+        y += 3;
+      } else if (isH3) {
+        checkPage(10);
+        y += 3;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+        doc.setTextColor(26, 39, 68);
+        const wrapped = doc.splitTextToSize(trimmed, pageWidth);
+        for (const wl of wrapped) { doc.text(wl, marginL, y); y += 5.5; }
+        y += 2;
+      } else if (/^\|/.test(trimmed)) {
+        // Table row — skip (handled as group below via previous logic, simplified here)
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+        doc.setTextColor(50, 50, 50);
+        const cells = trimmed.replace(/^\|/, "").replace(/\|$/, "").split("|").map(c => c.trim());
+        const colW = pageWidth / Math.max(cells.length, 1);
+        checkPage(6);
+        cells.forEach((cell, ci) => {
+          const wrapped = doc.splitTextToSize(cell, colW - 2);
+          doc.text(wrapped[0] || "", marginL + ci * colW + 1, y);
+        });
+        y += 6;
+      } else {
+        // Body paragraph
+        doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+        doc.setTextColor(40, 40, 40);
+        const wrapped = doc.splitTextToSize(trimmed, pageWidth);
+        for (const wl of wrapped) {
+          checkPage(5.5);
+          doc.text(wl, marginL, y);
+          y += 5.5;
+        }
+        y += 1.5;
+      }
     }
     doc.save(pdfFileName);
   };

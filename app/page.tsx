@@ -19,7 +19,7 @@ export default function Home() {
         </nav>
         <Link
           href="#"
-          className="px-5 py-2 rounded-full bg-[#5B8DEF] text-white font-medium text-sm hover:bg-[#4A7DE0] transition-colors shadow-sm"
+          className="px-5 py-2 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-medium text-sm hover:opacity-90 transition-opacity shadow-sm"
         >
           Prendre rendez-vous
         </Link>
@@ -47,14 +47,14 @@ export default function Home() {
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
             href="/cession-parts"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#5B8DEF] text-white font-semibold hover:bg-[#4A7DE0] transition-colors shadow-md text-sm"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md text-sm"
           >
             Céder des parts sociales
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/cession-action"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#5B8DEF] text-white font-semibold hover:bg-[#4A7DE0] transition-colors shadow-md text-sm"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md text-sm"
           >
             Céder des actions
             <ArrowRight className="w-4 h-4" />
@@ -132,14 +132,14 @@ export default function Home() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/cession-parts"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-[#1E3A8A] text-white font-semibold hover:bg-[#16317A] transition-colors shadow-md"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
             >
               Cession de parts
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/cession-action"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold hover:bg-[#EFF4FF] transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
             >
               Cession d&apos;actions
               <ArrowRight className="w-4 h-4" />

@@ -986,20 +986,28 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   Frais obligatoires (versés aux administrations)
                 </h2>
 
-                {/* Frais cession */}
-                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Cession de titres</p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                  <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Droits d&apos;enregistrement</p>
-                    <p className="font-semibold text-amber-900">
+                {/* Droits enregistrement — à charge des parties */}
+                <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200 flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-semibold text-orange-800">Droits d&apos;enregistrement — à votre charge directe</p>
+                    <p className="text-xs text-orange-700 mt-0.5">
                       {(() => {
                         const prix = parseFloat(prixTotal) || 0;
-                        if (prix <= 0) return "3% du prix";
-                        const droits = Math.max(25, prix * 0.03);
-                        return `~${Math.round(droits)}€`;
+                        const droits = prix > 0 ? `~${Math.round(Math.max(25, prix * 0.03))}€` : "3% du prix (min. 25€)";
+                        return `${droits} — à déclarer et payer directement au Service des Impôts des Entreprises dans le mois suivant la signature.`;
                       })()}
                     </p>
-                    <p className="text-[10px] text-amber-500">Service des impôts</p>
+                  </div>
+                </div>
+
+                {/* Frais cession pris en charge */}
+                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Formalités cession (inclus dans notre service)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  <div className="p-3 bg-white rounded-lg text-center">
+                    <p className="text-xs text-amber-600 mb-1">Annonce légale (JAL)</p>
+                    <p className="font-semibold text-amber-900">~150€</p>
+                    <p className="text-[10px] text-amber-500">Journal officiel habilité</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg text-center">
                     <p className="text-xs text-amber-600 mb-1">Annonce légale (JAL)</p>
@@ -1032,15 +1040,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       </div>
                     </div>
                     <div className="p-3 bg-amber-100 rounded-lg text-center mb-3">
-                      <p className="text-xs text-amber-700 font-medium">Total frais administratifs estimés</p>
+                      <p className="text-xs text-amber-700 font-medium">Total formalités estimées (hors droits d&apos;enregistrement)</p>
                       <p className="text-lg font-bold text-amber-900">
-                        ~{(() => {
-                          const prix = parseFloat(prixTotal) || 0;
-                          const droits = prix > 0 ? Math.max(25, Math.round(prix * 0.03)) : 0;
-                          // cession: JAL 150 + greffe 60 | dirigeant: JAL 150 + greffe 200 | débours: 12
-                          return droits + 150 + 60 + 150 + 200 + 12;
-                        })()}€
-                        {!prixTotal && <span className="text-sm font-normal"> + droits d&apos;enregistrement</span>}
+                        ~{/* cession: JAL 150 + greffe 60 | dirigeant: JAL 150 + greffe 200 | débours: 12 */}
+                        {150 + 60 + 150 + 200 + 12}€
                       </p>
                     </div>
                   </>

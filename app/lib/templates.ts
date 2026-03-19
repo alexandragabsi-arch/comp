@@ -196,11 +196,10 @@ Pour être opposable à la Société, la présente cession lui sera signifiée c
 12.2 Pouvoirs pour formalités
 Tous pouvoirs sont donnés au porteur d'un original ou d'une copie certifiée conforme des présentes pour :
 • Procéder à la signification de la présente cession au siège social de la Société conformément à l'article 1690 du Code civil ;
-• Effectuer l'enregistrement de l'acte auprès du service des impôts des entreprises compétent dans le délai légal d'un mois ;
 • Déposer au Greffe du Tribunal de Commerce tout document nécessaire à la mise à jour des registres ;
 • Modifier ou faire modifier les statuts de la Société si la cession l'exige ;
 • Procéder à toute publication légale requise.
-Les Parties donnent expressément mandat à LEGALCORNERS, 78 Avenue des Champs-Élysées, 75008 Paris, pour l'accomplissement de l'ensemble des formalités légales consécutives à la présente cession.
+Les Parties donnent expressément mandat à LEGALCORNERS, 78 Avenue des Champs-Élysées, 75008 Paris, pour l'accomplissement des formalités légales consécutives à la présente cession, à l'exclusion de l'enregistrement fiscal qui demeure à la charge exclusive des Parties.
 
 12.3 Enregistrement fiscal et droits d'enregistrement
 Conformément à l'article 635 du CGI, la présente cession sera enregistrée auprès du service des impôts des entreprises dans le délai d'un mois à compter de la date de signature. Les droits d'enregistrement sont à la charge de [Cessionnaire / Cédant]. Le défaut d'enregistrement dans le délai d'un mois expose les parties à une amende et à l'inopposabilité de la cession à l'administration fiscale.
@@ -300,11 +299,11 @@ Résolution adoptée à l'unanimité.
 
 RÉSOLUTION [N+3] — DÉLÉGATION DE POUVOIRS EN VUE DES FORMALITÉS
 Tous pouvoirs donnés à la société LEGALCORNERS, domiciliée au 78 Avenue des Champs-Élysées, 75008 Paris, et au porteur d'un extrait certifié conforme, pour :
-• Enregistrement auprès du service des impôts ;
 • Dépôt au Greffe du Tribunal de Commerce ;
 • Publication légale si requise ;
 • Modification des statuts si nécessaire ;
 • Toute autre formalité administrative ou juridique.
+Les parties demeurent personnellement responsables de l'enregistrement de l'acte de cession auprès du Service des Impôts des Entreprises dans le délai légal d'un mois.
 Résolution adoptée à l'unanimité.
 
 L'ordre du jour étant épuisé, la séance est levée.

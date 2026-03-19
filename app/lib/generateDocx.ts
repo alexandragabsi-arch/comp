@@ -133,8 +133,8 @@ function buildMarkdownTable(tableLines: string[]): Table | null {
       bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY },
       left: { style: BorderStyle.SINGLE, size: 4, color: NAVY },
       right: { style: BorderStyle.SINGLE, size: 4, color: NAVY },
-      insideH: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" },
-      insideV: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" },
+      insideHorizontal: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" },
+      insideVertical: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" },
     },
   });
 }

@@ -300,9 +300,13 @@ function buildDeclarationNonCondamnation(data: FormData): string {
     ? `représentant permanent de ${pv.nouveauDirigeantDenomination || "[PM]"}, ${pv.nouveauDirigeantFonction || "dirigeant"}`
     : (pv.nouveauDirigeantFonction || "dirigeant");
 
+  const mentionPM = isPM
+    ? `, représentant permanent de **${(pv.nouveauDirigeantDenomination || "[PM]").toUpperCase()}**`
+    : "";
+
   return `# Déclaration de non-condamnation et de filiation du Dirigeant
 
-Je soussigné(e) : ${civilite} **${nom.toUpperCase()}**, ${prenom} né(e) le ${dateNaissance} à : ${villeNaissance} de nationalité ${nationalite} demeurant ${adresse}
+Je soussigné(e) : ${civilite} **${nom.toUpperCase()}**, ${prenom}${mentionPM} né(e) le ${dateNaissance} à : ${villeNaissance} de nationalité ${nationalite} demeurant ${adresse}
 
 ${genreFils} de : Monsieur **${nomPere.toUpperCase()}** ${prenomPere} et de Madame **${nomMere.toUpperCase()}** ${prenomMere} déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce, relatif au Registre du Commerce et des Sociétés,
 

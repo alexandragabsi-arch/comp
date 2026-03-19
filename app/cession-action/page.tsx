@@ -3302,21 +3302,25 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               fraisALaCharge: fraisACharge === "cedant" ? "Cédant" : "Cessionnaire",
             };
 
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 120000);
-            const response = await fetch('/api/generate-documents', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ formData, type: "both" }),
-              signal: controller.signal,
-            });
-            clearTimeout(timeout);
+            const fetchDoc = async (type: "acte" | "pv") => {
+              const controller = new AbortController();
+              const timeout = setTimeout(() => controller.abort(), 240000);
+              const response = await fetch('/api/generate-documents', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ formData, type }),
+                signal: controller.signal,
+              });
+              clearTimeout(timeout);
+              if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || `Erreur serveur: ${response.status}`);
+              }
+              return response.json();
+            };
 
-            if (!response.ok) {
-              const errData = await response.json().catch(() => ({}));
-              throw new Error(errData.error || `Erreur serveur: ${response.status}`);
-            }
-            const result = await response.json();
+            const [resActe, resPv] = await Promise.all([fetchDoc("acte"), fetchDoc("pv")]);
+            const result = { ...resActe, ...resPv };
 
             const dl = (blob: Blob, name: string) => {
               const url = window.URL.createObjectURL(blob);

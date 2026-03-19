@@ -315,6 +315,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const [dateSignature, setDateSignature] = useState("");
   const [documentGenere, setDocumentGenere] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingActe, setIsGeneratingActe] = useState(false);
+  const [isGeneratingPv, setIsGeneratingPv] = useState(false);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [acteBlobUrl, setActeBlobUrl] = useState<string | null>(null);
@@ -408,7 +410,196 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
     setEcheances(newEcheances);
   };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
+  const handleGenerate = async (type: "acte" | "pv") => {
+    const setLoading = type === "acte" ? setIsGeneratingActe : setIsGeneratingPv;
+    setLoading(true);
+    try {
+      const formData = {
+        societe: {
+          denomination: societe.denomination,
+          formeJuridique: societe.formeJuridique as any,
+          capital: societe.capital,
+          rcsVille: societe.rcsVille,
+          rcsNumero: societe.rcsNumero,
+          adresse: `${societe.siegeAdresse}, ${societe.siegeCP} ${societe.siegeVille}`,
+          nombreTitresTotal: societe.nombreTotalParts,
+          valeurNominale: "",
+          estSPI: false,
+        },
+        cedant: {
+          typePersonne: cedantType as "physique" | "morale",
+          physique: cedantType === "physique" ? {
+            civilite: cedantPhysique.civilite as "M." | "Mme",
+            nom: cedantPhysique.nom,
+            prenom: cedantPhysique.prenom,
+            dateNaissance: cedantPhysique.dateNaissance,
+            villeNaissance: cedantPhysique.lieuNaissance,
+            nationalite: cedantPhysique.nationalite,
+            adresse: `${cedantPhysique.adresse}, ${cedantPhysique.codePostal} ${cedantPhysique.ville}`,
+            regime: (cedantRegimeMatrimonial || "celibataire") as any,
+            conjointCivilite: cedantConjointCivilite,
+            conjointNom: cedantConjointNom,
+            conjointPrenom: cedantConjointPrenom,
+          } : undefined,
+          morale: cedantType === "morale" ? {
+            denomination: cedantMorale.denomination,
+            formeJuridique: cedantMorale.formeJuridique,
+            capital: cedantMorale.capital,
+            adresse: `${cedantMorale.siegeAdresse}, ${cedantMorale.siegeCP} ${cedantMorale.siegeVille}`,
+            rcsVille: cedantMorale.rcsVille,
+            rcsNumero: cedantMorale.rcsNumero,
+            representantCivilite: cedantMorale.representantCivilite as "M." | "Mme",
+            representantNom: cedantMorale.representantNom,
+            representantPrenom: cedantMorale.representantPrenom,
+            representantQualite: cedantMorale.representantQualite,
+          } : undefined,
+          nombreTitresCedes: nombrePartsCedees,
+        },
+        cessionnaire: {
+          typePersonne: cessionnaireType as "physique" | "morale",
+          physique: cessionnaireType === "physique" ? {
+            civilite: cessionnairePhysique.civilite as "M." | "Mme",
+            nom: cessionnairePhysique.nom,
+            prenom: cessionnairePhysique.prenom,
+            dateNaissance: cessionnairePhysique.dateNaissance,
+            villeNaissance: cessionnairePhysique.lieuNaissance,
+            nationalite: cessionnairePhysique.nationalite,
+            adresse: `${cessionnairePhysique.adresse}, ${cessionnairePhysique.codePostal} ${cessionnairePhysique.ville}`,
+            regime: (cessionnaireRegimeMatrimonial || "celibataire") as any,
+            conjointCivilite: cessionnaireConjointCivilite,
+            conjointNom: cessionnaireConjointNom,
+            conjointPrenom: cessionnaireConjointPrenom,
+          } : undefined,
+          morale: cessionnaireType === "morale" ? {
+            denomination: cessionnaireMorale.denomination,
+            formeJuridique: cessionnaireMorale.formeJuridique,
+            capital: cessionnaireMorale.capital,
+            adresse: `${cessionnaireMorale.siegeAdresse}, ${cessionnaireMorale.siegeCP} ${cessionnaireMorale.siegeVille}`,
+            rcsVille: cessionnaireMorale.rcsVille,
+            rcsNumero: cessionnaireMorale.rcsNumero,
+            representantCivilite: cessionnaireMorale.representantCivilite as "M." | "Mme",
+            representantNom: cessionnaireMorale.representantNom,
+            representantPrenom: cessionnaireMorale.representantPrenom,
+            representantQualite: cessionnaireMorale.representantQualite,
+          } : undefined,
+          acquisitionBiens: cessionnaireAchatBiensPropres ? "propres" : "communs",
+        },
+        prix: {
+          prixTotal: prixTotal,
+          typePaiement: (modePaiement === "echeances" ? "echelonne" : "comptant") as any,
+          echeances: modePaiement === "echeances" ? echeances.map(e => ({ montant: e.montant, date: e.date })) : undefined,
+        },
+        natureCession: {
+          type: (typePropriete === "pleine-propriete" ? "pleine_propriete" : typePropriete === "usufruit" ? "usufruit" : "nue_propriete") as any,
+          numeroDe: numeroPartsDe,
+          numeroA: numeroPartsA,
+        },
+        gap: {
+          active: garantieActifPassif,
+          plafond: garantieMontantMax,
+          dureeAnnees: garantieDuree,
+          seuilParSinistre: garantieSeuilDeclenchement,
+          notificationAdresse: garantieAdresse,
+          notificationEmail: garantieEmail,
+          escrow: false,
+        },
+        comptesCourants: {
+          option: (comptesCourants || "absent") as any,
+        },
+        nonConcurrence: {
+          active: clauseNonConcurrenceVendeur || clauseNonConcurrenceAcheteur,
+          dureeAns: clauseNCVDuree,
+          zoneGeographique: clauseNCVZone,
+          appliqueAuCessionnaire: clauseNonConcurrenceAcheteur,
+          dureeAnsCessionnaire: clauseNCADuree,
+          zoneGeoCessionnaire: clauseNCAZone,
+        },
+        pv: {
+          typeAssemblee: (associeUnique ? "associe_unique" : "unanime") as any,
+          ville: lieuSignature,
+          date: dateSignature,
+          modificationValeurNominale,
+          changementDirigeant: includChangementDirigeant,
+          nouveauDirigeantTypePersonne: nouveauDirigeantType,
+          nouveauDirigeantCivilite: nouveauDirigeantPhysique.civilite as "M." | "Mme",
+          nouveauDirigeantNom: nouveauDirigeantPhysique.nom,
+          nouveauDirigeantPrenom: nouveauDirigeantPhysique.prenom,
+          nouveauDirigeantDateNaissance: nouveauDirigeantPhysique.dateNaissance,
+          nouveauDirigeantVilleNaissance: nouveauDirigeantPhysique.lieuNaissance,
+          nouveauDirigeantNationalite: nouveauDirigeantPhysique.nationalite,
+          nouveauDirigeantAdresse: `${nouveauDirigeantPhysique.adresse}, ${nouveauDirigeantPhysique.codePostal} ${nouveauDirigeantPhysique.ville}`.trim(),
+          nouveauDirigeantNomPere: nouveauDirigeantPereNom,
+          nouveauDirigeantPrenomPere: nouveauDirigeantPerePrenom,
+          nouveauDirigeantNomMere: nouveauDirigeantMereNom,
+          nouveauDirigeantPrenomMere: nouveauDirigeantMerePrenom,
+          nouveauDirigeantFonction: nouveauDirigeantQualite,
+          nouveauDirigeantDenomination: nouveauDirigeantMorale.denomination,
+          nouveauDirigeantFormeJuridiqueStr: nouveauDirigeantMorale.formeJuridique,
+          nouveauDirigeantCapitalStr: "",
+          nouveauDirigeantSiegeSocial: `${nouveauDirigeantMorale.siegeAdresse}, ${nouveauDirigeantMorale.siegeCP} ${nouveauDirigeantMorale.siegeVille}`.trim(),
+          nouveauDirigeantRCSSiege: "",
+          nouveauDirigeantRCSNum: nouveauDirigeantMorale.siren,
+          rpCivilite: representantPermanent.civilite as "M." | "Mme",
+          rpNom: representantPermanent.nom,
+          rpPrenom: representantPermanent.prenom,
+          rpDateNaissance: representantPermanent.dateNaissance,
+          rpVilleNaissance: representantPermanent.lieuNaissance,
+          rpNationalite: representantPermanent.nationalite,
+          rpAdresse: `${representantPermanent.adresse}, ${representantPermanent.codePostal} ${representantPermanent.ville}`.trim(),
+          rpNomPere: representantPermanentPereNom,
+          rpPrenomPere: representantPermanentPerePrenom,
+          rpNomMere: representantPermanentMereNom,
+          rpPrenomMere: representantPermanentMerePrenom,
+          mandataireFormalities,
+          questionsEcrites: false,
+        },
+        ville: lieuSignature,
+        date: dateSignature,
+        fraisALaCharge: fraisACharge === "cedant" ? "Cédant" : "Cessionnaire",
+        cedantIsSocieteCible,
+        cessionnaireIsSocieteCible,
+      };
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 240000);
+      const response = await fetch('/api/generate-documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formData, type }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Erreur serveur: ${response.status}`);
+      }
+      const result = await response.json();
+
+      if (result.acte) {
+        setActeText(result.acte);
+        const blob = await generateActeDocx(result.acte, formData as any);
+        setActeBlobUrl(window.URL.createObjectURL(blob));
+      }
+      if (result.pv) {
+        setPvText(result.pv);
+        const blob = await generatePVDocx(result.pv, formData as any);
+        setPvBlobUrl(window.URL.createObjectURL(blob));
+      }
+      if (result.declaration) {
+        setDeclarationText(result.declaration);
+        const blob = await generateDeclarationDocx(result.declaration, formData as any);
+        setDeclarationBlobUrl(window.URL.createObjectURL(blob));
+      }
+      setDocumentGenere(true);
+    } catch (error) {
+      console.error('[generation] error:', error);
+      alert(`Erreur lors de la génération : ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
   <>
   <div className="min-h-screen bg-white" suppressHydrationWarning>
@@ -3556,225 +3747,32 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
     </div>
   </div>
   <div className="pt-4 border-t">
-  {!documentGenere ? (
-    <>
-      <p className="text-sm text-gray-600 mb-4">
-        En cliquant sur &quot;Generer les documents&quot;, vous confirmez que toutes les informations fournies sont exactes.
-      </p>
+  <>
+    <p className="text-sm text-gray-600 mb-4">
+      Générez chaque document séparément. Vous pourrez les télécharger dès qu&apos;ils sont prêts.
+    </p>
+    <div className="flex flex-col gap-3 mt-3">
       <Button
-        onClick={async () => {
-          setIsGenerating(true);
-          try {
-            const formData = {
-              societe: {
-                denomination: societe.denomination,
-                formeJuridique: societe.formeJuridique as any,
-                capital: societe.capital,
-                rcsVille: societe.rcsVille,
-                rcsNumero: societe.rcsNumero,
-                adresse: `${societe.siegeAdresse}, ${societe.siegeCP} ${societe.siegeVille}`,
-                nombreTitresTotal: societe.nombreTotalParts,
-                valeurNominale: "",
-                estSPI: false,
-              },
-              cedant: {
-                typePersonne: cedantType as "physique" | "morale",
-                physique: cedantType === "physique" ? {
-                  civilite: cedantPhysique.civilite as "M." | "Mme",
-                  nom: cedantPhysique.nom,
-                  prenom: cedantPhysique.prenom,
-                  dateNaissance: cedantPhysique.dateNaissance,
-                  villeNaissance: cedantPhysique.lieuNaissance,
-                  nationalite: cedantPhysique.nationalite,
-                  adresse: `${cedantPhysique.adresse}, ${cedantPhysique.codePostal} ${cedantPhysique.ville}`,
-                  regime: (cedantRegimeMatrimonial || "celibataire") as any,
-                  conjointCivilite: cedantConjointCivilite,
-                  conjointNom: cedantConjointNom,
-                  conjointPrenom: cedantConjointPrenom,
-                } : undefined,
-                morale: cedantType === "morale" ? {
-                  denomination: cedantMorale.denomination,
-                  formeJuridique: cedantMorale.formeJuridique,
-                  capital: cedantMorale.capital,
-                  adresse: `${cedantMorale.siegeAdresse}, ${cedantMorale.siegeCP} ${cedantMorale.siegeVille}`,
-                  rcsVille: cedantMorale.rcsVille,
-                  rcsNumero: cedantMorale.rcsNumero,
-                  representantCivilite: cedantMorale.representantCivilite as "M." | "Mme",
-                  representantNom: cedantMorale.representantNom,
-                  representantPrenom: cedantMorale.representantPrenom,
-                  representantQualite: cedantMorale.representantQualite,
-                } : undefined,
-                nombreTitresCedes: nombrePartsCedees,
-              },
-              cessionnaire: {
-                typePersonne: cessionnaireType as "physique" | "morale",
-                physique: cessionnaireType === "physique" ? {
-                  civilite: cessionnairePhysique.civilite as "M." | "Mme",
-                  nom: cessionnairePhysique.nom,
-                  prenom: cessionnairePhysique.prenom,
-                  dateNaissance: cessionnairePhysique.dateNaissance,
-                  villeNaissance: cessionnairePhysique.lieuNaissance,
-                  nationalite: cessionnairePhysique.nationalite,
-                  adresse: `${cessionnairePhysique.adresse}, ${cessionnairePhysique.codePostal} ${cessionnairePhysique.ville}`,
-                  regime: (cessionnaireRegimeMatrimonial || "celibataire") as any,
-                  conjointCivilite: cessionnaireConjointCivilite,
-                  conjointNom: cessionnaireConjointNom,
-                  conjointPrenom: cessionnaireConjointPrenom,
-                } : undefined,
-                morale: cessionnaireType === "morale" ? {
-                  denomination: cessionnaireMorale.denomination,
-                  formeJuridique: cessionnaireMorale.formeJuridique,
-                  capital: cessionnaireMorale.capital,
-                  adresse: `${cessionnaireMorale.siegeAdresse}, ${cessionnaireMorale.siegeCP} ${cessionnaireMorale.siegeVille}`,
-                  rcsVille: cessionnaireMorale.rcsVille,
-                  rcsNumero: cessionnaireMorale.rcsNumero,
-                  representantCivilite: cessionnaireMorale.representantCivilite as "M." | "Mme",
-                  representantNom: cessionnaireMorale.representantNom,
-                  representantPrenom: cessionnaireMorale.representantPrenom,
-                  representantQualite: cessionnaireMorale.representantQualite,
-                } : undefined,
-                acquisitionBiens: cessionnaireAchatBiensPropres ? "propres" : "communs",
-              },
-              prix: {
-                prixTotal: prixTotal,
-                typePaiement: (modePaiement === "echeances" ? "echelonne" : "comptant") as any,
-                echeances: modePaiement === "echeances" ? echeances.map(e => ({ montant: e.montant, date: e.date })) : undefined,
-              },
-              natureCession: {
-                type: (typePropriete === "pleine-propriete" ? "pleine_propriete" : typePropriete === "usufruit" ? "usufruit" : "nue_propriete") as any,
-                numeroDe: numeroPartsDe,
-                numeroA: numeroPartsA,
-              },
-              gap: {
-                active: garantieActifPassif,
-                plafond: garantieMontantMax,
-                dureeAnnees: garantieDuree,
-                seuilParSinistre: garantieSeuilDeclenchement,
-                notificationAdresse: garantieAdresse,
-                notificationEmail: garantieEmail,
-                escrow: false,
-              },
-              comptesCourants: {
-                option: (comptesCourants || "absent") as any,
-              },
-              nonConcurrence: {
-                active: clauseNonConcurrenceVendeur || clauseNonConcurrenceAcheteur,
-                dureeAns: clauseNCVDuree,
-                zoneGeographique: clauseNCVZone,
-                appliqueAuCessionnaire: clauseNonConcurrenceAcheteur,
-                dureeAnsCessionnaire: clauseNCADuree,
-                zoneGeoCessionnaire: clauseNCAZone,
-              },
-              pv: {
-                typeAssemblee: (associeUnique ? "associe_unique" : "unanime") as any,
-                ville: lieuSignature,
-                date: dateSignature,
-                modificationValeurNominale,
-                changementDirigeant: includChangementDirigeant,
-                nouveauDirigeantTypePersonne: nouveauDirigeantType,
-                nouveauDirigeantCivilite: nouveauDirigeantPhysique.civilite as "M." | "Mme",
-                nouveauDirigeantNom: nouveauDirigeantPhysique.nom,
-                nouveauDirigeantPrenom: nouveauDirigeantPhysique.prenom,
-                nouveauDirigeantDateNaissance: nouveauDirigeantPhysique.dateNaissance,
-                nouveauDirigeantVilleNaissance: nouveauDirigeantPhysique.lieuNaissance,
-                nouveauDirigeantNationalite: nouveauDirigeantPhysique.nationalite,
-                nouveauDirigeantAdresse: `${nouveauDirigeantPhysique.adresse}, ${nouveauDirigeantPhysique.codePostal} ${nouveauDirigeantPhysique.ville}`.trim(),
-                nouveauDirigeantNomPere: nouveauDirigeantPereNom,
-                nouveauDirigeantPrenomPere: nouveauDirigeantPerePrenom,
-                nouveauDirigeantNomMere: nouveauDirigeantMereNom,
-                nouveauDirigeantPrenomMere: nouveauDirigeantMerePrenom,
-                nouveauDirigeantFonction: nouveauDirigeantQualite,
-                // Nouveau dirigeant — personne morale
-                nouveauDirigeantDenomination: nouveauDirigeantMorale.denomination,
-                nouveauDirigeantFormeJuridiqueStr: nouveauDirigeantMorale.formeJuridique,
-                nouveauDirigeantCapitalStr: "",
-                nouveauDirigeantSiegeSocial: `${nouveauDirigeantMorale.siegeAdresse}, ${nouveauDirigeantMorale.siegeCP} ${nouveauDirigeantMorale.siegeVille}`.trim(),
-                nouveauDirigeantRCSSiege: "",
-                nouveauDirigeantRCSNum: nouveauDirigeantMorale.siren,
-                // Représentant permanent (RP)
-                rpCivilite: representantPermanent.civilite as "M." | "Mme",
-                rpNom: representantPermanent.nom,
-                rpPrenom: representantPermanent.prenom,
-                rpDateNaissance: representantPermanent.dateNaissance,
-                rpVilleNaissance: representantPermanent.lieuNaissance,
-                rpNationalite: representantPermanent.nationalite,
-                rpAdresse: `${representantPermanent.adresse}, ${representantPermanent.codePostal} ${representantPermanent.ville}`.trim(),
-                rpNomPere: representantPermanentPereNom,
-                rpPrenomPere: representantPermanentPerePrenom,
-                rpNomMere: representantPermanentMereNom,
-                rpPrenomMere: representantPermanentMerePrenom,
-                mandataireFormalities,
-                questionsEcrites: false,
-              },
-              ville: lieuSignature,
-              date: dateSignature,
-              fraisALaCharge: fraisACharge === "cedant" ? "Cédant" : "Cessionnaire",
-              cedantIsSocieteCible,
-              cessionnaireIsSocieteCible,
-            };
-
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 120000);
-            const response = await fetch('/api/generate-documents', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ formData, type: "both" }),
-              signal: controller.signal,
-            });
-            clearTimeout(timeout);
-
-            if (!response.ok) {
-              const errData = await response.json().catch(() => ({}));
-              throw new Error(errData.error || `Erreur serveur: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            const downloadBlob = (blob: Blob, filename: string) => {
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = filename;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              window.URL.revokeObjectURL(url);
-            };
-
-            const nomSociete = (societe.denomination || "societe").replace(/\s+/g, '-');
-            if (result.acte) {
-              setActeText(result.acte);
-              const blob = await generateActeDocx(result.acte, formData as any);
-              setActeBlobUrl(window.URL.createObjectURL(blob));
-            }
-            if (result.pv) {
-              setPvText(result.pv);
-              const blob = await generatePVDocx(result.pv, formData as any);
-              setPvBlobUrl(window.URL.createObjectURL(blob));
-            }
-            if (result.declaration) {
-              setDeclarationText(result.declaration);
-              const blob = await generateDeclarationDocx(result.declaration, formData as any);
-              setDeclarationBlobUrl(window.URL.createObjectURL(blob));
-            }
-
-            setDocumentGenere(true);
-          } catch (error) {
-            console.error('[generation] error:', error);
-            alert(`Erreur lors de la génération : ${error}`);
-          } finally {
-            setIsGenerating(false);
-          }
-        }}
-        disabled={!lieuSignature || !dateSignature || isGenerating || (!generateAgrement && !generateConstatation && !includChangementDirigeant)}
+        onClick={() => handleGenerate("acte")}
+        disabled={!lieuSignature || !dateSignature || isGeneratingActe || isGeneratingPv}
         variant="outline"
-        className="w-full mt-3 border-[#5D9CEC] text-[#5D9CEC] hover:bg-[#5D9CEC]/10 py-6 text-lg"
+        className="w-full border-[#5D9CEC] text-[#5D9CEC] hover:bg-[#5D9CEC]/10 py-5 text-base"
       >
-        <Download className="w-5 h-5 mr-2" />
-        {isGenerating ? "Génération en cours..." : "Télécharger les documents"}
+        <Download className="w-4 h-4 mr-2" />
+        {isGeneratingActe ? "Génération de l'acte..." : acteText ? "Regénérer l'Acte de cession" : "Générer l'Acte de cession"}
       </Button>
-    </>
-  ) : (
+      <Button
+        onClick={() => handleGenerate("pv")}
+        disabled={!lieuSignature || !dateSignature || isGeneratingPv || isGeneratingActe || (!generateAgrement && !generateConstatation && !includChangementDirigeant)}
+        variant="outline"
+        className="w-full border-[#3B6FD9] text-[#3B6FD9] hover:bg-[#3B6FD9]/10 py-5 text-base"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        {isGeneratingPv ? "Génération du PV..." : pvText ? "Regénérer le(s) PV" : "Générer le(s) PV"}
+      </Button>
+    </div>
+  </>
+  {documentGenere && (
     <>
       {previewDoc && (
         <DocumentPreviewPanel
@@ -3885,7 +3883,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 formeJuridique: societe.formeJuridique || "",
                 denomination: societe.denomination || "",
                 capitalTotal: societe.capital || "",
-                nbTitresTotal: societe.nombreTitresTotal || "",
+                nbTitresTotal: societe.nombreTotalParts || "",
                 includChangementDirigeant,
                 nouveauDirigeantCivilite: nouveauDirigeantPhysique.civilite,
                 nouveauDirigeantNom: nouveauDirigeantPhysique.nom,

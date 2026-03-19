@@ -32,6 +32,7 @@ import {
   Menu,
   X,
   Download,
+  Eye,
 } from "lucide-react";
 import {
   Collapsible,
@@ -48,6 +49,7 @@ import {
 import { TooltipHelp, TOOLTIPS } from "@/components/ui/tooltip-help";
 import { SimulateurDroits } from "@/components/simulateur-droits";
 import { PdfPreviewModal } from "@/components/pdf-preview-modal";
+import { DocumentPreviewPanel } from "@/components/document-preview-panel";
 import { ExpertComptableInfo } from "@/components/cession/expert-comptable-info";
 import { generateActeDocx, generatePVDocx, generateDeclarationDocx } from "../lib/generateDocx";
 // Types
@@ -311,6 +313,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const [acteBlobUrl, setActeBlobUrl] = useState<string | null>(null);
   const [pvBlobUrl, setPvBlobUrl] = useState<string | null>(null);
   const [declarationBlobUrl, setDeclarationBlobUrl] = useState<string | null>(null);
+  const [acteText, setActeText] = useState<string | null>(null);
+  const [pvText, setPvText] = useState<string | null>(null);
+  const [declarationText, setDeclarationText] = useState<string | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{ title: string; text: string; blobUrl: string; docxFileName: string; pdfFileName: string } | null>(null);
   
   // Documents a generer
   const [generateAgrement, setGenerateAgrement] = useState(true);
@@ -3245,14 +3251,17 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
 
             const nom = (societe.denomination || "societe").replace(/\s+/g, '-');
             if (result.acte) {
+              setActeText(result.acte);
               const blob = await generateActeDocx(result.acte, formData as any);
               setActeBlobUrl(window.URL.createObjectURL(blob));
             }
             if (result.pv) {
+              setPvText(result.pv);
               const blob = await generatePVDocx(result.pv, formData as any);
               setPvBlobUrl(window.URL.createObjectURL(blob));
             }
             if (result.declaration) {
+              setDeclarationText(result.declaration);
               const blob = await generateDeclarationDocx(result.declaration, formData as any);
               setDeclarationBlobUrl(window.URL.createObjectURL(blob));
             }
@@ -3274,56 +3283,110 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
       </Button>
     </>
   ) : (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-6 bg-green-50 border border-green-200 rounded-xl"
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
-          <Check className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h3 className="font-bold text-green-800">Document genere avec succes !</h3>
-          <p className="text-sm text-green-600">Votre acte de cession est pret</p>
-        </div>
-      </div>
-      
-      <div className="space-y-3">
-        {acteBlobUrl && (
-          <a href={acteBlobUrl} download={`Acte-Cession-${(societe.denomination || 'document').replace(/\s+/g, '-')}.docx`} className="block">
-            <Button variant="outline" className="w-full border-green-300 text-green-700 hover:bg-green-100 gap-2">
-              <FileText className="w-4 h-4" />
-              Télécharger l&apos;acte de cession (DOCX)
-            </Button>
-          </a>
-        )}
-        {pvBlobUrl && (
-          <a href={pvBlobUrl} download={`PV-AG-${(societe.denomination || 'document').replace(/\s+/g, '-')}.docx`} className="block">
-            <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-100 gap-2">
-              <FileText className="w-4 h-4" />
-              Télécharger le PV d&apos;assemblée (DOCX)
-            </Button>
-          </a>
-        )}
-        {declarationBlobUrl && (
-          <a href={declarationBlobUrl} download={`Declaration-Non-Condamnation-${(societe.denomination || 'document').replace(/\s+/g, '-')}.docx`} className="block">
-            <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-100 gap-2">
-              <FileText className="w-4 h-4" />
-              Télécharger la déclaration de non-condamnation (DOCX)
-            </Button>
-          </a>
-        )}
-        {selectedFormule === "premium" && (
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 mt-4">
-            <p className="text-sm text-blue-800">
-              <Info className="w-4 h-4 inline mr-1" />
-              Formule Premium : Un juriste verifiera votre dossier sous 24h.
-            </p>
+    <>
+      {previewDoc && (
+        <DocumentPreviewPanel
+          title={previewDoc.title}
+          text={previewDoc.text}
+          docxBlobUrl={previewDoc.blobUrl}
+          docxFileName={previewDoc.docxFileName}
+          pdfFileName={previewDoc.pdfFileName}
+          onClose={() => setPreviewDoc(null)}
+        />
+      )}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-6 bg-green-50 border border-green-200 rounded-xl"
+      >
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+            <Check className="w-6 h-6 text-white" />
           </div>
-        )}
-      </div>
-    </motion.div>
+          <div>
+            <h3 className="font-bold text-green-800">Documents générés avec succès !</h3>
+            <p className="text-sm text-green-600">Prévisualisez ou téléchargez chaque document</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {acteBlobUrl && acteText && (() => {
+            const n = (societe.denomination || 'document').replace(/\s+/g, '-');
+            return (
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium text-gray-800 text-sm">Acte de cession</span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setPreviewDoc({ title: "Acte de cession", text: acteText!, blobUrl: acteBlobUrl!, docxFileName: `Acte-Cession-${n}.docx`, pdfFileName: `Acte-Cession-${n}.pdf` })}>
+                    <Eye className="w-3.5 h-3.5" /> Aperçu
+                  </Button>
+                  <a href={acteBlobUrl} download={`Acte-Cession-${n}.docx`}>
+                    <Button size="sm" variant="outline" className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50">
+                      <FileText className="w-3.5 h-3.5" /> Word (.docx)
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            );
+          })()}
+
+          {pvBlobUrl && pvText && (() => {
+            const n = (societe.denomination || 'document').replace(/\s+/g, '-');
+            return (
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium text-gray-800 text-sm">PV d&apos;assemblée</span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setPreviewDoc({ title: "PV d'assemblée générale", text: pvText!, blobUrl: pvBlobUrl!, docxFileName: `PV-AG-${n}.docx`, pdfFileName: `PV-AG-${n}.pdf` })}>
+                    <Eye className="w-3.5 h-3.5" /> Aperçu
+                  </Button>
+                  <a href={pvBlobUrl} download={`PV-AG-${n}.docx`}>
+                    <Button size="sm" variant="outline" className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50">
+                      <FileText className="w-3.5 h-3.5" /> Word (.docx)
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            );
+          })()}
+
+          {declarationBlobUrl && declarationText && (() => {
+            const n = (societe.denomination || 'document').replace(/\s+/g, '-');
+            return (
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium text-gray-800 text-sm">Déclaration de non-condamnation</span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setPreviewDoc({ title: "Déclaration de non-condamnation", text: declarationText!, blobUrl: declarationBlobUrl!, docxFileName: `Declaration-Non-Condamnation-${n}.docx`, pdfFileName: `Declaration-Non-Condamnation-${n}.pdf` })}>
+                    <Eye className="w-3.5 h-3.5" /> Aperçu
+                  </Button>
+                  <a href={declarationBlobUrl} download={`Declaration-Non-Condamnation-${n}.docx`}>
+                    <Button size="sm" variant="outline" className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50">
+                      <FileText className="w-3.5 h-3.5" /> Word (.docx)
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            );
+          })()}
+
+          {selectedFormule === "premium" && (
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 mt-4">
+              <p className="text-sm text-blue-800">
+                <Info className="w-4 h-4 inline mr-1" />
+                Formule Premium : Un juriste verifiera votre dossier sous 24h.
+              </p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </>
   )}
   </div>
               </div>

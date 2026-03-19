@@ -1064,7 +1064,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               className="space-y-6"
             >
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">La sociét�� concernée</h1>
+                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">La société concernée</h1>
                 <p className="text-gray-600">Recherchez la société par son numéro SIREN</p>
               </div>
               {/* Recherche par SIREN ou Nom */}

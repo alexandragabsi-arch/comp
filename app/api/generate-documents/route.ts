@@ -201,6 +201,12 @@ function buildPromptPV(data: FormData): string {
       ? `${cessionnaire.physique.civilite} ${cessionnaire.physique.nom} ${cessionnaire.physique.prenom}`
       : cessionnaire.morale?.denomination || "[CESSIONNAIRE]";
 
+  const nomNouveauDirigeantPP = pv.nouveauDirigeantNom
+    ? `${pv.nouveauDirigeantCivilite || ""} ${pv.nouveauDirigeantNom} ${pv.nouveauDirigeantPrenom || ""}`.trim()
+    : cessionnaire.typePersonne === "physique"
+    ? nomCessionnaire
+    : "";
+
   const nouveauDirigeantBlock =
     pv.changementDirigeant
       ? pv.nouveauDirigeantTypePersonne === "morale"
@@ -210,10 +216,10 @@ function buildPromptPV(data: FormData): string {
 - Siège : ${pv.nouveauDirigeantSiegeSocial || ""}
 - RCS ${pv.nouveauDirigeantRCSSiege || ""} n° ${pv.nouveauDirigeantRCSNum || ""}
 - Représentant permanent : ${pv.rpCivilite || ""} ${pv.rpNom || ""} ${pv.rpPrenom || ""}`
-        : `Nouveau dirigeant (PP) : ${nomCessionnaire}
-- Né(e) le ${cessionnaire.physique?.dateNaissance || pv.nouveauDirigeantDateNaissance || ""} à ${pv.nouveauDirigeantVilleNaissance || cessionnaire.physique?.villeNaissance || ""}
+        : `Nouveau dirigeant (PP) : ${nomNouveauDirigeantPP}
+- Né(e) le ${pv.nouveauDirigeantDateNaissance || cessionnaire.physique?.dateNaissance || ""} à ${pv.nouveauDirigeantVilleNaissance || cessionnaire.physique?.villeNaissance || ""}
 - Nationalité : ${pv.nouveauDirigeantNationalite || cessionnaire.physique?.nationalite || "française"}
-- Demeurant : ${cessionnaire.physique?.adresse || pv.nouveauDirigeantAdresse || ""}`
+- Demeurant : ${pv.nouveauDirigeantAdresse || cessionnaire.physique?.adresse || ""}`
       : "";
 
   return `Tu es un juriste expert en droit des sociétés français. Rédige un PROCÈS-VERBAL ${pv.typeAssemblee === "AGE" ? "D'ASSEMBLÉE GÉNÉRALE EXTRAORDINAIRE" : pv.typeAssemblee === "associe_unique" ? "DE L'ASSOCIÉ UNIQUE" : "DE DÉCISIONS UNANIMES DES ASSOCIÉS"} complet et juridiquement correct.
@@ -270,7 +276,8 @@ INSTRUCTIONS :
 4. La délégation de pouvoirs doit mentionner "LEGALCORNERS, 78 Avenue des Champs-Élysées, 75008 Paris"
 5. Toutes les résolutions sont adoptées à l'unanimité
 6. Termine par les signatures appropriées selon le type d'assemblée
-7. Style juridique professionnel français`;
+7. Style juridique professionnel français
+8. IMPORTANT : Dans toutes les résolutions (agrément, approbation nouvel associé, constatation), le CESSIONNAIRE doit toujours être désigné par son nom complet : "${nomCessionnaire}". Ne jamais utiliser le nom du représentant légal à la place de la dénomination sociale.`;
 }
 
 function buildDeclarationNonCondamnation(data: FormData): string {

@@ -121,7 +121,8 @@ export function StatutsUpdater({ cessionData }: StatutsUpdaterProps) {
       sections: [{ properties: {}, children }],
     });
 
-    const blob = new Blob([await Packer.toBuffer(doc)], {
+    const buffer = await Packer.toBuffer(doc);
+    const blob = new Blob([new Uint8Array(buffer)], {
       type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     });
     const url = URL.createObjectURL(blob);

@@ -654,7 +654,39 @@ export function DocumentPreviewPanel({
               `}
               lang="fr"
             >
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  table: ({ children }) => (
+                    <table style={{ width: "100%", borderCollapse: "collapse", margin: "16px 0", fontSize: "12px" }}>
+                      {children}
+                    </table>
+                  ),
+                  thead: ({ children }) => (
+                    <thead style={{ backgroundColor: "#0D2459" }}>{children}</thead>
+                  ),
+                  th: ({ children }) => (
+                    <th style={{ color: "white", padding: "8px 12px", textAlign: "left", fontWeight: "bold", fontSize: "11px", border: "1px solid #0D2459" }}>
+                      {children}
+                    </th>
+                  ),
+                  tbody: ({ children }) => <tbody>{children}</tbody>,
+                  tr: ({ children }) => (
+                    <tr>{children}</tr>
+                  ),
+                  td: ({ children }) => (
+                    <td style={{ padding: "7px 12px", border: "1px solid #e5e7eb", verticalAlign: "top", color: "#1e293b", lineHeight: "1.5" }}>
+                      {children}
+                    </td>
+                  ),
+                  hr: () => <hr style={{ border: "none", borderTop: "1px solid #d1d5db", margin: "20px 0" }} />,
+                  blockquote: ({ children }) => (
+                    <blockquote style={{ borderLeft: "3px solid #5B8DEF", paddingLeft: "12px", margin: "12px 0", color: "#64748b", fontStyle: "italic", fontSize: "11px" }}>
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
                 {bodyText}
               </ReactMarkdown>
             </article>

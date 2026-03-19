@@ -705,12 +705,25 @@ function A4Page({ children, pageNumber }: { children: React.ReactNode; pageNumbe
       <div
         data-a4-page=""
         className="bg-white shadow-xl rounded-sm w-full"
-        style={{ minHeight: "1123px", padding: "60px 72px" }}
+        style={{ minHeight: "1123px", padding: "60px 72px 50px 72px" }}
       >
         {children}
-      </div>
-      <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 select-none">
-        — {pageNumber} —
+        {/* Numéro de page en bas de la page blanche */}
+        <div style={{
+          position: "absolute",
+          bottom: "18px",
+          left: 0,
+          right: 0,
+          textAlign: "center",
+          fontSize: "10px",
+          color: "#9ca3af",
+          borderTop: "1px solid #e5e7eb",
+          marginLeft: "72px",
+          marginRight: "72px",
+          paddingTop: "6px",
+        }}>
+          — {pageNumber} —
+        </div>
       </div>
     </div>
   );

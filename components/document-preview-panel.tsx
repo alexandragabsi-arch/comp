@@ -526,10 +526,11 @@ export function DocumentPreviewPanel({
 
   const handleDownloadPdf = async () => {
     try {
-      await generatePDF(text, pdfFileName, isDeclaration, cover, bodyText);
+      const { generateReactPDF } = await import("@/app/lib/generatePdfReact");
+      await generateReactPDF(cover, bodyText, isDeclaration, pdfFileName);
     } catch (err) {
       console.error("Erreur génération PDF:", err);
-      alert("Erreur lors de la génération du PDF : " + (err instanceof Error ? err.message : String(err)));
+      alert("Erreur PDF : " + (err instanceof Error ? err.message : String(err)));
     }
   };
 

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-02-25.clover" });
-
 const PRODUCTS = {
   essentiel: {
     name: "LegalCorners — Cession Essentiel",
@@ -17,6 +15,8 @@ const PRODUCTS = {
 };
 
 export async function POST(request: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-02-25.clover" });
+
   try {
     const { formule, stateKey } = await request.json();
 
@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
     }
 
     const product = PRODUCTS[formule as keyof typeof PRODUCTS];
-    const baseUrl = request.headers.get("origin") || process.env.NEXT_PUBLIC_BASE_URL || "";
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : request.headers.get("origin") ?? "http://localhost:3000";
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],

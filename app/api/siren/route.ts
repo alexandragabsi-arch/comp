@@ -76,12 +76,16 @@ export async function GET(request: NextRequest) {
       }
 
       const data = await res.json();
-      const suggestions = data.suggestions ?? [];
+      // Pappers renvoie resultats_nom_entreprise, resultats_siren, etc.
+      const suggestions: Record<string, unknown>[] = [
+        ...(data.resultats_nom_entreprise ?? []),
+        ...(data.resultats_siren          ?? []),
+      ];
 
-      const resultats = suggestions.map((s: Record<string, string>) => ({
+      const resultats = suggestions.map((s) => ({
         siren: s.siren,
         nom:   s.nom_entreprise ?? "",
-        ville: s.siege_social   ?? "",
+        ville: (s.siege as Record<string, string>)?.ville ?? "",
       }));
 
       return NextResponse.json({ resultats });

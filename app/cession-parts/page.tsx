@@ -1036,7 +1036,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         ~{(() => {
                           const prix = parseFloat(prixTotal) || 0;
                           const droits = prix > 0 ? Math.max(25, Math.round(prix * 0.03)) : 0;
-                          return droits + 150 + 60 + 150 + 200;
+                          // cession: JAL 150 + greffe 60 | dirigeant: JAL 150 + greffe 200 | débours: 12
+                          return droits + 150 + 60 + 150 + 200 + 12;
                         })()}€
                         {!prixTotal && <span className="text-sm font-normal"> + droits d&apos;enregistrement</span>}
                       </p>
@@ -1044,8 +1045,29 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   </>
                 )}
 
-                <p className="text-xs text-amber-600 text-center">
-                  Ces frais ne nous reviennent pas. Ils sont versés directement aux administrations.
+                {/* Débours */}
+                <div className="mt-4 border-t border-amber-200 pt-3">
+                  <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Débours (documents officiels)</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    <div className="p-3 bg-white rounded-lg flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-amber-800">Extrait Kbis</p>
+                        <p className="text-[10px] text-amber-500">Téléchargé au Greffe</p>
+                      </div>
+                      <p className="font-semibold text-amber-900">~4€</p>
+                    </div>
+                    <div className="p-3 bg-white rounded-lg flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-amber-800">Statuts à jour certifiés</p>
+                        <p className="text-[10px] text-amber-500">Téléchargés au Greffe</p>
+                      </div>
+                      <p className="font-semibold text-amber-900">~8€</p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-amber-600 text-center mt-2">
+                  Ces frais sont versés directement aux administrations et refacturés à l&apos;identique.
                 </p>
               </div>
               {/* Paiement */}

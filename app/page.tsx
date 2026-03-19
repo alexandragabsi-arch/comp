@@ -82,7 +82,7 @@ export default function Home() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="bg-[#F7F9FF] py-20 px-6">
+      <section className="bg-white py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-[#1E3A8A] text-center mb-12">
             Tout ce dont vous avez besoin pour votre cession

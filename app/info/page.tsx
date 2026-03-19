@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   FileText,
   Users,
@@ -20,7 +21,9 @@ export default function InfoPage() {
       {/* Header */}
       <header className="border-b border-zinc-200 bg-white px-6 py-4">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <span className="text-xl font-semibold text-zinc-900">LegalCorners</span>
+          <Link href="/" className="block h-10 w-auto">
+            <Image src="/images/logo-legal-corners.png" alt="LegalCorners" width={160} height={40} className="h-full w-auto object-contain" priority />
+          </Link>
           <Link
             href="/"
             className="text-sm text-zinc-500 hover:text-zinc-800 transition-colors"

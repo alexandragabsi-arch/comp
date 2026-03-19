@@ -34,6 +34,9 @@ import {
   X,
   Download,
   Eye,
+  Upload,
+  Send,
+  Loader2,
 } from "lucide-react";
 import {
   Collapsible,
@@ -105,6 +108,7 @@ const STEPS = [
   { id: 8, label: "Clauses & Options", icon: Shield },
   { id: 9, label: "Récapitulatif", icon: CheckCircle },
   { id: 10, label: "Signature", icon: PenTool },
+  { id: 11, label: "Dépôt INPI", icon: Send },
 ];
 export default function CessionPartsPage() {
   // Navigation
@@ -330,6 +334,63 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   // Documents a generer
   const [generateAgrement, setGenerateAgrement] = useState(true);
   const [generateConstatation, setGenerateConstatation] = useState(true);
+  // Step 11: Pièces justificatives & INPI
+  type JustifKey = "acte" | "pv" | "statuts" | "identite" | "declaration";
+  interface JustifFile { name: string; base64: string; size: number; }
+  const [justifFiles, setJustifFiles] = useState<Partial<Record<JustifKey, JustifFile>>>({});
+  const [inpiStatus, setInpiStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [inpiMessage, setInpiMessage] = useState<string>("");
+  const [inpiDossierId, setInpiDossierId] = useState<string>("");
+
+  const handleJustifUpload = (key: JustifKey, file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = (e.target?.result as string).split(",")[1];
+      setJustifFiles(prev => ({ ...prev, [key]: { name: file.name, base64, size: file.size } }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleInpiSubmit = async () => {
+    setInpiStatus("loading");
+    setInpiMessage("");
+    try {
+      const siren = societe.rcsNumero?.replace(/\s/g, "").slice(0, 9) || "";
+      const res = await fetch("/api/inpi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siren,
+          formeJuridique: societe.formeJuridique,
+          denomination: societe.denomination,
+          capitalSocial: societe.capital,
+          siegeAdresse: `${societe.siegeAdresse} ${societe.siegeCP} ${societe.siegeVille}`.trim(),
+          cedant: cedantType === "physique"
+            ? { type: "physique", nom: cedantPhysique.nom, prenom: cedantPhysique.prenom, adresse: `${cedantPhysique.adresse} ${cedantPhysique.codePostal} ${cedantPhysique.ville}`.trim() }
+            : { type: "morale", denomination: cedantMorale.denomination, siren: cedantMorale.rcsNumero },
+          cessionnaire: cessionnaireType === "physique"
+            ? { type: "physique", nom: cessionnairePhysique.nom, prenom: cessionnairePhysique.prenom, adresse: `${cessionnairePhysique.adresse} ${cessionnairePhysique.codePostal} ${cessionnairePhysique.ville}`.trim() }
+            : { type: "morale", denomination: cessionnaireMorale.denomination, siren: cessionnaireMorale.rcsNumero },
+          nombreParts: nombrePartsCedees,
+          prixTotal,
+          dateSignature,
+          includChangementDirigeant,
+          nouveauDirigeant: includChangementDirigeant
+            ? { nom: nouveauDirigeantPhysique.nom, prenom: nouveauDirigeantPhysique.prenom, fonction: nouveauDirigeantQualite }
+            : null,
+          justifFiles,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur INPI");
+      setInpiStatus("success");
+      setInpiDossierId(data.dossierId || "");
+      setInpiMessage(data.message || "Dossier envoyé avec succès");
+    } catch (err: unknown) {
+      setInpiStatus("error");
+      setInpiMessage(err instanceof Error ? err.message : "Erreur inconnue");
+    }
+  };
   // Navigation functions
   const handleNext = () => {
     if (step === 3 && !paymentComplete) {
@@ -349,7 +410,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
       return;
     }
     
-    if (step < 10) {
+    if (step < 11) {
       setStep(step + 1);
     }
   };
@@ -3912,6 +3973,152 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               </div>
             </motion.div>
           )}
+          {/* STEP 11: Pièces justificatives & Dépôt INPI */}
+          {step === 11 && (
+            <motion.div
+              key="step11"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Pièces justificatives & Dépôt INPI</h1>
+                <p className="text-gray-600">Déposez les documents signés pour soumettre la formalité au Guichet Unique</p>
+              </div>
+
+              {/* Documents requis */}
+              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                <h3 className="font-semibold text-[#1E3A8A] mb-4">Documents obligatoires</h3>
+
+                {(
+                  [
+                    { key: "acte" as const, label: "Acte de cession signé", desc: "PDF signé par le cédant et le cessionnaire", required: true },
+                    { key: "pv" as const, label: "PV d'assemblée signé", desc: "Procès-verbal d'agrément et de constatation signé", required: true },
+                    { key: "statuts" as const, label: "Statuts mis à jour certifiés conformes", desc: "Statuts après cession, avec mention « certifié conforme »", required: true },
+                  ] as { key: JustifKey; label: string; desc: string; required: boolean }[]
+                ).map(({ key, label, desc }) => (
+                  <div key={key} className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800">{label} <span className="text-red-500">*</span></p>
+                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                      {justifFiles[key] && (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> {justifFiles[key]!.name} ({Math.round(justifFiles[key]!.size / 1024)} Ko)
+                        </p>
+                      )}
+                    </div>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        className="hidden"
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifUpload(key, f); }}
+                      />
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        justifFiles[key]
+                          ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100"
+                          : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"
+                      }`}>
+                        <Upload className="w-4 h-4" />
+                        {justifFiles[key] ? "Remplacer" : "Charger PDF"}
+                      </div>
+                    </label>
+                  </div>
+                ))}
+
+                {includChangementDirigeant && (
+                  <>
+                    <h3 className="font-semibold text-[#1E3A8A] mt-6 mb-2">Documents liés au changement de dirigeant</h3>
+                    {(
+                      [
+                        { key: "identite" as const, label: "Pièce d'identité du nouveau dirigeant", desc: "Copie CNI ou passeport en cours de validité", required: true },
+                        { key: "declaration" as const, label: "Déclaration de non-condamnation signée", desc: "Document généré à l'étape précédente, signé à la main", required: true },
+                      ] as { key: JustifKey; label: string; desc: string; required: boolean }[]
+                    ).map(({ key, label, desc }) => (
+                      <div key={key} className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800">{label} <span className="text-red-500">*</span></p>
+                          <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                          {justifFiles[key] && (
+                            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                              <Check className="w-3 h-3" /> {justifFiles[key]!.name} ({Math.round(justifFiles[key]!.size / 1024)} Ko)
+                            </p>
+                          )}
+                        </div>
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            className="hidden"
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifUpload(key, f); }}
+                          />
+                          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                            justifFiles[key]
+                              ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100"
+                              : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"
+                          }`}>
+                            <Upload className="w-4 h-4" />
+                            {justifFiles[key] ? "Remplacer" : "Charger PDF"}
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+
+              {/* Bouton soumettre INPI */}
+              {(() => {
+                const requiredKeys: JustifKey[] = ["acte", "pv", "statuts", ...(includChangementDirigeant ? ["identite" as const, "declaration" as const] : [])];
+                const allUploaded = requiredKeys.every(k => !!justifFiles[k]);
+                return (
+                  <div className="bg-white rounded-xl p-6 border border-gray-200">
+                    <h3 className="font-semibold text-[#1E3A8A] mb-3">Soumettre au Guichet Unique INPI</h3>
+                    {!allUploaded && (
+                      <p className="text-sm text-amber-600 mb-4 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                        Veuillez charger tous les documents obligatoires avant de soumettre.
+                      </p>
+                    )}
+                    {inpiStatus === "success" && (
+                      <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm font-semibold text-green-800 flex items-center gap-2">
+                          <Check className="w-4 h-4" /> Dossier envoyé avec succès !
+                        </p>
+                        {inpiDossierId && <p className="text-xs text-green-700 mt-1">N° de dossier : <strong>{inpiDossierId}</strong></p>}
+                        <p className="text-xs text-green-700 mt-1">{inpiMessage}</p>
+                      </div>
+                    )}
+                    {inpiStatus === "error" && (
+                      <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-sm font-semibold text-red-800 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4" /> Erreur lors du dépôt
+                        </p>
+                        <p className="text-xs text-red-700 mt-1">{inpiMessage}</p>
+                      </div>
+                    )}
+                    <Button
+                      onClick={handleInpiSubmit}
+                      disabled={!allUploaded || inpiStatus === "loading" || inpiStatus === "success"}
+                      className="w-full bg-[#1E3A8A] hover:bg-[#1a3278] text-white py-5 text-base gap-2"
+                    >
+                      {inpiStatus === "loading" ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Envoi en cours…</>
+                      ) : inpiStatus === "success" ? (
+                        <><Check className="w-4 h-4" /> Dossier envoyé</>
+                      ) : (
+                        <><Send className="w-4 h-4" /> Envoyer à l&apos;INPI</>
+                      )}
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-3 text-center">
+                      La formalité sera déposée sur le Guichet Unique INPI via le compte LegalCorners.
+                    </p>
+                  </div>
+                );
+              })()}
+            </motion.div>
+          )}
         </AnimatePresence>
             {/* Navigation buttons */}
             <div className="flex justify-between mt-8 pt-6 border-t border-gray-100">
@@ -3924,7 +4131,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <ArrowLeft className="w-4 h-4" />
                 Précédent
               </Button>
-              {step !== 3 && step !== 10 && (
+              {step !== 3 && step !== 11 && (
                 <Button
                   onClick={handleNext}
                   disabled={!canProceed()}

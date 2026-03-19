@@ -234,8 +234,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const [showCedantResults, setShowCedantResults] = useState(false);
   const [cedantNombreParts, setCedantNombreParts] = useState("");
   const [cedantRegimeMatrimonial, setCedantRegimeMatrimonial] = useState<RegimeMatrimonial | null>(null);
+  const [cedantConjointCivilite, setCedantConjointCivilite] = useState<"M." | "Mme">("Mme");
   const [cedantConjointNom, setCedantConjointNom] = useState("");
   const [cedantConjointPrenom, setCedantConjointPrenom] = useState("");
+  const [cedantAcquisAvantMariage, setCedantAcquisAvantMariage] = useState(false);
   // Step 6: Cessionnaire
   const [cessionnairePhysique, setCessionnairePhysique] = useState<PersonnePhysique>({
     civilite: "",
@@ -1491,30 +1493,63 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200"
+                          className="mt-4 space-y-3"
                         >
-                          <p className="text-sm text-amber-800 mb-3">
-                            <AlertTriangle className="w-4 h-4 inline mr-1" />
-                            Le conjoint doit consentir à la cession
-                          </p>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium text-amber-800 mb-1">Nom du conjoint *</label>
-                              <Input
-                                placeholder="Nom"
-                                value={cedantConjointNom}
-                                onChange={(e) => setCedantConjointNom(e.target.value)}
-                              />
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={cedantAcquisAvantMariage}
+                              onChange={(e) => setCedantAcquisAvantMariage(e.target.checked)}
+                              className="w-4 h-4 rounded border-gray-300 text-[#1E3A8A]"
+                            />
+                            <span className="text-sm text-gray-700">Les actions ont été acquises avant le mariage</span>
+                          </label>
+                          {!cedantAcquisAvantMariage && (
+                            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                              <p className="text-sm text-amber-800 mb-3">
+                                <AlertTriangle className="w-4 h-4 inline mr-1" />
+                                Le conjoint doit consentir à la cession
+                              </p>
+                              <div className="grid grid-cols-3 gap-4">
+                                <div>
+                                  <label className="block text-sm font-medium text-amber-800 mb-1">Civilité *</label>
+                                  <div className="flex gap-2">
+                                    {(["M.", "Mme"] as const).map((civ) => (
+                                      <button
+                                        key={civ}
+                                        type="button"
+                                        onClick={() => setCedantConjointCivilite(civ)}
+                                        className={cn(
+                                          "px-3 py-2 rounded-lg border-2 text-sm transition-all",
+                                          cedantConjointCivilite === civ
+                                            ? "border-[#1E3A8A] bg-[#5D9CEC]/10 font-medium"
+                                            : "border-gray-200 hover:border-[#1E3A8A]/50"
+                                        )}
+                                      >
+                                        {civ}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-amber-800 mb-1">Nom du conjoint *</label>
+                                  <Input
+                                    placeholder="Nom"
+                                    value={cedantConjointNom}
+                                    onChange={(e) => setCedantConjointNom(e.target.value)}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-medium text-amber-800 mb-1">Prénom du conjoint *</label>
+                                  <Input
+                                    placeholder="Prénom"
+                                    value={cedantConjointPrenom}
+                                    onChange={(e) => setCedantConjointPrenom(e.target.value)}
+                                  />
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <label className="block text-sm font-medium text-amber-800 mb-1">Prénom du conjoint *</label>
-                              <Input
-                                placeholder="Prénom"
-                                value={cedantConjointPrenom}
-                                onChange={(e) => setCedantConjointPrenom(e.target.value)}
-                              />
-                            </div>
-                          </div>
+                          )}
                         </motion.div>
                       )}
                     </div>
@@ -3165,8 +3200,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   nationalite: cedantPhysique.nationalite,
                   adresse: `${cedantPhysique.adresse}, ${cedantPhysique.codePostal} ${cedantPhysique.ville}`,
                   regime: (cedantRegimeMatrimonial || "celibataire") as any,
-                  conjointNom: cedantConjointNom,
-                  conjointPrenom: cedantConjointPrenom,
+                  acquisAvantMariage: cedantAcquisAvantMariage,
+                  conjointCivilite: cedantConjointCivilite,
+                  conjointNom: cedantAcquisAvantMariage ? "" : cedantConjointNom,
+                  conjointPrenom: cedantAcquisAvantMariage ? "" : cedantConjointPrenom,
                 } : undefined,
                 morale: cedantType === "morale" ? {
                   denomination: cedantMorale.denomination,

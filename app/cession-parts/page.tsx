@@ -118,6 +118,7 @@ export default function CessionPartsPage() {
   const [typePropriete, setTypePropriete] = useState<TypePropriete | null>(null);
   // Step 2: Les parties (avant paiement)
   const [cedantType, setCedantType] = useState<TypePersonne | null>(null);
+  const [cedantIsSocieteCible, setCedantIsSocieteCible] = useState(false);
   const [cessionnaireType, setCessionnaireType] = useState<TypePersonne | null>(null);
   const [nombrePartsApprox, setNombrePartsApprox] = useState("");
 const [prixApprox, setPrixApprox] = useState("");
@@ -699,7 +700,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cédant (vendeur)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
-                    onClick={() => setCedantType("physique")}
+                    onClick={() => { setCedantType("physique"); setCedantIsSocieteCible(false); }}
                     className={cn(
                       "p-4 rounded-xl border-2 text-center transition-all",
                       cedantType === "physique"
@@ -712,7 +713,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <span className="text-xs text-gray-500">Un particulier</span>
                   </button>
                   <button
-                    onClick={() => setCedantType("morale")}
+                    onClick={() => { setCedantType("morale"); setCedantIsSocieteCible(false); }}
                     className={cn(
                       "p-4 rounded-xl border-2 text-center transition-all",
                       cedantType === "morale"
@@ -725,6 +726,40 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <span className="text-xs text-gray-500">Une société</span>
                   </button>
                 </div>
+                {cedantType === "morale" && societe.denomination && (
+                  <button
+                    onClick={() => {
+                      setCedantIsSocieteCible(!cedantIsSocieteCible);
+                      if (!cedantIsSocieteCible) {
+                        setCedantMorale({
+                          denomination: societe.denomination,
+                          formeJuridique: societe.formeJuridique,
+                          siegeAdresse: societe.siegeAdresse,
+                          siegeCP: societe.siegeCP,
+                          siegeVille: societe.siegeVille,
+                          siegePays: societe.siegePays,
+                          capital: societe.capital,
+                          rcsVille: societe.rcsVille,
+                          rcsNumero: societe.rcsNumero,
+                          representantCivilite: "",
+                          representantNom: "",
+                          representantPrenom: "",
+                          representantQualite: "",
+                          email: "",
+                        });
+                      }
+                    }}
+                    className={cn(
+                      "mt-3 w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                      cedantIsSocieteCible
+                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        : "border-gray-200 hover:border-[#1E3A8A]/50"
+                    )}
+                  >
+                    <Building2 className="w-5 h-5 text-[#1E3A8A] shrink-0" />
+                    <span className="text-sm font-medium text-[#1E3A8A]">Il s'agit de la société cible ({societe.denomination})</span>
+                  </button>
+                )}
               </div>
               {/* Cessionnaire */}
               <div className="bg-white rounded-xl p-6 border border-gray-200">

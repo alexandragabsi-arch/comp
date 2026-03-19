@@ -184,24 +184,29 @@ export function DocumentPreviewPanel({
 
           {/* ══ PAGES DE CONTENU ══ */}
           <A4Page pageNumber={2}>
-            <article className="
-              prose prose-sm max-w-none
-              prose-headings:text-[#0D2459]
-              prose-headings:underline
-              prose-headings:decoration-[#5B8DEF]
-              prose-headings:underline-offset-4
-              prose-h1:text-lg prose-h1:font-bold
-              prose-h2:text-base prose-h2:font-semibold prose-h2:mt-7 prose-h2:mb-2
-              prose-h3:text-sm prose-h3:font-semibold prose-h3:mt-5
-              prose-p:text-[#0D2459] prose-p:leading-relaxed prose-p:text-sm
-              prose-li:text-[#0D2459] prose-li:text-sm
-              prose-strong:text-[#0D2459]
-              prose-table:text-xs
-              prose-th:bg-[#F7F9FF] prose-th:text-[#1E3A8A] prose-th:font-semibold
-              prose-td:text-[#0D2459] prose-td:border-gray-200
-              prose-hr:border-gray-200
-              [&_blockquote]:text-[#0D2459]/60 [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-[#5B8DEF]
-            ">
+            <article
+              className="
+                doc-prose prose prose-sm max-w-none
+                prose-headings:text-[#0D2459]
+                prose-headings:underline
+                prose-headings:decoration-[#5B8DEF]
+                prose-headings:underline-offset-4
+                prose-h1:text-lg prose-h1:font-bold
+                prose-h2:text-base prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-3
+                prose-h3:text-sm prose-h3:font-semibold prose-h3:mt-6
+                prose-p:text-[#0D2459] prose-p:text-sm prose-p:leading-[1.8] prose-p:mb-4
+                prose-li:text-[#0D2459] prose-li:text-sm prose-li:leading-[1.8]
+                prose-strong:text-[#0D2459]
+                prose-table:text-xs
+                prose-th:bg-[#F7F9FF] prose-th:text-[#1E3A8A] prose-th:font-semibold
+                prose-td:text-[#0D2459] prose-td:border-gray-200
+                prose-hr:border-gray-200 prose-hr:my-6
+                [&_blockquote]:text-[#0D2459]/60 [&_blockquote]:text-xs [&_blockquote]:italic [&_blockquote]:border-l-[#5B8DEF]
+                [&_p]:text-justify [&_p]:hyphens-auto [&_p]:break-words
+                [&_p]:orphans-3 [&_p]:widows-3
+              "
+              lang="fr"
+            >
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {bodyText}
               </ReactMarkdown>

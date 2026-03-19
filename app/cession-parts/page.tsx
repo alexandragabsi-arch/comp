@@ -116,6 +116,52 @@ export default function CessionPartsPage() {
   useEffect(() => { window.scrollTo(0, 0); }, [step]);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [selectedFormule, setSelectedFormule] = useState<"essentiel" | "premium" | null>(null);
+  const [stripeLoading, setStripeLoading] = useState(false);
+  const [stripeError, setStripeError] = useState("");
+
+  // Retour depuis Stripe Checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const payment = params.get("payment");
+    const sessionId = params.get("session_id");
+    const formule = params.get("formule") as "essentiel" | "premium" | null;
+    const stateKey = params.get("state");
+
+    if (payment === "success" && sessionId) {
+      // Vérifier le paiement côté serveur
+      fetch(`/api/stripe/verify?session_id=${sessionId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.paid) {
+            // Restaurer l'état depuis sessionStorage
+            if (stateKey) {
+              try {
+                const saved = sessionStorage.getItem(stateKey);
+                if (saved) {
+                  const s = JSON.parse(saved);
+                  if (s.typeCession) setTypeCession(s.typeCession);
+                  if (s.typePropriete) setTypePropriete(s.typePropriete);
+                  if (s.cedantType) setCedantType(s.cedantType);
+                  if (s.cessionnaireType) setCessionnaireType(s.cessionnaireType);
+                  sessionStorage.removeItem(stateKey);
+                }
+              } catch {}
+            }
+            if (formule) setSelectedFormule(formule);
+            setPaymentComplete(true);
+            setStep(4);
+            // Nettoyer l'URL
+            window.history.replaceState({}, "", "/cession-parts");
+          }
+        })
+        .catch(() => {});
+    } else if (payment === "cancel") {
+      if (formule) setSelectedFormule(formule);
+      setStep(3);
+      window.history.replaceState({}, "", "/cession-parts");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Step 1: Type de cession
   const [typeCession, setTypeCession] = useState<TypeCession | null>(null);
@@ -1407,40 +1453,68 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white rounded-xl p-6 border border-gray-200"
                 >
-                  <h2 className="font-semibold text-[#1E3A8A] mb-4">Paiement sécurisé</h2>
-                  
-                  <div className="space-y-4">
+                  <h2 className="font-semibold text-[#1E3A8A] mb-2">Paiement sécurisé</h2>
+                  <p className="text-sm text-gray-500 mb-5">
+                    Vous allez être redirigé vers la page de paiement Stripe. Vos données sont conservées.
+                  </p>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 mb-5">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                      <Input type="email" placeholder="votre@email.com" />
+                      <p className="font-semibold text-[#1E3A8A]">Formule {selectedFormule === "essentiel" ? "Essentiel" : "Premium"}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">TVA 20% incluse</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de carte</label>
-                      <Input placeholder="4242 4242 4242 4242" />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date d&apos;expiration</label>
-                        <Input placeholder="MM/AA" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
-                        <Input placeholder="123" />
-                      </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-[#1E3A8A]">
+                        {selectedFormule === "essentiel" ? "238,80" : "358,80"}€
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {selectedFormule === "essentiel" ? "199" : "299"}€ HT
+                      </p>
                     </div>
                   </div>
-                  <Button 
-                    onClick={handleNext}
-                    className="w-full mt-6 bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white py-6 text-lg"
+
+                  {stripeError && (
+                    <p className="text-sm text-red-600 mb-3 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" /> {stripeError}
+                    </p>
+                  )}
+
+                  <Button
+                    onClick={async () => {
+                      setStripeLoading(true);
+                      setStripeError("");
+                      try {
+                        // Sauvegarder l'état dans sessionStorage avant redirect
+                        const stateKey = `lc_state_${Date.now()}`;
+                        sessionStorage.setItem(stateKey, JSON.stringify({
+                          typeCession, typePropriete, cedantType, cessionnaireType,
+                        }));
+                        const res = await fetch("/api/stripe/checkout", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ formule: selectedFormule, stateKey }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok || !data.url) throw new Error(data.error || "Erreur Stripe");
+                        window.location.href = data.url;
+                      } catch (err: unknown) {
+                        setStripeError(err instanceof Error ? err.message : "Erreur inconnue");
+                        setStripeLoading(false);
+                      }
+                    }}
+                    disabled={stripeLoading}
+                    className="w-full bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white py-6 text-base gap-2"
                   >
-                    Payer {selectedFormule === "essentiel" ? "199" : "299"}€ HT et continuer
+                    {stripeLoading ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Redirection…</>
+                    ) : (
+                      <>Payer {selectedFormule === "essentiel" ? "238,80" : "358,80"}€ TTC</>
+                    )}
                   </Button>
-                  <p className="text-center text-xs text-gray-500 mt-3">
-                    Soit {selectedFormule === "essentiel" ? "238,80" : "358,80"}€ TTC (TVA 20%)
-                  </p>
-                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-500">
+
+                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-400">
                     <Shield className="w-4 h-4" />
-                    <span>Paiement sécurisé par Stripe</span>
+                    <span>Paiement 100% sécurisé par Stripe</span>
                   </div>
                 </motion.div>
               )}

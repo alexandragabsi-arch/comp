@@ -80,13 +80,32 @@ export async function GET(request: NextRequest) {
 
       const siege = result.siege || {};
 
+      // Essayer de récupérer le capital social depuis l'API annuaire si absent
+      let capitalSocial = result.capital_social ? String(result.capital_social) : "";
+      if (!capitalSocial) {
+        try {
+          const annuaireRes = await fetch(
+            `https://api.annuaire-entreprises.data.gouv.fr/entreprise/${siren}`,
+            { headers: { Accept: "application/json" } }
+          );
+          if (annuaireRes.ok) {
+            const annuaireData = await annuaireRes.json();
+            if (annuaireData.capital_social) {
+              capitalSocial = String(annuaireData.capital_social);
+            }
+          }
+        } catch {
+          // Ignore fallback error
+        }
+      }
+
       return NextResponse.json({
         denominationSociale: result.nom_raison_sociale || result.nom_complet || "",
         formeJuridique: getFormeJuridique(result.nature_juridique || ""),
         siegeSocial: buildAddress(siege),
         codePostal: siege.code_postal || "",
         ville: siege.libelle_commune || "",
-        capitalSocial: result.capital_social ? String(result.capital_social) : "",
+        capitalSocial,
         siren: result.siren || siren,
       });
     }

@@ -81,70 +81,6 @@ function buildFooter(): Footer {
   });
 }
 
-// ── Cover page ─────────────────────────────────────────────────────────────────
-function buildCoverPage(data: FormData, typeTitre: string): Paragraph[] {
-  const cedantName =
-    data.cedant.typePersonne === "physique" && data.cedant.physique
-      ? `${data.cedant.physique.civilite} ${data.cedant.physique.nom} ${data.cedant.physique.prenom}`
-      : data.cedant.morale?.denomination || "[CÉDANT]";
-
-  const cessionnaireName =
-    data.cessionnaire.typePersonne === "physique" && data.cessionnaire.physique
-      ? `${data.cessionnaire.physique.civilite} ${data.cessionnaire.physique.nom} ${data.cessionnaire.physique.prenom}`
-      : data.cessionnaire.morale?.denomination || "[CESSIONNAIRE]";
-
-  return [
-    emptyLine(600),
-    new Paragraph({
-      children: [
-        navyRun(`ACTE DE CESSION DE ${typeTitre.toUpperCase()}`, true, 36),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 80 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: NAVY } },
-    }),
-    emptyLine(400),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Entre   ", size: 24, color: "555555" }),
-        new TextRun({ text: cedantName.toUpperCase(), bold: true, size: 24, color: NAVY }),
-        new TextRun({ text: "   — Cédant", size: 24, color: "555555" }),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 120 },
-    }),
-    new Paragraph({
-      children: [navyRun("ET", true, 24)],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 120 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Au profit de   ", size: 24, color: "555555" }),
-        new TextRun({ text: cessionnaireName.toUpperCase(), bold: true, size: 24, color: NAVY }),
-        new TextRun({ text: "   — Cessionnaire", size: 24, color: "555555" }),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 300 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: "Société cible : ", size: 22, color: "555555" }),
-        new TextRun({ text: data.societe.denomination || "[DÉNOMINATION SOCIALE]", bold: true, size: 22, color: NAVY }),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 100 },
-    }),
-    new Paragraph({
-      children: [
-        new TextRun({ text: `Fait à ${data.ville || "[VILLE]"}, le ${data.date || "[DATE]"}`, size: 22, color: "555555" }),
-      ],
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 0 },
-    }),
-  ];
-}
-
 // ── Parse a markdown table into a DOCX Table ───────────────────────────────────
 function buildMarkdownTable(tableLines: string[]): Table | null {
   // Remove separator rows (|---|---|)
@@ -328,8 +264,20 @@ function parseBodyText(text: string): Array<Paragraph | Table> {
       result.push(new Paragraph({
         children: [navyRun(cleanT, true, 28)],
         alignment: AlignmentType.CENTER,
-        spacing: { before: 200, after: 180 },
+        spacing: { before: 400, after: 200 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: NAVY } },
         heading: HeadingLevel.HEADING_1,
+      }));
+      i++;
+      continue;
+    }
+
+    // ── Cover page lines: Entre / ET / Au profit de / Société cible / Fait à ──
+    if (/^(Entre\s|ET$|Au profit de\s|Société cible\s*:|Fait à\s)/i.test(cleanT)) {
+      result.push(new Paragraph({
+        children: parseInline(cleanT, 24, NAVY),
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 100 },
       }));
       i++;
       continue;
@@ -398,11 +346,7 @@ const PAGE_MARGINS = {
 
 // ── Exports ────────────────────────────────────────────────────────────────────
 export async function generateActeDocx(acteText: string, data: FormData): Promise<Blob> {
-  const typeTitre = ["SARL", "EURL", "SNC", "SCI"].includes(data.societe.formeJuridique || "")
-    ? "parts sociales"
-    : "actions";
-
-  const coverChildren = buildCoverPage(data, typeTitre);
+  // Parse the full AI text directly — no separate cover page to avoid duplication
   const bodyChildren = parseBodyText(acteText);
 
   const doc = new Document({
@@ -411,7 +355,7 @@ export async function generateActeDocx(acteText: string, data: FormData): Promis
         headers: { default: buildHeader() },
         footers: { default: buildFooter() },
         properties: { page: { margin: PAGE_MARGINS } },
-        children: [...coverChildren, emptyLine(400), ...bodyChildren],
+        children: bodyChildren,
       },
     ],
     styles: DOC_STYLES,

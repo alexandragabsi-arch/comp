@@ -382,6 +382,22 @@ export async function generatePVDocx(pvText: string, data: FormData): Promise<Bl
   return Packer.toBlob(doc);
 }
 
+export async function generateDissolutionDocx(pvText: string): Promise<Blob> {
+  const bodyChildren = parseBodyText(pvText);
+  const doc = new Document({
+    sections: [
+      {
+        headers: { default: buildHeader() },
+        footers: { default: buildFooter() },
+        properties: { page: { margin: PAGE_MARGINS } },
+        children: bodyChildren,
+      },
+    ],
+    styles: DOC_STYLES,
+  });
+  return Packer.toBlob(doc);
+}
+
 export async function generateDeclarationDocx(declarationText: string, data: FormData): Promise<Blob> {
   const bodyChildren = parseBodyText(declarationText);
 

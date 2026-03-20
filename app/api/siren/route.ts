@@ -85,6 +85,8 @@ export async function GET(request: NextRequest) {
       const resultats = suggestions.map((s) => ({
         siren: s.siren,
         nom:   s.nom_entreprise ?? "",
+        formeJuridique: s.forme_juridique ?? "",
+        codePostal: (s.siege as Record<string, string>)?.code_postal ?? "",
         ville: (s.siege as Record<string, string>)?.ville ?? "",
       }));
 

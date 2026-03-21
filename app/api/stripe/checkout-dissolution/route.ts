@@ -21,8 +21,20 @@ const PRODUCTS = {
     name: "LegalCorners — Mise en sommeil",
     amount: 11880, // 99€ HT × 1.20 = 118.80€ TTC
     description: "Vérification du dossier, assistance email et téléphone, enregistrement au greffe",
+    fraisAnnexes: [
+      { name: "Frais d'enregistrement au greffe", amount: 22148 }, // 184,57€ HT × 1.20
+    ],
   },
 };
+
+// Frais légaux dissolution (TTC = HT × 1.20)
+const FRAIS_DISSOLUTION = [
+  { name: "Frais de dissolution au greffe", amount: 23521 },       // 196,01€ HT × 1.20
+  { name: "Annonce légale de dissolution", amount: 18240 },         // 152€ HT × 1.20
+  { name: "Annonce légale de liquidation", amount: 13200 },         // 110€ HT × 1.20
+  { name: "Frais de liquidation au greffe", amount: 1672 },         // 13,93€ HT × 1.20
+  { name: "Frais d'obtention Kbis", amount: 384 },                  // 3,20€ HT × 1.20
+];
 
 export async function POST(request: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2026-02-25.clover" });
@@ -39,9 +51,15 @@ export async function POST(request: NextRequest) {
       ? `https://${process.env.VERCEL_URL}`
       : request.headers.get("origin") ?? "http://localhost:3000";
 
+    const isSommeil = formule === "sommeil";
+    const fraisAnnexes = isSommeil
+      ? (product as typeof PRODUCTS.sommeil).fraisAnnexes
+      : FRAIS_DISSOLUTION;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
+        // Pack principal
         {
           price_data: {
             currency: "eur",
@@ -54,6 +72,19 @@ export async function POST(request: NextRequest) {
           },
           quantity: 1,
         },
+        // Frais légaux obligatoires
+        ...fraisAnnexes.map((f) => ({
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: f.name,
+              description: "Frais légaux obligatoires",
+            },
+            unit_amount: f.amount,
+            tax_behavior: "inclusive" as const,
+          },
+          quantity: 1,
+        })),
       ],
       mode: "payment",
       success_url: `${baseUrl}/dissolution?payment=success&session_id={CHECKOUT_SESSION_ID}&state=${stateKey}&formule=${formule}`,

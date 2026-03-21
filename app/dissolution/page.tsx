@@ -56,7 +56,7 @@ export default function DissolutionPage() {
   const [selectedProcedure, setSelectedProcedure] = useState<Procedure>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Fetch suggestions with debounce
   useEffect(() => {

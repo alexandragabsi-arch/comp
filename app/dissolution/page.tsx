@@ -98,6 +98,18 @@ function getQuestionsDissoltion(formeJuridique: string) {
         },
       ],
     },
+    {
+      id: "delai",
+      question: "Dans quel délai souhaitez-vous démarrer ?",
+      subtitle: "Nous adaptons la prise en charge à votre calendrier",
+      type: "delai",
+      options: [
+        { value: "urgent", label: "Le plus vite possible", description: "Traitement prioritaire sous 48h", icon: Clock },
+        { value: "1mois", label: "Dans le mois", description: "Démarrage dans les 4 prochaines semaines", icon: Clock },
+        { value: "3mois", label: "Dans les 3 mois", description: "Pas d'urgence, on prend le temps", icon: Clock },
+        { value: "plus", label: "Dans plus de 3 mois", description: "Vous êtes en phase de réflexion", icon: Clock },
+      ],
+    },
   ];
 }
 
@@ -196,7 +208,7 @@ const PLANS: Plan[] = [
 type Suggestion = { siren: string; nom: string; formeJuridique: string; ville: string };
 type Company = { siren: string; nom: string; formeJuridique: string; ville: string };
 type Procedure = "dissolution" | "mise-en-sommeil" | null;
-type SubStep = "search" | "procedure" | "intro" | "questions" | "etapes" | "commande";
+type SubStep = "search" | "procedure" | "intro" | "questions" | "etapes" | "infos" | "commande";
 
 // ── Frais annexes par procédure ───────────────────────────────────────────────
 const FRAIS_DISSOLUTION = [
@@ -414,6 +426,10 @@ function DissolutionForm() {
 
   // Payment
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+
+  // Infos client
+  const [clientInfos, setClientInfos] = useState({ nom: "", prenom: "", email: "", telephone: "" });
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -493,6 +509,11 @@ function DissolutionForm() {
     } else {
       setSubStep("etapes");
     }
+  }
+
+  function selectPlan(planId: string) {
+    setSelectedPlan(planId);
+    setSubStep("infos");
   }
 
   async function handlePayment(planId: string) {
@@ -874,27 +895,52 @@ function DissolutionForm() {
                   </p>
                 </div>
 
-                <div className="space-y-3">
-                  {questions[currentQuestion].options.map((opt) => {
-                    const Icon = opt.icon;
-                    return (
-                      <button
-                        key={opt.value}
-                        onClick={() => answerQuestion(questions[currentQuestion].id, opt.value)}
-                        className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-gray-200 bg-white hover:border-[#5D9CEC] hover:bg-blue-50 text-left transition-all group"
-                      >
-                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#5D9CEC]/20 flex items-center justify-center flex-shrink-0 transition-colors">
-                          <Icon className="w-6 h-6 text-[#5D9CEC]" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-bold text-[#1E3A8A]">{opt.label}</p>
-                          <p className="text-sm text-gray-500">{opt.description}</p>
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#5D9CEC] flex-shrink-0 transition-colors" />
-                      </button>
-                    );
-                  })}
-                </div>
+                {(questions[currentQuestion] as { type?: string }).type === "delai" ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {questions[currentQuestion].options.map((opt, i) => {
+                      const emojis = ["⚡", "📅", "🗓️", "💭"];
+                      const colors = [
+                        "border-orange-200 bg-orange-50 hover:border-orange-400",
+                        "border-blue-200 bg-blue-50 hover:border-[#5D9CEC]",
+                        "border-violet-200 bg-violet-50 hover:border-violet-400",
+                        "border-gray-200 bg-gray-50 hover:border-gray-400",
+                      ];
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => answerQuestion(questions[currentQuestion].id, opt.value)}
+                          className={cn("flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all", colors[i])}
+                        >
+                          <span className="text-2xl">{emojis[i]}</span>
+                          <p className="font-bold text-[#1E3A8A] text-sm">{opt.label}</p>
+                          <p className="text-xs text-gray-500">{opt.description}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {questions[currentQuestion].options.map((opt) => {
+                      const Icon = opt.icon;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => answerQuestion(questions[currentQuestion].id, opt.value)}
+                          className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-gray-200 bg-white hover:border-[#5D9CEC] hover:bg-blue-50 text-left transition-all group"
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#5D9CEC]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Icon className="w-6 h-6 text-[#5D9CEC]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{opt.label}</p>
+                            <p className="text-sm text-gray-500">{opt.description}</p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#5D9CEC] flex-shrink-0 transition-colors" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Info panel dissolution judiciaire */}
                 {(() => {
@@ -1005,6 +1051,90 @@ function DissolutionForm() {
               </motion.div>
             )}
 
+            {/* ── Infos client avant paiement ── */}
+            {subStep === "infos" && (
+              <motion.div
+                key="infos"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <CompanyCard />
+
+                <div className="text-center space-y-1">
+                  <h2 className="text-2xl font-bold text-[#1E3A8A]">Vos coordonnées</h2>
+                  <p className="text-gray-500 text-sm">Pour finaliser votre commande et vous envoyer vos documents</p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Prénom</label>
+                      <input
+                        type="text"
+                        value={clientInfos.prenom}
+                        onChange={(e) => setClientInfos({ ...clientInfos, prenom: e.target.value })}
+                        placeholder="Jean"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#5D9CEC] focus:outline-none text-sm transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Nom</label>
+                      <input
+                        type="text"
+                        value={clientInfos.nom}
+                        onChange={(e) => setClientInfos({ ...clientInfos, nom: e.target.value })}
+                        placeholder="Dupont"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#5D9CEC] focus:outline-none text-sm transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Email</label>
+                    <input
+                      type="email"
+                      value={clientInfos.email}
+                      onChange={(e) => setClientInfos({ ...clientInfos, email: e.target.value })}
+                      placeholder="jean.dupont@email.com"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#5D9CEC] focus:outline-none text-sm transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Téléphone</label>
+                    <input
+                      type="tel"
+                      value={clientInfos.telephone}
+                      onChange={(e) => setClientInfos({ ...clientInfos, telephone: e.target.value })}
+                      placeholder="06 00 00 00 00"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#5D9CEC] focus:outline-none text-sm transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (!clientInfos.prenom || !clientInfos.nom || !clientInfos.email || !clientInfos.telephone) return;
+                    handlePayment(selectedPlan!);
+                  }}
+                  disabled={!clientInfos.prenom || !clientInfos.nom || !clientInfos.email || !clientInfos.telephone || paymentLoading !== null}
+                  className="w-full py-4 bg-[#5D9CEC] hover:bg-[#4a8bd4] disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold rounded-2xl transition-all flex items-center justify-center gap-2 text-sm"
+                >
+                  {paymentLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                  Procéder au paiement
+                </button>
+
+                <div className="text-center">
+                  <button
+                    onClick={() => setSubStep("commande")}
+                    className="text-gray-500 text-sm hover:text-[#1E3A8A] transition-colors"
+                  >
+                    ← Retour au choix du pack
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* ── Commande / Pricing ── */}
             {subStep === "commande" && (
               <motion.div
@@ -1044,7 +1174,7 @@ function DissolutionForm() {
                           </div>
 
                           <button
-                            onClick={() => handlePayment("sommeil")}
+                            onClick={() => selectPlan("sommeil")}
                             disabled={paymentLoading !== null}
                             className="w-full py-3.5 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
                           >
@@ -1148,7 +1278,7 @@ function DissolutionForm() {
                           </ul>
 
                           <button
-                            onClick={() => handlePayment(plan.id)}
+                            onClick={() => selectPlan(plan.id)}
                             disabled={paymentLoading !== null}
                             className={cn(
                               "w-full py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5",

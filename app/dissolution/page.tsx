@@ -246,6 +246,7 @@ function PaymentSuccessPage() {
   const params = useSearchParams();
   const formule = params.get("formule") ?? "";
   const stateRaw = params.get("state") ?? "";
+  const sessionId = params.get("session_id") ?? "";
 
   let procedure: string = "dissolution";
   let company: Company | null = null;
@@ -254,6 +255,24 @@ function PaymentSuccessPage() {
     procedure = parsed.procedure ?? "dissolution";
     company = parsed.company ?? null;
   } catch { /* ignore */ }
+
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  async function downloadInvoice() {
+    if (!sessionId) return;
+    setInvoiceLoading(true);
+    try {
+      const res = await fetch(`/api/stripe/invoice?session_id=${sessionId}`);
+      if (!res.ok) throw new Error("Erreur");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Facture_LegalCorners.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { alert("Erreur lors du téléchargement de la facture."); }
+    finally { setInvoiceLoading(false); }
+  }
 
   const plan = getPlanLabel(formule);
   const frais = procedure === "mise-en-sommeil" ? FRAIS_SOMMEIL : FRAIS_DISSOLUTION;
@@ -412,6 +431,19 @@ function PaymentSuccessPage() {
               >
                 Continuer → Dossier juridique
               </Link>
+
+              {sessionId && (
+                <button
+                  onClick={downloadInvoice}
+                  disabled={invoiceLoading}
+                  className="w-full py-3 border-2 border-gray-300 text-gray-600 hover:border-[#5D9CEC] hover:text-[#1E3A8A] font-semibold rounded-xl text-sm transition-all flex items-center justify-center gap-2"
+                >
+                  {invoiceLoading
+                    ? <><Loader2 className="w-4 h-4 animate-spin" />Téléchargement...</>
+                    : <><FileText className="w-4 h-4" />Télécharger la facture (.docx)</>
+                  }
+                </button>
+              )}
             </div>
           </div>
         </div>

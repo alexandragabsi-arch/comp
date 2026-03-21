@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ChevronRight, FileText, Download, Loader2, ArrowLeft } from "lucide-react";
+import { Check, ChevronRight, FileText, Download, Loader2, ArrowLeft, Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PVData } from "@/app/api/dissolution/pv/route";
 import type { ConvocationData } from "@/app/api/dissolution/convocation/route";
+import type { PVLiquidationData } from "@/app/api/dissolution/pv-liquidation/route";
+import type { ConvocationLiquidationData } from "@/app/api/dissolution/convocation-liquidation/route";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function Field({
@@ -90,15 +92,20 @@ function DossierForm() {
   const stateRaw = params.get("state") ?? "";
 
   // Decode state from payment page
-  let company: { nom: string; formeJuridique: string; siren: string; siege?: string; capital?: string } | null = null;
-  let decisionTypeAuto: "associe_unique" | "unanimite" | "age" = "age";
+  let initCompany: { nom: string; formeJuridique: string; siren: string } | null = null;
+  let initAnswers: Record<string, string> = {};
   try {
     const parsed = JSON.parse(atob(stateRaw));
-    company = parsed.company ?? null;
-    const fj = (company?.formeJuridique ?? "").toUpperCase();
-    decisionTypeAuto = fj.includes("EURL") || fj.includes("SASU") ? "associe_unique" : "age";
+    initCompany = parsed.company ?? null;
+    initAnswers = parsed.answers ?? {};
   } catch { /* */ }
 
+  function autoDecisionType(fj: string): "associe_unique" | "unanimite" | "age" {
+    const up = fj.toUpperCase();
+    return up.includes("EURL") || up.includes("SASU") ? "associe_unique" : "age";
+  }
+
+  const [sirenLoading, setSirenLoading] = useState(!!initCompany?.siren);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [convocLoading, setConvocLoading] = useState(false);
@@ -108,20 +115,23 @@ function DossierForm() {
   const [lieuAssemblee, setLieuAssemblee] = useState("");
 
   // ── Step 1: Société ──────────────────────────────────────────────────────
-  const [companyName, setCompanyName] = useState(company?.nom ?? "");
-  const [formeJuridique, setFormeJuridique] = useState(company?.formeJuridique ?? "");
-  const [capital, setCapital] = useState(company?.capital ?? "");
+  const [companyName, setCompanyName] = useState(initCompany?.nom ?? "");
+  const [formeJuridique, setFormeJuridique] = useState(initCompany?.formeJuridique ?? "");
+  const [capital, setCapital] = useState("");
   const [rcsVille, setRcsVille] = useState("");
-  const [siren, setSiren] = useState(company?.siren ?? "");
-  const [siegeSocial, setSiegeSocial] = useState(company?.siege ?? "");
+  const [siren, setSiren] = useState(initCompany?.siren ?? "");
+  const [siegeSocial, setSiegeSocial] = useState("");
   const [date, setDate] = useState("");
-  const [ville, setVille] = useState("");
+  const [ville, setVille] = useState(initCompany ? "" : "");
 
   // ── Step 2: Décision ────────────────────────────────────────────────────
-  const [decisionType, setDecisionType] = useState<"associe_unique" | "unanimite" | "age">(decisionTypeAuto);
+  const [decisionType, setDecisionType] = useState<"associe_unique" | "unanimite" | "age">(
+    autoDecisionType(initCompany?.formeJuridique ?? "")
+  );
+
+  // ── Step 2 states (declared here so useEffect can reference setters) ──────
   const [associeUniqueNom, setAssocieUniqueNom] = useState("");
   const [associeUniquePrenom, setAssocieUniquePrenom] = useState("");
-  // AGE
   const [ageHeure, setAgeHeure] = useState("");
   const [agePartsPresentes, setAgePartsPresentes] = useState("");
   const [agePartsTotal, setAgePartsTotal] = useState("");
@@ -134,13 +144,8 @@ function DossierForm() {
   const [agePour, setAgePour] = useState(["", "", "", ""]);
   const [ageContre, setAgeContre] = useState(["", "", "", ""]);
   const [ageAbstentions, setAgeAbstentions] = useState(["", "", "", ""]);
-  const toggleResUnanimite = (i: number) => {
-    const next = [...ageResUnanimite];
-    next[i] = !next[i];
-    setAgeResUnanimite(next);
-  };
 
-  // ── Step 3: Liquidateur ─────────────────────────────────────────────────
+  // ── Step 3 states ─────────────────────────────────────────────────────────
   const [liqType, setLiqType] = useState<"personne" | "societe">("personne");
   const [liqNom, setLiqNom] = useState("");
   const [liqPrenom, setLiqPrenom] = useState("");
@@ -153,6 +158,157 @@ function DossierForm() {
   const [liqRemuneration, setLiqRemuneration] = useState("");
   const [siegeLiquidation, setSiegeLiquidation] = useState<"siege_social" | "domicile_liquidateur" | "autre">("siege_social");
   const [siegeLiquidationAdresse, setSiegeLiquidationAdresse] = useState("");
+
+  // ── Fetch SIREN details on mount ─────────────────────────────────────────
+  useEffect(() => {
+    if (!initCompany?.siren) return;
+    fetch(`/api/siren?siren=${initCompany.siren}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) return;
+        // Société
+        setCompanyName(d.denominationSociale || initCompany!.nom);
+        setFormeJuridique(d.formeJuridique || initCompany!.formeJuridique);
+        setCapital(d.capitalSocial ?? "");
+        setRcsVille(d.greffe ?? d.ville ?? "");
+        setSiren(d.siren ?? initCompany!.siren);
+        const adresse = [d.siegeSocial, d.codePostal, d.ville].filter(Boolean).join(" ");
+        setSiegeSocial(adresse);
+        setVille(d.ville ?? "");
+
+        // Décision type
+        const dt = autoDecisionType(d.formeJuridique || initCompany!.formeJuridique);
+        setDecisionType(dt);
+
+        // AGE: total parts from associés
+        const totalParts = (d.associes as { nbParts: number }[] ?? []).reduce(
+          (sum: number, a: { nbParts: number }) => sum + (a.nbParts ?? 0), 0
+        );
+        if (totalParts > 0) {
+          setAgePartsPresentes(String(totalParts));
+          setAgePartsTotal(String(totalParts));
+        }
+
+        // Type actions (SAS/SA → actions, sinon parts sociales)
+        const fj = (d.formeJuridique ?? "").toUpperCase();
+        if (fj.includes("SAS") || fj.includes("SA")) setAgeTypeActions("actions");
+
+        // Liquidateur = dirigeant actuel → pré-remplir
+        const dir0 = (d.dirigeants as { nom: string; prenom: string }[] ?? [])[0];
+        if (dir0) {
+          setAgePresident(`${dir0.prenom} ${dir0.nom}`.trim());
+          if (initAnswers.liquidateur === "dirigeant" || dt === "associe_unique") {
+            setLiqNom(dir0.nom);
+            setLiqPrenom(dir0.prenom);
+            setLiqEstGerant(true);
+          }
+          if (dt === "associe_unique") {
+            setAssocieUniqueNom(dir0.nom);
+            setAssocieUniquePrenom(dir0.prenom);
+          }
+        }
+        if (initAnswers.liquidateur === "autre") {
+          setLiqEstGerant(false);
+        }
+      })
+      .finally(() => setSirenLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // ── Phase 2 : Liquidation states ─────────────────────────────────────────
+  const [phase2Open, setPhase2Open] = useState(false);
+  const [liqDate, setLiqDate] = useState("");
+  const [liqHeure, setLiqHeure] = useState("");
+  const [liqVille, setLiqVille] = useState("");
+  const [liqLieu, setLiqLieu] = useState("");
+  const [liqEmail, setLiqEmail] = useState("");
+  const [liqModeConvoc, setLiqModeConvoc] = useState<"LRAR" | "lettre simple" | "voie électronique" | "remise en mains propres">("LRAR");
+  const [liqDateArret, setLiqDateArret] = useState("");
+  const [liqSoldeSigne, setLiqSoldeSigne] = useState<"positif" | "negatif">("positif");
+  const [liqSoldeMontant, setLiqSoldeMontant] = useState("");
+  const [liqPhase2LoadingPV, setLiqPhase2LoadingPV] = useState(false);
+  const [liqPhase2LoadingConvoc, setLiqPhase2LoadingConvoc] = useState(false);
+  const [liqResUnanimite, setLiqResUnanimite] = useState([true, true, true, true]);
+  const [liqPour, setLiqPour] = useState(["", "", "", ""]);
+  const [liqContre, setLiqContre] = useState(["", "", "", ""]);
+  const [liqAbstentions, setLiqAbstentions] = useState(["", "", "", ""]);
+
+  async function generatePhase2PV() {
+    setLiqPhase2LoadingPV(true);
+    try {
+      const data: PVLiquidationData = {
+        companyName, formeJuridique, capital, rcsVille, siren, siegeSocial,
+        decisionType,
+        date: liqDate, heure: liqHeure, ville: liqVille || ville,
+        associeUniqueNom: decisionType !== "age" ? associeUniqueNom : undefined,
+        associeUniquePrenom: decisionType !== "age" ? associeUniquePrenom : undefined,
+        age: decisionType === "age" ? {
+          partsPresentes: agePartsPresentes, partsTotal: agePartsTotal,
+          typeActions: ageTypeActions,
+          cacPresent: ageCacPresent ?? undefined, cacNom: ageCacNom || undefined,
+          cePresent: ageCePresent ?? undefined,
+          president: agePresident,
+          resolutions: ["r5", "r6", "r7", "r8"].map((id, i) => ({
+            id, unanimite: liqResUnanimite[i],
+            pour: liqPour[i], contre: liqContre[i], abstentions: liqAbstentions[i],
+          })),
+        } : undefined,
+        liquidateurNom: liqNom || liqSocieteNom,
+        liquidateurPrenom: liqPrenom,
+        dateArretComptes: liqDateArret,
+        soldeSigne: liqSoldeSigne,
+        soldeMontant: liqSoldeMontant,
+      };
+      const res = await fetch("/api/dissolution/pv-liquidation", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Erreur");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url;
+      a.download = `PV_Liquidation_${companyName.replace(/\s+/g, "_")}.docx`;
+      a.click(); URL.revokeObjectURL(url);
+    } catch { alert("Erreur génération PV liquidation."); }
+    finally { setLiqPhase2LoadingPV(false); }
+  }
+
+  async function generatePhase2Convoc() {
+    setLiqPhase2LoadingConvoc(true);
+    try {
+      // Parse siege for CP/ville
+      const siegeParts = siegeSocial.split(" ");
+      const cp = siegeParts.find((p) => /^\d{5}$/.test(p)) ?? "";
+      const data: ConvocationLiquidationData = {
+        companyName, formeJuridique, capital,
+        siegeVille: ville, siegeCP: cp, siegeAdresse: siegeSocial,
+        rcsVille, sirenNumero: siren,
+        modeConvocation: liqModeConvoc,
+        date: liqDate, heure: liqHeure,
+        lieuAssemblee: liqLieu || `au siège social : ${siegeSocial}`,
+        emailQuestions: liqEmail,
+        dirigeant: formeJuridique.toUpperCase().includes("SAS") ? "président" : "gérant",
+        decisionType,
+        dateArretComptes: liqDateArret,
+        soldeSigne: liqSoldeSigne,
+        soldeMontant: liqSoldeMontant,
+      };
+      const res = await fetch("/api/dissolution/convocation-liquidation", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Erreur");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url;
+      a.download = `Convocation_AGO_Liquidation_${companyName.replace(/\s+/g, "_")}.docx`;
+      a.click(); URL.revokeObjectURL(url);
+    } catch { alert("Erreur génération convocation liquidation."); }
+    finally { setLiqPhase2LoadingConvoc(false); }
+  }
+
+  const toggleResUnanimite = (i: number) => {
+    const next = [...ageResUnanimite];
+    next[i] = !next[i];
+    setAgeResUnanimite(next);
+  };
 
   // ── Build PVData ─────────────────────────────────────────────────────────
   function buildData(): PVData {
@@ -302,7 +458,7 @@ function DossierForm() {
             </div>
           ))}
         </div>
-        {company && <span className="text-xs text-gray-400 hidden md:block">{company.nom}</span>}
+        {companyName && <span className="text-xs text-gray-400 hidden md:block">{companyName}</span>}
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-10">
@@ -315,6 +471,13 @@ function DossierForm() {
               <h1 className="text-2xl font-bold text-[#1E3A8A]">Informations sur la société</h1>
               <p className="text-sm text-gray-500">Ces informations apparaîtront en en-tête du PV</p>
             </div>
+
+            {sirenLoading && (
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center gap-3">
+                <Loader2 className="w-4 h-4 animate-spin text-[#5D9CEC] flex-shrink-0" />
+                <span className="text-sm text-[#1E3A8A] font-medium">Récupération des données de la société depuis le registre…</span>
+              </div>
+            )}
 
             <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
               <Field label="Dénomination sociale" value={companyName} onChange={setCompanyName} placeholder="NOM DE LA SOCIÉTÉ" />
@@ -532,44 +695,129 @@ function DossierForm() {
           </div>
         )}
 
-        {/* ── Étape 4 : Succès ─────────────────────────────────────────────── */}
+        {/* ── Étape 4 : Succès + 2 phases ─────────────────────────────────── */}
         {step === 4 && (
-          <div className="text-center space-y-6 py-10">
-            <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-              <Check className="w-10 h-10 text-green-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[#1E3A8A]">PV généré avec succès !</h1>
-              <p className="text-gray-500 text-sm mt-1">Votre document a été téléchargé au format Word (.docx)</p>
-            </div>
-            <div className="bg-blue-50 rounded-2xl p-6 text-left space-y-3">
-              <p className="text-sm font-semibold text-[#1E3A8A]">Prochaines étapes :</p>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] flex-shrink-0 mt-0.5" />Faire signer le PV par l'associé unique / les associés</li>
-                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] flex-shrink-0 mt-0.5" />Publier l'annonce légale de dissolution dans un journal habilité</li>
-                <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] flex-shrink-0 mt-0.5" />Déposer le dossier de dissolution au greffe du tribunal</li>
-              </ul>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                onClick={generate}
-                disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#5D9CEC] text-[#5D9CEC] font-semibold rounded-2xl hover:bg-blue-50 transition-all text-sm"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                Re-télécharger le PV
-              </button>
-              {decisionType === "age" && (
-                <button
-                  onClick={generateConvocation}
-                  disabled={convocLoading}
-                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-2xl hover:bg-blue-50 transition-all text-sm"
-                >
-                  {convocLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                  Télécharger la Convocation AGE
+          <div className="space-y-6 py-4">
+
+            {/* Phase 1 — Dissolution */}
+            <div className="bg-white rounded-2xl border-2 border-green-200 p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-[#1E3A8A]">Phase 1 — Dissolution</p>
+                  <p className="text-xs text-gray-500">Documents prêts à signer et déposer</p>
+                </div>
+              </div>
+
+              <div className="bg-green-50 rounded-xl p-4 space-y-2 text-sm text-gray-700">
+                <p className="font-semibold text-green-800 text-xs uppercase tracking-wide mb-1">Prochaines étapes</p>
+                <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" /><span>Faire signer le PV par l'associé unique / les associés</span></div>
+                <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" /><span>Publier l'annonce légale de dissolution dans un journal habilité</span></div>
+                <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" /><span>Déposer le dossier de dissolution au greffe du tribunal de commerce</span></div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button onClick={generate} disabled={loading}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#5D9CEC] text-[#5D9CEC] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                  PV de Dissolution
                 </button>
+                {decisionType === "age" && (
+                  <button onClick={generateConvocation} disabled={convocLoading}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
+                    {convocLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                    Convocation AGE Dissolution
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Phase 2 — Liquidation (collapsible) */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setPhase2Open((o) => !o)}
+                className="w-full flex items-center gap-3 p-6 text-left hover:bg-gray-50 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-[#1E3A8A]">Phase 2 — Clôture de la liquidation</p>
+                  <p className="text-xs text-gray-500">À compléter dans 6 à 12 mois, lors de la clôture</p>
+                </div>
+                {phase2Open ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+              </button>
+
+              {phase2Open && (
+                <div className="border-t border-gray-100 p-6 space-y-5">
+                  <div className="bg-amber-50 rounded-xl p-3 text-xs text-amber-800 font-medium">
+                    Ces documents sont générés lors de la clôture de la liquidation. Revenez sur cette page quand vous êtes prêt à convoquer l'assemblée de clôture.
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field label="Date de l'assemblée de clôture" value={liqDate} onChange={setLiqDate} placeholder="JJ/MM/AAAA" />
+                      <Field label="Heure" value={liqHeure} onChange={setLiqHeure} placeholder="10h00" />
+                    </div>
+                    <Field label="Ville de signature" value={liqVille} onChange={setLiqVille} placeholder="Paris" required={false} />
+                    <Field label="Lieu de l'assemblée" value={liqLieu} onChange={setLiqLieu} placeholder="au siège social ou adresse complète" required={false} />
+                    <Field label="Email pour questions écrites" value={liqEmail} onChange={setLiqEmail} placeholder="contact@societe.fr" type="email" required={false} />
+                    <Select label="Mode de convocation" value={liqModeConvoc}
+                      onChange={(v) => setLiqModeConvoc(v as typeof liqModeConvoc)}
+                      options={[
+                        { value: "LRAR", label: "LRAR" },
+                        { value: "lettre simple", label: "Lettre simple" },
+                        { value: "voie électronique", label: "Voie électronique" },
+                        { value: "remise en mains propres", label: "Remise en mains propres" },
+                      ]}
+                    />
+                    <Field label="Date d'arrêté des comptes de liquidation" value={liqDateArret} onChange={setLiqDateArret} placeholder="JJ/MM/AAAA" required={false} />
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Solde de liquidation</label>
+                      <div className="flex gap-3">
+                        <button onClick={() => setLiqSoldeSigne("positif")} className={cn("flex-1 py-3 rounded-xl text-sm border-2 font-semibold", liqSoldeSigne === "positif" ? "border-green-400 bg-green-50 text-green-700" : "border-gray-200")}>Boni (positif)</button>
+                        <button onClick={() => setLiqSoldeSigne("negatif")} className={cn("flex-1 py-3 rounded-xl text-sm border-2 font-semibold", liqSoldeSigne === "negatif" ? "border-red-400 bg-red-50 text-red-700" : "border-gray-200")}>Mali (négatif)</button>
+                      </div>
+                    </div>
+                    <Field label="Montant du solde (€)" value={liqSoldeMontant} onChange={setLiqSoldeMontant} placeholder="0" required={false} />
+
+                    {decisionType === "age" && (
+                      <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Vote par résolution (phase 2)</p>
+                        {["Résolution 5 – Comptes de liquidation", "Résolution 6 – Répartition", "Résolution 7 – Clôture", "Résolution 8 – Formalités"].map((label, i) => (
+                          <div key={i} className="space-y-2">
+                            <Toggle label={`${label} — à l'unanimité`} value={liqResUnanimite[i]} onChange={() => { const n = [...liqResUnanimite]; n[i] = !n[i]; setLiqResUnanimite(n); }} />
+                            {!liqResUnanimite[i] && (
+                              <div className="grid grid-cols-3 gap-2 pl-2">
+                                <Field label="Pour" value={liqPour[i]} onChange={(v) => { const n = [...liqPour]; n[i] = v; setLiqPour(n); }} placeholder="0" required={false} />
+                                <Field label="Contre" value={liqContre[i]} onChange={(v) => { const n = [...liqContre]; n[i] = v; setLiqContre(n); }} placeholder="0" required={false} />
+                                <Field label="Abstentions" value={liqAbstentions[i]} onChange={(v) => { const n = [...liqAbstentions]; n[i] = v; setLiqAbstentions(n); }} placeholder="0" required={false} />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                      <button onClick={generatePhase2PV} disabled={liqPhase2LoadingPV}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm">
+                        {liqPhase2LoadingPV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        PV de Liquidation
+                      </button>
+                      <button onClick={generatePhase2Convoc} disabled={liqPhase2LoadingConvoc}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
+                        {liqPhase2LoadingConvoc ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                        Convocation AGO Liquidation
+                      </button>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
+
           </div>
         )}
       </div>

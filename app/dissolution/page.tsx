@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -203,7 +204,199 @@ type Company = { siren: string; nom: string; formeJuridique: string; ville: stri
 type Procedure = "dissolution" | "mise-en-sommeil" | null;
 type SubStep = "search" | "procedure" | "intro" | "questions" | "etapes" | "commande";
 
-export default function DissolutionPage() {
+// ── Frais annexes par procédure ───────────────────────────────────────────────
+const FRAIS_DISSOLUTION = [
+  { label: "Frais de dissolution au greffe", montant: 196.01 },
+  { label: "Annonce légale de dissolution", montant: 152 },
+  { label: "Annonce légale de liquidation", montant: 110 },
+  { label: "Frais de liquidation au greffe", montant: 13.93 },
+  { label: "Frais d'obtention Kbis", montant: 3.2 },
+];
+const FRAIS_SOMMEIL = [
+  { label: "Frais d'enregistrement au greffe", montant: 184.57 },
+];
+
+function getPlanLabel(id: string) {
+  if (id === "starter") return { name: "Starter", priceHT: 79 };
+  if (id === "standard") return { name: "Standard", priceHT: 199 };
+  if (id === "premium") return { name: "Premium", priceHT: 249 };
+  if (id === "sommeil") return { name: "Mise en sommeil", priceHT: 99 };
+  return { name: id, priceHT: 0 };
+}
+
+function PaymentSuccessPage() {
+  const params = useSearchParams();
+  const formule = params.get("formule") ?? "";
+  const stateRaw = params.get("state") ?? "";
+
+  let procedure: string = "dissolution";
+  let company: Company | null = null;
+  try {
+    const parsed = JSON.parse(atob(stateRaw));
+    procedure = parsed.procedure ?? "dissolution";
+    company = parsed.company ?? null;
+  } catch { /* ignore */ }
+
+  const plan = getPlanLabel(formule);
+  const frais = procedure === "mise-en-sommeil" ? FRAIS_SOMMEIL : FRAIS_DISSOLUTION;
+  const totalFraisHT = frais.reduce((s, f) => s + f.montant, 0);
+  const totalHT = plan.priceHT + totalFraisHT;
+  const tva = totalHT * 0.2;
+  const totalTTC = totalHT + tva;
+
+  return (
+    <div className="min-h-screen flex bg-white">
+      <aside className="hidden md:flex flex-col w-72 bg-white border-r border-gray-100 fixed top-0 left-0 h-full z-20">
+        <div className="p-6 border-b border-gray-100">
+          <Link href="/"><Image src="/images/logo.svg" alt="LegalCorners" width={140} height={36} /></Link>
+        </div>
+        <div className="px-6 py-4 border-b border-gray-100">
+          <p className="font-semibold text-[#1E3A8A] text-sm">
+            {procedure === "mise-en-sommeil" ? "Mise en sommeil" : "Dissolution-Liquidation"}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">Fermeture de société</p>
+        </div>
+        <div className="flex-1 px-6 py-6">
+          <div className="space-y-1">
+            {SIDEBAR_STEPS.map((s, index) => {
+              const isActive = s.id === 3;
+              const isCompleted = s.id <= 2;
+              const Icon = s.icon;
+              return (
+                <div key={s.id} className="flex items-start gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium",
+                      isActive ? "bg-[#5D9CEC] text-white" : isCompleted ? "bg-green-500 text-white" : "bg-gray-100 text-gray-400"
+                    )}>
+                      {isCompleted ? <Check className="w-5 h-5" /> : s.id}
+                    </div>
+                    {index < SIDEBAR_STEPS.length - 1 && (
+                      <div className={cn("w-0.5 h-8 mt-1", isCompleted ? "bg-green-500" : "bg-gray-200")} />
+                    )}
+                  </div>
+                  <div className={cn("flex items-center gap-2 pt-2 rounded-lg px-2 flex-1", isActive ? "bg-blue-50 py-1" : "")}>
+                    <Icon className={cn("w-4 h-4 flex-shrink-0", isActive ? "text-[#5D9CEC]" : isCompleted ? "text-green-500" : "text-gray-400")} />
+                    <p className={cn("text-sm font-medium flex-1", isActive ? "text-[#1E3A8A]" : "text-gray-400")}>{s.label}</p>
+                    {isActive && <ChevronRight className="w-4 h-4 text-[#5D9CEC]" />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="bg-slate-50 rounded-xl p-4">
+            <h3 className="font-semibold text-[#1E3A8A] mb-1 text-sm">Besoin d&apos;aide ?</h3>
+            <p className="text-xs text-gray-500 mb-3">Notre équipe est disponible pour vous accompagner</p>
+            <a href="mailto:support@legalcorners.fr" className="text-[#5D9CEC] text-sm font-medium">support@legalcorners.fr</a>
+          </div>
+        </div>
+      </aside>
+
+      <main className="flex-1 md:ml-72 p-6 pt-16">
+        <div className="max-w-2xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#1E3A8A]">Paiement confirmé</h1>
+              <p className="text-sm text-gray-500">Votre commande a bien été enregistrée</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4 items-start">
+            {/* Left: détail commande */}
+            <div className="md:col-span-2 space-y-4">
+              {/* Société */}
+              {company && (
+                <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#5D9CEC] flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#1E3A8A] text-sm">{company.nom}</p>
+                    <p className="text-xs text-gray-500">{company.formeJuridique} • {company.siren}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Pack choisi */}
+              <div className="bg-white rounded-xl border border-gray-100 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="font-bold text-[#1E3A8A]">
+                    {procedure === "mise-en-sommeil" ? "Mise en sommeil" : "Dissolution-Liquidation"}
+                  </h2>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-50">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-[#5D9CEC]" />
+                    <span className="text-sm font-medium text-gray-700">Pack {plan.name}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-[#1E3A8A]">{plan.priceHT} €</span>
+                </div>
+              </div>
+
+              {/* Frais annexes */}
+              <div className="bg-white rounded-xl border border-gray-100 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-4 h-4 text-amber-500" />
+                  <h2 className="font-bold text-[#1E3A8A] text-sm">Frais légaux obligatoires</h2>
+                  <span className="text-xs text-gray-400">(payables lors de la validation)</span>
+                </div>
+                <div className="space-y-2">
+                  {frais.map((f) => (
+                    <div key={f.label} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">{f.label}</span>
+                      <span className="text-sm text-gray-700 font-medium">{f.montant.toFixed(2).replace(".", ",")} €</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <span className="text-sm font-semibold text-gray-700">Total frais légaux</span>
+                    <span className="text-sm font-semibold text-gray-700">{totalFraisHT.toFixed(2).replace(".", ",")} €</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: récapitulatif */}
+            <div className="bg-slate-50 rounded-xl p-5 space-y-3 sticky top-6">
+              <h2 className="font-bold text-[#1E3A8A]">Récapitulatif</h2>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Total commande HT</span>
+                  <span className="font-medium">{totalHT.toFixed(2).replace(".", ",")} €</span>
+                </div>
+                <div className="flex justify-between text-gray-400 text-xs">
+                  <span>TVA (20%)</span>
+                  <span>{tva.toFixed(2).replace(".", ",")} €</span>
+                </div>
+                <div className="flex justify-between font-bold text-[#1E3A8A] pt-2 border-t border-gray-200">
+                  <span>Total TTC</span>
+                  <span>{totalTTC.toFixed(2).replace(".", ",")} €</span>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 rounded-lg p-3 text-xs text-amber-700">
+                💡 Les frais légaux sont payables lors de la validation de votre dossier.
+              </div>
+
+              <Link
+                href="/dissolution"
+                className="block w-full py-3 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl text-center text-sm transition-all"
+              >
+                Continuer → Dossier juridique
+              </Link>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function DissolutionForm() {
   const [sidebarStep, setSidebarStep] = useState(1);
   const [subStep, setSubStep] = useState<SubStep>("search");
 
@@ -811,9 +1004,8 @@ export default function DissolutionPage() {
 
                         {/* Card */}
                         <div className="bg-white border-2 border-[#5D9CEC] rounded-2xl p-6 space-y-5">
-                          <div className="flex items-center justify-between">
+                          <div>
                             <h3 className="text-2xl font-bold text-[#1E3A8A]">Mise en sommeil</h3>
-                            <Moon className="w-8 h-8 text-[#5D9CEC]" />
                           </div>
 
                           <div className="flex items-baseline gap-1">
@@ -964,5 +1156,19 @@ export default function DissolutionPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+function DissolutionRouter() {
+  const searchParams = useSearchParams();
+  const isSuccess = searchParams.get("payment") === "success";
+  return isSuccess ? <PaymentSuccessPage /> : <DissolutionForm />;
+}
+
+export default function DissolutionPage() {
+  return (
+    <Suspense>
+      <DissolutionRouter />
+    </Suspense>
   );
 }

@@ -407,7 +407,7 @@ function PaymentSuccessPage() {
               </div>
 
               <Link
-                href="/dissolution"
+                href={`/dissolution/dossier?state=${params.get("state") ?? ""}`}
                 className="block w-full py-3 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl text-center text-sm transition-all"
               >
                 Continuer → Dossier juridique

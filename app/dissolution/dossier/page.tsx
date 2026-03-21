@@ -214,6 +214,14 @@ function DossierForm() {
       .finally(() => setSirenLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // ── Pièces justificatives Greffe ─────────────────────────────────────────
+  type JustifKeyDiss = "pvDissolution" | "attestationAL" | "identiteLiquidateur" | "pvLiquidation" | "comptesLiquidation" | "attestationALCloture";
+  interface JustifFileDiss { name: string; size: number; }
+  const [justifDiss, setJustifDiss] = useState<Partial<Record<JustifKeyDiss, JustifFileDiss>>>({});
+  const handleJustifDissUpload = (key: JustifKeyDiss, file: File) => {
+    setJustifDiss(prev => ({ ...prev, [key]: { name: file.name, size: file.size } }));
+  };
+
   // ── Phase 2 : Liquidation states ─────────────────────────────────────────
   const [phase2Open, setPhase2Open] = useState(false);
   const [liqDate, setLiqDate] = useState("");
@@ -718,6 +726,51 @@ function DossierForm() {
                 <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" /><span>Déposer le dossier de dissolution au greffe du tribunal de commerce</span></div>
               </div>
 
+              {/* Pièces justificatives Phase 1 */}
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Pièces justificatives — Dépôt Greffe (Phase 1)</p>
+                {(
+                  [
+                    {
+                      key: "pvDissolution" as const,
+                      label: decisionType === "associe_unique" ? "Décision de l'associé unique signée (DAS)" : "PV de dissolution signé",
+                      desc: decisionType === "associe_unique"
+                        ? "Décision unilatérale de dissolution, signée par l'associé unique"
+                        : "Procès-verbal de l'assemblée générale extraordinaire, signé",
+                    },
+                    {
+                      key: "attestationAL" as const,
+                      label: "Attestation de parution de l'annonce légale",
+                      desc: "Fournie par le journal habilité après publication de l'avis de dissolution",
+                    },
+                    ...(!liqEstGerant ? [{
+                      key: "identiteLiquidateur" as const,
+                      label: "Pièce d'identité du liquidateur",
+                      desc: "Copie CNI ou passeport du liquidateur désigné (si différent du dirigeant)",
+                    }] : []),
+                  ] as { key: JustifKeyDiss; label: string; desc: string }[]
+                ).map(({ key, label, desc }) => (
+                  <div key={key} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800">{label}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                      {justifDiss[key] && (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> {justifDiss[key]!.name} ({Math.round(justifDiss[key]!.size / 1024)} Ko)
+                        </p>
+                      )}
+                    </div>
+                    <label className="cursor-pointer">
+                      <input type="file" accept=".pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifDissUpload(key, f); }} />
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${justifDiss[key] ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100" : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"}`}>
+                        <Download className="w-4 h-4" />
+                        {justifDiss[key] ? "Remplacer" : "Charger PDF"}
+                      </div>
+                    </label>
+                  </div>
+                ))}
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <button onClick={generate} disabled={loading}
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#5D9CEC] text-[#5D9CEC] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
@@ -812,6 +865,51 @@ function DossierForm() {
                         {liqPhase2LoadingConvoc ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                         Convocation AGO Liquidation
                       </button>
+                    </div>
+
+                    {/* Pièces justificatives Phase 2 */}
+                    <div className="border-t border-gray-100 pt-4">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Pièces justificatives — Dépôt Greffe (Phase 2)</p>
+                      {(
+                        [
+                          {
+                            key: "pvLiquidation" as const,
+                            label: decisionType === "associe_unique" ? "Décision de clôture de liquidation signée" : "PV de clôture de liquidation signé",
+                            desc: decisionType === "associe_unique"
+                              ? "Décision unilatérale approuvant les comptes et constatant la clôture"
+                              : "Procès-verbal de l'AGO de clôture, approuvant les comptes et constatant la clôture",
+                          },
+                          {
+                            key: "comptesLiquidation" as const,
+                            label: "Comptes de liquidation approuvés",
+                            desc: `Bilan de clôture de liquidation — solde ${liqSoldeSigne === "positif" ? "positif (boni)" : "négatif (mali)"}`,
+                          },
+                          {
+                            key: "attestationALCloture" as const,
+                            label: "Attestation de parution de l'annonce légale de clôture",
+                            desc: "Fournie par le journal habilité après publication de l'avis de clôture de liquidation",
+                          },
+                        ] as { key: JustifKeyDiss; label: string; desc: string }[]
+                      ).map(({ key, label, desc }) => (
+                        <div key={key} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-800">{label}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                            {justifDiss[key] && (
+                              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                <Check className="w-3 h-3" /> {justifDiss[key]!.name} ({Math.round(justifDiss[key]!.size / 1024)} Ko)
+                              </p>
+                            )}
+                          </div>
+                          <label className="cursor-pointer">
+                            <input type="file" accept=".pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifDissUpload(key, f); }} />
+                            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${justifDiss[key] ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100" : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"}`}>
+                              <Download className="w-4 h-4" />
+                              {justifDiss[key] ? "Remplacer" : "Charger PDF"}
+                            </div>
+                          </label>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>

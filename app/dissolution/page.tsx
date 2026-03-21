@@ -256,6 +256,31 @@ function PaymentSuccessPage() {
     company = parsed.company ?? null;
   } catch { /* ignore */ }
 
+  // ── Fetch SIREN complet ──────────────────────────────────────────────────
+  type SirenData = {
+    denominationSociale: string;
+    formeJuridique: string;
+    siegeSocial: string;
+    codePostal: string;
+    ville: string;
+    capitalSocial: string;
+    siren: string;
+    greffe: string;
+    rcs: string;
+    dirigeants: { nom: string; prenom: string; qualite: string }[];
+    associes: { nom: string; prenom: string; nbParts: number }[];
+  };
+  const [sirenData, setSirenData] = useState<SirenData | null>(null);
+  const [sirenLoading, setSirenLoading] = useState(!!company?.siren);
+  useEffect(() => {
+    if (!company?.siren) return;
+    fetch(`/api/siren?siren=${company.siren}`)
+      .then((r) => r.json())
+      .then((d) => { if (!d.error) setSirenData(d); })
+      .finally(() => setSirenLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   async function downloadInvoice() {
     if (!sessionId) return;
@@ -352,15 +377,61 @@ function PaymentSuccessPage() {
           <div className="grid md:grid-cols-3 gap-4 items-start">
             {/* Left: détail commande */}
             <div className="md:col-span-2 space-y-4">
-              {/* Société */}
+              {/* Fiche société */}
               {company && (
-                <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#5D9CEC] flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-white" />
+                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                  {/* En-tête */}
+                  <div className="bg-gradient-to-r from-[#1E3A8A] to-[#5D9CEC] p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-white font-black text-lg">
+                        {(sirenData?.denominationSociale ?? company.nom).charAt(0)}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-bold text-white text-base leading-tight truncate">
+                        {sirenData?.denominationSociale ?? company.nom}
+                      </p>
+                      <p className="text-blue-200 text-xs mt-0.5">
+                        {sirenData?.formeJuridique ?? company.formeJuridique}
+                        {sirenData?.capitalSocial ? ` • Capital ${Number(sirenData.capitalSocial).toLocaleString("fr-FR")} €` : ""}
+                      </p>
+                    </div>
+                    {sirenLoading && <Loader2 className="w-4 h-4 text-white/60 animate-spin ml-auto flex-shrink-0" />}
                   </div>
-                  <div>
-                    <p className="font-bold text-[#1E3A8A] text-sm">{company.nom}</p>
-                    <p className="text-xs text-gray-500">{company.formeJuridique} • {company.siren}</p>
+
+                  {/* Corps */}
+                  <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">SIREN</p>
+                      <p className="text-sm font-mono font-semibold text-gray-800">{sirenData?.siren ?? company.siren}</p>
+                    </div>
+                    {sirenData?.greffe && (
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">RCS</p>
+                        <p className="text-sm text-gray-800">{sirenData.greffe}</p>
+                      </div>
+                    )}
+                    {(sirenData?.siegeSocial || sirenData?.ville) && (
+                      <div className="space-y-1 sm:col-span-2">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Siège social</p>
+                        <p className="text-sm text-gray-800">
+                          {[sirenData.siegeSocial, sirenData.codePostal, sirenData.ville].filter(Boolean).join(" ")}
+                        </p>
+                      </div>
+                    )}
+                    {sirenData?.dirigeants && sirenData.dirigeants.length > 0 && (
+                      <div className="space-y-1 sm:col-span-2">
+                        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">Direction</p>
+                        <div className="flex flex-wrap gap-2">
+                          {sirenData.dirigeants.slice(0, 3).map((d, i) => (
+                            <span key={i} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-[#1E3A8A] rounded-lg text-xs font-medium">
+                              {d.prenom} {d.nom}
+                              {d.qualite && <span className="text-blue-400">— {d.qualite}</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

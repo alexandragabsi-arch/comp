@@ -35,65 +35,76 @@ const SIDEBAR_STEPS = [
 ];
 
 // ── Questions dissolution ──────────────────────────────────────────────────────
-const QUESTIONS_DISSOLUTION = [
-  {
-    id: "decision",
-    question: "Qui prend la décision de dissoudre la société ?",
-    subtitle: "Cela détermine le type de procès-verbal à rédiger",
-    options: [
-      {
-        value: "associe_unique",
-        label: "Associé unique",
-        description: "Je suis le seul associé de la société",
-        icon: User,
-      },
-      {
-        value: "age",
-        label: "Plusieurs associés (AGE)",
-        description: "La décision est prise en assemblée générale extraordinaire",
-        icon: Users,
-      },
-    ],
-  },
-  {
-    id: "actifs",
-    question: "La société a-t-elle encore des actifs ou des dettes ?",
-    subtitle: "Hors dissolution amiable si des dettes existent",
-    options: [
-      {
-        value: "non",
-        label: "Non, la société est vide",
-        description: "Aucun actif, aucune dette en cours",
-        icon: Check,
-      },
-      {
-        value: "oui",
-        label: "Oui, il y a des actifs",
-        description: "La liquidation devra répartir les actifs entre associés",
-        icon: AlertTriangle,
-      },
-    ],
-  },
-  {
-    id: "liquidateur",
-    question: "Qui souhaitez-vous nommer liquidateur ?",
-    subtitle: "Le liquidateur gère les opérations de clôture",
-    options: [
-      {
-        value: "gerant",
-        label: "Le gérant actuel",
-        description: "La personne qui gère actuellement la société",
-        icon: User,
-      },
-      {
-        value: "autre",
-        label: "Une autre personne",
-        description: "Un tiers désigné pour liquider la société",
-        icon: Scale,
-      },
-    ],
-  },
-];
+// Retourne le titre du dirigeant selon la forme juridique
+function getDirigeantLabel(formeJuridique: string): string {
+  const fj = formeJuridique.toUpperCase();
+  if (fj.includes("SAS") || fj.includes("SASU") || fj.includes("SA")) return "président";
+  return "gérant";
+}
+
+function getQuestionsDissoltion(formeJuridique: string) {
+  const dirigeant = getDirigeantLabel(formeJuridique);
+  const dirigeantCap = dirigeant.charAt(0).toUpperCase() + dirigeant.slice(1);
+  return [
+    {
+      id: "decision",
+      question: "Qui prend la décision de dissoudre la société ?",
+      subtitle: "Cela détermine le type de procès-verbal à rédiger",
+      options: [
+        {
+          value: "associe_unique",
+          label: "Associé unique",
+          description: "Je suis le seul associé de la société",
+          icon: User,
+        },
+        {
+          value: "age",
+          label: "Plusieurs associés (AGE)",
+          description: "La décision est prise en assemblée générale extraordinaire",
+          icon: Users,
+        },
+      ],
+    },
+    {
+      id: "actifs",
+      question: "La société a-t-elle encore des actifs ou des dettes ?",
+      subtitle: "Hors dissolution amiable si des dettes existent",
+      options: [
+        {
+          value: "non",
+          label: "Non, la société est vide",
+          description: "Aucun actif, aucune dette en cours",
+          icon: Check,
+        },
+        {
+          value: "oui",
+          label: "Oui, il y a des actifs",
+          description: "La liquidation devra répartir les actifs entre associés",
+          icon: AlertTriangle,
+        },
+      ],
+    },
+    {
+      id: "liquidateur",
+      question: "Qui souhaitez-vous nommer liquidateur ?",
+      subtitle: "Le liquidateur gère les opérations de clôture",
+      options: [
+        {
+          value: "dirigeant",
+          label: `Le ${dirigeant} actuel`,
+          description: `Le ${dirigeant} qui dirige actuellement la société`,
+          icon: User,
+        },
+        {
+          value: "autre",
+          label: "Une autre personne",
+          description: "Un tiers désigné pour liquider la société",
+          icon: Scale,
+        },
+      ],
+    },
+  ];
+}
 
 const QUESTIONS_SOMMEIL = [
   {
@@ -139,50 +150,50 @@ const QUESTIONS_SOMMEIL = [
 // ── Pricing plans ─────────────────────────────────────────────────────────────
 const PLANS = [
   {
-    id: "essentiel",
-    name: "Essentiel",
-    priceHT: 149,
-    priceTTC: 179,
+    id: "starter",
+    name: "Starter",
+    priceHT: 0,
+    priceTTC: 0,
     icon: FileText,
     color: "border-gray-200",
     features: [
       "Procès-verbal de dissolution",
       "Formulaire M2 pré-rempli",
-      "Notice explicative",
-      "Assistance par email",
+      "Notice explicative étape par étape",
+      "Sans assistance ni vérification",
     ],
-    cta: "Choisir Essentiel",
+    cta: "Choisir Starter",
   },
   {
     id: "standard",
     name: "Standard",
-    priceHT: 199,
-    priceTTC: 239,
+    priceHT: 149,
+    priceTTC: 179,
     icon: Shield,
     color: "border-[#5D9CEC]",
     popular: true,
     features: [
-      "Tout l'Essentiel",
-      "Annonce légale incluse",
-      "Suivi du dossier en ligne",
-      "Assistance prioritaire",
+      "Tout le Starter",
+      "Aide d'un formaliste par email",
+      "Vérification complète du dossier",
+      "Assistance jusqu'à la clôture",
     ],
     cta: "Choisir Standard",
   },
   {
     id: "premium",
-    name: "Premium",
+    name: "Premium Express",
     priceHT: 249,
     priceTTC: 299,
     icon: Sparkles,
     color: "border-gray-200",
     features: [
       "Tout le Standard",
-      "Relecture par un juriste",
-      "Accompagnement téléphonique",
-      "Traitement express prioritaire",
+      "Traitement express 48h",
+      "Assurance anti-rejet greffe",
+      "Assistance illimitée email + téléphone",
     ],
-    cta: "Choisir Premium",
+    cta: "Choisir Premium Express",
   },
 ];
 
@@ -215,7 +226,7 @@ export default function DissolutionPage() {
 
   const questions =
     selectedProcedure === "dissolution"
-      ? QUESTIONS_DISSOLUTION
+      ? getQuestionsDissoltion(selectedCompany?.formeJuridique ?? "")
       : QUESTIONS_SOMMEIL;
 
   // Fetch suggestions
@@ -294,6 +305,13 @@ export default function DissolutionPage() {
       const stateKey = btoa(
         JSON.stringify({ company: selectedCompany, procedure: selectedProcedure, answers })
       );
+      // Starter is free — skip Stripe
+      if (planId === "starter") {
+        setSidebarStep(3);
+        setSubStep("commande"); // TODO: navigate to dossier juridique step
+        setPaymentLoading(null);
+        return;
+      }
       const res = await fetch("/api/stripe/checkout-dissolution", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -667,11 +685,20 @@ export default function DissolutionPage() {
                             <div className="flex items-baseline justify-between mb-1">
                               <h3 className="font-bold text-[#1E3A8A] text-lg">{plan.name}</h3>
                               <div className="text-right">
-                                <span className="text-2xl font-bold text-[#1E3A8A]">{plan.priceTTC}€</span>
-                                <span className="text-xs text-gray-400 ml-1">TTC</span>
+                                <span className="text-2xl font-bold text-[#1E3A8A]">
+                                  {plan.priceTTC === 0 ? "Gratuit" : `${plan.priceTTC}€`}
+                                </span>
+                                {plan.priceTTC > 0 && (
+                                  <span className="text-xs text-gray-400 ml-1">TTC</span>
+                                )}
                               </div>
                             </div>
-                            <p className="text-xs text-gray-400 mb-3">{plan.priceHT}€ HT</p>
+                            {plan.priceHT > 0 && (
+                              <p className="text-xs text-gray-400 mb-3">{plan.priceHT}€ HT</p>
+                            )}
+                            {plan.priceTTC === 0 && (
+                              <p className="text-xs text-gray-400 mb-3">Hors frais de greffe et annonces légales</p>
+                            )}
 
                             <ul className="space-y-1.5 mb-4">
                               {plan.features.map((f) => (

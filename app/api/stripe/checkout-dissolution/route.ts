@@ -2,20 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
 const PRODUCTS = {
-  essentiel: {
-    name: "LegalCorners — Dissolution Essentiel",
-    amount: 17900, // 149€ HT × 1.20 = 178.80€ → 179€ TTC
-    description: "PV de dissolution, formulaire M2 pré-rempli, assistance email",
-  },
   standard: {
     name: "LegalCorners — Dissolution Standard",
-    amount: 23900, // 199€ HT × 1.20 = 238.80€ → 239€ TTC
-    description: "Essentiel + annonce légale + suivi dossier + assistance prioritaire",
+    amount: 17880, // 149€ HT × 1.20 = 178.80€ TTC
+    description: "Aide formaliste email, vérification complète du dossier",
   },
   premium: {
-    name: "LegalCorners — Dissolution Premium",
-    amount: 29900, // 249€ HT × 1.20 = 298.80€ → 299€ TTC
-    description: "Standard + relecture juriste + accompagnement téléphonique + traitement express",
+    name: "LegalCorners — Dissolution Premium Express",
+    amount: 29880, // 249€ HT × 1.20 = 298.80€ TTC
+    description: "Traitement express 48h, assurance anti-rejet greffe, assistance illimitée",
   },
 };
 

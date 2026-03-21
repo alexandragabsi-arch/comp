@@ -645,92 +645,157 @@ export default function DissolutionPage() {
               >
                 <CompanyCard />
 
-                <div className="text-center space-y-1">
-                  <h2 className="text-2xl font-bold text-[#1E3A8A]">
-                    Choisissez votre formule
-                  </h2>
-                  <p className="text-gray-500 text-sm">
-                    Frais de greffe et annonces légales non inclus (~460–570 €)
-                  </p>
-                </div>
+                {/* ── Mise en sommeil : carte unique ── */}
+                {selectedProcedure === "mise-en-sommeil" ? (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-[#1E3A8A] text-center">
+                      La formule qui vous correspond le mieux
+                    </h2>
 
-                <div className="space-y-3">
-                  {PLANS.map((plan) => {
-                    const Icon = plan.icon;
-                    return (
-                      <div
-                        key={plan.id}
-                        className={cn(
-                          "relative bg-white rounded-xl border-2 p-5 transition-all",
-                          plan.popular ? "border-[#5D9CEC]" : "border-gray-200"
-                        )}
-                      >
-                        {plan.popular && (
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                            <span className="bg-[#5D9CEC] text-white text-xs font-bold px-3 py-1 rounded-full">
-                              LE PLUS POPULAIRE
-                            </span>
-                          </div>
-                        )}
+                    <div className="flex justify-center">
+                      <div className="w-full max-w-sm">
+                        {/* Badge */}
+                        <div className="flex justify-center mb-[-1px] relative z-10">
+                          <span className="bg-[#5D9CEC] text-white text-xs font-bold px-4 py-1.5 rounded-full">
+                            Le plus fréquent
+                          </span>
+                        </div>
 
-                        <div className="flex items-start gap-4">
-                          <div className={cn(
-                            "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
-                            plan.popular ? "bg-[#5D9CEC]/10" : "bg-gray-50"
-                          )}>
-                            <Icon className={cn("w-6 h-6", plan.popular ? "text-[#5D9CEC]" : "text-gray-500")} />
+                        {/* Card */}
+                        <div className="bg-white border-2 border-[#5D9CEC] rounded-2xl p-6 space-y-5">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-2xl font-bold text-[#1E3A8A]">Mise en sommeil</h3>
+                            <Moon className="w-8 h-8 text-[#5D9CEC]" />
                           </div>
 
-                          <div className="flex-1">
-                            <div className="flex items-baseline justify-between mb-1">
-                              <h3 className="font-bold text-[#1E3A8A] text-lg">{plan.name}</h3>
-                              <div className="text-right">
-                                <span className="text-2xl font-bold text-[#1E3A8A]">
-                                  {plan.priceTTC === 0 ? "Gratuit" : `${plan.priceTTC}€`}
-                                </span>
-                                {plan.priceTTC > 0 && (
-                                  <span className="text-xs text-gray-400 ml-1">TTC</span>
-                                )}
-                              </div>
-                            </div>
-                            {plan.priceHT > 0 && (
-                              <p className="text-xs text-gray-400 mb-3">{plan.priceHT}€ HT</p>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-bold text-[#1E3A8A]">99 €</span>
+                            <span className="text-gray-500 text-sm">HT</span>
+                          </div>
+
+                          <button
+                            onClick={() => handlePayment("sommeil")}
+                            disabled={paymentLoading !== null}
+                            className="w-full py-3.5 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+                          >
+                            {paymentLoading === "sommeil" ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              "Mise en sommeil"
                             )}
-                            {plan.priceTTC === 0 && (
-                              <p className="text-xs text-gray-400 mb-3">Hors frais de greffe et annonces légales</p>
-                            )}
+                          </button>
 
-                            <ul className="space-y-1.5 mb-4">
-                              {plan.features.map((f) => (
-                                <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                  {f}
-                                </li>
-                              ))}
-                            </ul>
+                          <ul className="space-y-3">
+                            {[
+                              "Vérification du dossier par un formaliste",
+                              "Assistance par email et téléphone",
+                              "Enregistrement au greffe",
+                            ].map((f) => (
+                              <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+                                <Check className="w-4 h-4 text-[#5D9CEC] flex-shrink-0" />
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
 
-                            <button
-                              onClick={() => handlePayment(plan.id)}
-                              disabled={paymentLoading !== null}
-                              className={cn(
-                                "w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2",
-                                plan.popular
-                                  ? "bg-[#5D9CEC] text-white hover:bg-[#4a8bd4]"
-                                  : "bg-gray-100 text-[#1E3A8A] hover:bg-gray-200"
-                              )}
-                            >
-                              {paymentLoading === plan.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                plan.cta
-                              )}
-                            </button>
-                          </div>
+                          <p className="text-xs text-gray-400 text-center">
+                            + frais de greffe ~184 € HT (non inclus)
+                          </p>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* ── Dissolution : 3 formules ── */
+                  <div className="space-y-4">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">
+                        Choisissez votre formule
+                      </h2>
+                      <p className="text-gray-500 text-sm">
+                        Frais de greffe et annonces légales non inclus (~460–570 €)
+                      </p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {PLANS.map((plan) => {
+                        const Icon = plan.icon;
+                        return (
+                          <div
+                            key={plan.id}
+                            className={cn(
+                              "relative bg-white rounded-xl border-2 p-5 transition-all",
+                              plan.popular ? "border-[#5D9CEC]" : "border-gray-200"
+                            )}
+                          >
+                            {plan.popular && (
+                              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                <span className="bg-[#5D9CEC] text-white text-xs font-bold px-3 py-1 rounded-full">
+                                  LE PLUS POPULAIRE
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="flex items-start gap-4">
+                              <div className={cn(
+                                "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
+                                plan.popular ? "bg-[#5D9CEC]/10" : "bg-gray-50"
+                              )}>
+                                <Icon className={cn("w-6 h-6", plan.popular ? "text-[#5D9CEC]" : "text-gray-500")} />
+                              </div>
+
+                              <div className="flex-1">
+                                <div className="flex items-baseline justify-between mb-1">
+                                  <h3 className="font-bold text-[#1E3A8A] text-lg">{plan.name}</h3>
+                                  <div className="text-right">
+                                    <span className="text-2xl font-bold text-[#1E3A8A]">
+                                      {plan.priceTTC === 0 ? "Gratuit" : `${plan.priceTTC}€`}
+                                    </span>
+                                    {plan.priceTTC > 0 && (
+                                      <span className="text-xs text-gray-400 ml-1">TTC</span>
+                                    )}
+                                  </div>
+                                </div>
+                                {plan.priceHT > 0 && (
+                                  <p className="text-xs text-gray-400 mb-3">{plan.priceHT}€ HT</p>
+                                )}
+                                {plan.priceTTC === 0 && (
+                                  <p className="text-xs text-gray-400 mb-3">Hors frais de greffe et annonces légales</p>
+                                )}
+
+                                <ul className="space-y-1.5 mb-4">
+                                  {plan.features.map((f) => (
+                                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+                                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                      {f}
+                                    </li>
+                                  ))}
+                                </ul>
+
+                                <button
+                                  onClick={() => handlePayment(plan.id)}
+                                  disabled={paymentLoading !== null}
+                                  className={cn(
+                                    "w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2",
+                                    plan.popular
+                                      ? "bg-[#5D9CEC] text-white hover:bg-[#4a8bd4]"
+                                      : "bg-gray-100 text-[#1E3A8A] hover:bg-gray-200"
+                                  )}
+                                >
+                                  {paymentLoading === plan.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    plan.cta
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="text-center">
                   <button

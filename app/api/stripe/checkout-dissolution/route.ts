@@ -12,6 +12,11 @@ const PRODUCTS = {
     amount: 29880, // 249€ HT × 1.20 = 298.80€ TTC
     description: "Traitement express 48h, assurance anti-rejet greffe, assistance illimitée",
   },
+  sommeil: {
+    name: "LegalCorners — Mise en sommeil",
+    amount: 11880, // 99€ HT × 1.20 = 118.80€ TTC
+    description: "Vérification du dossier, assistance email et téléphone, enregistrement au greffe",
+  },
 };
 
 export async function POST(request: NextRequest) {

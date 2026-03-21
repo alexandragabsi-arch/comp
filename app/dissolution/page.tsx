@@ -58,25 +58,37 @@ function getQuestionsDissoltion(formeJuridique: string) {
   return [
     {
       id: "actifs",
-      question: "La société a-t-elle des dettes ?",
-      subtitle: "En cas de dettes, une dissolution judiciaire peut être nécessaire",
+      question: "Quel est l'état du patrimoine de la société ?",
+      subtitle: "Cela détermine les étapes de liquidation",
       options: [
         {
-          value: "non",
-          label: "Non, la société est vide",
-          description: "Aucun actif, aucune dette en cours",
+          value: "vide",
+          label: "Société vide",
+          description: "Aucun actif, aucune dette — clôture simplifiée",
           icon: Check,
         },
         {
-          value: "oui",
-          label: "Oui, il y a des dettes ou actifs",
-          description: "La liquidation devra apurer les dettes et répartir les actifs",
+          value: "mobilier",
+          label: "Actifs mobiliers uniquement",
+          description: "Trésorerie, matériel, créances — répartis entre associés lors de la liquidation",
+          icon: CreditCard,
+        },
+        {
+          value: "immo",
+          label: "Biens immobiliers",
+          description: "Un passage chez le notaire sera obligatoire pour céder les biens",
+          icon: Building2,
+        },
+        {
+          value: "dettes",
+          label: "Des dettes en cours",
+          description: "Les créanciers doivent être remboursés avant la clôture",
           icon: AlertTriangle,
         },
       ],
       info: {
-        trigger: "oui",
-        content: "⚠️ Si la société a des dettes, la dissolution amiable n'est pas possible. Il faudra passer par une **dissolution judiciaire** ou rembourser les créanciers avant de clôturer.",
+        trigger: "dettes",
+        content: "⚠️ Si la société a des dettes, la dissolution amiable n'est pas possible. Il faudra rembourser les créanciers ou passer par une dissolution judiciaire avant de clôturer.",
       },
     },
     {

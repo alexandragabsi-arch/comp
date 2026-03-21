@@ -1332,61 +1332,75 @@ function DissolutionForm() {
                   </div>
                 ) : (
                   /* ── Dissolution : 3 formules ── */
-                  <div className="space-y-5">
-                    <div className="text-center space-y-2 mb-10">
-                      <h2 className="text-4xl font-extrabold text-[#1E3A8A]">
+                  <div className="space-y-4">
+                    <div className="text-center space-y-1 mb-8">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">
                         Choisissez la formule qui vous correspond le mieux
                       </h2>
-                      <p className="text-gray-400 text-base">
+                      <p className="text-gray-400 text-sm">
                         + frais de greffe et annonces légales (~460–570 €)
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                       {PLANS.map((plan) => (
                         <div
                           key={plan.id}
                           className={cn(
-                            "relative rounded-3xl flex flex-col transition-all",
+                            "relative rounded-2xl flex flex-col transition-all",
                             plan.featured
-                              ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-2xl md:scale-[1.04] p-8"
-                              : "bg-white border-2 border-gray-100 p-7"
+                              ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-xl md:scale-[1.03] p-6"
+                              : "bg-white border-2 border-gray-200 p-5"
                           )}
                         >
                           {plan.badge && (
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                              <span className="bg-amber-400 text-amber-900 text-sm font-bold px-5 py-1.5 rounded-full whitespace-nowrap shadow">
+                            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                              <span className="bg-amber-400 text-amber-900 text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow">
                                 {plan.badge}
                               </span>
                             </div>
                           )}
 
-                          <div className="mb-6">
-                            <p className={cn("text-sm font-bold uppercase tracking-widest mb-3",
+                          <div className="mb-4">
+                            <p className={cn("text-xs font-bold uppercase tracking-widest mb-2",
                               plan.featured ? "text-blue-200" : "text-gray-400"
                             )}>
                               {plan.name}
                             </p>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className={cn("text-6xl font-extrabold",
+                            <div className="flex items-baseline gap-1">
+                              <span className={cn("text-5xl font-extrabold",
                                 plan.featured ? "text-white" : "text-[#1E3A8A]"
                               )}>
                                 {plan.priceHT}€
                               </span>
-                              <span className={cn("text-base font-medium", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                              <span className={cn("text-sm font-medium", plan.featured ? "text-blue-200" : "text-gray-400")}>
                                 HT
                               </span>
                             </div>
-                            <p className={cn("text-sm mt-2", plan.featured ? "text-blue-200" : "text-gray-400")}>
-                              + frais légaux obligatoires
-                            </p>
+                            <div className={cn("mt-2 text-xs space-y-0.5", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                              <div className="flex justify-between">
+                                <span>HT</span>
+                                <span>{plan.priceHT} €</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>TVA 20 %</span>
+                                <span>{(plan.priceHT * 0.2).toFixed(2)} €</span>
+                              </div>
+                              <div className={cn("flex justify-between font-semibold pt-0.5 border-t",
+                                plan.featured ? "border-blue-400 text-white" : "border-gray-200 text-gray-700"
+                              )}>
+                                <span>TTC</span>
+                                <span>{(plan.priceHT * 1.2).toFixed(2)} €</span>
+                              </div>
+                              <p className="pt-1">+ frais légaux obligatoires</p>
+                            </div>
                           </div>
 
                           <button
                             onClick={() => selectPlan(plan.id)}
                             disabled={paymentLoading !== null}
                             className={cn(
-                              "w-full py-4 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 mb-6",
+                              "w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-5",
                               plan.featured
                                 ? "bg-white text-[#1E3A8A] hover:bg-blue-50"
                                 : "border-2 border-[#5D9CEC] text-[#5D9CEC] hover:bg-[#5D9CEC] hover:text-white"
@@ -1397,15 +1411,15 @@ function DissolutionForm() {
                               : plan.cta}
                           </button>
 
-                          <ul className="space-y-3 flex-1">
+                          <ul className="space-y-2.5 flex-1">
                             {plan.features.map((f) => (
-                              <li key={f.label} className="flex items-start gap-2.5">
+                              <li key={f.label} className="flex items-start gap-2">
                                 {f.included === true ? (
                                   <Check className={cn("w-4 h-4 mt-0.5 flex-shrink-0",
                                     plan.featured ? "text-blue-300" : "text-[#5D9CEC]"
                                   )} />
                                 ) : f.included === "partial" ? (
-                                  <span className={cn("text-base leading-none mt-0.5 flex-shrink-0",
+                                  <span className={cn("w-4 text-center leading-none mt-0.5 flex-shrink-0 text-sm",
                                     plan.featured ? "text-amber-300" : "text-amber-500"
                                   )}>~</span>
                                 ) : (

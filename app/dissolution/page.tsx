@@ -361,25 +361,27 @@ function PaymentSuccessPage() {
         </div>
       </aside>
 
-      <main className="flex-1 md:ml-72 p-4 pt-20 md:pt-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-              <Check className="w-5 h-5 text-green-600" />
+      <main className="flex-1 md:ml-72 p-4 pt-20 md:pt-0 bg-gray-50 min-h-screen">
+        {/* Banner succès */}
+        <div className="bg-gradient-to-r from-[#1E3A8A] to-[#5D9CEC] px-8 py-10 md:py-12">
+          <div className="max-w-5xl mx-auto flex items-center gap-5">
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Check className="w-8 h-8 text-white" strokeWidth={3} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#1E3A8A]">Paiement confirmé</h1>
-              <p className="text-sm text-gray-500">Votre commande a bien été enregistrée</p>
+              <h1 className="text-3xl font-bold text-white tracking-tight">Paiement confirmé</h1>
+              <p className="text-blue-100 mt-1">Votre commande a bien été enregistrée — merci de votre confiance.</p>
             </div>
           </div>
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-4 items-start">
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+          <div className="grid md:grid-cols-3 gap-6 items-start">
             {/* Left: détail commande */}
             <div className="md:col-span-2 space-y-4">
               {/* Fiche société */}
               {company && (
-                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                   {/* En-tête */}
                   <div className="bg-gradient-to-r from-[#1E3A8A] to-[#5D9CEC] p-5 flex items-center gap-4">
                     <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -437,7 +439,7 @@ function PaymentSuccessPage() {
               )}
 
               {/* Pack choisi */}
-              <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="font-bold text-[#1E3A8A]">
                     {procedure === "mise-en-sommeil" ? "Mise en sommeil" : "Dissolution-Liquidation"}
@@ -453,7 +455,7 @@ function PaymentSuccessPage() {
               </div>
 
               {/* Frais annexes */}
-              <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <AlertTriangle className="w-4 h-4 text-amber-500" />
                   <h2 className="font-bold text-[#1E3A8A] text-sm">Frais légaux obligatoires</h2>
@@ -475,7 +477,7 @@ function PaymentSuccessPage() {
             </div>
 
             {/* Right: récapitulatif */}
-            <div className="bg-slate-50 rounded-xl p-5 space-y-3 md:sticky md:top-6">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 space-y-3 md:sticky md:top-6">
               <h2 className="font-bold text-[#1E3A8A]">Récapitulatif</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
@@ -524,6 +526,7 @@ function PaymentSuccessPage() {
 }
 
 function DissolutionForm() {
+
   const [sidebarStep, setSidebarStep] = useState(1);
   const [subStep, setSubStep] = useState<SubStep>("search");
 

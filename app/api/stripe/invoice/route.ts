@@ -1,12 +1,56 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { Document, Packer, Paragraph, TextRun, AlignmentType, convertInchesToTwip, Table, TableRow, TableCell, WidthType, BorderStyle } from "docx";
+import {
+  Document, Packer, Paragraph, TextRun, AlignmentType, convertInchesToTwip,
+  Table, TableRow, TableCell, WidthType, BorderStyle, ShadingType,
+} from "docx";
 
-function p(text: string, bold_ = false, right = false): Paragraph {
+// LegalCorners info
+const LC = {
+  nom: "LegalCorners",
+  siren: "950 811 190",
+  adresse: "78 avenue des Champs-Élysées",
+  cp: "75008",
+  ville: "Paris",
+  email: "contact@legalcorners.fr",
+  tva: "FR 07 950 811 190",
+};
+
+function p(text: string, opts: { bold?: boolean; right?: boolean; center?: boolean; size?: number; color?: string } = {}): Paragraph {
   return new Paragraph({
-    children: [new TextRun({ text, bold: bold_ })],
-    alignment: right ? AlignmentType.RIGHT : AlignmentType.LEFT,
-    spacing: { after: 120 },
+    children: [new TextRun({
+      text,
+      bold: opts.bold,
+      size: opts.size,
+      color: opts.color,
+    })],
+    alignment: opts.center ? AlignmentType.CENTER : opts.right ? AlignmentType.RIGHT : AlignmentType.LEFT,
+    spacing: { after: 100 },
+  });
+}
+
+function hr(): Paragraph {
+  return new Paragraph({
+    children: [],
+    border: { bottom: { color: "E2E8F0", space: 1, style: BorderStyle.SINGLE, size: 4 } },
+    spacing: { after: 200, before: 100 },
+  });
+}
+
+function rowData(label: string, value: string, bold = false): TableRow {
+  return new TableRow({
+    children: [
+      new TableCell({
+        children: [p(label, { bold })],
+        width: { size: 70, type: WidthType.PERCENTAGE },
+        borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+      }),
+      new TableCell({
+        children: [p(value, { bold, right: true })],
+        width: { size: 30, type: WidthType.PERCENTAGE },
+        borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+      }),
+    ],
   });
 }
 
@@ -35,25 +79,19 @@ export async function GET(request: NextRequest) {
     const lineItems = session.line_items?.data ?? [];
     const email = session.customer_details?.email ?? "";
     const name = session.customer_details?.name ?? "";
-    const total = (session.amount_total ?? 0) / 100;
+    const totalTTC = (session.amount_total ?? 0) / 100;
+    const totalHT = Math.round((totalTTC / 1.2) * 100) / 100;
+    const tva = Math.round((totalTTC - totalHT) * 100) / 100;
     const currency = (session.currency ?? "eur").toUpperCase();
     const created = new Date(session.created * 1000);
     const dateStr = created.toLocaleDateString("fr-FR");
+    const ref = sessionId.slice(-12).toUpperCase();
 
-    // Generate invoice as .docx
-    const rows = lineItems.map((item) =>
-      new TableRow({
-        children: [
-          new TableCell({
-            children: [p(item.description ?? "")],
-            borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          }),
-          new TableCell({
-            children: [p(`${((item.amount_total ?? 0) / 100).toFixed(2)} ${currency}`, false, true)],
-            borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
-          }),
-        ],
-      })
+    const formatEur = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
+
+    // Lignes de la commande
+    const itemRows = lineItems.map((item) =>
+      rowData(item.description ?? "", formatEur((item.amount_total ?? 0) / 100))
     );
 
     const doc = new Document({
@@ -61,69 +99,121 @@ export async function GET(request: NextRequest) {
         {
           properties: {
             page: {
-              margin: { top: convertInchesToTwip(1), bottom: convertInchesToTwip(1), left: convertInchesToTwip(1.2), right: convertInchesToTwip(1.2) },
+              margin: {
+                top: convertInchesToTwip(1),
+                bottom: convertInchesToTwip(1),
+                left: convertInchesToTwip(1.2),
+                right: convertInchesToTwip(1.2),
+              },
             },
           },
           children: [
+            // ── Tampon PAYÉ ──────────────────────────────────────────────────
             new Paragraph({
-              children: [new TextRun({ text: "LegalCorners", bold: true, size: 36 })],
-              spacing: { after: 80 },
+              children: [new TextRun({ text: "✓  PAYÉ", bold: true, size: 36, color: "C0392B" })],
+              alignment: AlignmentType.RIGHT,
+              border: { top: { style: BorderStyle.SINGLE, color: "C0392B", size: 12 }, bottom: { style: BorderStyle.SINGLE, color: "C0392B", size: 12 }, left: { style: BorderStyle.SINGLE, color: "C0392B", size: 12 }, right: { style: BorderStyle.SINGLE, color: "C0392B", size: 12 } },
+              shading: { type: ShadingType.CLEAR, color: "FDEDEC", fill: "FDEDEC" },
+              spacing: { after: 300 },
             }),
-            p("contact@legalcorners.fr"),
-            new Paragraph({ children: [], spacing: { after: 300 } }),
-            new Paragraph({ children: [new TextRun({ text: "FACTURE", bold: true, size: 28 })], spacing: { after: 160 } }),
+
+            // ── En-tête émetteur ─────────────────────────────────────────────
+            new Paragraph({
+              children: [new TextRun({ text: LC.nom, bold: true, size: 40, color: "1E3A8A" })],
+              spacing: { after: 60 },
+            }),
+            p(`${LC.adresse}, ${LC.cp} ${LC.ville}`),
+            p(`Email : ${LC.email}`),
+            p(`SIREN : ${LC.siren}   |   N° TVA : ${LC.tva}`),
+
+            hr(),
+
+            // ── Titre + référence ────────────────────────────────────────────
+            new Paragraph({
+              children: [new TextRun({ text: "FACTURE", bold: true, size: 32, color: "1E3A8A" })],
+              spacing: { before: 100, after: 120 },
+            }),
             p(`Date : ${dateStr}`),
-            p(`Référence : ${sessionId.slice(-12).toUpperCase()}`),
-            ...(email ? [p(`Client : ${name || email}`)] : []),
+            p(`Référence : ${ref}`),
+            ...(name ? [p(`Client : ${name}`)] : []),
             ...(email ? [p(`Email : ${email}`)] : []),
-            new Paragraph({ children: [], spacing: { after: 300 } }),
+
+            hr(),
+
+            // ── Tableau des prestations ──────────────────────────────────────
             new Table({
               width: { size: 100, type: WidthType.PERCENTAGE },
               rows: [
+                // En-tête tableau
                 new TableRow({
                   children: [
                     new TableCell({
-                      children: [p("Description", true)],
-                      width: { size: 75, type: WidthType.PERCENTAGE },
-                      borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.SINGLE, size: 8 }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                      children: [p("Description", { bold: true })],
+                      width: { size: 70, type: WidthType.PERCENTAGE },
+                      shading: { type: ShadingType.CLEAR, fill: "EFF4FF" },
+                      borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.SINGLE, size: 6, color: "5D9CEC" }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                     }),
                     new TableCell({
-                      children: [p("Montant (TTC)", true, true)],
-                      width: { size: 25, type: WidthType.PERCENTAGE },
-                      borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.SINGLE, size: 8 }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                      children: [p("Montant HT", { bold: true, right: true })],
+                      width: { size: 30, type: WidthType.PERCENTAGE },
+                      shading: { type: ShadingType.CLEAR, fill: "EFF4FF" },
+                      borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.SINGLE, size: 6, color: "5D9CEC" }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                     }),
                   ],
                 }),
-                ...rows,
+                // Lignes items
+                ...itemRows,
+                // Séparateur
                 new TableRow({
                   children: [
                     new TableCell({
-                      children: [p("TOTAL TTC", true, true)],
-                      borders: { top: { style: BorderStyle.SINGLE, size: 8 }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                      children: [new Paragraph({ children: [] })],
+                      columnSpan: 2,
+                      borders: { top: { style: BorderStyle.SINGLE, size: 4, color: "E2E8F0" }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                    }),
+                  ],
+                }),
+                // Sous-total HT
+                rowData("Sous-total HT", formatEur(totalHT)),
+                // TVA
+                rowData("TVA (20%)", formatEur(tva)),
+                // Total TTC
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      children: [p("TOTAL TTC", { bold: true })],
+                      shading: { type: ShadingType.CLEAR, fill: "1E3A8A" },
+                      borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                     }),
                     new TableCell({
-                      children: [p(`${total.toFixed(2)} ${currency}`, true, true)],
-                      borders: { top: { style: BorderStyle.SINGLE, size: 8 }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
+                      children: [new Paragraph({ children: [new TextRun({ text: formatEur(totalTTC), bold: true, color: "FFFFFF" })], alignment: AlignmentType.RIGHT, spacing: { after: 100 } })],
+                      shading: { type: ShadingType.CLEAR, fill: "1E3A8A" },
+                      borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } },
                     }),
                   ],
                 }),
               ],
             }),
+
             new Paragraph({ children: [], spacing: { after: 300 } }),
-            p("TVA incluse au taux légal en vigueur."),
-            ...(receiptUrl ? [p(`Reçu de paiement : ${receiptUrl}`)] : []),
+            p("TVA incluse au taux légal en vigueur (20%)."),
+            p(`Paiement effectué le ${dateStr}.`),
+            ...(receiptUrl ? [p(`Reçu Stripe : ${receiptUrl}`)] : []),
+
+            hr(),
+            p("LegalCorners — Société par actions simplifiée (SAS)", { color: "9CA3AF" }),
+            p(`78 avenue des Champs-Élysées, 75008 Paris — SIREN ${LC.siren}`, { color: "9CA3AF" }),
           ],
         },
       ],
     });
 
     const buffer = await Packer.toBuffer(doc);
-    const uint8 = new Uint8Array(buffer);
 
-    return new NextResponse(uint8, {
+    return new NextResponse(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "Content-Disposition": `attachment; filename="Facture_LegalCorners_${sessionId.slice(-8).toUpperCase()}.docx"`,
+        "Content-Disposition": `attachment; filename="Facture_LegalCorners_${ref}.docx"`,
       },
     });
   } catch (err) {

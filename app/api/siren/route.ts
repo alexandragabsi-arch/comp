@@ -83,9 +83,10 @@ export async function GET(request: NextRequest) {
       ];
 
       const resultats = suggestions.map((s) => ({
-        siren: s.siren,
-        nom:   s.nom_entreprise ?? "",
-        ville: (s.siege as Record<string, string>)?.ville ?? "",
+        siren:          s.siren,
+        nom:            s.nom_entreprise ?? "",
+        ville:          (s.siege as Record<string, string>)?.ville ?? "",
+        formeJuridique: (s as Record<string, unknown>).forme_juridique as string ?? "",
       }));
 
       return NextResponse.json({ resultats });

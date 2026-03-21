@@ -43,29 +43,19 @@ function getDirigeantLabel(formeJuridique: string): string {
   return "gérant";
 }
 
+function isUnipersonnelle(formeJuridique: string): boolean {
+  const fj = formeJuridique.toUpperCase();
+  return fj.includes("EURL") || fj.includes("SASU") || fj.includes("UNIPERSONNELLE");
+}
+
+function getDecisionFromForme(formeJuridique: string): string {
+  return isUnipersonnelle(formeJuridique) ? "associe_unique" : "age";
+}
+
 function getQuestionsDissoltion(formeJuridique: string) {
   const dirigeant = getDirigeantLabel(formeJuridique);
   const dirigeantCap = dirigeant.charAt(0).toUpperCase() + dirigeant.slice(1);
   return [
-    {
-      id: "decision",
-      question: "Qui prend la décision de dissoudre la société ?",
-      subtitle: "Cela détermine le type de procès-verbal à rédiger",
-      options: [
-        {
-          value: "associe_unique",
-          label: "Associé unique",
-          description: "Je suis le seul associé de la société",
-          icon: User,
-        },
-        {
-          value: "age",
-          label: "Plusieurs associés (AGE)",
-          description: "La décision est prise en assemblée générale extraordinaire",
-          icon: Users,
-        },
-      ],
-    },
     {
       id: "actifs",
       question: "La société a-t-elle des dettes ?",
@@ -250,6 +240,12 @@ function PaymentSuccessPage() {
 
   return (
     <div className="min-h-screen flex bg-white">
+      {/* Mobile header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+        <Link href="/"><Image src="/images/logo.svg" alt="LegalCorners" width={110} height={28} /></Link>
+        <span className="text-xs text-gray-400 ml-auto">Paiement confirmé</span>
+      </div>
+
       <aside className="hidden md:flex flex-col w-72 bg-white border-r border-gray-100 fixed top-0 left-0 h-full z-20">
         <div className="p-6 border-b border-gray-100">
           <Link href="/"><Image src="/images/logo.svg" alt="LegalCorners" width={140} height={36} /></Link>
@@ -297,7 +293,7 @@ function PaymentSuccessPage() {
         </div>
       </aside>
 
-      <main className="flex-1 md:ml-72 p-6 pt-16">
+      <main className="flex-1 md:ml-72 p-4 pt-20 md:pt-8">
         <div className="max-w-2xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center gap-3">
@@ -365,7 +361,7 @@ function PaymentSuccessPage() {
             </div>
 
             {/* Right: récapitulatif */}
-            <div className="bg-slate-50 rounded-xl p-5 space-y-3 sticky top-6">
+            <div className="bg-slate-50 rounded-xl p-5 space-y-3 md:sticky md:top-6">
               <h2 className="font-bold text-[#1E3A8A]">Récapitulatif</h2>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
@@ -481,7 +477,11 @@ function DissolutionForm() {
   function selectProcedure(p: Procedure) {
     setSelectedProcedure(p);
     setCurrentQuestion(0);
-    setAnswers({});
+    const initialAnswers: Record<string, string> =
+      p === "dissolution" && selectedCompany
+        ? { decision: getDecisionFromForme(selectedCompany.formeJuridique) }
+        : {};
+    setAnswers(initialAnswers);
     setSubStep("intro");
   }
 
@@ -773,7 +773,7 @@ function DissolutionForm() {
                   </span>
                 </h1>
 
-                <div className="grid grid-cols-3 gap-6 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
                   <div className="space-y-3">
                     <div className="flex justify-center">
                       <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
@@ -1087,7 +1087,7 @@ function DissolutionForm() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {PLANS.map((plan) => (
                         <div
                           key={plan.id}

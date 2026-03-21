@@ -426,6 +426,7 @@ function DissolutionForm() {
 
   // Payment
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
   // Infos client
@@ -943,30 +944,25 @@ function DissolutionForm() {
                 )}
 
                 {/* Info panel dissolution judiciaire */}
-                {(() => {
-                  const q = questions[currentQuestion] as typeof questions[number] & { info?: { trigger: string; content: string } };
-                  if (!q.info) return null;
-                  const [open, setOpen] = useState(false);
-                  return (
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
-                      <button
-                        onClick={() => setOpen((o) => !o)}
-                        className="w-full flex items-center justify-between px-4 py-3 text-left"
-                      >
-                        <span className="text-sm font-semibold text-amber-800 flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4" />
-                          Que se passe-t-il en cas de dettes ?
-                        </span>
-                        <ChevronRight className={cn("w-4 h-4 text-amber-600 transition-transform", open && "rotate-90")} />
-                      </button>
-                      {open && (
-                        <div className="px-4 pb-4 text-sm text-amber-900 leading-relaxed border-t border-amber-200 pt-3">
-                          {q.info.content}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                {(questions[currentQuestion] as { info?: { content: string } }).info && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
+                    <button
+                      onClick={() => setInfoOpen((o) => !o)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-left"
+                    >
+                      <span className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4" />
+                        Que se passe-t-il en cas de dettes ?
+                      </span>
+                      <ChevronRight className={cn("w-4 h-4 text-amber-600 transition-transform", infoOpen && "rotate-90")} />
+                    </button>
+                    {infoOpen && (
+                      <div className="px-4 pb-4 text-sm text-amber-900 leading-relaxed border-t border-amber-200 pt-3">
+                        {(questions[currentQuestion] as { info?: { content: string } }).info!.content}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="text-center">
                   <button

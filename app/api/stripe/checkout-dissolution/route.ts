@@ -4,13 +4,18 @@ import Stripe from "stripe";
 const PRODUCTS = {
   essentiel: {
     name: "LegalCorners — Dissolution Essentiel",
-    amount: 19900, // 199€ TTC en centimes
-    description: "PV de dissolution, formalités administratives",
+    amount: 17900, // 149€ HT × 1.20 = 178.80€ → 179€ TTC
+    description: "PV de dissolution, formulaire M2 pré-rempli, assistance email",
+  },
+  standard: {
+    name: "LegalCorners — Dissolution Standard",
+    amount: 23900, // 199€ HT × 1.20 = 238.80€ → 239€ TTC
+    description: "Essentiel + annonce légale + suivi dossier + assistance prioritaire",
   },
   premium: {
     name: "LegalCorners — Dissolution Premium",
-    amount: 29900, // 299€ TTC en centimes
-    description: "Formule Essentiel + vérification juriste + accompagnement téléphonique",
+    amount: 29900, // 249€ HT × 1.20 = 298.80€ → 299€ TTC
+    description: "Standard + relecture juriste + accompagnement téléphonique + traitement express",
   },
 };
 

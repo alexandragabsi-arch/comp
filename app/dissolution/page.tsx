@@ -642,8 +642,11 @@ function DissolutionForm() {
       </aside>
 
       {/* ── Main content ─────────────────────────────────────────────────────── */}
-      <main className="flex-1 md:ml-72 flex items-start justify-center min-h-screen p-6 pt-16">
-        <div className="w-full max-w-xl">
+      <main className={cn(
+        "flex-1 flex items-start justify-center min-h-screen",
+        subStep === "commande" ? "p-0" : "md:ml-72 p-6 pt-16"
+      )}>
+        <div className={cn("w-full", subStep === "commande" ? "" : "max-w-xl")}>
           <AnimatePresence mode="wait">
 
             {/* ── Search ── */}
@@ -912,21 +915,15 @@ function DissolutionForm() {
                   <div className="grid grid-cols-2 gap-3">
                     {questions[currentQuestion].options.map((opt, i) => {
                       const emojis = ["⚡", "📅", "🗓️", "💭"];
-                      const colors = [
-                        "border-orange-200 bg-orange-50 hover:border-orange-400",
-                        "border-blue-200 bg-blue-50 hover:border-[#5D9CEC]",
-                        "border-violet-200 bg-violet-50 hover:border-violet-400",
-                        "border-gray-200 bg-gray-50 hover:border-gray-400",
-                      ];
                       return (
                         <button
                           key={opt.value}
                           onClick={() => answerQuestion(questions[currentQuestion].id, opt.value)}
-                          className={cn("flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all", colors[i])}
+                          className="flex flex-col items-start gap-2 p-5 rounded-xl border-2 border-gray-200 bg-white hover:border-[#5D9CEC] hover:bg-blue-50 text-left transition-all group"
                         >
                           <span className="text-2xl">{emojis[i]}</span>
                           <p className="font-bold text-[#1E3A8A] text-sm">{opt.label}</p>
-                          <p className="text-xs text-gray-500">{opt.description}</p>
+                          <p className="text-xs text-[#1E3A8A]/60">{opt.description}</p>
                         </button>
                       );
                     })}
@@ -957,19 +954,19 @@ function DissolutionForm() {
 
                 {/* Info panel dissolution judiciaire */}
                 {(questions[currentQuestion] as { info?: { content: string } }).info && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
+                  <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
                     <button
                       onClick={() => setInfoOpen((o) => !o)}
                       className="w-full flex items-center justify-between px-4 py-3 text-left"
                     >
-                      <span className="text-sm font-semibold text-amber-800 flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4" />
+                      <span className="text-sm font-semibold text-[#1E3A8A] flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-[#5D9CEC]" />
                         Que se passe-t-il en cas de dettes ?
                       </span>
-                      <ChevronRight className={cn("w-4 h-4 text-amber-600 transition-transform", infoOpen && "rotate-90")} />
+                      <ChevronRight className={cn("w-4 h-4 text-[#5D9CEC] transition-transform", infoOpen && "rotate-90")} />
                     </button>
                     {infoOpen && (
-                      <div className="px-4 pb-4 text-sm text-amber-900 leading-relaxed border-t border-amber-200 pt-3">
+                      <div className="px-4 pb-4 text-sm text-[#1E3A8A]/80 leading-relaxed border-t border-gray-100 pt-3">
                         {(questions[currentQuestion] as { info?: { content: string } }).info!.content}
                       </div>
                     )}
@@ -1150,9 +1147,26 @@ function DissolutionForm() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-6"
+                className="min-h-screen flex flex-col"
               >
-                <CompanyCard />
+                {/* Top bar plein écran */}
+                <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+                  <Link href="/"><Image src="/images/logo.svg" alt="LegalCorners" width={120} height={30} /></Link>
+                  <div className="hidden md:flex items-center gap-6 text-sm text-gray-400">
+                    <span className="flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs"><Check className="w-3 h-3" /></span>Projet</span>
+                    <span className="text-gray-200">›</span>
+                    <span className="flex items-center gap-1.5 font-semibold text-[#1E3A8A]"><span className="w-5 h-5 rounded-full bg-[#5D9CEC] text-white flex items-center justify-center text-xs font-bold">2</span>Commande</span>
+                    <span className="text-gray-200">›</span>
+                    <span className="text-gray-300 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs">3</span>Dossier Juridique</span>
+                    <span className="text-gray-200">›</span>
+                    <span className="text-gray-300 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center text-xs">4</span>Validation</span>
+                  </div>
+                  {selectedCompany && (
+                    <span className="text-xs text-gray-400 hidden md:block">{selectedCompany.nom}</span>
+                  )}
+                </div>
+
+                <div className="flex-1 px-6 py-10 max-w-6xl mx-auto w-full">
 
                 {/* ── Mise en sommeil : carte unique ── */}
                 {selectedProcedure === "mise-en-sommeil" ? (
@@ -1216,67 +1230,85 @@ function DissolutionForm() {
                 ) : (
                   /* ── Dissolution : 3 formules ── */
                   <div className="space-y-5">
-                    <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">
-                        Choisissez votre formule
+                    <div className="text-center space-y-2 mb-10">
+                      <h2 className="text-4xl font-extrabold text-[#1E3A8A]">
+                        Choisissez la formule qui vous correspond le mieux
                       </h2>
-                      <p className="text-gray-400 text-xs">
+                      <p className="text-gray-400 text-base">
                         + frais de greffe et annonces légales (~460–570 €)
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
                       {PLANS.map((plan) => (
                         <div
                           key={plan.id}
                           className={cn(
-                            "relative rounded-2xl p-4 flex flex-col transition-all",
+                            "relative rounded-3xl flex flex-col transition-all",
                             plan.featured
-                              ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-xl scale-[1.02]"
-                              : "bg-white border-2 border-gray-100"
+                              ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-2xl md:scale-[1.04] p-8"
+                              : "bg-white border-2 border-gray-100 p-7"
                           )}
                         >
                           {plan.badge && (
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                              <span className="bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                              <span className="bg-amber-400 text-amber-900 text-sm font-bold px-5 py-1.5 rounded-full whitespace-nowrap shadow">
                                 {plan.badge}
                               </span>
                             </div>
                           )}
 
-                          <div className="mb-4">
-                            <p className={cn("text-xs font-semibold uppercase tracking-wide mb-1",
+                          <div className="mb-6">
+                            <p className={cn("text-sm font-bold uppercase tracking-widest mb-3",
                               plan.featured ? "text-blue-200" : "text-gray-400"
                             )}>
                               {plan.name}
                             </p>
-                            <div className="flex items-baseline gap-1">
-                              <span className={cn("text-3xl font-bold",
+                            <div className="flex items-baseline gap-1.5">
+                              <span className={cn("text-6xl font-extrabold",
                                 plan.featured ? "text-white" : "text-[#1E3A8A]"
                               )}>
                                 {plan.priceHT}€
                               </span>
-                              <span className={cn("text-xs", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                              <span className={cn("text-base font-medium", plan.featured ? "text-blue-200" : "text-gray-400")}>
                                 HT
                               </span>
                             </div>
+                            <p className={cn("text-sm mt-2", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                              + frais légaux obligatoires
+                            </p>
                           </div>
 
-                          <ul className="space-y-2 flex-1 mb-4">
+                          <button
+                            onClick={() => selectPlan(plan.id)}
+                            disabled={paymentLoading !== null}
+                            className={cn(
+                              "w-full py-4 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 mb-6",
+                              plan.featured
+                                ? "bg-white text-[#1E3A8A] hover:bg-blue-50"
+                                : "border-2 border-[#5D9CEC] text-[#5D9CEC] hover:bg-[#5D9CEC] hover:text-white"
+                            )}
+                          >
+                            {paymentLoading === plan.id
+                              ? <Loader2 className="w-4 h-4 animate-spin" />
+                              : plan.cta}
+                          </button>
+
+                          <ul className="space-y-3 flex-1">
                             {plan.features.map((f) => (
-                              <li key={f.label} className="flex items-start gap-1.5">
+                              <li key={f.label} className="flex items-start gap-2.5">
                                 {f.included === true ? (
-                                  <Check className={cn("w-3.5 h-3.5 mt-0.5 flex-shrink-0",
+                                  <Check className={cn("w-4 h-4 mt-0.5 flex-shrink-0",
                                     plan.featured ? "text-blue-300" : "text-[#5D9CEC]"
                                   )} />
                                 ) : f.included === "partial" ? (
-                                  <span className={cn("w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-xs flex items-center justify-center",
+                                  <span className={cn("text-base leading-none mt-0.5 flex-shrink-0",
                                     plan.featured ? "text-amber-300" : "text-amber-500"
                                   )}>~</span>
                                 ) : (
-                                  <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-gray-300" />
+                                  <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-300" />
                                 )}
-                                <span className={cn("text-xs leading-tight",
+                                <span className={cn("text-sm leading-snug",
                                   plan.featured ? "text-blue-100" : f.included ? "text-gray-700" : "text-gray-300"
                                 )}>
                                   {f.label}
@@ -1284,21 +1316,6 @@ function DissolutionForm() {
                               </li>
                             ))}
                           </ul>
-
-                          <button
-                            onClick={() => selectPlan(plan.id)}
-                            disabled={paymentLoading !== null}
-                            className={cn(
-                              "w-full py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5",
-                              plan.featured
-                                ? "bg-white text-[#1E3A8A] hover:bg-blue-50"
-                                : "bg-[#5D9CEC]/10 text-[#1E3A8A] hover:bg-[#5D9CEC]/20"
-                            )}
-                          >
-                            {paymentLoading === plan.id
-                              ? <Loader2 className="w-3 h-3 animate-spin" />
-                              : plan.cta}
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -1317,6 +1334,7 @@ function DissolutionForm() {
                     ← Retour
                   </button>
                 </div>
+                </div>{/* end flex-1 inner */}
               </motion.div>
             )}
 

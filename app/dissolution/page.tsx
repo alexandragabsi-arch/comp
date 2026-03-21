@@ -148,59 +148,60 @@ const QUESTIONS_SOMMEIL = [
 ];
 
 // ── Pricing plans ─────────────────────────────────────────────────────────────
-const PLANS = [
+type PlanFeature = { label: string; included: boolean | "partial" };
+type Plan = {
+  id: string; name: string; priceHT: number; badge?: string; featured?: boolean;
+  features: PlanFeature[]; cta: string;
+};
+
+const PLANS: Plan[] = [
   {
     id: "starter",
     name: "Starter",
-    priceHT: 0,
-    priceTTC: 0,
-    icon: FileText,
-    color: "border-gray-200",
+    priceHT: 79,
     features: [
-      "Procès-verbal de dissolution",
-      "Formulaire M2 pré-rempli",
-      "Notice explicative étape par étape",
-      "Sans assistance ni vérification",
+      { label: "Documents juridiques générés", included: true },
+      { label: "Formulaire M2 pré-rempli", included: true },
+      { label: "Vérification par un formaliste", included: false },
+      { label: "Envoi dossier au greffe", included: false },
+      { label: "Accompagnement expert", included: false },
     ],
     cta: "Choisir Starter",
   },
   {
     id: "standard",
     name: "Standard",
-    priceHT: 149,
-    priceTTC: 179,
-    icon: Shield,
-    color: "border-[#5D9CEC]",
-    popular: true,
+    priceHT: 199,
+    featured: true,
+    badge: "Le plus choisi",
     features: [
-      "Tout le Starter",
-      "Aide d'un formaliste par email",
-      "Vérification complète du dossier",
-      "Assistance jusqu'à la clôture",
+      { label: "Documents juridiques générés", included: true },
+      { label: "Formulaire M2 pré-rempli", included: true },
+      { label: "Vérification par un formaliste", included: true },
+      { label: "Envoi dossier au greffe", included: true },
+      { label: "Accompagnement expert", included: "partial" },
     ],
     cta: "Choisir Standard",
   },
   {
     id: "premium",
-    name: "Premium Express",
+    name: "Premium",
     priceHT: 249,
-    priceTTC: 299,
-    icon: Sparkles,
-    color: "border-gray-200",
     features: [
-      "Tout le Standard",
-      "Traitement express 48h",
-      "Assurance anti-rejet greffe",
-      "Assistance illimitée email + téléphone",
+      { label: "Documents juridiques générés", included: true },
+      { label: "Formulaire M2 pré-rempli", included: true },
+      { label: "Vérification par un formaliste", included: true },
+      { label: "Envoi dossier au greffe", included: true },
+      { label: "Accompagnement expert illimité", included: true },
     ],
-    cta: "Choisir Premium Express",
+    cta: "Choisir Premium",
   },
 ];
 
 type Suggestion = { siren: string; nom: string; formeJuridique: string; ville: string };
 type Company = { siren: string; nom: string; formeJuridique: string; ville: string };
 type Procedure = "dissolution" | "mise-en-sommeil" | null;
-type SubStep = "search" | "procedure" | "questions" | "commande";
+type SubStep = "search" | "procedure" | "intro" | "questions" | "etapes" | "commande";
 
 export default function DissolutionPage() {
   const [sidebarStep, setSidebarStep] = useState(1);
@@ -284,7 +285,7 @@ export default function DissolutionPage() {
     setSelectedProcedure(p);
     setCurrentQuestion(0);
     setAnswers({});
-    setSubStep("questions");
+    setSubStep("intro");
   }
 
   function answerQuestion(questionId: string, value: string) {
@@ -293,9 +294,7 @@ export default function DissolutionPage() {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      // All questions answered → go to payment
-      setSidebarStep(2);
-      setSubStep("commande");
+      setSubStep("etapes");
     }
   }
 
@@ -305,13 +304,6 @@ export default function DissolutionPage() {
       const stateKey = btoa(
         JSON.stringify({ company: selectedCompany, procedure: selectedProcedure, answers })
       );
-      // Starter is free — skip Stripe
-      if (planId === "starter") {
-        setSidebarStep(3);
-        setSubStep("commande"); // TODO: navigate to dossier juridique step
-        setPaymentLoading(null);
-        return;
-      }
       const res = await fetch("/api/stripe/checkout-dissolution", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -564,6 +556,93 @@ export default function DissolutionPage() {
               </motion.div>
             )}
 
+            {/* ── Intro ── */}
+            {subStep === "intro" && selectedProcedure && (
+              <motion.div
+                key="intro"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-10"
+              >
+                <CompanyCard />
+
+                <h1 className="text-3xl font-bold text-[#1E3A8A] text-center leading-tight">
+                  Quelques informations avant de{" "}
+                  <span className="text-[#F97316]">
+                    {selectedProcedure === "dissolution"
+                      ? "fermer votre société"
+                      : "mettre en sommeil votre société"}
+                  </span>
+                </h1>
+
+                <div className="grid grid-cols-3 gap-6 text-center">
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
+                        <Clock className="w-7 h-7 text-[#5D9CEC]" />
+                      </div>
+                    </div>
+                    <p className="font-bold text-[#1E3A8A] text-sm">
+                      Combien de temps dure le questionnaire ?
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Les utilisateurs le remplissent en moyenne en 5 à 10 minutes.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
+                        <Users className="w-7 h-7 text-[#5D9CEC]" />
+                      </div>
+                    </div>
+                    <p className="font-bold text-[#1E3A8A] text-sm">
+                      Vous avez besoin d&apos;aide ?
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Nos experts sont là pour vous aider par email ou téléphone.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex justify-center">
+                      <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
+                        <Shield className="w-7 h-7 text-[#5D9CEC]" />
+                      </div>
+                    </div>
+                    <p className="font-bold text-[#1E3A8A] text-sm">
+                      On s&apos;occupe de tout pour vous !
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {selectedProcedure === "dissolution"
+                        ? "Dissolution, liquidation et radiation en toute sérénité."
+                        : "Déclaration de cessation et enregistrement au greffe."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 text-center">
+                  <button
+                    onClick={() => setSubStep("questions")}
+                    className="w-full py-4 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-base"
+                  >
+                    {selectedProcedure === "dissolution"
+                      ? "Dissoudre et radier ma société"
+                      : "Mettre ma société en sommeil"}
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+
+                  <button
+                    onClick={resetSearch}
+                    className="text-gray-400 text-sm hover:text-[#1E3A8A] transition-colors"
+                  >
+                    ← Retour
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             {/* ── Questions ── */}
             {subStep === "questions" && (
               <motion.div
@@ -631,6 +710,75 @@ export default function DissolutionPage() {
                     ← Retour
                   </button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* ── Étapes suivantes ── */}
+            {subStep === "etapes" && (
+              <motion.div
+                key="etapes"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-10"
+              >
+                <CompanyCard />
+
+                <div className="text-center space-y-2">
+                  <div className="inline-flex items-center gap-2 bg-green-50 text-green-700 text-sm font-medium px-4 py-1.5 rounded-full mb-2">
+                    <Check className="w-4 h-4" />
+                    Votre projet est prêt
+                  </div>
+                  <h2 className="text-2xl font-bold text-[#1E3A8A]">
+                    Voici les prochaines étapes
+                  </h2>
+                  <p className="text-gray-500 text-sm">
+                    {selectedProcedure === "dissolution"
+                      ? "Votre dossier de dissolution-liquidation avance bien."
+                      : "Votre mise en sommeil est en bonne voie."}
+                  </p>
+                </div>
+
+                <div className="relative">
+                  {/* connecting line */}
+                  <div className="absolute top-6 left-0 right-0 h-0.5 bg-gray-100 mx-12 hidden sm:block" />
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center relative">
+                    {[
+                      { num: 1, label: "Votre projet", sub: "Informations collectées", done: true },
+                      { num: 2, label: "Commande", sub: "Choisissez votre formule" },
+                      { num: 3, label: "Dossier juridique", sub: "Documents & compléments" },
+                      { num: 4, label: "Validation", sub: "Envoi au greffe" },
+                    ].map((e) => (
+                      <div key={e.num} className="flex flex-col items-center gap-2">
+                        <div className={cn(
+                          "w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold relative z-10",
+                          e.done
+                            ? "bg-green-500 text-white"
+                            : e.num === 2
+                            ? "bg-[#5D9CEC] text-white ring-4 ring-[#5D9CEC]/20"
+                            : "bg-gray-100 text-gray-400"
+                        )}>
+                          {e.done ? <Check className="w-5 h-5" /> : e.num}
+                        </div>
+                        <p className={cn(
+                          "text-sm font-semibold",
+                          e.done ? "text-green-600" : e.num === 2 ? "text-[#1E3A8A]" : "text-gray-400"
+                        )}>
+                          {e.label}
+                        </p>
+                        <p className="text-xs text-gray-400">{e.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setSidebarStep(2); setSubStep("commande"); }}
+                  className="w-full py-4 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-base"
+                >
+                  Continuer vers la commande
+                  <ArrowRight className="w-5 h-5" />
+                </button>
               </motion.div>
             )}
 
@@ -707,92 +855,92 @@ export default function DissolutionPage() {
                   </div>
                 ) : (
                   /* ── Dissolution : 3 formules ── */
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">
                         Choisissez votre formule
                       </h2>
-                      <p className="text-gray-500 text-sm">
-                        Frais de greffe et annonces légales non inclus (~460–570 €)
+                      <p className="text-gray-400 text-xs">
+                        + frais de greffe et annonces légales (~460–570 €)
                       </p>
                     </div>
 
-                    <div className="space-y-3">
-                      {PLANS.map((plan) => {
-                        const Icon = plan.icon;
-                        return (
-                          <div
-                            key={plan.id}
-                            className={cn(
-                              "relative bg-white rounded-xl border-2 p-5 transition-all",
-                              plan.popular ? "border-[#5D9CEC]" : "border-gray-200"
-                            )}
-                          >
-                            {plan.popular && (
-                              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                <span className="bg-[#5D9CEC] text-white text-xs font-bold px-3 py-1 rounded-full">
-                                  LE PLUS POPULAIRE
-                                </span>
-                              </div>
-                            )}
+                    <div className="grid grid-cols-3 gap-3">
+                      {PLANS.map((plan) => (
+                        <div
+                          key={plan.id}
+                          className={cn(
+                            "relative rounded-2xl p-4 flex flex-col transition-all",
+                            plan.featured
+                              ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-xl scale-[1.02]"
+                              : "bg-white border-2 border-gray-100"
+                          )}
+                        >
+                          {plan.badge && (
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                              <span className="bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+                                {plan.badge}
+                              </span>
+                            </div>
+                          )}
 
-                            <div className="flex items-start gap-4">
-                              <div className={cn(
-                                "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
-                                plan.popular ? "bg-[#5D9CEC]/10" : "bg-gray-50"
+                          <div className="mb-4">
+                            <p className={cn("text-xs font-semibold uppercase tracking-wide mb-1",
+                              plan.featured ? "text-blue-200" : "text-gray-400"
+                            )}>
+                              {plan.name}
+                            </p>
+                            <div className="flex items-baseline gap-1">
+                              <span className={cn("text-3xl font-bold",
+                                plan.featured ? "text-white" : "text-[#1E3A8A]"
                               )}>
-                                <Icon className={cn("w-6 h-6", plan.popular ? "text-[#5D9CEC]" : "text-gray-500")} />
-                              </div>
-
-                              <div className="flex-1">
-                                <div className="flex items-baseline justify-between mb-1">
-                                  <h3 className="font-bold text-[#1E3A8A] text-lg">{plan.name}</h3>
-                                  <div className="text-right">
-                                    <span className="text-2xl font-bold text-[#1E3A8A]">
-                                      {plan.priceTTC === 0 ? "Gratuit" : `${plan.priceTTC}€`}
-                                    </span>
-                                    {plan.priceTTC > 0 && (
-                                      <span className="text-xs text-gray-400 ml-1">TTC</span>
-                                    )}
-                                  </div>
-                                </div>
-                                {plan.priceHT > 0 && (
-                                  <p className="text-xs text-gray-400 mb-3">{plan.priceHT}€ HT</p>
-                                )}
-                                {plan.priceTTC === 0 && (
-                                  <p className="text-xs text-gray-400 mb-3">Hors frais de greffe et annonces légales</p>
-                                )}
-
-                                <ul className="space-y-1.5 mb-4">
-                                  {plan.features.map((f) => (
-                                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                                      {f}
-                                    </li>
-                                  ))}
-                                </ul>
-
-                                <button
-                                  onClick={() => handlePayment(plan.id)}
-                                  disabled={paymentLoading !== null}
-                                  className={cn(
-                                    "w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2",
-                                    plan.popular
-                                      ? "bg-[#5D9CEC] text-white hover:bg-[#4a8bd4]"
-                                      : "bg-gray-100 text-[#1E3A8A] hover:bg-gray-200"
-                                  )}
-                                >
-                                  {paymentLoading === plan.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    plan.cta
-                                  )}
-                                </button>
-                              </div>
+                                {plan.priceHT}€
+                              </span>
+                              <span className={cn("text-xs", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                                HT
+                              </span>
                             </div>
                           </div>
-                        );
-                      })}
+
+                          <ul className="space-y-2 flex-1 mb-4">
+                            {plan.features.map((f) => (
+                              <li key={f.label} className="flex items-start gap-1.5">
+                                {f.included === true ? (
+                                  <Check className={cn("w-3.5 h-3.5 mt-0.5 flex-shrink-0",
+                                    plan.featured ? "text-blue-300" : "text-[#5D9CEC]"
+                                  )} />
+                                ) : f.included === "partial" ? (
+                                  <span className={cn("w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-xs flex items-center justify-center",
+                                    plan.featured ? "text-amber-300" : "text-amber-500"
+                                  )}>~</span>
+                                ) : (
+                                  <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-gray-300" />
+                                )}
+                                <span className={cn("text-xs leading-tight",
+                                  plan.featured ? "text-blue-100" : f.included ? "text-gray-700" : "text-gray-300"
+                                )}>
+                                  {f.label}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          <button
+                            onClick={() => handlePayment(plan.id)}
+                            disabled={paymentLoading !== null}
+                            className={cn(
+                              "w-full py-2.5 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5",
+                              plan.featured
+                                ? "bg-white text-[#1E3A8A] hover:bg-blue-50"
+                                : "bg-[#5D9CEC]/10 text-[#1E3A8A] hover:bg-[#5D9CEC]/20"
+                            )}
+                          >
+                            {paymentLoading === plan.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : plan.cta}
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

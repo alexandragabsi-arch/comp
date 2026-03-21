@@ -68,8 +68,8 @@ function getQuestionsDissoltion(formeJuridique: string) {
     },
     {
       id: "actifs",
-      question: "La société a-t-elle encore des actifs ou des dettes ?",
-      subtitle: "Hors dissolution amiable si des dettes existent",
+      question: "La société a-t-elle des dettes ?",
+      subtitle: "En cas de dettes, une dissolution judiciaire peut être nécessaire",
       options: [
         {
           value: "non",
@@ -79,11 +79,15 @@ function getQuestionsDissoltion(formeJuridique: string) {
         },
         {
           value: "oui",
-          label: "Oui, il y a des actifs",
-          description: "La liquidation devra répartir les actifs entre associés",
+          label: "Oui, il y a des dettes ou actifs",
+          description: "La liquidation devra apurer les dettes et répartir les actifs",
           icon: AlertTriangle,
         },
       ],
+      info: {
+        trigger: "oui",
+        content: "⚠️ Si la société a des dettes, la dissolution amiable n'est pas possible. Il faudra passer par une **dissolution judiciaire** ou rembourser les créanciers avant de clôturer.",
+      },
     },
     {
       id: "liquidateur",
@@ -891,6 +895,32 @@ function DissolutionForm() {
                     );
                   })}
                 </div>
+
+                {/* Info panel dissolution judiciaire */}
+                {(() => {
+                  const q = questions[currentQuestion] as typeof questions[number] & { info?: { trigger: string; content: string } };
+                  if (!q.info) return null;
+                  const [open, setOpen] = useState(false);
+                  return (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
+                      <button
+                        onClick={() => setOpen((o) => !o)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-left"
+                      >
+                        <span className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4" />
+                          Que se passe-t-il en cas de dettes ?
+                        </span>
+                        <ChevronRight className={cn("w-4 h-4 text-amber-600 transition-transform", open && "rotate-90")} />
+                      </button>
+                      {open && (
+                        <div className="px-4 pb-4 text-sm text-amber-900 leading-relaxed border-t border-amber-200 pt-3">
+                          {q.info.content}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="text-center">
                   <button

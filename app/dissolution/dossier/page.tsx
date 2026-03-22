@@ -692,7 +692,20 @@ function DossierForm() {
               <Field label="Numéro SIREN" value={siren} onChange={setSiren} placeholder="XXX XXX XXX" />
               <Field label="Siège social (adresse complète)" value={siegeSocial} onChange={setSiegeSocial} placeholder="1 rue de la Paix, 75001 Paris" />
               <div className="grid grid-cols-2 gap-4">
-                <Field label="Date de la décision" value={date} onChange={setDate} placeholder="JJ/MM/AAAA" />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Date de la décision <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={date ? date.split("/").reverse().join("-") : ""}
+                    onChange={(e) => {
+                      const [y, m, d2] = e.target.value.split("-");
+                      setDate(e.target.value ? `${d2}/${m}/${y}` : "");
+                    }}
+                    className="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#5D9CEC] bg-white text-sm text-gray-800"
+                  />
+                </div>
                 <Field label="Ville de signature" value={ville} onChange={setVille} placeholder="Paris" />
               </div>
             </div>

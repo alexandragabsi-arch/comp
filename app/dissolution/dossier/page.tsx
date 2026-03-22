@@ -181,13 +181,24 @@ function DossierForm() {
         const dt = autoDecisionType(d.formeJuridique || initCompany!.formeJuridique);
         setDecisionType(dt);
 
-        // AGE: total parts from associés
-        const totalParts = (d.associes as { nbParts: number }[] ?? []).reduce(
+        // AGE: total parts from associés + feuille de présence
+        const rawAssocies = (d.associes as { nom: string; prenom: string; nbParts: number }[] ?? []);
+        const totalParts = rawAssocies.reduce(
           (sum: number, a: { nbParts: number }) => sum + (a.nbParts ?? 0), 0
         );
         if (totalParts > 0) {
           setAgePartsPresentes(String(totalParts));
           setAgePartsTotal(String(totalParts));
+        }
+        if (rawAssocies.length > 0) {
+          setFeuilleAssocies(rawAssocies.map((a) => ({
+            civilite: "",
+            nom: a.nom,
+            prenom: a.prenom,
+            representant: "",
+            qualite: "pleine_propriete" as const,
+            nbParts: String(a.nbParts || ""),
+          })));
         }
 
         // Type actions (SAS/SA → actions, sinon parts sociales)
@@ -215,6 +226,19 @@ function DossierForm() {
       .finally(() => setSirenLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // ── Feuille de présence ───────────────────────────────────────────────────
+  interface FeuilleAssoc {
+    civilite: string;
+    nom: string;
+    prenom: string;
+    representant: string;
+    qualite: "pleine_propriete" | "industrie" | "nue_propriete" | "usufruit";
+    nbParts: string;
+  }
+  const [feuilleAssocies, setFeuilleAssocies] = useState<FeuilleAssoc[]>([]);
+  const [feuilleLoading, setFeuilleLoading] = useState(false);
+  const [feuilleOpen, setFeuilleOpen] = useState(false);
+
   // ── Pièces justificatives Greffe ─────────────────────────────────────────
   type JustifKeyDiss = "pvDissolution" | "attestationAL" | "identiteLiquidateur" | "pvLiquidation" | "comptesLiquidation" | "attestationALCloture";
   interface JustifFileDiss { name: string; size: number; }
@@ -542,6 +566,41 @@ function DossierForm() {
       setSignResult(err instanceof Error ? err.message : "Erreur signature.");
     } finally {
       setSignLoading(false);
+    }
+  }
+
+  async function downloadFeuillePresence() {
+    setFeuilleLoading(true);
+    try {
+      const data = {
+        companyName, formeJuridique, capital, siegeSocial, rcsVille, siren,
+        date, heure: ageHeure || "10h00",
+        lieuAssemblee: lieuAssemblee || siegeSocial,
+        typeActions: ageTypeActions,
+        president: agePresident,
+        associes: feuilleAssocies.length > 0 ? feuilleAssocies : [
+          { civilite: "", nom: "", prenom: "", representant: "", qualite: "pleine_propriete", nbParts: "" },
+          { civilite: "", nom: "", prenom: "", representant: "", qualite: "pleine_propriete", nbParts: "" },
+          { civilite: "", nom: "", prenom: "", representant: "", qualite: "pleine_propriete", nbParts: "" },
+        ],
+      };
+      const res = await fetch("/api/dissolution/feuille-presence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Erreur génération feuille de présence");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Feuille_Presence_AGE_${companyName.replace(/\s+/g, "_")}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Erreur génération feuille de présence.");
+    } finally {
+      setFeuilleLoading(false);
     }
   }
 
@@ -1021,6 +1080,114 @@ function DossierForm() {
                   </div>
                 )}
               </div>
+
+              {/* ── Feuille de présence AGE ── */}
+              {decisionType === "age" && (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setFeuilleOpen((o) => !o)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-[#5D9CEC]" />
+                      <span className="font-semibold text-sm text-[#1E3A8A]">Feuille de présence AGE</span>
+                      <span className="text-xs text-gray-400 font-normal">(optionnel — à conserver)</span>
+                    </div>
+                    {feuilleOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  </button>
+
+                  {feuilleOpen && (
+                    <div className="border-t border-gray-100 p-4 space-y-3 bg-gray-50">
+                      <p className="text-xs text-gray-500">
+                        Document A4 paysage avec tableau nominatif. Pré-rempli depuis le registre Pappers si disponible.
+                      </p>
+
+                      {/* Liste des associés */}
+                      <div className="space-y-2">
+                        {feuilleAssocies.map((a, i) => (
+                          <div key={i} className="bg-white border border-gray-200 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Associé {i + 1}</span>
+                              <button
+                                onClick={() => setFeuilleAssocies((prev) => prev.filter((_, j) => j !== i))}
+                                className="text-red-400 hover:text-red-600 text-xs"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <select
+                                value={a.civilite}
+                                onChange={(e) => { const n = [...feuilleAssocies]; n[i] = { ...n[i], civilite: e.target.value }; setFeuilleAssocies(n); }}
+                                className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"
+                              >
+                                <option value="">—</option>
+                                <option value="M.">M.</option>
+                                <option value="Mme">Mme</option>
+                              </select>
+                              <input
+                                value={a.prenom}
+                                onChange={(e) => { const n = [...feuilleAssocies]; n[i] = { ...n[i], prenom: e.target.value }; setFeuilleAssocies(n); }}
+                                placeholder="Prénom"
+                                className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs"
+                              />
+                              <input
+                                value={a.nom}
+                                onChange={(e) => { const n = [...feuilleAssocies]; n[i] = { ...n[i], nom: e.target.value }; setFeuilleAssocies(n); }}
+                                placeholder="NOM"
+                                className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs"
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <select
+                                value={a.qualite}
+                                onChange={(e) => { const n = [...feuilleAssocies]; n[i] = { ...n[i], qualite: e.target.value as FeuilleAssoc["qualite"] }; setFeuilleAssocies(n); }}
+                                className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs bg-white"
+                              >
+                                <option value="pleine_propriete">Pleine propriété</option>
+                                <option value="nue_propriete">Nu-propriétaire</option>
+                                <option value="usufruit">Usufruitier</option>
+                                <option value="industrie">Apporteur en industrie</option>
+                              </select>
+                              <input
+                                value={a.nbParts}
+                                onChange={(e) => { const n = [...feuilleAssocies]; n[i] = { ...n[i], nbParts: e.target.value }; setFeuilleAssocies(n); }}
+                                placeholder={`Nb ${ageTypeActions === "actions" ? "actions" : "parts"}`}
+                                className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs"
+                              />
+                            </div>
+                            <input
+                              value={a.representant}
+                              onChange={(e) => { const n = [...feuilleAssocies]; n[i] = { ...n[i], representant: e.target.value }; setFeuilleAssocies(n); }}
+                              placeholder="Représentant (si personne morale ou mandataire)"
+                              className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs"
+                            />
+                          </div>
+                        ))}
+
+                        <button
+                          onClick={() => setFeuilleAssocies((prev) => [
+                            ...prev,
+                            { civilite: "", nom: "", prenom: "", representant: "", qualite: "pleine_propriete", nbParts: "" }
+                          ])}
+                          className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 text-xs rounded-lg hover:border-[#5D9CEC] hover:text-[#5D9CEC] transition-colors"
+                        >
+                          + Ajouter un associé
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={downloadFeuillePresence}
+                        disabled={feuilleLoading}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl transition-all text-sm"
+                      >
+                        {feuilleLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                        Télécharger la feuille de présence (.docx)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* ── Retour édition ── */}
               <button

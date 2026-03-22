@@ -73,10 +73,11 @@ export async function getBubbleDossiers(userEmail: string): Promise<BubbleDossie
       const statut = ((r["OS_Statut"] as string) ?? "").toLowerCase().trim();
       const formeJuridique = ((r["Questionnaire"] as string) ?? "").toUpperCase();
       const ref = (r["Référence"] as string) ?? "";
+      const denomination = (r["Denomination"] as string) ?? "";
       return {
         id: r._id as string,
-        // Nom affiché = "SASU · LC-2026-000003" (le nom réel est dans les réponses du questionnaire)
-        company_name: formeJuridique ? `${formeJuridique} · ${ref}` : ref || "Dossier LegalCorners",
+        // Nom affiché = dénomination si disponible, sinon "SASU · LC-2026-000003"
+        company_name: denomination || (formeJuridique ? `${formeJuridique} · ${ref}` : ref || "Dossier LegalCorners"),
         siren: "",
         type: "creation",
         status: STATUS_MAP[statut] ?? "en_cours",

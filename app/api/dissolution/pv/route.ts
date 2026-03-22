@@ -351,7 +351,7 @@ export async function POST(request: NextRequest) {
     para([
       bold(`${decision} `),
       normal(
-        `${donne} au liquidateur les pouvoirs les plus étendus pour mener à bien sa mission, c'est-à-dire réaliser l'actif, payer le passif et répartir le solde entre les associés, sous réserve des dispositions des articles L 237-1 et suivants du Code de commerce.`
+        `${donne} au liquidateur les pouvoirs les plus étendus pour mener à bien sa mission, c'est-à-dire réaliser l'actif, payer le passif et répartir le solde entre ${d.decisionType === "associe_unique" ? "l'associé unique" : "les associés"}, sous réserve des dispositions des articles L 237-1 et suivants du Code de commerce.`
       ),
     ]),
     paraText(

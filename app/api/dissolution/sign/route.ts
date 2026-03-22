@@ -105,8 +105,8 @@ export async function POST(request: NextRequest) {
               phone_number: signer.phone ?? undefined,
               locale: "fr",
             },
-            signature_level: "electronic_signature",
-            signature_authentication_mode: "otp_email",
+            signature_level: "advanced_electronic_signature",
+            signature_authentication_mode: "otp_sms",
             fields: [
               {
                 document_id: documentId,

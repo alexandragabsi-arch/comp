@@ -276,6 +276,7 @@ function DossierForm() {
   const [signerEmail, setSignerEmail] = useState("");
   const [signerFirstName, setSignerFirstName] = useState("");
   const [signerLastName, setSignerLastName] = useState("");
+  const [signerPhone, setSignerPhone] = useState("");
   const [signLoading, setSignLoading] = useState(false);
   const [signResult, setSignResult] = useState<string | null>(null);
 
@@ -529,8 +530,8 @@ function DossierForm() {
   }
 
   async function handleYousign(docType: "pv" | "convocation") {
-    if (!signerEmail || !signerFirstName || !signerLastName) {
-      alert("Veuillez remplir le prénom, nom et email du signataire.");
+    if (!signerEmail || !signerFirstName || !signerLastName || !signerPhone) {
+      alert("Veuillez remplir le prénom, nom, email et téléphone du signataire.");
       return;
     }
     setSignLoading(true);
@@ -556,7 +557,7 @@ function DossierForm() {
           documentType: docType,
           companyName,
           documentBase64: base64,
-          signers: [{ firstName: signerFirstName, lastName: signerLastName, email: signerEmail }],
+          signers: [{ firstName: signerFirstName, lastName: signerLastName, email: signerEmail, phone: signerPhone }],
         }),
       });
       const signData = await signRes.json();
@@ -951,13 +952,16 @@ function DossierForm() {
                   <p className="font-semibold text-green-800 text-sm">Étape 1 — Signer le PV en ligne</p>
                 </div>
                 <p className="text-xs text-gray-500">
-                  Renseignez les coordonnées du signataire. Un lien de signature sécurisé lui sera envoyé par email.
+                  Signature électronique avancée (AES eIDAS) — un code OTP sera envoyé par SMS au signataire.
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <Field label="Prénom" value={signerFirstName} onChange={setSignerFirstName} placeholder="Jean" />
                   <Field label="Nom" value={signerLastName} onChange={setSignerLastName} placeholder="DUPONT" />
                 </div>
-                <Field label="Email du signataire" value={signerEmail} onChange={setSignerEmail} placeholder="jean@societe.fr" type="email" />
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Email du signataire" value={signerEmail} onChange={setSignerEmail} placeholder="jean@societe.fr" type="email" />
+                  <Field label="Téléphone (OTP SMS) *" value={signerPhone} onChange={setSignerPhone} placeholder="+33612345678" />
+                </div>
                 <div className="flex gap-2 pt-1">
                   <button
                     onClick={() => handleYousign("pv")}

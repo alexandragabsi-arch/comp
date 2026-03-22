@@ -39,7 +39,7 @@ const SIDEBAR_STEPS = [
 // Retourne le titre du dirigeant selon la forme juridique
 function getDirigeantLabel(formeJuridique: string): string {
   const fj = formeJuridique.toUpperCase();
-  if (fj.includes("SAS") || fj.includes("SASU") || fj.includes("SA")) return "président";
+  if (/\bSASU\b/.test(fj) || /\bSAS\b/.test(fj) || /\bSA\b/.test(fj)) return "président";
   return "gérant";
 }
 

@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
         })),
       ],
       mode: "payment",
+      metadata: { type: isSommeil ? "sommeil" : "dissolution", formule },
       success_url: `${baseUrl}/dissolution?payment=success&session_id={CHECKOUT_SESSION_ID}&state=${stateKey}&formule=${formule}`,
       cancel_url: `${baseUrl}/dissolution?payment=cancel&formule=${formule}`,
       locale: "fr",

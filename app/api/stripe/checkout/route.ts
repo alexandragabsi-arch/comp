@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "payment",
+      metadata: { type: "cession", formule },
       success_url: `${baseUrl}/cession-parts?payment=success&session_id={CHECKOUT_SESSION_ID}&state=${stateKey}&formule=${formule}`,
       cancel_url: `${baseUrl}/cession-parts?payment=cancel&formule=${formule}`,
       locale: "fr",

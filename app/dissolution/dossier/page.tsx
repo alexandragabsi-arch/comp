@@ -855,59 +855,174 @@ function DossierForm() {
                 </div>
               </div>
 
+              {/* Prochaines étapes */}
               <div className="bg-green-50 rounded-xl p-4 space-y-2 text-sm text-gray-700">
                 <p className="font-semibold text-green-800 text-xs uppercase tracking-wide mb-1">Prochaines étapes</p>
-                <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" /><span>Faire signer le PV par l'associé unique / les associés</span></div>
-                <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" /><span>Publier l'annonce légale de dissolution dans un journal habilité</span></div>
-                <div className="flex items-start gap-2"><Check className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" /><span>Déposer le dossier de dissolution au greffe du tribunal de commerce</span></div>
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                  <span><strong>Signer le PV en ligne</strong> — envoi du lien de signature par email (Yousign)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#5D9CEC] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                  <span><strong>LegalCorners publie l'annonce légale</strong> de dissolution dans un journal habilité</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[#1E3A8A] text-white flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                  <span><strong>Dépôt du dossier</strong> au greffe du tribunal de commerce</span>
+                </div>
               </div>
 
-              {/* Pièces justificatives Phase 1 */}
-              <div className="border-t border-gray-100 pt-4">
+              {/* ── 1. Signature en ligne (action principale) ── */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <PenLine className="w-5 h-5 text-green-600" />
+                  <p className="font-semibold text-green-800 text-sm">Étape 1 — Signer le PV en ligne</p>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Renseignez les coordonnées du signataire. Un lien de signature sécurisé lui sera envoyé par email.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Prénom" value={signerFirstName} onChange={setSignerFirstName} placeholder="Jean" />
+                  <Field label="Nom" value={signerLastName} onChange={setSignerLastName} placeholder="DUPONT" />
+                </div>
+                <Field label="Email du signataire" value={signerEmail} onChange={setSignerEmail} placeholder="jean@societe.fr" type="email" />
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => handleYousign("pv")}
+                    disabled={signLoading}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all text-sm shadow-sm"
+                  >
+                    {signLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
+                    Envoyer le PV à signer
+                  </button>
+                  {decisionType === "age" && (
+                    <button
+                      onClick={() => handleYousign("convocation")}
+                      disabled={signLoading}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-green-600 text-green-700 font-semibold rounded-xl hover:bg-green-50 transition-all text-sm"
+                    >
+                      {signLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
+                      Envoyer Convocation
+                    </button>
+                  )}
+                </div>
+                {signResult && (
+                  <p className={`text-xs font-medium px-1 ${signResult.includes("Erreur") || signResult.includes("échou") ? "text-red-500" : "text-green-700"}`}>
+                    {signResult}
+                  </p>
+                )}
+                {/* Aperçu + téléchargement en secondaire */}
+                <div className="flex gap-2 pt-1 border-t border-green-200">
+                  <button
+                    onClick={() => setPreview({ open: true, type: "pv", title: `PV de Dissolution – ${companyName}` })}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-green-300 text-green-700 font-medium rounded-lg hover:bg-white transition-all text-xs"
+                  >
+                    <Eye className="w-3.5 h-3.5" /> Aperçu PV
+                  </button>
+                  <button onClick={generate} disabled={loading}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-green-300 text-green-700 font-medium rounded-lg hover:bg-white transition-all text-xs"
+                  >
+                    {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                    Télécharger .docx
+                  </button>
+                  {decisionType === "age" && (<>
+                    <button
+                      onClick={() => setPreview({ open: true, type: "convocation", title: `Convocation AGE – ${companyName}` })}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-green-300 text-green-700 font-medium rounded-lg hover:bg-white transition-all text-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> Aperçu Convoc.
+                    </button>
+                    <button onClick={generateConvocation} disabled={convocLoading}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-green-300 text-green-700 font-medium rounded-lg hover:bg-white transition-all text-xs"
+                    >
+                      {convocLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+                      Convoc. .docx
+                    </button>
+                  </>)}
+                </div>
+              </div>
+
+              {/* ── 2. Annonce légale (LegalCorners publie) ── */}
+              <div className="bg-blue-50 border border-[#5D9CEC]/30 rounded-xl p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-[#5D9CEC]" />
+                    <p className="font-semibold text-[#1E3A8A] text-sm">Étape 2 — Annonce légale de dissolution</p>
+                  </div>
+                  <span className="text-xs font-semibold bg-[#1E3A8A] text-white px-2.5 py-1 rounded-full">Pris en charge par LegalCorners</span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  LegalCorners publie cette annonce dans un journal habilité. Voici le texte qui sera publié :
+                </p>
+                {/* Texte de l'annonce légale */}
+                <div className="bg-white border border-[#5D9CEC]/30 rounded-lg p-4 text-xs text-gray-700 font-mono leading-relaxed whitespace-pre-wrap">
+                  {[
+                    `${companyName || "[Nom société]"}`,
+                    `${formeJuridique || "[Forme juridique]"} au capital de ${capital || "[X]"} €.`,
+                    `Siège social : ${siegeSocial || "[Adresse siège]"}.`,
+                    `${siren || "[SIREN]"} RCS ${rcsVille || "[Ville]"}.`,
+                    `Par ${decisionType === "associe_unique" ? "décision de l'associé unique" : decisionType === "unanimite" ? "décision unanime des associés" : "décision de l'assemblée générale extraordinaire"} en date du ${date || "[date]"}, il a été décidé la dissolution anticipée et la mise en liquidation amiable de la société à compter de ce jour.`,
+                    `Le siège de la liquidation est fixé ${siegeLiquidation === "siege_social" ? "au siège de la société" : siegeLiquidation === "domicile_liquidateur" ? "au domicile du liquidateur" : siegeLiquidationAdresse || "[adresse]"}.`,
+                    liqType === "personne"
+                      ? `Le liquidateur est ${liqPrenom || "[Prénom]"} ${liqNom || "[Nom]"}${liqAdresse ? `, demeurant ${liqAdresse}` : ""}.`
+                      : `Le liquidateur est la société ${liqSocieteNom || "[Nom société]"}, RCS ${liqSocieteRCSVille || "[Ville]"} n° ${liqSocieteRCSNum || "[Numéro]"}, représentée par ${liqSocieteRep || "[Représentant]"}.`,
+                    `Pour avis.`,
+                  ].join("\n")}
+                </div>
+              </div>
+
+              {/* ── Pièces justificatives Phase 1 ── */}
+              <div className="border-t border-gray-100 pt-4 space-y-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Pièces justificatives — Dépôt Greffe (Phase 1)</p>
-                {(
-                  [
-                    {
-                      key: "pvDissolution" as const,
-                      label: decisionType === "associe_unique" ? "Décision de l'associé unique signée (DAS)" : "PV de dissolution signé",
-                      desc: decisionType === "associe_unique"
-                        ? "Décision unilatérale de dissolution, signée par l'associé unique"
-                        : "Procès-verbal de l'assemblée générale extraordinaire, signé",
-                    },
-                    {
-                      key: "attestationAL" as const,
-                      label: "Attestation de parution de l'annonce légale",
-                      desc: "Fournie par le journal habilité après publication de l'avis de dissolution",
-                    },
-                    ...(!liqEstGerant ? [{
-                      key: "identiteLiquidateur" as const,
-                      label: "Pièce d'identité du liquidateur",
-                      desc: "Copie CNI ou passeport du liquidateur désigné (si différent du dirigeant)",
-                    }] : []),
-                  ] as { key: JustifKeyDiss; label: string; desc: string }[]
-                ).map(({ key, label, desc }) => (
-                  <div key={key} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 mb-2">
+
+                {/* PV signé — fourni par Yousign */}
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-green-200 bg-green-50 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">
+                      {decisionType === "associe_unique" ? "Décision de l'associé unique signée (DAS)" : "PV de dissolution signé"}
+                    </p>
+                    <p className="text-xs text-green-700 mt-0.5 flex items-center gap-1">
+                      <PenLine className="w-3 h-3" /> Fourni automatiquement après signature en ligne (Yousign)
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-full whitespace-nowrap">Auto</span>
+                </div>
+
+                {/* Attestation AL — LegalCorners */}
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-blue-200 bg-blue-50 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800">Attestation de parution de l'annonce légale</p>
+                    <p className="text-xs text-[#1E3A8A] mt-0.5 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Fournie par LegalCorners après publication dans le JAL
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-[#1E3A8A] bg-blue-100 px-2 py-1 rounded-full whitespace-nowrap">LegalCorners</span>
+                </div>
+
+                {/* Pièce d'identité liquidateur si nécessaire */}
+                {!liqEstGerant && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 mb-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">{label}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                      {justifDiss[key] && (
+                      <p className="text-sm font-medium text-gray-800">Pièce d'identité du liquidateur</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Copie CNI ou passeport (liquidateur différent du dirigeant)</p>
+                      {justifDiss.identiteLiquidateur && (
                         <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                          <Check className="w-3 h-3" /> {justifDiss[key]!.name} ({Math.round(justifDiss[key]!.size / 1024)} Ko)
+                          <Check className="w-3 h-3" /> {justifDiss.identiteLiquidateur.name}
                         </p>
                       )}
                     </div>
                     <label className="cursor-pointer">
-                      <input type="file" accept=".pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifDissUpload(key, f); }} />
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${justifDiss[key] ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100" : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"}`}>
+                      <input type="file" accept=".pdf,.jpg,.png" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifDissUpload("identiteLiquidateur", f); }} />
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${justifDiss.identiteLiquidateur ? "border-green-300 text-green-700 bg-green-50" : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"}`}>
                         <Download className="w-4 h-4" />
-                        {justifDiss[key] ? "Remplacer" : "Charger PDF"}
+                        {justifDiss.identiteLiquidateur ? "Remplacer" : "Charger"}
                       </div>
                     </label>
                   </div>
-                ))}
+                )}
               </div>
 
-              {/* Retour à l'édition */}
+              {/* ── Retour édition ── */}
               <button
                 onClick={() => setStep(1)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm"
@@ -915,84 +1030,7 @@ function DossierForm() {
                 <ArrowLeft className="w-4 h-4" /> Modifier les informations
               </button>
 
-              {/* Documents Phase 1 */}
-              <div className="space-y-2">
-                {/* PV de Dissolution */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setPreview({ open: true, type: "pv", title: `PV de Dissolution – ${companyName}` })}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#5D9CEC] text-[#5D9CEC] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Aperçu PV de Dissolution
-                  </button>
-                  <button onClick={generate} disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#5D9CEC] text-white font-semibold rounded-xl hover:bg-[#4a8bd4] transition-all text-sm"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                    .docx
-                  </button>
-                </div>
-
-                {/* Convocation AGE */}
-                {decisionType === "age" && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setPreview({ open: true, type: "convocation", title: `Convocation AGE – ${companyName}` })}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Aperçu Convocation AGE
-                    </button>
-                    <button onClick={generateConvocation} disabled={convocLoading}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1E3A8A] text-white font-semibold rounded-xl hover:bg-[#162d6e] transition-all text-sm"
-                    >
-                      {convocLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                      .docx
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Signer en ligne (Yousign) */}
-              <div className="border border-gray-100 rounded-xl p-4 space-y-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                  <PenLine className="w-4 h-4 text-green-500" />
-                  Signature électronique (Yousign)
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field label="Prénom signataire" value={signerFirstName} onChange={setSignerFirstName} placeholder="Jean" />
-                  <Field label="Nom signataire" value={signerLastName} onChange={setSignerLastName} placeholder="DUPONT" />
-                </div>
-                <Field label="Email signataire" value={signerEmail} onChange={setSignerEmail} placeholder="jean@societe.fr" type="email" />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleYousign("pv")}
-                    disabled={signLoading}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all text-sm"
-                  >
-                    {signLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
-                    Signer PV
-                  </button>
-                  {decisionType === "age" && (
-                    <button
-                      onClick={() => handleYousign("convocation")}
-                      disabled={signLoading}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-green-500 text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all text-sm"
-                    >
-                      {signLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
-                      Signer Convocation
-                    </button>
-                  )}
-                </div>
-                {signResult && (
-                  <p className={`text-xs font-medium ${signResult.includes("Erreur") || signResult.includes("échou") ? "text-red-500" : "text-green-600"}`}>
-                    {signResult}
-                  </p>
-                )}
-              </div>
-
-              {/* Dépôt INPI */}
+              {/* ── Dépôt INPI Phase 1 ── */}
               <div className="border border-gray-100 rounded-xl p-4 space-y-2">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
                   <Send className="w-4 h-4 text-[#5D9CEC]" />

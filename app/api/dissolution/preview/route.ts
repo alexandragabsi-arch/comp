@@ -265,11 +265,40 @@ function generateConvocationHtml(d: ConvocationData): string {
   body += `<p>Délégation de tous pouvoirs ${LEGALCORNERS_CLAUSE}, à l'effet d'accomplir toutes les formalités légales.</p>`;
 
   if (d.emailQuestions) {
-    body += `<p>Conformément aux dispositions légales, toute question écrite devra être adressée à l'adresse suivante : <strong>${esc(d.emailQuestions)}</strong>.</p>`;
+    body += `<p>Conformément aux dispositions légales, toute question écrite devra être adressée à : <strong>${esc(d.emailQuestions)}</strong>.</p>`;
   }
+
+  body += `<p>Au cas où vous ne pourriez assister personnellement à cette assemblée, vous pourrez vous y faire représenter en remettant une procuration à un autre associé ou à toute personne de votre choix.</p>`;
+  body += `<p><strong>Faculté de substitution :</strong> Le mandataire désigné peut, sauf stipulation contraire, substituer une autre personne à lui-même dans l'exercice de son mandat.</p>`;
+  body += `<p>Vous trouverez ci-après un formulaire de procuration avec directive de vote résolution par résolution.</p>`;
 
   body += `<p style="margin-top:24px">Le ${dirigeant}</p>`;
   body += `<div class="sig-line" style="width:40%"></div>`;
+
+  // ── Formulaire de procuration avec directive de vote ──────────────────
+  body += `<hr style="margin:40px 0;border-top:2px solid #0D2459">`;
+  body += `<h2 style="text-align:center;font-size:12pt">FORMULAIRE DE PROCURATION AVEC DIRECTIVE DE VOTE</h2>`;
+  body += `<p style="border-top:1px solid #0D2459;margin:8px 0"></p>`;
+  body += `<p>Je soussigné(e), associé(e) de la société <strong>${esc(d.companyName)}</strong>,</p>`;
+  body += `<p>Empêché(e) d'assister à l'Assemblée Générale Extraordinaire du <strong>${esc(d.date)}</strong>,</p>`;
+  body += `<p>Donne pouvoir à : <span style="border-bottom:1px solid #0D2459;display:inline-block;min-width:250px">&nbsp;</span></p>`;
+  body += `<p>Demeurant : <span style="border-bottom:1px solid #0D2459;display:inline-block;min-width:280px">&nbsp;</span></p>`;
+  body += `<p>Avec <strong>faculté de substitution</strong>, pour me représenter à ladite assemblée et voter en mon nom conformément aux directives ci-dessous :</p>`;
+  body += `<p><strong>DIRECTIVES DE VOTE</strong> (cochez la case correspondante) :</p>`;
+  body += `<table class="table" style="margin-top:12px">
+    <thead><tr><th>Résolution</th><th style="width:80px">☐ Pour</th><th style="width:80px">☐ Contre</th><th style="width:100px">☐ Abstention</th></tr></thead>
+    <tbody>
+      <tr><td>Résolution 1 – Dissolution</td><td></td><td></td><td></td></tr>
+      <tr><td>Résolution 2 – Nomination du liquidateur</td><td></td><td></td><td></td></tr>
+      <tr><td>Résolution 3 – Pouvoirs du liquidateur</td><td></td><td></td><td></td></tr>
+      <tr><td>Résolution 4 – Délégation de pouvoirs</td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>`;
+  body += `<p style="font-size:9pt;font-style:italic">À défaut d'instructions pour une résolution, le mandataire votera en faveur du projet de résolution présenté par le gérant/président ou, à défaut, s'abstiendra.</p>`;
+  body += `<p style="margin-top:24px">Fait à _________________________, le _________________________</p>`;
+  body += `<p style="margin-top:20px">Signature du mandant :</p>`;
+  body += `<div class="sig-line" style="width:50%"></div>`;
+  body += `<p style="font-size:9pt;color:#555;border-top:1px solid #ccc;padding-top:8px;margin-top:20px">NB : Ce formulaire doit être retourné signé à la société avant la tenue de l'assemblée.</p>`;
 
   return wrap(body, `Convocation AGE – ${d.companyName}`);
 }

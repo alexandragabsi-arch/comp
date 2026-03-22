@@ -112,7 +112,13 @@ export async function POST(request: NextRequest) {
     new Paragraph({ children: [], spacing: { after: 100 } }),
     p("Vous trouverez ci-joint le texte des résolutions proposées à l'assemblée."),
     p(
-      "Au cas où vous ne pourriez assister personnellement à cette assemblée, vous pourrez vous y faire représenter en remettant une procuration à un autre associé."
+      "Au cas où vous ne pourriez assister personnellement à cette assemblée, vous pourrez vous y faire représenter en remettant une procuration à un autre associé ou à toute personne de votre choix."
+    ),
+    p(
+      "Le mandataire désigné peut, sauf stipulation contraire dans la procuration, substituer une autre personne à lui-même dans l'exercice de son mandat (faculté de substitution). Dans ce cas, le mandataire d'origine demeure responsable vis-à-vis du mandant des actes accomplis par son substitué."
+    ),
+    p(
+      "Vous trouverez en annexe de la présente convocation un formulaire de procuration avec directive de vote. Ce formulaire vous permet d'indiquer, résolution par résolution, vos instructions de vote (Pour / Contre / Abstention) à votre mandataire."
     ),
     p(
       `Nous vous rappelons que vous pouvez, à compter de la présente, poser par écrit des questions à l'assemblée à l'adresse email suivante : ${d.emailQuestions}, auxquelles il sera répondu au cours de cette réunion.`
@@ -222,6 +228,37 @@ export async function POST(request: NextRequest) {
       alignment: AlignmentType.JUSTIFIED,
       spacing: { after: 160 },
     }),
+
+    // ── Formulaire de procuration avec directive de vote ──────────────────
+    new Paragraph({ children: [], spacing: { before: 600, after: 200 } }),
+    heading("FORMULAIRE DE PROCURATION AVEC DIRECTIVE DE VOTE"),
+    p("─".repeat(60)),
+    p(`Je soussigné(e), associé(e) de la société ${d.companyName},`),
+    p(`Empêché(e) d'assister à l'Assemblée Générale Extraordinaire du ${d.date},`),
+    p("Donne pouvoir à : _______________________________________________"),
+    p("Demeurant : ___________________________________________________"),
+    p(""),
+    p(
+      "Avec faculté de substitution, pour me représenter à ladite assemblée et voter en mon nom conformément aux directives ci-dessous :"
+    ),
+    p(""),
+    p("DIRECTIVES DE VOTE (cochez la case correspondante) :", true),
+    p(""),
+    p("Résolution 1 – Dissolution :            ☐ Pour      ☐ Contre      ☐ Abstention"),
+    p("Résolution 2 – Nomination du liquidateur : ☐ Pour    ☐ Contre      ☐ Abstention"),
+    p("Résolution 3 – Pouvoirs du liquidateur :   ☐ Pour    ☐ Contre      ☐ Abstention"),
+    p("Résolution 4 – Délégation de pouvoirs :    ☐ Pour    ☐ Contre      ☐ Abstention"),
+    p(""),
+    p(
+      "À défaut d'instructions pour l'une ou plusieurs des résolutions, le mandataire votera en faveur des projets de résolutions présentés par le gérant/président ou, à défaut, s'abstiendra."
+    ),
+    p(""),
+    p(`Fait à _________________, le _______________________`),
+    p(""),
+    p("Signature du mandant :"),
+    new Paragraph({ children: [], spacing: { after: 400 } }),
+    p("─".repeat(60)),
+    p("NB : Ce formulaire doit être retourné signé à la société avant la tenue de l'assemblée."),
   ];
 
   const doc = new Document({

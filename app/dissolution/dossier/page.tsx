@@ -4,7 +4,7 @@ import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ChevronRight, FileText, Download, Loader2, ArrowLeft, Clock, ChevronDown, ChevronUp, Eye, PenLine, Send } from "lucide-react";
+import { Check, ChevronRight, FileText, Download, Loader2, ArrowLeft, Clock, ChevronDown, ChevronUp, Eye, PenLine, Send, ExternalLink } from "lucide-react";
 import DocPreviewModal from "@/components/dissolution/DocPreviewModal";
 import { cn } from "@/lib/utils";
 import type { PVData } from "@/app/api/dissolution/pv/route";
@@ -1223,14 +1223,15 @@ function DossierForm() {
                       ? "Pièces requises : PV signé, attestation annonce légale."
                       : "Pièces requises : Décision de l'associé unique signée, attestation annonce légale."}
                 </p>
-                <button
-                  onClick={() => handleInpiSubmit("dissolution")}
-                  disabled={inpiLoading}
+                <a
+                  href="https://procedures.inpi.fr"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm"
                 >
-                  {inpiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  <ExternalLink className="w-4 h-4" />
                   Déposer au Guichet Unique INPI
-                </button>
+                </a>
                 {inpiResult && (
                   <p className={`text-xs font-medium ${inpiResult.includes("Erreur") || inpiResult.includes("échou") ? "text-red-500" : "text-green-600"}`}>
                     {inpiResult}
@@ -1347,14 +1348,15 @@ function DossierForm() {
                           ? "Pièces requises : PV de clôture signé, convocation, feuille de présence, comptes de liquidation, attestation AL clôture."
                           : "Pièces requises : PV/Décision de clôture signée, comptes de liquidation, attestation AL clôture."}
                       </p>
-                      <button
-                        onClick={() => handleInpiSubmit("liquidation")}
-                        disabled={inpiLoading}
+                      <a
+                        href="https://procedures.inpi.fr"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm"
                       >
-                        {inpiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        <ExternalLink className="w-4 h-4" />
                         Déposer au Guichet Unique INPI (Radiation)
-                      </button>
+                      </a>
                       {inpiResult && (
                         <p className={`text-xs font-medium ${inpiResult.includes("Erreur") ? "text-red-500" : "text-green-600"}`}>
                           {inpiResult}

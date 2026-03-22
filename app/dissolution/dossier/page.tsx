@@ -4,7 +4,8 @@ import { useState, Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, ChevronRight, FileText, Download, Loader2, ArrowLeft, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronRight, FileText, Download, Loader2, ArrowLeft, Clock, ChevronDown, ChevronUp, Eye, PenLine, Send } from "lucide-react";
+import DocPreviewModal from "@/components/dissolution/DocPreviewModal";
 import { cn } from "@/lib/utils";
 import type { PVData } from "@/app/api/dissolution/pv/route";
 import type { ConvocationData } from "@/app/api/dissolution/convocation/route";
@@ -235,6 +236,28 @@ function DossierForm() {
   const [liqSoldeMontant, setLiqSoldeMontant] = useState("");
   const [liqPhase2LoadingPV, setLiqPhase2LoadingPV] = useState(false);
   const [liqPhase2LoadingConvoc, setLiqPhase2LoadingConvoc] = useState(false);
+
+  // ── Preview modal ─────────────────────────────────────────────────────────
+  const [preview, setPreview] = useState<{
+    open: boolean;
+    type: "pv" | "convocation" | "pv-liquidation" | "convocation-liquidation";
+    title: string;
+  } | null>(null);
+
+  // ── Yousign sign modal ────────────────────────────────────────────────────
+  const [signModal, setSignModal] = useState<{
+    open: boolean;
+    docType: "pv" | "convocation";
+  } | null>(null);
+  const [signerEmail, setSignerEmail] = useState("");
+  const [signerFirstName, setSignerFirstName] = useState("");
+  const [signerLastName, setSignerLastName] = useState("");
+  const [signLoading, setSignLoading] = useState(false);
+  const [signResult, setSignResult] = useState<string | null>(null);
+
+  // ── INPI submission ───────────────────────────────────────────────────────
+  const [inpiLoading, setInpiLoading] = useState(false);
+  const [inpiResult, setInpiResult] = useState<string | null>(null);
   const [liqResUnanimite, setLiqResUnanimite] = useState([true, true, true, true]);
   const [liqPour, setLiqPour] = useState(["", "", "", ""]);
   const [liqContre, setLiqContre] = useState(["", "", "", ""]);
@@ -443,8 +466,121 @@ function DossierForm() {
     }
   }
 
+  // ── Preview helpers ───────────────────────────────────────────────────────
+  function buildConvocationData(): ConvocationData {
+    return {
+      companyName, formeJuridique, capital,
+      siegeVille: ville, siegeAdresse: siegeSocial,
+      rcsVille, sirenNumero: siren,
+      modeConvocation, date, heure: ageHeure || "10h00",
+      lieuAssemblee: lieuAssemblee || `au siège social : ${siegeSocial}`,
+      emailQuestions,
+      dirigeant: formeJuridique.toUpperCase().includes("SAS") ? "président" : "gérant",
+      decisionType, siegeLiquidation, siegeLiquidationAdresse,
+      liqType, liqNom, liqPrenom, liqAdresse, liqEstGerant,
+      liqSocieteNom, liqSocieteRCSVille, liqSocieteRCSNum, liqSocieteRep, liqRemuneration,
+    };
+  }
+
+  async function fetchPreviewHtml(type: "pv" | "convocation" | "pv-liquidation" | "convocation-liquidation"): Promise<string> {
+    const data = type === "pv" ? buildData()
+      : type === "convocation" ? buildConvocationData()
+        : null; // phase 2 handled separately
+    const res = await fetch("/api/dissolution/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, data }),
+    });
+    if (!res.ok) throw new Error("Erreur aperçu");
+    const { html } = await res.json();
+    return html as string;
+  }
+
+  async function downloadWordBlob(type: "pv" | "convocation"): Promise<void> {
+    if (type === "pv") {
+      await generate();
+    } else {
+      await generateConvocation();
+    }
+  }
+
+  async function handleYousign(docType: "pv" | "convocation") {
+    if (!signerEmail || !signerFirstName || !signerLastName) {
+      alert("Veuillez remplir le prénom, nom et email du signataire.");
+      return;
+    }
+    setSignLoading(true);
+    setSignResult(null);
+    try {
+      // Génère le DOCX en base64
+      const apiPath = docType === "pv" ? "/api/dissolution/pv" : "/api/dissolution/convocation";
+      const docData = docType === "pv" ? buildData() : buildConvocationData();
+      const docRes = await fetch(apiPath, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(docData),
+      });
+      if (!docRes.ok) throw new Error("Erreur génération document");
+      const blob = await docRes.blob();
+      const buffer = await blob.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+
+      const signRes = await fetch("/api/dissolution/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentType: docType,
+          companyName,
+          documentBase64: base64,
+          signers: [{ firstName: signerFirstName, lastName: signerLastName, email: signerEmail }],
+        }),
+      });
+      const signData = await signRes.json();
+      if (!signRes.ok) throw new Error(signData.error ?? "Erreur Yousign");
+      setSignResult(signData.message ?? "Signature envoyée.");
+    } catch (err) {
+      setSignResult(err instanceof Error ? err.message : "Erreur signature.");
+    } finally {
+      setSignLoading(false);
+    }
+  }
+
+  async function handleInpiSubmit(phase: "dissolution" | "liquidation") {
+    setInpiLoading(true);
+    setInpiResult(null);
+    try {
+      // Convertir les fichiers uploadés en base64 pour l'INPI
+      const justifBase64: Record<string, { name: string; base64: string; size: number }> = {};
+      // Note : les fichiers sont stockés localement (justifDiss) ; en production, les convertir en base64 ici
+      const res = await fetch("/api/dissolution/inpi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siren, formeJuridique, companyName, capital, siegeSocial,
+          dateDissolution: date,
+          decisionType,
+          liquidateur: {
+            type: liqType,
+            nom: liqNom, prenom: liqPrenom, adresse: liqAdresse,
+            societeNom: liqSocieteNom, societeRCSVille: liqSocieteRCSVille,
+            societeRCSNumero: liqSocieteRCSNum,
+          },
+          phase,
+          justifFiles: justifBase64,
+        }),
+      });
+      const data = await res.json();
+      setInpiResult(data.message ?? data.error ?? "Traitement INPI.");
+    } catch (err) {
+      setInpiResult(err instanceof Error ? err.message : "Erreur INPI.");
+    } finally {
+      setInpiLoading(false);
+    }
+  }
+
   // ── Layout ───────────────────────────────────────────────────────────────
   return (
+    <>
     <div className="min-h-screen bg-[#F8FAFC]">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
@@ -771,18 +907,116 @@ function DossierForm() {
                 ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button onClick={generate} disabled={loading}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#5D9CEC] text-[#5D9CEC] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  PV de Dissolution
-                </button>
-                {decisionType === "age" && (
-                  <button onClick={generateConvocation} disabled={convocLoading}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
-                    {convocLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                    Convocation AGE Dissolution
+              {/* Retour à l'édition */}
+              <button
+                onClick={() => setStep(1)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition-all text-sm"
+              >
+                <ArrowLeft className="w-4 h-4" /> Modifier les informations
+              </button>
+
+              {/* Documents Phase 1 */}
+              <div className="space-y-2">
+                {/* PV de Dissolution */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPreview({ open: true, type: "pv", title: `PV de Dissolution – ${companyName}` })}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#5D9CEC] text-[#5D9CEC] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Aperçu PV de Dissolution
                   </button>
+                  <button onClick={generate} disabled={loading}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#5D9CEC] text-white font-semibold rounded-xl hover:bg-[#4a8bd4] transition-all text-sm"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    .docx
+                  </button>
+                </div>
+
+                {/* Convocation AGE */}
+                {decisionType === "age" && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPreview({ open: true, type: "convocation", title: `Convocation AGE – ${companyName}` })}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Aperçu Convocation AGE
+                    </button>
+                    <button onClick={generateConvocation} disabled={convocLoading}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1E3A8A] text-white font-semibold rounded-xl hover:bg-[#162d6e] transition-all text-sm"
+                    >
+                      {convocLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                      .docx
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Signer en ligne (Yousign) */}
+              <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                  <PenLine className="w-4 h-4 text-green-500" />
+                  Signature électronique (Yousign)
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Prénom signataire" value={signerFirstName} onChange={setSignerFirstName} placeholder="Jean" />
+                  <Field label="Nom signataire" value={signerLastName} onChange={setSignerLastName} placeholder="DUPONT" />
+                </div>
+                <Field label="Email signataire" value={signerEmail} onChange={setSignerEmail} placeholder="jean@societe.fr" type="email" />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleYousign("pv")}
+                    disabled={signLoading}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-all text-sm"
+                  >
+                    {signLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
+                    Signer PV
+                  </button>
+                  {decisionType === "age" && (
+                    <button
+                      onClick={() => handleYousign("convocation")}
+                      disabled={signLoading}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-green-500 text-green-600 font-semibold rounded-xl hover:bg-green-50 transition-all text-sm"
+                    >
+                      {signLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <PenLine className="w-4 h-4" />}
+                      Signer Convocation
+                    </button>
+                  )}
+                </div>
+                {signResult && (
+                  <p className={`text-xs font-medium ${signResult.includes("Erreur") || signResult.includes("échou") ? "text-red-500" : "text-green-600"}`}>
+                    {signResult}
+                  </p>
+                )}
+              </div>
+
+              {/* Dépôt INPI */}
+              <div className="border border-gray-100 rounded-xl p-4 space-y-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                  <Send className="w-4 h-4 text-[#5D9CEC]" />
+                  Dépôt Guichet Unique INPI – Phase 1
+                </p>
+                <p className="text-xs text-gray-400">
+                  {decisionType === "age"
+                    ? "Pièces requises : PV signé, convocation, feuille de présence, attestation annonce légale."
+                    : decisionType === "unanimite"
+                      ? "Pièces requises : PV signé, attestation annonce légale."
+                      : "Pièces requises : Décision de l'associé unique signée, attestation annonce légale."}
+                </p>
+                <button
+                  onClick={() => handleInpiSubmit("dissolution")}
+                  disabled={inpiLoading}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm"
+                >
+                  {inpiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  Déposer au Guichet Unique INPI
+                </button>
+                {inpiResult && (
+                  <p className={`text-xs font-medium ${inpiResult.includes("Erreur") || inpiResult.includes("échou") ? "text-red-500" : "text-green-600"}`}>
+                    {inpiResult}
+                  </p>
                 )}
               </div>
             </div>
@@ -854,17 +1088,60 @@ function DossierForm() {
                       </div>
                     )}
 
-                    <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                      <button onClick={generatePhase2PV} disabled={liqPhase2LoadingPV}
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm">
-                        {liqPhase2LoadingPV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                        PV de Liquidation
+                    <div className="space-y-2 pt-2">
+                      {/* PV Liquidation */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPreview({ open: true, type: "pv-liquidation", title: `PV Liquidation – ${companyName}` })}
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm"
+                        >
+                          <Eye className="w-4 h-4" /> Aperçu PV Liquidation
+                        </button>
+                        <button onClick={generatePhase2PV} disabled={liqPhase2LoadingPV}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm">
+                          {liqPhase2LoadingPV ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                          .docx
+                        </button>
+                      </div>
+                      {/* Convocation AGO */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setPreview({ open: true, type: "convocation-liquidation", title: `Convocation AGO Liquidation – ${companyName}` })}
+                          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-gray-400 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-all text-sm"
+                        >
+                          <Eye className="w-4 h-4" /> Aperçu Convocation AGO
+                        </button>
+                        <button onClick={generatePhase2Convoc} disabled={liqPhase2LoadingConvoc}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
+                          {liqPhase2LoadingConvoc ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                          .docx
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* INPI Phase 2 */}
+                    <div className="border border-gray-100 rounded-xl p-4 space-y-2 mt-2">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                        <Send className="w-4 h-4 text-[#5D9CEC]" /> Dépôt INPI – Phase 2 (Radiation)
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {decisionType === "age"
+                          ? "Pièces requises : PV de clôture signé, convocation, feuille de présence, comptes de liquidation, attestation AL clôture."
+                          : "Pièces requises : PV/Décision de clôture signée, comptes de liquidation, attestation AL clôture."}
+                      </p>
+                      <button
+                        onClick={() => handleInpiSubmit("liquidation")}
+                        disabled={inpiLoading}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm"
+                      >
+                        {inpiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        Déposer au Guichet Unique INPI (Radiation)
                       </button>
-                      <button onClick={generatePhase2Convoc} disabled={liqPhase2LoadingConvoc}
-                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 border-2 border-[#1E3A8A] text-[#1E3A8A] font-semibold rounded-xl hover:bg-blue-50 transition-all text-sm">
-                        {liqPhase2LoadingConvoc ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                        Convocation AGO Liquidation
-                      </button>
+                      {inpiResult && (
+                        <p className={`text-xs font-medium ${inpiResult.includes("Erreur") ? "text-red-500" : "text-green-600"}`}>
+                          {inpiResult}
+                        </p>
+                      )}
                     </div>
 
                     {/* Pièces justificatives Phase 2 */}
@@ -920,6 +1197,27 @@ function DossierForm() {
         )}
       </div>
     </div>
+
+    {/* ── Preview modal ── */}
+    {preview?.open && (
+      <DocPreviewModal
+        title={preview.title}
+        onClose={() => setPreview(null)}
+        onEdit={() => { setPreview(null); setStep(1); }}
+        onFetchHtml={() => fetchPreviewHtml(preview.type)}
+        onDownloadWord={async () => {
+          if (preview.type === "pv") await generate();
+          else if (preview.type === "convocation") await generateConvocation();
+          else if (preview.type === "pv-liquidation") await generatePhase2PV();
+          else await generatePhase2Convoc();
+        }}
+        onSign={preview.type === "pv" || preview.type === "convocation"
+          ? () => handleYousign(preview.type as "pv" | "convocation")
+          : undefined
+        }
+      />
+    )}
+    </>
   );
 }
 

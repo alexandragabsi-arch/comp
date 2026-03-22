@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
     para([
       new TextRun({ text: `${decision} `, bold: true }),
       new TextRun({
-        text: `${verb(d, "donne", "donnent")} tous pouvoirs au porteur d'une copie ou d'un extrait du présent procès-verbal pour effectuer la demande de radiation de la société du registre du commerce et des sociétés et accomplir les formalités de publicité afférentes aux décisions ci-dessus adoptées conformément aux dispositions législatives et réglementaires en vigueur.`,
+        text: `${verb(d, "donne", "donnent")} tous pouvoirs à la société LEGALCORNERS, dont le siège social est situé au 78 Avenue des Champs-Élysées, 75008 Paris, immatriculée au Registre du Commerce et des Sociétés de Paris sous le numéro 988 485 405, ainsi qu'à tout porteur d'une copie ou d'un extrait du présent procès-verbal, pour effectuer la demande de radiation de la société du registre du commerce et des sociétés et accomplir les formalités de publicité afférentes aux décisions ci-dessus adoptées conformément aux dispositions législatives et réglementaires en vigueur.`,
       }),
     ])
   );

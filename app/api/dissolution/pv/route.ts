@@ -372,7 +372,7 @@ export async function POST(request: NextRequest) {
     para([
       bold(`${decision} `),
       normal(
-        `${confere} tous pouvoirs au porteur d'une copie ou d'un extrait du présent procès-verbal à l'effet d'accomplir toutes les formalités légales.`
+        `${confere} tous pouvoirs à la société LEGALCORNERS, dont le siège social est situé au 78 Avenue des Champs-Élysées, 75008 Paris, immatriculée au Registre du Commerce et des Sociétés de Paris sous le numéro 988 485 405, ainsi qu'à tout porteur d'une copie ou d'un extrait du présent procès-verbal, à l'effet d'accomplir toutes les formalités légales.`
       ),
     ])
   );

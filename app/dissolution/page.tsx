@@ -76,7 +76,7 @@ function getQuestionsDissoltion(formeJuridique: string) {
         {
           value: "immo",
           label: "Biens immobiliers",
-          description: "Un passage chez le notaire sera obligatoire pour céder les biens",
+          description: "Bureau, local, terrain — la dissolution reste possible mais nécessite une cession via notaire",
           icon: Building2,
         },
         {
@@ -87,6 +87,10 @@ function getQuestionsDissoltion(formeJuridique: string) {
         },
       ],
       info: {
+        trigger: "immo",
+        content: "🏢 La présence de biens immobiliers (bureau, local…) ne bloque pas la dissolution. Il faudra les céder avant la clôture, avec l'intervention obligatoire d'un notaire pour l'acte de vente.",
+      },
+      infoSecondary: {
         trigger: "dettes",
         content: "⚠️ Si la société a des dettes, la dissolution amiable n'est pas possible. Il faudra rembourser les créanciers ou passer par une dissolution judiciaire avant de clôturer.",
       },
@@ -1052,26 +1056,33 @@ function DissolutionForm() {
                   </div>
                 )}
 
-                {/* Info panel dissolution judiciaire */}
-                {(questions[currentQuestion] as { info?: { content: string } }).info && (
-                  <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-                    <button
-                      onClick={() => setInfoOpen((o) => !o)}
-                      className="w-full flex items-center justify-between px-4 py-3 text-left"
-                    >
-                      <span className="text-sm font-semibold text-[#1E3A8A] flex items-center gap-2">
-                        <AlertTriangle className="w-4 h-4 text-[#5D9CEC]" />
-                        Que se passe-t-il en cas de dettes ?
-                      </span>
-                      <ChevronRight className={cn("w-4 h-4 text-[#5D9CEC] transition-transform", infoOpen && "rotate-90")} />
-                    </button>
-                    {infoOpen && (
-                      <div className="px-4 pb-4 text-sm text-[#1E3A8A]/80 leading-relaxed border-t border-gray-100 pt-3">
-                        {(questions[currentQuestion] as { info?: { content: string } }).info!.content}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Info panel immo */}
+                {(() => {
+                  const q = questions[currentQuestion] as { id: string; info?: { trigger: string; content: string }; infoSecondary?: { trigger: string; content: string } };
+                  const currentAnswer = answers[q.id];
+                  const activeInfo = [q.info, q.infoSecondary].find(i => i && i.trigger === currentAnswer);
+                  if (!activeInfo) return null;
+                  const isImmo = activeInfo.trigger === "immo";
+                  return (
+                    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                      <button
+                        onClick={() => setInfoOpen((o) => !o)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-left"
+                      >
+                        <span className="text-sm font-semibold text-[#1E3A8A] flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-[#5D9CEC]" />
+                          {isImmo ? "Que se passe-t-il avec les biens immobiliers ?" : "Que se passe-t-il en cas de dettes ?"}
+                        </span>
+                        <ChevronRight className={cn("w-4 h-4 text-[#5D9CEC] transition-transform", infoOpen && "rotate-90")} />
+                      </button>
+                      {infoOpen && (
+                        <div className="px-4 pb-4 text-sm text-[#1E3A8A]/80 leading-relaxed border-t border-gray-100 pt-3">
+                          {activeInfo.content}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 <div className="text-center">
                   <button

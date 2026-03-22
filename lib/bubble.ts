@@ -21,6 +21,7 @@ export interface BubbleDossier {
   type: string;
   status: string;
   reference: string;
+  forme_juridique: string;  // ex: "sasu", "sarl"
   step: string;
   created_at: string;
   bubble_url?: string;
@@ -70,14 +71,17 @@ export async function getBubbleDossiers(userEmail: string): Promise<BubbleDossie
 
     return results.map((r) => {
       const statut = ((r["OS_Statut"] as string) ?? "").toLowerCase().trim();
+      const formeJuridique = ((r["Questionnaire"] as string) ?? "").toUpperCase();
+      const ref = (r["Référence"] as string) ?? "";
       return {
         id: r._id as string,
-        // Pas de champ nom société direct → on utilise Référence comme identifiant
-        company_name: (r["Référence"] as string) ?? "Dossier LegalCorners",
+        // Nom affiché = "SASU · LC-2026-000003" (le nom réel est dans les réponses du questionnaire)
+        company_name: formeJuridique ? `${formeJuridique} · ${ref}` : ref || "Dossier LegalCorners",
         siren: "",
         type: "creation",
         status: STATUS_MAP[statut] ?? "en_cours",
-        reference: (r["Référence"] as string) ?? "",
+        reference: ref,
+        forme_juridique: formeJuridique,
         step: (r["Step_dossier"] as string) ?? "",
         created_at: (r["Created Date"] as string) ?? new Date().toISOString(),
         bubble_url: `${appUrl}/dossier/${r._id as string}`,

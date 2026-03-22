@@ -1379,7 +1379,7 @@ function DissolutionForm() {
                           className={cn(
                             "relative rounded-2xl flex flex-col transition-all",
                             plan.featured
-                              ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-xl md:scale-[1.03] p-6"
+                              ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-2xl p-6 md:-my-3"
                               : "bg-white border-2 border-gray-200 p-5"
                           )}
                         >
@@ -1476,19 +1476,19 @@ function DissolutionForm() {
                     {
                       title: "Qu'est-ce qui est inclus dans nos honoraires ?",
                       content: selectedProcedure === "mise-en-sommeil" ? (
-                        <ul className="space-y-2 text-sm text-gray-600">
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Vérification complète de votre dossier par un formaliste</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Préparation et envoi de la déclaration de cessation d'activité</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Enregistrement au greffe du tribunal de commerce</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Suivi et assistance par email et téléphone</li>
+                        <ul className="space-y-2.5 text-sm text-gray-600">
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Vérification complète</strong> de votre dossier par un formaliste</span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Préparation et envoi de la <strong className="text-gray-800">déclaration de cessation d'activité</strong></span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Enregistrement au greffe</strong> du tribunal de commerce</span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Suivi et <strong className="text-gray-800">assistance par email et téléphone</strong></span></li>
                         </ul>
                       ) : (
-                        <ul className="space-y-2 text-sm text-gray-600">
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Vérification de votre dossier par un formaliste expert</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Rédaction des actes de dissolution (PV d'assemblée, décision de l'associé unique…)</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Dépôt au greffe et suivi des formalités</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Publication des annonces légales (formules Standard & Premium)</li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Assistance par email et téléphone</li>
+                        <ul className="space-y-2.5 text-sm text-gray-600">
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Vérification du dossier</strong> par un formaliste expert</span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Rédaction des actes de dissolution</strong> (PV d'assemblée, décision de l'associé unique…)</span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Dépôt au greffe</strong> et suivi des formalités</span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Publication des annonces légales</strong> <span className="text-gray-400">(formules Standard & Premium)</span></span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Assistance par <strong className="text-gray-800">email et téléphone</strong></span></li>
                         </ul>
                       ),
                     },
@@ -1496,7 +1496,7 @@ function DissolutionForm() {
                       title: "Quels sont les frais annexes obligatoires ?",
                       content: (
                         <div className="space-y-3">
-                          <p className="text-sm text-gray-500">Ces frais sont fixés par l'État et les organismes officiels. Ils s'ajoutent à nos honoraires et sont identiques quelle que soit la plateforme.</p>
+                          <p className="text-sm text-gray-500 text-justify">Ces frais sont <strong className="text-gray-700">fixés par l'État</strong> et les organismes officiels. Ils s'ajoutent à nos honoraires et sont <strong className="text-gray-700">identiques quelle que soit la plateforme</strong>.</p>
                           <div className="rounded-xl overflow-hidden border border-gray-100">
                             {(selectedProcedure === "mise-en-sommeil" ? FRAIS_SOMMEIL : FRAIS_DISSOLUTION).map((f, i, arr) => (
                               <div key={f.label} className={cn("flex justify-between items-center px-4 py-3 text-sm", i < arr.length - 1 ? "border-b border-gray-100" : "", i % 2 === 0 ? "bg-gray-50" : "bg-white")}>
@@ -1519,8 +1519,8 @@ function DissolutionForm() {
                     {
                       title: "Pourquoi ces frais ne sont-ils pas inclus dans le prix affiché ?",
                       content: (
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                          Les frais de greffe et d'annonces légales sont collectés directement par les organismes officiels (tribunal de commerce, journaux d'annonces légales). Nous ne pouvons pas les intégrer dans notre prix car ils varient selon le département et la forme juridique de votre société. Nous vous accompagnons dans leur règlement et vous informons à chaque étape.
+                        <p className="text-sm text-gray-600 leading-relaxed text-justify">
+                          Les <strong className="text-gray-800">frais de greffe et d'annonces légales</strong> sont collectés directement par les <strong className="text-gray-800">organismes officiels</strong> (tribunal de commerce, journaux d'annonces légales). Nous ne pouvons pas les intégrer dans notre prix car ils <strong className="text-gray-800">varient selon le département</strong> et la forme juridique de votre société. Nous vous accompagnons dans leur règlement et vous informons à chaque étape.
                         </p>
                       ),
                     },

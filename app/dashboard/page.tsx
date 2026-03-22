@@ -23,6 +23,7 @@ const TYPE_MAP: Record<string, { label: string; badge: string }> = {
   creation:                 { label: "Création",                badge: "bg-green-50 text-green-700 border-green-200" },
   modification:             { label: "Modification",            badge: "bg-purple-50 text-purple-700 border-purple-200" },
   creation_auto_entrepreneur: { label: "Création AE / EI",     badge: "bg-teal-50 text-teal-700 border-teal-200" },
+  modification_ae:          { label: "Modif. AE / EI",         badge: "bg-cyan-50 text-cyan-700 border-cyan-200" },
   fermeture_micro:          { label: "Fermeture micro",         badge: "bg-rose-50 text-rose-700 border-rose-200" },
 };
 

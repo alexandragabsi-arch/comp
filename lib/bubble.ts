@@ -8,11 +8,25 @@
  * Champs Bubble Dossier utilisés (vérifiés en Data tab) :
  *   User            → email du client (filtre principal)
  *   OS_Statut       → statut du dossier ("En cours", "Complété"…)
- *   Type            → "Création de société"
+ *   Type            → "Création de société" | "Modification Statutaire" |
+ *                     "Création Auto-entrepreneur/EI" | "Modification Auto-entrepreneur/EI" |
+ *                     "Dissolution / Liquidation" | "Mise en Sommeil"
+ *   Questionnaire   → forme juridique (ex: "sasu")
+ *   Denomination    → dénomination sociale
  *   Référence       → "LC-2026-000003"
  *   Step_dossier    → étape courante
  *   Created Date    → date de création
  */
+
+// Mapping champ Type Bubble → type interne dashboard
+const TYPE_MAP: Record<string, string> = {
+  "création de société":              "creation",
+  "modification statutaire":          "modification",
+  "création auto-entrepreneur/ei":    "creation_auto_entrepreneur",
+  "modification auto-entrepreneur/ei":"modification_ae",
+  "dissolution / liquidation":        "dissolution",
+  "mise en sommeil":                  "sommeil",
+};
 
 export interface BubbleDossier {
   id: string;
@@ -74,12 +88,14 @@ export async function getBubbleDossiers(userEmail: string): Promise<BubbleDossie
       const formeJuridique = ((r["Questionnaire"] as string) ?? "").toUpperCase();
       const ref = (r["Référence"] as string) ?? "";
       const denomination = (r["Denomination"] as string) ?? "";
+      const bubbleType = ((r["Type"] as string) ?? "").toLowerCase().trim();
+      const internalType = TYPE_MAP[bubbleType] ?? "creation";
       return {
         id: r._id as string,
         // Nom affiché = dénomination si disponible, sinon "SASU · LC-2026-000003"
         company_name: denomination || (formeJuridique ? `${formeJuridique} · ${ref}` : ref || "Dossier LegalCorners"),
         siren: "",
-        type: "creation",
+        type: internalType,
         status: STATUS_MAP[statut] ?? "en_cours",
         reference: ref,
         forme_juridique: formeJuridique,

@@ -283,6 +283,10 @@ function DossierForm() {
   // ── INPI submission ───────────────────────────────────────────────────────
   const [inpiLoading, setInpiLoading] = useState(false);
   const [inpiResult, setInpiResult] = useState<string | null>(null);
+  const [inpiPortalUrl, setInpiPortalUrl] = useState<string | null>(null);
+  const [inpiUsername, setInpiUsername] = useState("");
+  const [inpiPassword, setInpiPassword] = useState("");
+  const [inpiCredOpen, setInpiCredOpen] = useState(false);
   const [liqResUnanimite, setLiqResUnanimite] = useState([true, true, true, true]);
   const [liqPour, setLiqPour] = useState(["", "", "", ""]);
   const [liqContre, setLiqContre] = useState(["", "", "", ""]);
@@ -1215,31 +1219,96 @@ function DossierForm() {
               </button>
 
               {/* ── Dépôt INPI Phase 1 ── */}
-              <div className="border border-gray-100 rounded-xl p-4 space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                  <Send className="w-4 h-4 text-[#5D9CEC]" />
-                  Dépôt Guichet Unique INPI – Phase 1
-                </p>
-                <p className="text-xs text-gray-400">
-                  {decisionType === "age"
-                    ? "Pièces requises : PV signé, convocation, feuille de présence, attestation annonce légale."
-                    : decisionType === "unanimite"
-                      ? "Pièces requises : PV signé, attestation annonce légale."
-                      : "Pièces requises : Décision de l'associé unique signée, attestation annonce légale."}
-                </p>
-                <a
-                  href="https://procedures.inpi.fr"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all text-sm"
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setInpiCredOpen((o) => !o)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
                 >
-                  <ExternalLink className="w-4 h-4" />
-                  Déposer au Guichet Unique INPI
-                </a>
-                {inpiResult && (
-                  <p className={`text-xs font-medium ${inpiResult.includes("Erreur") || inpiResult.includes("échou") ? "text-red-500" : "text-green-600"}`}>
-                    {inpiResult}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <Send className="w-4 h-4 text-[#5D9CEC]" />
+                    <span className="font-semibold text-sm text-[#1E3A8A]">Dépôt Guichet Unique INPI – Phase 1</span>
+                  </div>
+                  {inpiCredOpen ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+
+                {inpiCredOpen && (
+                  <div className="border-t border-gray-100 p-4 space-y-3 bg-gray-50">
+                    <p className="text-xs text-gray-500">
+                      Saisissez vos identifiants <strong>procedures.inpi.fr</strong>. Le dossier sera déposé automatiquement via l'API Guichet Unique.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="email"
+                        value={inpiUsername}
+                        onChange={(e) => setInpiUsername(e.target.value)}
+                        placeholder="Email INPI"
+                        className="px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#5D9CEC]"
+                      />
+                      <input
+                        type="password"
+                        value={inpiPassword}
+                        onChange={(e) => setInpiPassword(e.target.value)}
+                        placeholder="Mot de passe INPI"
+                        className="px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#5D9CEC]"
+                      />
+                    </div>
+                    <p className="text-xs text-amber-600">
+                      ⚠ Les formalités de cessation nécessitent une <strong>signature électronique avancée</strong> (certificat qualifié eIDAS). Après dépôt, rendez-vous sur le portail INPI pour signer.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          if (!inpiUsername || !inpiPassword) { alert("Saisissez vos identifiants INPI."); return; }
+                          setInpiLoading(true); setInpiResult(null); setInpiPortalUrl(null);
+                          try {
+                            // Génère le PV en base64 pour joindre au dossier INPI
+                            const docRes = await fetch("/api/dissolution/pv", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(buildData()) });
+                            const docBlob = await docRes.blob();
+                            const reader = new FileReader();
+                            const pvBase64 = await new Promise<string>((resolve) => { reader.onload = () => resolve((reader.result as string).split(",")[1]); reader.readAsDataURL(docBlob); });
+
+                            const res = await fetch("/api/dissolution/inpi-submit", {
+                              method: "POST", headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                inpiUsername, inpiPassword, siren, companyName, formeJuridique,
+                                siegeSocial, codePostal: siegeSocial.match(/\d{5}/)?.[0] ?? "",
+                                ville, dateDissolution: date,
+                                liquidateurNom: liqNom, liquidateurPrenom: liqPrenom,
+                                liquidateurAdresse: liqAdresse,
+                                liquidateurCodePostal: liqAdresse.match(/\d{5}/)?.[0] ?? "",
+                                liquidateurVille: liqVille || ville,
+                                pvBase64,
+                              }),
+                            });
+                            const data = await res.json();
+                            setInpiResult(data.message);
+                            if (data.portalUrl) setInpiPortalUrl(data.portalUrl);
+                          } catch { setInpiResult("Erreur lors du dépôt INPI."); }
+                          finally { setInpiLoading(false); }
+                        }}
+                        disabled={inpiLoading}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#1E3A8A] hover:bg-[#162d6e] disabled:bg-gray-300 text-white font-semibold rounded-xl transition-all text-sm"
+                      >
+                        {inpiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        Déposer via l'API INPI
+                      </button>
+                      <a href="https://procedures.inpi.fr" target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-600 text-xs rounded-xl hover:bg-gray-100 transition-colors">
+                        <ExternalLink className="w-3.5 h-3.5" /> Portail
+                      </a>
+                    </div>
+                    {inpiResult && (
+                      <div className={`p-3 rounded-lg text-xs font-medium ${inpiResult.includes("Erreur") || inpiResult.includes("échou") ? "bg-red-50 text-red-600" : "bg-green-50 text-green-700"}`}>
+                        {inpiResult}
+                        {inpiPortalUrl && (
+                          <a href={inpiPortalUrl} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 mt-1.5 text-[#1E3A8A] underline">
+                            <ExternalLink className="w-3 h-3" /> Ouvrir sur le portail INPI pour signer →
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

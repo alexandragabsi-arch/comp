@@ -26,6 +26,13 @@ export interface InpiSubmitRequest {
   liquidateurVille: string;
   /** PV signé en base64 (PDF) */
   pvBase64: string;
+  /**
+   * Mode de règlement des frais de greffe :
+   * - "compte_mandataire" → INPI débite le compte prépayé LegalCorners (recommandé, no-touch client)
+   * - "portail" → le client paye lui-même sur procedures.inpi.fr (fallback)
+   * Par défaut : "compte_mandataire" si INPI_MANDATAIRE_ACCOUNT configuré, sinon "portail"
+   */
+  modeReglement?: "compte_mandataire" | "portail";
   /** Référence interne LegalCorners */
   reference?: string;
 }
@@ -106,6 +113,11 @@ async function createFormality(
   );
   const dateDissIso = toIsoDate(req.dateDissolution);
 
+  // Mode de règlement : compte mandataire prépayé si configuré, sinon portail client
+  const hasMandataireAccount = !!process.env.INPI_MANDATAIRE_ACCOUNT;
+  const useCompteMandat =
+    req.modeReglement !== "portail" && hasMandataireAccount;
+
   // Schéma cessation personne morale (typeFormalite = "R")
   // cf. https://guichet-unique.inpi.fr/data pour dictionnaire complet
   const body = {
@@ -117,6 +129,12 @@ async function createFormality(
     numNat: req.siren,
     diffusionINSEE: "O",
     indicateruEntreeSortieRegistre: true,
+    // Paiement des frais de greffe par le mandataire (LegalCorners)
+    // → compte prépayé INPI, numéro configuré dans INPI_MANDATAIRE_ACCOUNT
+    ...(useCompteMandat && {
+      modeReglement: "compte_mandataire",
+      numeroCompteMandataire: process.env.INPI_MANDATAIRE_ACCOUNT,
+    }),
     content: {
       personneMorale: {
         // Identité
@@ -231,18 +249,26 @@ export async function POST(request: NextRequest): Promise<NextResponse<InpiSubmi
     );
   }
 
-  // Succès — retourne l'ID et l'URL du portail pour la suite (signature + paiement)
+  // Succès
   const portalUrl =
     (process.env.INPI_ENV === "demo"
       ? "https://procedures-demo.inpi.fr"
       : "https://procedures.inpi.fr") +
     `/?/formalite/${formalityId}`;
 
+  const hasMandataireAccount = !!process.env.INPI_MANDATAIRE_ACCOUNT;
+  const paidByMandat = req.modeReglement !== "portail" && hasMandataireAccount;
+
+  const message = paidByMandat
+    ? `Formalité déposée et frais de greffe réglés via le compte mandataire LegalCorners (n° ${liasseNumber || formalityId}). Il reste à signer le dossier sur le portail INPI.`
+    : `Formalité déposée avec succès (n° ${liasseNumber || formalityId}). Le client doit signer et régler les frais de greffe (~196 € HT) sur le portail INPI.`;
+
   return NextResponse.json({
     step: "done",
     formalityId,
     liasseNumber,
-    message: `Formalité déposée avec succès (n° ${liasseNumber || formalityId}). Rendez-vous sur le portail INPI pour signer et payer.`,
+    paidByMandat,
+    message,
     portalUrl,
   });
 }

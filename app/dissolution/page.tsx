@@ -264,11 +264,37 @@ function PaymentSuccessPage() {
 
   let procedure: string = "dissolution";
   let company: Company | null = null;
+  let clientEmail: string = "";
+  let clientNom: string = "";
   try {
     const parsed = JSON.parse(atob(stateRaw));
     procedure = parsed.procedure ?? "dissolution";
     company = parsed.company ?? null;
+    clientEmail = parsed.clientInfos?.email ?? "";
+    clientNom = `${parsed.clientInfos?.prenom ?? ""} ${parsed.clientInfos?.nom ?? ""}`.trim();
   } catch { /* ignore */ }
+
+  // ── Sauvegarde Supabase ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (!sessionId || !clientEmail || !company) return;
+    const type = procedure === "mise-en-sommeil" ? "sommeil" : "dissolution";
+    fetch("/api/dossiers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: clientEmail,
+        company_name: company.nom,
+        siren: company.siren ?? "",
+        forme_juridique: company.formeJuridique ?? "",
+        type,
+        status: "en_cours",
+        stripe_session_id: sessionId,
+        stripe_paid: true,
+        data: { formule, clientNom },
+      }),
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Fetch SIREN complet ──────────────────────────────────────────────────
   type SirenData = {
@@ -738,7 +764,7 @@ function DissolutionForm() {
     setPaymentLoading(planId);
     try {
       const stateKey = btoa(
-        JSON.stringify({ company: selectedCompany, procedure: selectedProcedure, answers })
+        JSON.stringify({ company: selectedCompany, procedure: selectedProcedure, answers, clientInfos })
       );
       const res = await fetch("/api/stripe/checkout-dissolution", {
         method: "POST",

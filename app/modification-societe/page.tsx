@@ -107,6 +107,9 @@ export default function ModificationSocietePage() {
   // Objet / Statuts
   const [details, setDetails] = useState("");
 
+  // Contact
+  const [email, setEmail] = useState("");
+
   // Step 3 — Documents (upload or note)
   const [pvGenere, setPvGenere] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -142,7 +145,7 @@ export default function ModificationSocietePage() {
     setPvGenere(true);
   }
 
-  const step1Valid = siren.replace(/\s/g, "").length >= 9 && denomination.trim().length > 0;
+  const step1Valid = siren.replace(/\s/g, "").length >= 9 && denomination.trim().length > 0 && email.trim().length > 0;
   const step2Valid = typeModif.length > 0 && dateDecision.trim().length > 0;
 
   return (
@@ -228,6 +231,7 @@ export default function ModificationSocietePage() {
               <Field label="Dénomination sociale" value={denomination} onChange={setDenomination} placeholder="ACME SAS" />
               <SelectField label="Forme juridique" value={formeJuridique} onChange={setFormeJuridique} options={FORMES_JURIDIQUES} />
               <Field label="Siège social actuel" value={siegeSocial} onChange={setSiegeSocial} placeholder="12 rue de la Paix, 75001 Paris" />
+              <Field label="Votre email" value={email} onChange={setEmail} type="email" placeholder="jean.dupont@email.fr" />
             </div>
           )}
 
@@ -434,7 +438,24 @@ export default function ModificationSocietePage() {
             </button>
             {step < 4 ? (
               <button
-                onClick={() => setStep(s => s + 1)}
+                onClick={() => {
+                  if (step === 3) {
+                    fetch("/api/dossiers", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        email,
+                        company_name: denomination,
+                        siren: siren.replace(/\s/g, ""),
+                        forme_juridique: formeJuridique,
+                        type: "modification",
+                        status: "en_cours",
+                        data: { typeModif, dateDecision, lieuDecision },
+                      }),
+                    }).catch(() => {});
+                  }
+                  setStep(s => s + 1);
+                }}
                 disabled={(step === 1 && !step1Valid) || (step === 2 && !step2Valid)}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#4A6FE3] to-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
               >

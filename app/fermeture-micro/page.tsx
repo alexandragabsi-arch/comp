@@ -346,7 +346,23 @@ export default function FermetureMicroPage() {
             </button>
             {step < 3 ? (
               <button
-                onClick={() => setStep(s => s + 1)}
+                onClick={() => {
+                  if (step === 2) {
+                    fetch("/api/dossiers", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        email,
+                        company_name: nomCommercial || `${prenom} ${nom}`.trim(),
+                        siren: siret.replace(/\s/g, "").slice(0, 9),
+                        type: "fermeture_micro",
+                        status: "en_cours",
+                        data: { siret, dateCessation, motif },
+                      }),
+                    }).catch(() => {});
+                  }
+                  setStep(s => s + 1);
+                }}
                 disabled={(step === 1 && !step1Valid) || (step === 2 && !step2Valid)}
                 className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#4A6FE3] to-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
               >

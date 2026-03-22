@@ -570,6 +570,7 @@ function DissolutionForm() {
   const [paymentLoading, setPaymentLoading] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [focusedPlan, setFocusedPlan] = useState<string>("standard");
 
   // Infos client
   const [clientInfos, setClientInfos] = useState({ nom: "", prenom: "", email: "", telephone: "" });
@@ -1280,7 +1281,7 @@ function DissolutionForm() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="min-h-screen flex flex-col"
+                className="min-h-screen flex flex-col md:ml-72"
               >
                 {/* Top bar plein écran */}
                 <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
@@ -1376,11 +1377,15 @@ function DissolutionForm() {
                       {PLANS.map((plan) => (
                         <div
                           key={plan.id}
+                          onMouseEnter={() => setFocusedPlan(plan.id)}
+                          onClick={() => setFocusedPlan(plan.id)}
                           className={cn(
-                            "relative rounded-2xl flex flex-col transition-all",
+                            "relative rounded-2xl flex flex-col transition-all cursor-pointer",
                             plan.featured
                               ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-2xl p-6 md:-my-3"
-                              : "bg-white border-2 border-gray-200 p-5"
+                              : focusedPlan === plan.id
+                                ? "bg-white border-2 border-[#5D9CEC] p-5 shadow-md"
+                                : "bg-white border-2 border-gray-200 p-5"
                           )}
                         >
                           {plan.badge && (
@@ -1474,7 +1479,9 @@ function DissolutionForm() {
                   {/* Dépliant 1 : Ce qui est inclus dans nos honoraires */}
                   {[
                     {
-                      title: "Qu'est-ce qui est inclus dans nos honoraires ?",
+                      title: selectedProcedure === "mise-en-sommeil"
+                        ? "Ce qui est inclus dans la formule Mise en sommeil"
+                        : `Ce qui est inclus dans la formule ${PLANS.find(p => p.id === focusedPlan)?.name ?? "Standard"}`,
                       content: selectedProcedure === "mise-en-sommeil" ? (
                         <ul className="space-y-2.5 text-sm text-gray-600">
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Vérification complète</strong> de votre dossier par un formaliste</span></li>
@@ -1482,15 +1489,29 @@ function DissolutionForm() {
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Enregistrement au greffe</strong> du tribunal de commerce</span></li>
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Suivi et <strong className="text-gray-800">assistance par email et téléphone</strong></span></li>
                         </ul>
-                      ) : (
-                        <ul className="space-y-2.5 text-sm text-gray-600">
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Vérification du dossier</strong> par un formaliste expert</span></li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Rédaction des actes de dissolution</strong> (PV d'assemblée, décision de l'associé unique…) et préparation du <strong className="text-gray-800">dossier greffe</strong></span></li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Dépôt au greffe</strong> et suivi des formalités</span></li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Publication des annonces légales</strong> <span className="text-gray-400">(formules Standard & Premium)</span></span></li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Assistance par <strong className="text-gray-800">email et téléphone</strong></span></li>
-                        </ul>
-                      ),
+                      ) : (() => {
+                        const plan = PLANS.find(p => p.id === focusedPlan) ?? PLANS[1];
+                        return (
+                          <ul className="space-y-2.5 text-sm text-gray-600">
+                            {plan.features.map((f) => (
+                              <li key={f.label} className="flex items-start gap-2">
+                                {f.included === true ? (
+                                  <Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />
+                                ) : f.included === "partial" ? (
+                                  <span className="w-4 text-center text-amber-500 mt-0.5 flex-shrink-0 text-sm leading-none">~</span>
+                                ) : (
+                                  <X className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
+                                )}
+                                <span className={f.included ? "text-gray-700" : "text-gray-400"}>
+                                  <strong className={f.included ? "text-gray-800" : "text-gray-400"}>{f.label}</strong>
+                                  {f.included === "partial" && <span className="text-gray-400 font-normal"> (limité)</span>}
+                                  {f.included === false && <span className="text-gray-400 font-normal"> — non inclus dans cette formule</span>}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        );
+                      })(),
                     },
                     {
                       title: "Quels sont les frais annexes obligatoires ?",

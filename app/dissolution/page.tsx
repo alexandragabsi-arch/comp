@@ -116,14 +116,13 @@ function getQuestionsDissoltion(formeJuridique: string) {
     },
     {
       id: "delai",
-      question: "Dans quel délai souhaitez-vous démarrer ?",
-      subtitle: "Nous adaptons la prise en charge à votre calendrier",
+      question: "Dans quel délai souhaitez-vous réaliser cette formalité ?",
+      subtitle: "Nous adaptons notre accompagnement à vos besoins",
       type: "delai",
       options: [
-        { value: "urgent", label: "Le plus vite possible", description: "Traitement prioritaire sous 48h", icon: Clock },
-        { value: "1mois", label: "Dans le mois", description: "Démarrage dans les 4 prochaines semaines", icon: Clock },
-        { value: "3mois", label: "Dans les 3 mois", description: "Pas d'urgence, on prend le temps", icon: Clock },
-        { value: "plus", label: "Dans plus de 3 mois", description: "Vous êtes en phase de réflexion", icon: Clock },
+        { value: "urgent", label: "Dès à présent", description: "Traitement prioritaire de votre dossier", icon: Zap },
+        { value: "semaine", label: "Dans la semaine", description: "Délai standard de traitement", icon: Clock },
+        { value: "mois", label: "Dans le mois", description: "Traitement selon disponibilité", icon: Clock },
       ],
     },
   ];
@@ -166,6 +165,17 @@ const QUESTIONS_SOMMEIL = [
         description: "La dissolution-liquidation serait peut-être plus adaptée",
         icon: X,
       },
+    ],
+  },
+  {
+    id: "delai",
+    question: "Dans quel délai souhaitez-vous réaliser cette formalité ?",
+    subtitle: "Nous adaptons notre accompagnement à vos besoins",
+    type: "delai",
+    options: [
+      { value: "urgent", label: "Dès à présent", description: "Traitement prioritaire de votre dossier", icon: Zap },
+      { value: "semaine", label: "Dans la semaine", description: "Délai standard de traitement", icon: Clock },
+      { value: "mois", label: "Dans le mois", description: "Traitement selon disponibilité", icon: Clock },
     ],
   },
 ];
@@ -529,6 +539,70 @@ function PaymentSuccessPage() {
   );
 }
 
+// ── Délai Picker ─────────────────────────────────────────────────────────────
+function DelaiPicker({
+  options, selected, onSelect, onContinue, onBack, canContinue,
+}: {
+  options: { value: string; label: string; description: string }[];
+  selected: string;
+  onSelect: (v: string) => void;
+  onContinue: () => void;
+  onBack: () => void;
+  canContinue: boolean;
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Icon */}
+      <div className="flex justify-center">
+        <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center">
+          <Zap className="w-8 h-8 text-orange-500" />
+        </div>
+      </div>
+
+      {/* Cards */}
+      <div className="space-y-3">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onSelect(opt.value)}
+            className={cn(
+              "w-full text-left p-5 rounded-xl border-2 bg-white transition-all",
+              selected === opt.value
+                ? "border-[#5D9CEC] shadow-sm"
+                : "border-gray-200 hover:border-gray-300"
+            )}
+          >
+            <p className={cn(
+              "font-semibold text-base",
+              selected === opt.value ? "text-[#1E3A8A]" : "text-[#1E3A8A]"
+            )}>
+              {opt.label}
+            </p>
+            <p className="text-sm text-gray-500 mt-0.5">{opt.description}</p>
+          </button>
+        ))}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex gap-3 pt-2">
+        <button
+          onClick={onBack}
+          className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+        >
+          Retour
+        </button>
+        <button
+          onClick={onContinue}
+          disabled={!canContinue}
+          className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-30 flex items-center justify-center gap-2"
+        >
+          Continuer <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AccordionItem({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
@@ -657,7 +731,7 @@ function DissolutionForm() {
 
   function selectPlan(planId: string) {
     setSelectedPlan(planId);
-    setSubStep("infos");
+    handlePayment(planId);
   }
 
   async function handlePayment(planId: string) {
@@ -1039,22 +1113,16 @@ function DissolutionForm() {
                 </div>
 
                 {(questions[currentQuestion] as { type?: string }).type === "delai" ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    {questions[currentQuestion].options.map((opt, i) => {
-                      const emojis = ["⚡", "📅", "🗓️", "💭"];
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => answerQuestion(questions[currentQuestion].id, opt.value)}
-                          className="flex flex-col items-start gap-2 p-5 rounded-xl border-2 border-gray-200 bg-white hover:border-[#5D9CEC] hover:bg-blue-50 text-left transition-all group"
-                        >
-                          <span className="text-2xl">{emojis[i]}</span>
-                          <p className="font-bold text-[#1E3A8A] text-sm">{opt.label}</p>
-                          <p className="text-xs text-[#1E3A8A]/60">{opt.description}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <DelaiPicker
+                    options={questions[currentQuestion].options.map(o => ({ value: o.value, label: o.label, description: o.description }))}
+                    selected={answers[questions[currentQuestion].id] ?? ""}
+                    onSelect={(v) => {
+                      setAnswers(prev => ({ ...prev, [questions[currentQuestion].id]: v }));
+                    }}
+                    onContinue={() => answerQuestion(questions[currentQuestion].id, answers[questions[currentQuestion].id] ?? "")}
+                    onBack={() => setCurrentQuestion(q => Math.max(0, q - 1))}
+                    canContinue={!!answers[questions[currentQuestion].id]}
+                  />
                 ) : (
                   <div className="space-y-3">
                     {questions[currentQuestion].options.map((opt) => {
@@ -1181,10 +1249,10 @@ function DissolutionForm() {
                 </div>
 
                 <button
-                  onClick={() => { setSidebarStep(2); setSubStep("commande"); }}
+                  onClick={() => { setSidebarStep(2); setSubStep("infos"); }}
                   className="w-full py-4 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-base"
                 >
-                  Continuer vers la commande
+                  Voir les tarifs
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </motion.div>
@@ -1254,21 +1322,22 @@ function DissolutionForm() {
                 <button
                   onClick={() => {
                     if (!clientInfos.prenom || !clientInfos.nom || !clientInfos.email || !clientInfos.telephone) return;
-                    handlePayment(selectedPlan!);
+                    setSidebarStep(2);
+                    setSubStep("commande");
                   }}
-                  disabled={!clientInfos.prenom || !clientInfos.nom || !clientInfos.email || !clientInfos.telephone || paymentLoading !== null}
+                  disabled={!clientInfos.prenom || !clientInfos.nom || !clientInfos.email || !clientInfos.telephone}
                   className="w-full py-4 bg-[#5D9CEC] hover:bg-[#4a8bd4] disabled:bg-gray-200 disabled:text-gray-400 text-white font-semibold rounded-2xl transition-all flex items-center justify-center gap-2 text-sm"
                 >
-                  {paymentLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-                  Procéder au paiement
+                  <ArrowRight className="w-4 h-4" />
+                  Voir les tarifs
                 </button>
 
                 <div className="text-center">
                   <button
-                    onClick={() => setSubStep("commande")}
+                    onClick={() => setSubStep("etapes")}
                     className="text-gray-500 text-sm hover:text-[#1E3A8A] transition-colors"
                   >
-                    ← Retour au choix du pack
+                    ← Retour
                   </button>
                 </div>
               </motion.div>

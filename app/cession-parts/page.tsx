@@ -134,11 +134,13 @@ export default function CessionPartsPage() {
         .then(data => {
           if (data.paid) {
             // Restaurer l'état depuis sessionStorage
+            let restoredState: Record<string, unknown> = {};
             if (stateKey) {
               try {
                 const saved = sessionStorage.getItem(stateKey);
                 if (saved) {
                   const s = JSON.parse(saved);
+                  restoredState = s;
                   if (s.typeCession) setTypeCession(s.typeCession);
                   if (s.typePropriete) setTypePropriete(s.typePropriete);
                   if (s.cedantType) setCedantType(s.cedantType);
@@ -150,6 +152,22 @@ export default function CessionPartsPage() {
             if (formule) setSelectedFormule(formule);
             setPaymentComplete(true);
             setStep(4);
+            // Sauvegarder le dossier en Supabase
+            fetch("/api/dossiers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: data.email,
+                company_name: (restoredState.societe as string) || "Cession de parts",
+                siren: (restoredState.siren as string) || "",
+                forme_juridique: (restoredState.formeJuridique as string) || "",
+                type: "cession",
+                status: "en_cours",
+                stripe_session_id: sessionId,
+                stripe_paid: true,
+                data: { formule, ...restoredState },
+              }),
+            }).catch(() => {});
             // Nettoyer l'URL
             window.history.replaceState({}, "", "/cession-parts");
           }

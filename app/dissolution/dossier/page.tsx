@@ -1421,7 +1421,7 @@ function DossierForm() {
       <DocPreviewModal
         title={preview.title}
         onClose={() => setPreview(null)}
-        onEdit={() => { setPreview(null); setStep(1); }}
+        onEdit={() => setPreview(null)}
         onFetchHtml={() => fetchPreviewHtml(preview.type)}
         onDownloadWord={async () => {
           if (preview.type === "pv") await generate();

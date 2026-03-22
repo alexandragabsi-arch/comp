@@ -2,66 +2,89 @@
  * Récupère les dossiers d'un client depuis Bubble via l'API Data.
  *
  * Configuration requise dans .env :
- *   BUBBLE_API_KEY         = clé API Bubble (admin token)
- *   BUBBLE_APP_URL         = ex: https://legalcorners.bubbleapps.io
- *   BUBBLE_DOSSIER_TYPE    = nom du type de données dans Bubble, ex: "dossier_creation"
+ *   BUBBLE_API_KEY   = clé API Bubble (token "backend")
+ *   BUBBLE_APP_URL   = https://legalcorners.fr
  *
- * L'utilisateur Bubble est identifié par son email (commun avec Supabase).
+ * Champs Bubble Dossier utilisés (vérifiés en Data tab) :
+ *   User            → email du client (filtre principal)
+ *   OS_Statut       → statut du dossier ("En cours", "Complété"…)
+ *   Type            → "Création de société"
+ *   Référence       → "LC-2026-000003"
+ *   Step_dossier    → étape courante
+ *   Created Date    → date de création
  */
 
 export interface BubbleDossier {
   id: string;
   company_name: string;
   siren: string;
-  type: string;          // "creation" | etc.
-  status: string;        // statut Bubble (à mapper)
+  type: string;
+  status: string;
+  reference: string;
+  step: string;
   created_at: string;
-  bubble_url?: string;   // lien vers le dossier dans Bubble
+  bubble_url?: string;
 }
 
-const STATUS_BUBBLE_MAP: Record<string, string> = {
-  // Adaptez les noms de statuts selon votre app Bubble
-  "en cours":   "en_cours",
-  "complété":   "termine",
-  "signé":      "signe",
-  "déposé":     "depose_inpi",
-  // Fallback
-  "default":    "en_cours",
+// Mapping OS_Statut Bubble → statut unifié dashboard
+const STATUS_MAP: Record<string, string> = {
+  "en cours":       "en_cours",
+  "complété":       "termine",
+  "terminé":        "termine",
+  "signé":          "signe",
+  "déposé":         "depose_inpi",
+  "en attente":     "en_cours",
+  "action requise": "erreur",
 };
 
 export async function getBubbleDossiers(userEmail: string): Promise<BubbleDossier[]> {
   const apiKey = process.env.BUBBLE_API_KEY;
-  const appUrl = process.env.BUBBLE_APP_URL;
-  const dataType = process.env.BUBBLE_DOSSIER_TYPE ?? "dossier";
+  const appUrl = process.env.BUBBLE_APP_URL ?? "https://legalcorners.fr";
 
-  if (!apiKey || !appUrl) return [];
+  if (!apiKey) return [];
 
   try {
-    // API Data Bubble : filtre sur l'email du client
-    const url = new URL(`${appUrl}/api/1.1/obj/${dataType}`);
-    url.searchParams.set("constraints", JSON.stringify([
-      { key: "email_client", constraint_type: "equals", value: userEmail }
-    ]));
+    // Filtre : User = email du client connecté
+    const url = new URL(`${appUrl}/version-live/api/1.1/obj/Dossier`);
+    url.searchParams.set(
+      "constraints",
+      JSON.stringify([
+        { key: "User", constraint_type: "equals", value: userEmail },
+      ])
+    );
+    url.searchParams.set("sort_field", "Created Date");
+    url.searchParams.set("descending", "true");
 
     const res = await fetch(url.toString(), {
       headers: { Authorization: `Bearer ${apiKey}` },
-      next: { revalidate: 60 }, // cache 60s
+      next: { revalidate: 60 },
     });
 
-    if (!res.ok) return [];
-    const json = await res.json();
-    const results = json?.response?.results ?? [];
+    if (!res.ok) {
+      console.error("Bubble API error:", res.status, await res.text());
+      return [];
+    }
 
-    return results.map((r: Record<string, unknown>) => ({
-      id: r._id as string,
-      company_name: (r.nom_societe ?? r.denomination ?? r.company_name ?? "Société") as string,
-      siren: (r.siren ?? "") as string,
-      type: "creation",
-      status: STATUS_BUBBLE_MAP[(r.statut as string)?.toLowerCase()] ?? "en_cours",
-      created_at: (r["Created Date"] ?? r.created_date ?? new Date().toISOString()) as string,
-      bubble_url: `${appUrl}/dossier/${r._id}`,
-    }));
-  } catch {
+    const json = await res.json();
+    const results: Record<string, unknown>[] = json?.response?.results ?? [];
+
+    return results.map((r) => {
+      const statut = ((r["OS_Statut"] as string) ?? "").toLowerCase().trim();
+      return {
+        id: r._id as string,
+        // Pas de champ nom société direct → on utilise Référence comme identifiant
+        company_name: (r["Référence"] as string) ?? "Dossier LegalCorners",
+        siren: "",
+        type: "creation",
+        status: STATUS_MAP[statut] ?? "en_cours",
+        reference: (r["Référence"] as string) ?? "",
+        step: (r["Step_dossier"] as string) ?? "",
+        created_at: (r["Created Date"] as string) ?? new Date().toISOString(),
+        bubble_url: `${appUrl}/dossier/${r._id as string}`,
+      };
+    });
+  } catch (e) {
+    console.error("Erreur getBubbleDossiers:", e);
     return [];
   }
 }

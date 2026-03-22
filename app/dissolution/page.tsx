@@ -903,58 +903,52 @@ function DissolutionForm() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-10"
+                className="space-y-10 max-w-2xl mx-auto w-full"
               >
                 <CompanyCard />
 
-                <h1 className="text-3xl font-bold text-[#1E3A8A] text-center leading-tight">
+                <h1 className="text-4xl font-extrabold text-[#1E3A8A] text-center leading-tight">
                   Quelques informations avant de{" "}
-                  <span className="text-[#F97316]">
+                  <span className="text-[#059669]">
                     {selectedProcedure === "dissolution"
                       ? "fermer votre société"
                       : "mettre en sommeil votre société"}
                   </span>
                 </h1>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-                  <div className="space-y-3">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
-                        <Clock className="w-7 h-7 text-[#5D9CEC]" />
-                      </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="space-y-3 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
+                      <Clock className="w-7 h-7 text-white" />
                     </div>
-                    <p className="font-bold text-[#1E3A8A] text-sm">
+                    <p className="font-bold text-[#1E3A8A] text-sm leading-snug">
                       Combien de temps dure le questionnaire ?
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 hidden sm:block">
                       Les utilisateurs le remplissent en moyenne en 5 à 10 minutes.
                     </p>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
-                        <Users className="w-7 h-7 text-[#5D9CEC]" />
-                      </div>
+                  <div className="space-y-3 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
+                      <Users className="w-7 h-7 text-white" />
                     </div>
-                    <p className="font-bold text-[#1E3A8A] text-sm">
+                    <p className="font-bold text-[#1E3A8A] text-sm leading-snug">
                       Vous avez besoin d&apos;aide ?
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 hidden sm:block">
                       Nos experts sont là pour vous aider par email ou téléphone.
                     </p>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex justify-center">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
-                        <Shield className="w-7 h-7 text-[#5D9CEC]" />
-                      </div>
+                  <div className="space-y-3 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
+                      <Shield className="w-7 h-7 text-white" />
                     </div>
-                    <p className="font-bold text-[#1E3A8A] text-sm">
+                    <p className="font-bold text-[#1E3A8A] text-sm leading-snug">
                       On s&apos;occupe de tout pour vous !
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 hidden sm:block">
                       {selectedProcedure === "dissolution"
                         ? "Dissolution, liquidation et radiation en toute sérénité."
                         : "Déclaration de cessation et enregistrement au greffe."}
@@ -965,7 +959,7 @@ function DissolutionForm() {
                 <div className="space-y-4 text-center">
                   <button
                     onClick={() => setSubStep("questions")}
-                    className="w-full py-4 bg-[#5D9CEC] hover:bg-[#4a8bd4] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-base"
+                    className="w-full py-4 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-base"
                   >
                     {selectedProcedure === "dissolution"
                       ? "Dissoudre et radier ma société"

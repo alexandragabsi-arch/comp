@@ -17,10 +17,13 @@ const STATUS_MAP: Record<string, { label: string; color: string; icon: React.Ele
 };
 
 const TYPE_MAP: Record<string, { label: string; badge: string }> = {
-  dissolution: { label: "Dissolution",       badge: "bg-red-50 text-red-700 border-red-200" },
-  cession:     { label: "Cession de parts",  badge: "bg-blue-50 text-blue-700 border-blue-200" },
-  sommeil:     { label: "Mise en sommeil",   badge: "bg-amber-50 text-amber-700 border-amber-200" },
-  creation:    { label: "Création",          badge: "bg-green-50 text-green-700 border-green-200" },
+  dissolution:              { label: "Dissolution",             badge: "bg-red-50 text-red-700 border-red-200" },
+  cession:                  { label: "Cession de parts",        badge: "bg-blue-50 text-blue-700 border-blue-200" },
+  sommeil:                  { label: "Mise en sommeil",         badge: "bg-amber-50 text-amber-700 border-amber-200" },
+  creation:                 { label: "Création",                badge: "bg-green-50 text-green-700 border-green-200" },
+  modification:             { label: "Modification",            badge: "bg-purple-50 text-purple-700 border-purple-200" },
+  creation_auto_entrepreneur: { label: "Création AE / EI",     badge: "bg-teal-50 text-teal-700 border-teal-200" },
+  fermeture_micro:          { label: "Fermeture micro",         badge: "bg-rose-50 text-rose-700 border-rose-200" },
 };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -97,10 +100,17 @@ export default async function DashboardPage() {
         </div>
 
         {dossiers.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+          <div className="bg-white rounded-2xl border border-gray-200 p-10 text-center">
             <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="font-medium text-gray-700">Aucun dossier pour l'instant</p>
-            <p className="text-sm text-gray-400 mt-1">Vos formalités apparaîtront ici dès leur création.</p>
+            <p className="text-sm text-gray-400 mt-1 mb-6">Vos formalités apparaîtront ici dès leur création.</p>
+            <div className="flex flex-wrap justify-center gap-3 text-sm">
+              <a href="/dissolution" className="px-4 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors">Dissolution</a>
+              <a href="/modification-societe" className="px-4 py-2 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">Modification</a>
+              <a href="/mise-en-sommeil" className="px-4 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">Mise en sommeil</a>
+              <a href="/creation-auto-entrepreneur" className="px-4 py-2 rounded-lg bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition-colors">Créer AE / EI</a>
+              <a href="/fermeture-micro" className="px-4 py-2 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition-colors">Fermeture micro</a>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">

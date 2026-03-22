@@ -2,7 +2,69 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Scale, FileText, Users, Building2, ArrowRight, CheckCircle2 } from "lucide-react";
+import {
+  Scale, FileText, Users, Building2, ArrowRight, CheckCircle2,
+  RefreshCw, Moon, Briefcase, X, LayoutDashboard
+} from "lucide-react";
+
+const SERVICES = [
+  {
+    href: "/cession-parts",
+    icon: <Users className="w-6 h-6 text-[#4A6FE3]" />,
+    title: "Cession de parts sociales",
+    desc: "SARL, EURL, SCI — acte de cession, PV d'AG, déclaration de non-condamnation.",
+    tag: "SARL · EURL · SCI",
+    color: "bg-blue-50",
+  },
+  {
+    href: "/cession-action",
+    icon: <Building2 className="w-6 h-6 text-[#4A6FE3]" />,
+    title: "Cession d'actions",
+    desc: "SAS, SASU, SA — acte de cession, PV AGE, garantie actif-passif.",
+    tag: "SAS · SASU · SA",
+    color: "bg-blue-50",
+  },
+  {
+    href: "/dissolution",
+    icon: <FileText className="w-6 h-6 text-red-500" />,
+    title: "Dissolution / Liquidation",
+    desc: "Fermez votre société en douceur. Signature électronique avancée + dépôt INPI automatique.",
+    tag: "Toutes formes",
+    color: "bg-red-50",
+  },
+  {
+    href: "/modification-societe",
+    icon: <RefreshCw className="w-6 h-6 text-purple-500" />,
+    title: "Modification de société",
+    desc: "Changement de dirigeant, siège social, dénomination, capital, objet social.",
+    tag: "M2 · M3 · INPI",
+    color: "bg-purple-50",
+  },
+  {
+    href: "/mise-en-sommeil",
+    icon: <Moon className="w-6 h-6 text-amber-500" />,
+    title: "Mise en sommeil",
+    desc: "Suspendez votre activité sans fermer définitivement. Dossier complet généré.",
+    tag: "Toutes formes",
+    color: "bg-amber-50",
+  },
+  {
+    href: "/creation-auto-entrepreneur",
+    icon: <Briefcase className="w-6 h-6 text-green-600" />,
+    title: "Création auto-entrepreneur / EI",
+    desc: "Déclarez votre micro-entreprise gratuitement via le Guichet Unique INPI.",
+    tag: "Micro-BIC · Micro-BNC",
+    color: "bg-green-50",
+  },
+  {
+    href: "/fermeture-micro",
+    icon: <X className="w-6 h-6 text-rose-500" />,
+    title: "Fermeture micro-entreprise",
+    desc: "Cessez votre activité d'auto-entrepreneur en toute conformité — déclaration INPI / URSSAF.",
+    tag: "Gratuit",
+    color: "bg-rose-50",
+  },
+];
 
 export default function Home() {
   return (
@@ -17,19 +79,20 @@ export default function Home() {
         </nav>
         <div className="flex items-center gap-2 md:gap-3">
           <Link
-            href="#"
-            className="hidden md:inline-flex px-5 py-2 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-medium text-sm hover:opacity-90 transition-opacity shadow-sm"
+            href="/dashboard"
+            className="hidden md:flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] transition-colors"
           >
-            Prendre rendez-vous
+            <LayoutDashboard className="w-4 h-4" />
+            Mes dossiers
           </Link>
           <Link
-            href="/cession-parts"
+            href="/login"
             className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
-            <span className="hidden sm:inline">Connexion</span>
+            <span className="hidden sm:inline">Mon espace</span>
           </Link>
         </div>
       </header>
@@ -37,47 +100,58 @@ export default function Home() {
       {/* ── HERO ── */}
       <section className="max-w-7xl mx-auto px-4 md:px-6 pt-12 md:pt-20 pb-10 md:pb-16 text-center">
         <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-[#1E3A8A] leading-tight max-w-3xl mx-auto">
-          Cédez vos parts ou actions en toute simplicité
+          Toutes vos formalités juridiques en ligne
         </h1>
         <p className="mt-6 text-lg text-gray-500 max-w-xl mx-auto">
-          Générez en quelques minutes tous les documents nécessaires à votre cession : acte de cession, PV d&apos;AG, déclaration de non-condamnation du nouveau dirigeant — et envoyez-les directement au Greffe.
+          Création, modification, cession, dissolution, mise en sommeil — documents conformes, signature électronique avancée, dépôt INPI automatique.
         </p>
 
-        {/* CTA buttons */}
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
-            href="/cession-parts"
+            href="/dissolution"
             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md text-sm"
           >
-            Céder des parts sociales
+            Dissoudre ma société
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
-            href="/cession-action"
-            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md text-sm"
+            href="/modification-societe"
+            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full border border-[#4A6FE3] text-[#4A6FE3] font-semibold hover:bg-[#EFF4FF] transition-colors text-sm"
           >
-            Céder des actions
+            Modifier ma société
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
+      </section>
 
-        {/* Service tags */}
-        <div className="mt-12 flex flex-wrap justify-center gap-3 max-w-2xl mx-auto">
-          {[
-            "Cession de parts sociales",
-            "Cession d'actions",
-            "PV d'assemblée générale",
-            "Acte de cession",
-            "Déclaration de non-condamnation",
-            "Garantie actif-passif",
-          ].map((tag) => (
-            <span
-              key={tag}
-              className="px-4 py-2 rounded-lg border border-[#5B8DEF] text-[#1E3A8A] text-sm font-medium bg-white hover:bg-[#EFF4FF] transition-colors cursor-default"
-            >
-              {tag}
-            </span>
-          ))}
+      {/* ── SERVICES ── */}
+      <section className="bg-gray-50 py-12 md:py-20 px-4 md:px-6">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] text-center mb-3">
+            Nos services juridiques
+          </h2>
+          <p className="text-center text-gray-500 text-sm mb-10">Tous vos dossiers, une seule plateforme.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {SERVICES.map((s) => (
+              <Link
+                key={s.href}
+                href={s.href}
+                className="group bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
+              >
+                <div className={`w-11 h-11 rounded-xl ${s.color} flex items-center justify-center mb-4`}>
+                  {s.icon}
+                </div>
+                <h3 className="font-semibold text-[#1E3A8A] mb-2 group-hover:text-[#4A6FE3] transition-colors">
+                  {s.title}
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed mb-3">{s.desc}</p>
+                <span className="inline-block text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                  {s.tag}
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -85,24 +159,24 @@ export default function Home() {
       <section className="bg-white py-12 md:py-20 px-4 md:px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] text-center mb-8 md:mb-12">
-            Tout ce dont vous avez besoin pour votre cession
+            Pourquoi LegalCorners ?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               {
                 icon: <FileText className="w-6 h-6 text-[#5B8DEF]" />,
-                title: "Documents complets",
-                desc: "Acte de cession, PV d'AG, déclaration de non-condamnation — tout en un.",
+                title: "Documents 100 % conformes",
+                desc: "Rédigés par des juristes, adaptés à chaque forme juridique.",
               },
               {
                 icon: <CheckCircle2 className="w-6 h-6 text-[#5B8DEF]" />,
-                title: "100 % conforme",
-                desc: "Modèles rédigés par des juristes, conformes au Code de commerce.",
+                title: "Signature électronique avancée",
+                desc: "Signature YouSign avec OTP SMS — niveau eIDAS avancé, conforme INPI.",
               },
               {
                 icon: <Building2 className="w-6 h-6 text-[#5B8DEF]" />,
-                title: "SARL · SAS · SA · EURL · SCI · SASU",
-                desc: "Adapté à toutes les formes juridiques : SARL, SAS, SA, EURL, SASU, SCI, SNC — cession de parts ou d'actions.",
+                title: "Dépôt INPI automatique",
+                desc: "Vos formalités déposées au Guichet Unique sans quitter la plateforme.",
               },
             ].map((f) => (
               <div
@@ -120,31 +194,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="py-12 md:py-20 px-4 md:px-6 text-center">
+      {/* ── CTA DASHBOARD ── */}
+      <section className="py-12 md:py-20 px-4 md:px-6 text-center bg-gradient-to-b from-white to-[#EFF4FF]">
         <div className="max-w-xl mx-auto">
           <h2 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] mb-4">
-            Prêt à finaliser votre cession ?
+            Suivez tous vos dossiers en un clin d'œil
           </h2>
           <p className="text-gray-500 mb-8">
-            Formulaire guidé · Documents conformes · Téléchargement immédiat en DOCX ou PDF.
+            Création sur Bubble, formalités sur LegalCorners — tout centralisé dans votre espace client.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/cession-parts"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
-            >
-              Cession de parts
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/cession-action"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
-            >
-              Cession d&apos;actions
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            Accéder à mon espace
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 

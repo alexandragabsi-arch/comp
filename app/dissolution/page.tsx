@@ -529,6 +529,26 @@ function PaymentSuccessPage() {
   );
 }
 
+function AccordionItem({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 py-3.5 text-left gap-3"
+      >
+        <span className="text-sm font-semibold text-[#1E3A8A]">{title}</span>
+        <ChevronRight className={cn("w-4 h-4 text-[#5D9CEC] flex-shrink-0 transition-transform", open && "rotate-90")} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function DissolutionForm() {
 
   const [sidebarStep, setSidebarStep] = useState(1);
@@ -1449,7 +1469,67 @@ function DissolutionForm() {
                   </div>
                 )}
 
-                <div className="text-center">
+                {/* ── Dépliants explication tarifs & frais ── */}
+                <div className="mt-8 space-y-3 max-w-2xl mx-auto w-full">
+                  {/* Dépliant 1 : Ce qui est inclus dans nos honoraires */}
+                  {[
+                    {
+                      title: "Qu'est-ce qui est inclus dans nos honoraires ?",
+                      content: selectedProcedure === "mise-en-sommeil" ? (
+                        <ul className="space-y-2 text-sm text-gray-600">
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Vérification complète de votre dossier par un formaliste</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Préparation et envoi de la déclaration de cessation d'activité</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Enregistrement au greffe du tribunal de commerce</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Suivi et assistance par email et téléphone</li>
+                        </ul>
+                      ) : (
+                        <ul className="space-y-2 text-sm text-gray-600">
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Vérification de votre dossier par un formaliste expert</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Rédaction des actes de dissolution (PV d'assemblée, décision de l'associé unique…)</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Dépôt au greffe et suivi des formalités</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Publication des annonces légales (formules Standard & Premium)</li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" />Assistance par email et téléphone</li>
+                        </ul>
+                      ),
+                    },
+                    {
+                      title: "Quels sont les frais annexes obligatoires ?",
+                      content: (
+                        <div className="space-y-3">
+                          <p className="text-sm text-gray-500">Ces frais sont fixés par l'État et les organismes officiels. Ils s'ajoutent à nos honoraires et sont identiques quelle que soit la plateforme.</p>
+                          <div className="rounded-xl overflow-hidden border border-gray-100">
+                            {(selectedProcedure === "mise-en-sommeil" ? FRAIS_SOMMEIL : FRAIS_DISSOLUTION).map((f, i, arr) => (
+                              <div key={f.label} className={cn("flex justify-between items-center px-4 py-3 text-sm", i < arr.length - 1 ? "border-b border-gray-100" : "", i % 2 === 0 ? "bg-gray-50" : "bg-white")}>
+                                <span className="text-gray-600">{f.label}</span>
+                                <span className="font-semibold text-[#1E3A8A] whitespace-nowrap">{f.montant.toFixed(2).replace(".", ",")} € HT</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between items-center px-4 py-3 text-sm bg-[#1E3A8A] text-white font-bold">
+                              <span>Total frais annexes</span>
+                              <span>
+                                {(selectedProcedure === "mise-en-sommeil" ? FRAIS_SOMMEIL : FRAIS_DISSOLUTION)
+                                  .reduce((acc, f) => acc + f.montant, 0)
+                                  .toFixed(2).replace(".", ",")} € HT
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ),
+                    },
+                    {
+                      title: "Pourquoi ces frais ne sont-ils pas inclus dans le prix affiché ?",
+                      content: (
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          Les frais de greffe et d'annonces légales sont collectés directement par les organismes officiels (tribunal de commerce, journaux d'annonces légales). Nous ne pouvons pas les intégrer dans notre prix car ils varient selon le département et la forme juridique de votre société. Nous vous accompagnons dans leur règlement et vous informons à chaque étape.
+                        </p>
+                      ),
+                    },
+                  ].map((item, i) => (
+                    <AccordionItem key={i} title={item.title}>{item.content}</AccordionItem>
+                  ))}
+                </div>
+
+                <div className="text-center mt-6">
                   <button
                     onClick={() => {
                       setSidebarStep(1);

@@ -909,7 +909,7 @@ function DissolutionForm() {
 
                 <h1 className="text-4xl font-extrabold text-[#1E3A8A] text-center leading-tight">
                   Quelques informations avant de{" "}
-                  <span className="text-[#059669]">
+                  <span className="text-[#5D9CEC]">
                     {selectedProcedure === "dissolution"
                       ? "fermer votre société"
                       : "mettre en sommeil votre société"}

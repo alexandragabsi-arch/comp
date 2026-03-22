@@ -950,7 +950,9 @@ function DissolutionForm() {
                       <Shield className="w-7 h-7 text-white" />
                     </div>
                     <p className="font-bold text-[#1E3A8A] text-sm leading-snug">
-                      On s&apos;occupe de tout pour vous !
+                      {selectedProcedure === "dissolution"
+                        ? "On s'occupe de tout pour vous !"
+                        : "On gère les formalités pour vous !"}
                     </p>
                     <p className="text-xs text-gray-500 hidden sm:block">
                       {selectedProcedure === "dissolution"

@@ -184,7 +184,7 @@ const PLANS: Plan[] = [
     priceHT: 79,
     features: [
       { label: "Documents juridiques générés", included: true },
-      { label: "Formulaire M2 pré-rempli", included: true },
+      { label: "Dossier greffe pré-rempli", included: true },
       { label: "Vérification par un formaliste", included: false },
       { label: "Envoi dossier au greffe", included: false },
       { label: "Accompagnement expert", included: false },
@@ -199,7 +199,7 @@ const PLANS: Plan[] = [
     badge: "Le plus choisi",
     features: [
       { label: "Documents juridiques générés", included: true },
-      { label: "Formulaire M2 pré-rempli", included: true },
+      { label: "Dossier greffe pré-rempli", included: true },
       { label: "Vérification par un formaliste", included: true },
       { label: "Envoi dossier au greffe", included: true },
       { label: "Accompagnement expert", included: "partial" },
@@ -212,7 +212,7 @@ const PLANS: Plan[] = [
     priceHT: 249,
     features: [
       { label: "Documents juridiques générés", included: true },
-      { label: "Formulaire M2 pré-rempli", included: true },
+      { label: "Dossier greffe pré-rempli", included: true },
       { label: "Vérification par un formaliste", included: true },
       { label: "Envoi dossier au greffe", included: true },
       { label: "Accompagnement expert illimité", included: true },
@@ -1478,14 +1478,14 @@ function DissolutionForm() {
                       content: selectedProcedure === "mise-en-sommeil" ? (
                         <ul className="space-y-2.5 text-sm text-gray-600">
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Vérification complète</strong> de votre dossier par un formaliste</span></li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Préparation et envoi de la <strong className="text-gray-800">déclaration de cessation d'activité</strong></span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Préparation et envoi du <strong className="text-gray-800">dossier au greffe</strong></span></li>
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Enregistrement au greffe</strong> du tribunal de commerce</span></li>
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Suivi et <strong className="text-gray-800">assistance par email et téléphone</strong></span></li>
                         </ul>
                       ) : (
                         <ul className="space-y-2.5 text-sm text-gray-600">
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Vérification du dossier</strong> par un formaliste expert</span></li>
-                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Rédaction des actes de dissolution</strong> (PV d'assemblée, décision de l'associé unique…)</span></li>
+                          <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Rédaction des actes de dissolution</strong> (PV d'assemblée, décision de l'associé unique…) et préparation du <strong className="text-gray-800">dossier greffe</strong></span></li>
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Dépôt au greffe</strong> et suivi des formalités</span></li>
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span><strong className="text-gray-800">Publication des annonces légales</strong> <span className="text-gray-400">(formules Standard & Premium)</span></span></li>
                           <li className="flex items-start gap-2"><Check className="w-4 h-4 text-[#5D9CEC] mt-0.5 flex-shrink-0" /><span>Assistance par <strong className="text-gray-800">email et téléphone</strong></span></li>

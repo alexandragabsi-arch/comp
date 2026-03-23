@@ -134,11 +134,13 @@ export default function CessionPartsPage() {
         .then(data => {
           if (data.paid) {
             // Restaurer l'état depuis sessionStorage
+            let restoredState: Record<string, unknown> = {};
             if (stateKey) {
               try {
                 const saved = sessionStorage.getItem(stateKey);
                 if (saved) {
                   const s = JSON.parse(saved);
+                  restoredState = s;
                   if (s.typeCession) setTypeCession(s.typeCession);
                   if (s.typePropriete) setTypePropriete(s.typePropriete);
                   if (s.cedantType) setCedantType(s.cedantType);
@@ -150,6 +152,22 @@ export default function CessionPartsPage() {
             if (formule) setSelectedFormule(formule);
             setPaymentComplete(true);
             setStep(4);
+            // Sauvegarder le dossier en Supabase
+            fetch("/api/dossiers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: data.email,
+                company_name: (restoredState.societe as string) || "Cession de parts",
+                siren: (restoredState.siren as string) || "",
+                forme_juridique: (restoredState.formeJuridique as string) || "",
+                type: "cession",
+                status: "en_cours",
+                stripe_session_id: sessionId,
+                stripe_paid: true,
+                data: { formule, ...restoredState },
+              }),
+            }).catch(() => {});
             // Nettoyer l'URL
             window.history.replaceState({}, "", "/cession-parts");
           }
@@ -381,7 +399,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const [generateAgrement, setGenerateAgrement] = useState(true);
   const [generateConstatation, setGenerateConstatation] = useState(true);
   // Step 11: Pièces justificatives & INPI
-  type JustifKey = "acte" | "pv" | "statuts" | "identite" | "declaration";
+  type JustifKey = "acte" | "pv" | "statuts" | "identite" | "declaration" | "kbisCedant" | "kbisCessionnaire";
   interface JustifFile { name: string; base64: string; size: number; }
   const [justifFiles, setJustifFiles] = useState<Partial<Record<JustifKey, JustifFile>>>({});
   const [inpiStatus, setInpiStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -4065,90 +4083,87 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <p className="text-gray-600">Déposez les documents signés pour soumettre la formalité au Guichet Unique</p>
               </div>
 
-              {/* Documents requis */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
-                <h3 className="font-semibold text-[#1E3A8A] mb-4">Documents obligatoires</h3>
+              {/* Documents requis — dynamiques selon la situation */}
+              {(() => {
+                type DocItem = { key: JustifKey; label: string; desc: string };
+                const mandatory: DocItem[] = [
+                  { key: "acte", label: "Acte de cession signé", desc: "PDF signé par le cédant et le cessionnaire" },
+                  {
+                    key: "pv",
+                    label: associeUnique === true ? "Décision de l'associé unique signée (DAS)" : "PV d'assemblée signé",
+                    desc: associeUnique === true
+                      ? "Décision unilatérale constatant la cession, signée par l'associé unique"
+                      : "Procès-verbal d'agrément et de constatation signé par les associés",
+                  },
+                  { key: "statuts", label: "Statuts mis à jour certifiés conformes", desc: "Statuts après cession, avec mention « certifié conforme à l'original »" },
+                ];
+                const moraleItems: DocItem[] = [
+                  ...(cedantType === "morale" ? [{ key: "kbisCedant" as const, label: "Extrait Kbis du cédant (moins de 3 mois)", desc: "Extrait K-bis de la société cédante, datant de moins de 3 mois" }] : []),
+                  ...(cessionnaireType === "morale" ? [{ key: "kbisCessionnaire" as const, label: "Extrait Kbis du cessionnaire (moins de 3 mois)", desc: "Extrait K-bis de la société cessionnaire, datant de moins de 3 mois" }] : []),
+                ];
+                const dirigeantItems: DocItem[] = includChangementDirigeant ? [
+                  { key: "identite", label: "Pièce d'identité du nouveau dirigeant", desc: "Copie CNI ou passeport en cours de validité" },
+                  { key: "declaration", label: "Déclaration de non-condamnation signée", desc: "Document généré à l'étape précédente, signé à la main" },
+                ] : [];
 
-                {(
-                  [
-                    { key: "acte" as const, label: "Acte de cession signé", desc: "PDF signé par le cédant et le cessionnaire", required: true },
-                    { key: "pv" as const, label: "PV d'assemblée signé", desc: "Procès-verbal d'agrément et de constatation signé", required: true },
-                    { key: "statuts" as const, label: "Statuts mis à jour certifiés conformes", desc: "Statuts après cession, avec mention « certifié conforme »", required: true },
-                  ] as { key: JustifKey; label: string; desc: string; required: boolean }[]
-                ).map(({ key, label, desc }) => (
-                  <div key={key} className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
+                const renderDoc = (item: DocItem) => (
+                  <div key={item.key} className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800">{label} <span className="text-red-500">*</span></p>
-                      <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                      {justifFiles[key] && (
+                      <p className="text-sm font-medium text-gray-800">{item.label} <span className="text-red-500">*</span></p>
+                      <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
+                      {justifFiles[item.key] && (
                         <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                          <Check className="w-3 h-3" /> {justifFiles[key]!.name} ({Math.round(justifFiles[key]!.size / 1024)} Ko)
+                          <Check className="w-3 h-3" /> {justifFiles[item.key]!.name} ({Math.round(justifFiles[item.key]!.size / 1024)} Ko)
                         </p>
                       )}
                     </div>
                     <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        className="hidden"
-                        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifUpload(key, f); }}
-                      />
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                        justifFiles[key]
-                          ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100"
-                          : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"
-                      }`}>
+                      <input type="file" accept=".pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifUpload(item.key, f); }} />
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${justifFiles[item.key] ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100" : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"}`}>
                         <Upload className="w-4 h-4" />
-                        {justifFiles[key] ? "Remplacer" : "Charger PDF"}
+                        {justifFiles[item.key] ? "Remplacer" : "Charger PDF"}
                       </div>
                     </label>
                   </div>
-                ))}
+                );
 
-                {includChangementDirigeant && (
-                  <>
-                    <h3 className="font-semibold text-[#1E3A8A] mt-6 mb-2">Documents liés au changement de dirigeant</h3>
-                    {(
-                      [
-                        { key: "identite" as const, label: "Pièce d'identité du nouveau dirigeant", desc: "Copie CNI ou passeport en cours de validité", required: true },
-                        { key: "declaration" as const, label: "Déclaration de non-condamnation signée", desc: "Document généré à l'étape précédente, signé à la main", required: true },
-                      ] as { key: JustifKey; label: string; desc: string; required: boolean }[]
-                    ).map(({ key, label, desc }) => (
-                      <div key={key} className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 bg-gray-50">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800">{label} <span className="text-red-500">*</span></p>
-                          <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                          {justifFiles[key] && (
-                            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                              <Check className="w-3 h-3" /> {justifFiles[key]!.name} ({Math.round(justifFiles[key]!.size / 1024)} Ko)
-                            </p>
-                          )}
-                        </div>
-                        <label className="cursor-pointer">
-                          <input
-                            type="file"
-                            accept=".pdf"
-                            className="hidden"
-                            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifUpload(key, f); }}
-                          />
-                          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                            justifFiles[key]
-                              ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100"
-                              : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"
-                          }`}>
-                            <Upload className="w-4 h-4" />
-                            {justifFiles[key] ? "Remplacer" : "Charger PDF"}
-                          </div>
-                        </label>
-                      </div>
-                    ))}
-                  </>
-                )}
-              </div>
+                return (
+                  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                    <h3 className="font-semibold text-[#1E3A8A] mb-1">Documents obligatoires</h3>
+                    <p className="text-xs text-gray-500 mb-4">
+                      {associeUnique === true ? "Associé unique détecté — la décision remplace le PV d'assemblée." : ""}
+                      {cedantType === "morale" || cessionnaireType === "morale" ? " Une ou plusieurs parties sont des personnes morales — Kbis requis." : ""}
+                    </p>
+                    {mandatory.map(renderDoc)}
+
+                    {moraleItems.length > 0 && (
+                      <>
+                        <h3 className="font-semibold text-[#1E3A8A] mt-6 mb-2">Personnes morales — Kbis</h3>
+                        {moraleItems.map(renderDoc)}
+                      </>
+                    )}
+
+                    {dirigeantItems.length > 0 && (
+                      <>
+                        <h3 className="font-semibold text-[#1E3A8A] mt-6 mb-2">Changement de dirigeant</h3>
+                        {dirigeantItems.map(renderDoc)}
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Bouton soumettre INPI */}
               {(() => {
-                const requiredKeys: JustifKey[] = ["acte", "pv", "statuts", ...(includChangementDirigeant ? ["identite" as const, "declaration" as const] : [])];
+                const moraleKeys: JustifKey[] = [
+                  ...(cedantType === "morale" ? ["kbisCedant" as const] : []),
+                  ...(cessionnaireType === "morale" ? ["kbisCessionnaire" as const] : []),
+                ];
+                const requiredKeys: JustifKey[] = [
+                  "acte", "pv", "statuts",
+                  ...moraleKeys,
+                  ...(includChangementDirigeant ? ["identite" as const, "declaration" as const] : []),
+                ];
                 const allUploaded = requiredKeys.every(k => !!justifFiles[k]);
                 return (
                   <div className="bg-white rounded-xl p-6 border border-gray-200">

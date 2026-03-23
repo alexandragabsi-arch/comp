@@ -187,7 +187,7 @@ export default function Home() {
                   <span className="text-lg font-semibold text-[#1E3A8A] pr-4">{item.q}</span>
                   <ChevronDown className="w-5 h-5 text-[#1E3A8A] flex-shrink-0 transition-transform duration-200" />
                 </CollapsibleTrigger>
-                <CollapsibleContent className="pb-5 text-gray-600 leading-relaxed text-justify">
+                <CollapsibleContent className="pb-5 text-gray-600 leading-relaxed">
                   {item.a}
                 </CollapsibleContent>
               </Collapsible>

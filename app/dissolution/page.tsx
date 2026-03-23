@@ -1612,7 +1612,7 @@ function DissolutionForm() {
                       title: "Quels sont les frais annexes obligatoires ?",
                       content: (
                         <div className="space-y-3">
-                          <p className="text-sm text-gray-500 text-justify">Ces frais sont <strong className="text-gray-700">fixés par l'État</strong> et les organismes officiels. Ils s'ajoutent à nos honoraires et sont <strong className="text-gray-700">identiques quelle que soit la plateforme</strong>.</p>
+                          <p className="text-sm text-gray-500">Ces frais sont <strong className="text-gray-700">fixés par l'État</strong> et les organismes officiels. Ils s'ajoutent à nos honoraires et sont <strong className="text-gray-700">identiques quelle que soit la plateforme</strong>.</p>
                           <div className="rounded-xl overflow-hidden border border-gray-100">
                             {(selectedProcedure === "mise-en-sommeil" ? FRAIS_SOMMEIL : FRAIS_DISSOLUTION).map((f, i, arr) => (
                               <div key={f.label} className={cn("flex justify-between items-center px-4 py-3 text-sm", i < arr.length - 1 ? "border-b border-gray-100" : "", i % 2 === 0 ? "bg-gray-50" : "bg-white")}>
@@ -1635,7 +1635,7 @@ function DissolutionForm() {
                     {
                       title: "Pourquoi ces frais ne sont-ils pas inclus dans le prix affiché ?",
                       content: (
-                        <p className="text-sm text-gray-600 leading-relaxed text-justify">
+                        <p className="text-sm text-gray-600 leading-relaxed">
                           Les <strong className="text-gray-800">frais de greffe et d'annonces légales</strong> sont collectés directement par les <strong className="text-gray-800">organismes officiels</strong> (tribunal de commerce, journaux d'annonces légales). Nous ne pouvons pas les intégrer dans notre prix car ils <strong className="text-gray-800">varient selon le département</strong> et la forme juridique de votre société. Nous vous accompagnons dans leur règlement et vous informons à chaque étape.
                         </p>
                       ),

@@ -125,34 +125,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="py-12 md:py-20 px-4 md:px-6 text-center">
-        <div className="max-w-xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] mb-4">
-            Prêt à finaliser votre cession ?
-          </h2>
-          <p className="text-gray-500 mb-8">
-            Formulaire guidé · Documents conformes · Téléchargement immédiat en DOCX ou PDF.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/cession-parts"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
-            >
-              Cession de parts
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link
-              href="/cession-action"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
-            >
-              Cession d&apos;actions
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ── */}
       <section className="bg-white py-16 px-4 md:px-6">
         <div className="max-w-3xl mx-auto">
@@ -220,6 +192,34 @@ export default function Home() {
                 </CollapsibleContent>
               </Collapsible>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA ── */}
+      <section className="py-12 md:py-20 px-4 md:px-6 text-center">
+        <div className="max-w-xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] mb-4">
+            Prêt à finaliser votre cession ?
+          </h2>
+          <p className="text-gray-500 mb-8">
+            Formulaire guidé · Documents conformes · Téléchargement immédiat en DOCX ou PDF.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/cession-parts"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
+            >
+              Cession de parts
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/cession-action"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-[#7AAAF5] to-[#4A6FE3] text-white font-semibold hover:opacity-90 transition-opacity shadow-md"
+            >
+              Cession d&apos;actions
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>

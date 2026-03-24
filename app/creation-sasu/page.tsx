@@ -383,50 +383,56 @@ export default function CreationSASUPage() {
       </div>
 
       <div className="flex max-w-[1400px] mx-auto">
-        {/* ── Sidebar stepper (desktop) ── */}
-        <aside className="hidden md:flex flex-col items-start w-[240px] min-w-[240px] border-r border-gray-200 py-10 pl-8 pr-4">
+        {/* ── Sidebar stepper (desktop) — pixel-match LegalCorners ── */}
+        <aside className="hidden md:flex flex-col w-[280px] min-w-[280px] border-r border-gray-200 pt-12 pb-10 pl-6 pr-6">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const done = sidebarStep > s.id;
             const active = sidebarStep === s.id;
+            const isActive = done || active;
             return (
-              <div key={s.id} className="flex flex-col items-center w-full">
-                {/* Step row: number + icon */}
-                <div className="flex items-center gap-3 w-full justify-center">
+              <div key={s.id} className="flex flex-col items-start">
+                {/* Step row: circle + icon + label */}
+                <div className="flex items-center gap-3">
+                  {/* Number circle */}
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-all",
-                      done || active
+                      "w-[50px] h-[50px] rounded-full flex items-center justify-center text-base font-bold shrink-0",
+                      isActive
                         ? "bg-[#5B6FD6] text-white"
-                        : "bg-white text-[#5B6FD6] border-2 border-[#A5B8F0]"
+                        : "bg-[#D6DEEF] text-[#8A9CC4]"
                     )}
                   >
-                    {done ? <Check className="w-4 h-4" /> : s.id}
+                    {done ? <Check className="w-5 h-5" /> : s.id}
                   </div>
+                  {/* Icon */}
                   <Icon
                     className={cn(
-                      "w-5 h-5 shrink-0",
-                      done || active ? "text-[#5B6FD6]" : "text-[#A5B8F0]"
+                      "w-7 h-7 shrink-0",
+                      isActive ? "text-[#5B6FD6]" : "text-[#B0BDD4]"
                     )}
                   />
-                </div>
-                {/* Step label */}
-                <span
-                  className={cn(
-                    "text-xs font-medium text-center whitespace-pre-line leading-tight mt-1.5",
-                    done || active ? "text-[#3B4A7A]" : "text-[#8B9DC3]"
-                  )}
-                >
-                  {s.label}
-                </span>
-                {/* Dotted connector */}
-                {i < STEPS.length - 1 && (
-                  <div
+                  {/* Label */}
+                  <span
                     className={cn(
-                      "h-9 my-1.5 border-l-2 border-dashed",
-                      done ? "border-[#5B6FD6]" : "border-[#A5B8F0]"
+                      "text-sm font-semibold leading-tight whitespace-pre-line",
+                      isActive ? "text-[#2D3E6B]" : "text-[#8B9DC3]"
                     )}
-                  />
+                  >
+                    {s.label}
+                  </span>
+                </div>
+                {/* Dotted connector line */}
+                {i < STEPS.length - 1 && (
+                  <div className="flex justify-start pl-[24px]">
+                    <div
+                      className={cn(
+                        "w-0 border-l-[2px] border-dotted",
+                        done ? "border-[#5B6FD6]" : "border-[#B8C9ED]"
+                      )}
+                      style={{ height: "60px" }}
+                    />
+                  </div>
                 )}
               </div>
             );

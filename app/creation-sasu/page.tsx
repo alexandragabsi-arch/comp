@@ -1070,10 +1070,19 @@ export default function CreationSASUPage() {
 
       {/* ── Main content ── */}
       <main className={cn(
-        "flex-1 flex items-start justify-center min-h-screen",
-        phase === "post_payment" ? "md:ml-72 p-6" : "md:ml-72 p-6 pt-16"
+        "flex-1 flex justify-center min-h-screen",
+        phase === "questions" || phase === "intro"
+          ? "md:ml-72 p-6 md:p-10 items-center"
+          : phase === "pricing"
+            ? "md:ml-72 p-6 md:p-10 items-start pt-10"
+            : "md:ml-72 p-6 items-start"
       )}>
-        <div className={cn("w-full", phase === "post_payment" ? "max-w-[900px]" : "max-w-xl")}>
+        <div className={cn(
+          "w-full",
+          phase === "pricing" || phase === "brand_protection" ? "max-w-4xl" :
+          phase === "post_payment" ? "max-w-[900px]" :
+          "max-w-2xl"
+        )}>
           <AnimatePresence mode="wait">
 
             {/* ══════ INTRO ══════ */}
@@ -1377,7 +1386,7 @@ export default function CreationSASUPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-6 max-w-3xl mx-auto"
+                className="space-y-6"
               >
                 <PricingSection
                   selected={answers.formule || ""}

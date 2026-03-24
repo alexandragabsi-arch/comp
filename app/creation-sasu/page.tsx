@@ -1157,6 +1157,7 @@ export default function CreationSASUPage() {
     { id: "services_comptables" },  // commissaire aux comptes
     { id: "duree_societe" },        // durée de la société (99 ans ou personnalisée)
     { id: "cession_actions" },      // modalités de cession/transmission des actions
+    { id: "regime_impot" },         // régime d'impôt IS / IR (personnalisation)
     { id: "denomination" },         // dénomination + sigle + nom commercial + enseigne
     { id: "objet_principal" },      // catégories visuelles + sous-catégories
     { id: "objet_social" },         // texte libre
@@ -2326,6 +2327,65 @@ export default function CreationSASUPage() {
                             );
                           })}
                         </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Page: Régime d'impôt ── */}
+                {POST_PAGES[postPage]?.id === "regime_impot" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Quel régime d&apos;impôt souhaitez-vous choisir ?</p>
+                      <p className="text-sm text-gray-600">Dans la majorité des cas, une SASU est soumise par défaut à l&apos;impôt sur les Sociétés (IS), avec TVA au réel simplifié</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setAnswer("regime_impot", "IS"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                          className={cn(
+                            "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                            answers.regime_impot === "IS"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-[#2563EB]">Impôt sur les Sociétés (IS)</span>
+                        </button>
+                        <button
+                          onClick={() => { setAnswer("regime_impot", "IR"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                          className={cn(
+                            "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                            answers.regime_impot === "IR"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-[#2563EB]">Impôt sur le Revenu (IR)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Bouton explications */}
+                    <button
+                      onClick={() => setAnswer("show_regime_explications", answers.show_regime_explications === "true" ? "" : "true")}
+                      className="px-5 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                    >
+                      Explications
+                    </button>
+
+                    {answers.show_regime_explications === "true" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3 text-sm text-gray-700"
+                      >
+                        <p><strong className="text-[#2563EB]">Impôt sur les Sociétés (IS) :</strong> c&apos;est le régime par défaut. La société est imposée sur ses bénéfices à un taux réduit de <strong>15 %</strong> sur les 42 500 premiers euros, puis <strong>25 %</strong> au-delà. Les dividendes versés au dirigeant sont ensuite soumis au PFU (30 %).</p>
+                        <p><strong className="text-[#2563EB]">Impôt sur le Revenu (IR) :</strong> option possible pendant 5 ans maximum. Les bénéfices sont directement imposés entre les mains de l&apos;associé unique selon le barème progressif de l&apos;IR. Intéressant si vos revenus personnels sont faibles ou si vous prévoyez des déficits les premières années.</p>
+                        <p className="text-xs text-gray-500 italic">Conseil : dans le doute, l&apos;IS est le choix le plus courant et le plus sécurisant pour démarrer.</p>
                       </motion.div>
                     )}
                   </div>

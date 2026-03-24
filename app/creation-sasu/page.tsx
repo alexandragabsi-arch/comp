@@ -688,15 +688,24 @@ const PRICING_PLANS = [
 ];
 
 const TARIF_DETAILS = [
-  { title: "Essentielle — 139 € HT", description: "Idéal pour les créateurs autonomes. Vous remplissez le questionnaire, nous générons vos statuts et préparons votre dossier complet. Accompagnement par mail inclus." },
-  { title: "Premium — 199 € HT", description: "Notre formule la plus populaire. Un juriste dédié vérifie l'intégralité de votre dossier sous 24h ouvrées, avec garantie anti-rejet du greffe et accompagnement téléphonique." },
-  { title: "Rédaction par un avocat — 850 € HT", description: "Un avocat rédige vos statuts sur mesure et vous accompagne personnellement. Idéal pour les projets complexes ou les associés multiples." },
+  {
+    title: "Essentielle — 139 € HT",
+    description: "Idéal si vous savez ce que vous voulez et êtes à l'aise avec les démarches administratives. Vous remplissez le questionnaire en ligne, nous générons automatiquement vos statuts conformes et préparons l'intégralité de votre dossier d'immatriculation. Vous pouvez nous contacter par mail à tout moment si vous avez une question. Le dossier est ensuite transmis directement au greffe pour immatriculation.",
+  },
+  {
+    title: "Premium — 199 € HT",
+    description: "Notre formule la plus choisie. En plus de tout ce qui est inclus dans l'Essentielle, un juriste dédié relit et vérifie chaque document de votre dossier sous 24h ouvrées avant envoi au greffe. Vous bénéficiez d'un accompagnement téléphonique et par mail, ainsi que d'une garantie anti-rejet : si le greffe refuse votre dossier, nous corrigeons et renvoyons sans frais supplémentaires. C'est la tranquillité d'esprit pour votre création.",
+  },
+  {
+    title: "Rédaction par un avocat — 850 € HT",
+    description: "Pour les projets nécessitant un accompagnement juridique personnalisé. Un avocat spécialisé en droit des sociétés rédige vos statuts sur mesure, adaptés à votre situation précise (clauses spécifiques, pacte d'associés, activité réglementée…). Il vous accompagne par téléphone, mail et rendez-vous si besoin. Vos statuts sont vérifiés et validés sous 24h ouvrées avec garantie anti-rejet du greffe.",
+  },
 ];
 
 const FRAIS_ANNEXES = [
-  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", description: "Frais versés au Greffe du Tribunal de Commerce pour l'immatriculation de votre SASU au Registre du Commerce et des Sociétés." },
-  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT", description: "Tarif forfaitaire fixé par décret pour les SAS/SASU. Obligatoire pour officialiser la création de votre société." },
-  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", description: "Frais pour la déclaration obligatoire des bénéficiaires effectifs, déposée en même temps que l'immatriculation." },
+  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", description: "Frais légaux versés au Greffe du Tribunal de Commerce pour inscrire votre SASU au Registre du Commerce et des Sociétés (RCS). Ce montant est fixé par arrêté et identique partout en France métropolitaine. C'est cette inscription qui donne naissance juridiquement à votre société." },
+  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT", description: "La loi impose de publier un avis de constitution dans un Journal d'Annonces Légales (JAL) habilité dans le département du siège social. Depuis la réforme de 2021, le tarif est un forfait national fixe de 138 € HT pour les SAS/SASU (environ 165 € HT pour Mayotte et La Réunion). Nous nous chargeons de la publication pour vous." },
+  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", description: "Obligation légale anti-blanchiment : vous devez déclarer l'identité des personnes physiques qui contrôlent votre société (plus de 25 % du capital ou des droits de vote). Déposée en même temps que l'immatriculation, le tarif est de 21,41 €. Si déposée séparément, le coût passe à environ 43,35 €." },
 ];
 
 function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
@@ -745,9 +754,9 @@ function PricingSection({ selected, onSelect }: { selected: string; onSelect: (v
               {plan.price}€
             </p>
             <p className="text-xs text-[#6B7280] mb-1">+ frais annexes obligatoires (~196,86 € HT)</p>
-            <p className="text-xs text-[#9CA3AF] mb-5">Prix HT — TVA applicable en sus</p>
-            <div className="border-t border-[#E5E7EB] pt-4 mt-auto" />
-            <ul className="space-y-2.5">
+            <p className="text-xs text-[#9CA3AF] mb-4">Prix HT — TVA applicable en sus</p>
+            <div className="border-t border-[#E5E7EB] mb-4" />
+            <ul className="space-y-2.5 flex-1">
               {plan.features.map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
                   <span className="text-green-500 mt-0.5 shrink-0">●</span>

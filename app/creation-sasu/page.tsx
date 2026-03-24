@@ -201,9 +201,16 @@ const QUESTIONS: Question[] = [
 
 /* ───────── Pages: each page = array of question indices shown together ───────── */
 
-const PAGES: { questions: number[]; sidebarStep: number }[] = [
+interface PageDef {
+  questions: number[];
+  sidebarStep: number;
+  special?: "brand_protection";
+}
+
+const STATIC_PAGES: PageDef[] = [
   { questions: [0],    sidebarStep: 1 },  // qui_realise
   { questions: [1, 2], sidebarStep: 2 },  // nom_societe + proteger_nom (together)
+  { questions: [],     sidebarStep: 2, special: "brand_protection" }, // conditional
   { questions: [3],    sidebarStep: 2 },  // capital_social
   { questions: [4],    sidebarStep: 2 },  // objet_social
   { questions: [5],    sidebarStep: 2 },  // activite_artisanale
@@ -454,12 +461,10 @@ function QuestionBlock({
   question,
   answer,
   onAnswer,
-  showBrandProtection,
 }: {
   question: Question;
   answer: string;
   onAnswer: (val: string) => void;
-  showBrandProtection?: boolean;
 }) {
   return (
     <div className="mb-10">
@@ -531,8 +536,6 @@ function QuestionBlock({
         </InfoAccordion>
       )}
 
-      {/* Conditional brand protection section */}
-      {showBrandProtection && answer === "oui" && <BrandProtectionSection />}
     </div>
   );
 }
@@ -602,7 +605,12 @@ export default function CreationSASUPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const page = PAGES[currentPage];
+  // Build active pages: skip brand_protection page if user didn't select "oui"
+  const pages = STATIC_PAGES.filter(
+    (p) => p.special !== "brand_protection" || answers.proteger_nom === "oui"
+  );
+
+  const page = pages[currentPage] ?? pages[pages.length - 1];
   const activeStep = page.sidebarStep;
   const pageQuestions = page.questions.map((i) => QUESTIONS[i]);
 
@@ -610,7 +618,7 @@ export default function CreationSASUPage() {
     setAnswers((prev) => ({ ...prev, [id]: val }));
 
   const goNext = () => {
-    if (currentPage < PAGES.length - 1) {
+    if (currentPage < pages.length - 1) {
       setCurrentPage((p) => p + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -677,6 +685,9 @@ export default function CreationSASUPage() {
             Création d&apos;une SASU
           </h1>
 
+          {/* Brand protection special page */}
+          {page.special === "brand_protection" && <BrandProtectionSection />}
+
           {/* Questions for this page */}
           {pageQuestions.map((q) => (
             <QuestionBlock
@@ -684,7 +695,6 @@ export default function CreationSASUPage() {
               question={q}
               answer={answers[q.id] || ""}
               onAnswer={(val) => setAnswer(q.id, val)}
-              showBrandProtection={q.id === "proteger_nom"}
             />
           ))}
 

@@ -319,6 +319,7 @@ const BRAND_PLANS = [
 function BrandProtectionSection() {
   const [selectedPlan, setSelectedPlan] = useState("france");
   const [selectedClasses, setSelectedClasses] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const plan = BRAND_PLANS.find((p) => p.id === selectedPlan)!;
   const extraCost = selectedClasses > 1 ? (selectedClasses - 1) * plan.extraClassPrice : 0;
@@ -373,16 +374,39 @@ function BrandProtectionSection() {
         <div className="border border-[#D1D5DB] rounded-xl p-5">
           <h3 className="font-bold text-[#1E293B] mb-1">Paramètres</h3>
           <p className="text-sm text-[#6B7280] mb-3">Choisir vos classes</p>
-          <select
-            value={selectedClasses}
-            onChange={(e) => setSelectedClasses(Number(e.target.value))}
-            className="w-full px-4 py-3 rounded-lg border border-[#D1D5DB] text-sm text-[#1E293B] bg-white focus:border-[#2563EB] focus:outline-none"
-          >
-            <option value={0}>Choisir la classe</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>{n} classe{n > 1 ? "s" : ""}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className={cn(
+                "w-full flex items-center justify-between px-4 py-3 rounded-lg border text-sm bg-white transition-colors",
+                dropdownOpen ? "border-[#2563EB]" : "border-[#D1D5DB]",
+                selectedClasses > 0 ? "text-[#1E293B]" : "text-[#9CA3AF]"
+              )}
+            >
+              {selectedClasses > 0
+                ? `${selectedClasses} classe${selectedClasses > 1 ? "s" : ""}`
+                : "Choisir la classe"}
+              <ChevronDown className={cn("w-4 h-4 text-[#9CA3AF] transition-transform", dropdownOpen && "rotate-180")} />
+            </button>
+            {dropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-[#D1D5DB] rounded-lg shadow-lg overflow-hidden">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => { setSelectedClasses(n); setDropdownOpen(false); }}
+                    className={cn(
+                      "w-full text-left px-4 py-2.5 text-sm transition-colors",
+                      selectedClasses === n
+                        ? "bg-[#EFF6FF] text-[#2563EB] font-medium"
+                        : "text-[#1E293B] hover:bg-[#F9FAFB]"
+                    )}
+                  >
+                    {n} classe{n > 1 ? "s" : ""}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           {plan.extraClassPrice > 0 && (
             <p className="text-xs text-[#6B7280] mt-3">
               Chaque classe au-delà de la 1ʳᵉ ajoute {plan.extraClassPrice} €.

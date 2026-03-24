@@ -104,24 +104,21 @@ const QUESTIONS: Question[] = [
     },
   },
   {
-    id: "objet_social",
-    title: "Quel est l'objet social de votre SASU ?",
-    description:
-      "Décrivez précisément l'activité principale de votre société.",
-    type: "textarea",
-    placeholder: "Ex : Conseil en stratégie digitale, développement de sites web...",
-    info: {
-      title: "Conseil pratique",
-      content: (
-        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em>.</p>
-      ),
-    },
+    id: "demarrage",
+    title: "Quand souhaitez-vous démarrer votre projet ?",
+    type: "choice",
+    choices: [
+      { value: "asap", label: "Dès que possible (un de nos experts vous accompagne)" },
+      { value: "semaine", label: "Dans la semaine" },
+      { value: "mois", label: "Dans le mois" },
+      { value: "ne_sais_pas", label: "Je ne sais pas encore" },
+    ],
   },
   {
     id: "activite_artisanale",
     title: "Votre activité est-elle artisanale ? (Coiffeur, boulanger, plombier, etc...)",
     description:
-      "Une activité artisanale est une activité manuelle (ex. : coiffure, pâtisserie, couture sur mesure, mécanique, plomberie, etc.).",
+      "Une activité artisanale est une activité manuelle (ex. : coiffure, pâtisserie, couture sur mesure, mécanique, plomberie, etc.). De même, si vous fabriquez ou réparez quelque chose et que vous le vendez ensuite, votre activité est considérée comme partiellement artisanale.",
     type: "choice",
     optional: true,
     choices: [
@@ -133,11 +130,25 @@ const QUESTIONS: Question[] = [
       title: "Le saviez-vous ?",
       content: (
         <>
-          <p><strong>Toute activité artisanale doit être immatriculée au Répertoire des Métiers (RM)</strong>, tenu par la <strong>CMA</strong>.</p>
+          <p><strong>Toute activité artisanale doit être immatriculée au Répertoire des Métiers (RM)</strong>, tenu par la <strong>Chambre de Métiers et de l&apos;Artisanat (CMA)</strong>. Il s&apos;agit d&apos;une <strong>obligation légale distincte</strong> de l&apos;immatriculation au <strong>Registre du Commerce et des Sociétés (RCS)</strong>.</p>
           <p className="mt-2 italic text-[#2563EB]">
-            Supplément de 79 € HT si nous réalisons cette démarche pour vous.
+            Si vous souhaitez que nous réalisions cette démarche pour vous, un supplément de 79 € HT sera appliqué, auquel s&apos;ajoutent les frais légaux obligatoires (frais CMA et frais de greffe), dont le montant exact sera précisé au moment du paiement.
           </p>
         </>
+      ),
+    },
+  },
+  {
+    id: "objet_social",
+    title: "Quel est l'objet social de votre SASU ?",
+    description:
+      "Décrivez précisément l'activité principale de votre société.",
+    type: "textarea",
+    placeholder: "Ex : Conseil en stratégie digitale, développement de sites web...",
+    info: {
+      title: "Conseil pratique",
+      content: (
+        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em>.</p>
       ),
     },
   },
@@ -185,18 +196,6 @@ const QUESTIONS: Question[] = [
       ),
     },
   },
-  /* ── Step 5: Récapitulatif ── */
-  {
-    id: "demarrage",
-    title: "Quand souhaitez-vous démarrer votre projet ?",
-    type: "choice",
-    choices: [
-      { value: "asap", label: "Dès que possible (un de nos experts vous accompagne)" },
-      { value: "semaine", label: "Dans la semaine" },
-      { value: "mois", label: "Dans le mois" },
-      { value: "ne_sais_pas", label: "Je ne sais pas encore" },
-    ],
-  },
 ];
 
 /* ───────── Pages: each page = array of question indices shown together ───────── */
@@ -212,12 +211,12 @@ const STATIC_PAGES: PageDef[] = [
   { questions: [1, 2], sidebarStep: 2 },  // nom_societe + proteger_nom (together)
   { questions: [],     sidebarStep: 2, special: "brand_protection" }, // conditional
   { questions: [3],    sidebarStep: 2 },  // capital_social
-  { questions: [4],    sidebarStep: 2 },  // objet_social
+  { questions: [4],    sidebarStep: 2 },  // demarrage
   { questions: [5],    sidebarStep: 2 },  // activite_artisanale
-  { questions: [6],    sidebarStep: 3 },  // regime_fiscal
-  { questions: [7],    sidebarStep: 4 },  // adresse_siege
-  { questions: [8],    sidebarStep: 4 },  // president_remunere
-  { questions: [9],    sidebarStep: 5 },  // demarrage
+  { questions: [6],    sidebarStep: 2 },  // objet_social
+  { questions: [7],    sidebarStep: 3 },  // regime_fiscal
+  { questions: [8],    sidebarStep: 4 },  // adresse_siege
+  { questions: [9],    sidebarStep: 4 },  // president_remunere
 ];
 
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */

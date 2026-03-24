@@ -2760,76 +2760,70 @@ export default function CreationSASUPage() {
                       </p>
                     </div>
 
-                    {/* Option 1: Associé unique = Président */}
-                    <div className="space-y-2">
+                    {/* Option 1 */}
+                    <div className="space-y-1">
                       <h3 className="text-base font-bold text-[#1E3A8A]">Option 1 : L&apos;associé unique est également Président</h3>
                       <p className="text-sm text-gray-600">C&apos;est la solution la plus courante : vous cumulez les fonctions d&apos;associé unique et de Président.</p>
                     </div>
 
-                    {/* Option 2: Président distinct */}
-                    <div className="space-y-2">
+                    {/* Option 2 */}
+                    <div className="space-y-1">
                       <h3 className="text-base font-bold text-[#2563EB]">Option 2 : Nommer un Président distinct</h3>
                       <p className="text-sm text-gray-600">Vous pouvez désigner une autre personne physique ou morale (par exemple un proche ou un partenaire professionnel) comme Président non associé.</p>
                     </div>
 
-                    {/* Choice */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Choix associé unique dans la liste */}
+                    <div className="space-y-3">
                       <button
                         onClick={() => {
-                          setAnswer("president_option", "associe");
+                          setAnswer("president_option", answers.president_option === "associe" ? "" : "associe");
                           setAnswer("president_type", "");
                         }}
                         className={cn(
-                          "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all",
                           answers.president_option === "associe"
-                            ? "border-[#2563EB] bg-blue-50"
-                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 hover:border-[#2563EB]/50"
                         )}
                       >
-                        <User className="w-10 h-10 text-[#2563EB]" />
-                        <span className="text-sm font-medium text-[#2563EB] text-center">L&apos;associé unique est Président</span>
-                      </button>
-                      <button
-                        onClick={() => setAnswer("president_option", "distinct")}
-                        className={cn(
-                          "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
-                          answers.president_option === "distinct"
-                            ? "border-[#2563EB] bg-blue-50"
-                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        <div className={cn(
+                          "w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0",
+                          answers.president_option === "associe"
+                            ? "border-[#2563EB] bg-[#2563EB]"
+                            : "border-gray-300"
+                        )}>
+                          {answers.president_option === "associe" && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                        {answers.type_associe === "morale" ? (
+                          <Building2 className="w-8 h-8 text-[#2563EB] flex-shrink-0" />
+                        ) : (
+                          <User className="w-8 h-8 text-[#2563EB] flex-shrink-0" />
                         )}
-                      >
-                        <Users className="w-10 h-10 text-[#2563EB]" />
-                        <span className="text-sm font-medium text-[#2563EB] text-center">Nommer un Président distinct</span>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">
+                            {answers.type_associe === "morale"
+                              ? (answers.associe_societe_nom || "Société associée")
+                              : [answers.associe_prenom, answers.associe_nom].filter(Boolean).join(" ") || "Associé unique"}
+                          </p>
+                          <p className="text-xs text-gray-500">Associé unique — sera nommé Président</p>
+                        </div>
                       </button>
                     </div>
 
-                    {/* Option associé = président: recap card */}
-                    {answers.president_option === "associe" && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="border-2 border-[#2563EB] rounded-xl p-5 bg-[#EFF6FF]"
+                    {/* Bouton ajouter un tiers */}
+                    {answers.president_option !== "distinct" && (
+                      <button
+                        onClick={() => {
+                          setAnswer("president_option", "distinct");
+                          setAnswer("president_type", "");
+                        }}
+                        className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
                       >
-                        <div className="flex items-center gap-3">
-                          {answers.type_associe === "morale" ? (
-                            <Building2 className="w-8 h-8 text-[#2563EB]" />
-                          ) : (
-                            <User className="w-8 h-8 text-[#2563EB]" />
-                          )}
-                          <div>
-                            <p className="font-bold text-[#1E3A8A]">
-                              {answers.type_associe === "morale"
-                                ? (answers.associe_societe_nom || "Société non renseignée")
-                                : [answers.associe_prenom, answers.associe_nom].filter(Boolean).join(" ") || "Associé non renseigné"}
-                            </p>
-                            <p className="text-xs text-gray-500">Associé unique — Président</p>
-                          </div>
-                          <Check className="w-5 h-5 text-green-500 ml-auto" />
-                        </div>
-                      </motion.div>
+                        Ajoutez un dirigeant non associé <span className="text-lg">+</span>
+                      </button>
                     )}
 
-                    {/* Option président distinct: formulaire */}
+                    {/* Formulaire tiers */}
                     {answers.president_option === "distinct" && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -2876,7 +2870,7 @@ export default function CreationSASUPage() {
                           </button>
                         </div>
 
-                        {/* Président PP — formulaire */}
+                        {/* ── Président PP : identité + filiation + non-condamnation ── */}
                         {answers.president_type === "physique" && (
                           <div className="space-y-4 border-t border-gray-200 pt-5">
                             <div className="grid grid-cols-2 gap-4">
@@ -2885,7 +2879,7 @@ export default function CreationSASUPage() {
                                 <select
                                   value={answers.president_civilite || ""}
                                   onChange={(e) => setAnswer("president_civilite", e.target.value)}
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all bg-white"
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all"
                                 >
                                   <option value="">Choisir</option>
                                   <option value="M.">M.</option>
@@ -2894,102 +2888,70 @@ export default function CreationSASUPage() {
                               </div>
                               <div>
                                 <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
-                                <input
-                                  type="text"
-                                  value={answers.president_nom || ""}
-                                  onChange={(e) => setAnswer("president_nom", e.target.value)}
-                                  placeholder="Nom de famille"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                />
+                                <input type="text" value={answers.president_nom || ""} onChange={(e) => setAnswer("president_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
-                                <input
-                                  type="text"
-                                  value={answers.president_prenom || ""}
-                                  onChange={(e) => setAnswer("president_prenom", e.target.value)}
-                                  placeholder="Prénom"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                />
+                                <input type="text" value={answers.president_prenom || ""} onChange={(e) => setAnswer("president_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                               </div>
                               <div>
                                 <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
-                                <input
-                                  type="date"
-                                  value={answers.president_date_naissance || ""}
-                                  onChange={(e) => setAnswer("president_date_naissance", e.target.value)}
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                />
+                                <input type="date" value={answers.president_date_naissance || ""} onChange={(e) => setAnswer("president_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
-                                <input
-                                  type="text"
-                                  value={answers.president_lieu_naissance || ""}
-                                  onChange={(e) => setAnswer("president_lieu_naissance", e.target.value)}
-                                  placeholder="Ville de naissance"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                />
+                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
+                                <input type="text" value={answers.president_lieu_naissance || ""} onChange={(e) => setAnswer("president_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                               </div>
                               <div>
                                 <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
-                                <input
-                                  type="text"
-                                  value={answers.president_nationalite || ""}
-                                  onChange={(e) => setAnswer("president_nationalite", e.target.value)}
-                                  placeholder="Ex : Française"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                />
+                                <input type="text" value={answers.president_nationalite || ""} onChange={(e) => setAnswer("president_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                               </div>
                             </div>
                             <div>
                               <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                              <input
-                                type="text"
-                                value={answers.president_adresse || ""}
-                                onChange={(e) => setAnswer("president_adresse", e.target.value)}
-                                placeholder="Adresse complète"
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                              />
+                              <input type="text" value={answers.president_adresse || ""} onChange={(e) => setAnswer("president_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                             </div>
 
-                            {/* Attestation */}
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                            {/* Filiation */}
+                            <p className="text-sm font-bold text-[#1E3A8A] pt-2">Filiation</p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du père</label>
+                                <input type="text" value={answers.president_pere_nom || ""} onChange={(e) => setAnswer("president_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
+                                <input type="text" value={answers.president_mere_nom || ""} onChange={(e) => setAnswer("president_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                              </div>
+                            </div>
+
+                            {/* Non-condamnation */}
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
                               <label className="flex items-start gap-3 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={answers.president_attestation === "true"}
-                                  onChange={(e) => setAnswer("president_attestation", e.target.checked ? "true" : "")}
-                                  className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]"
-                                />
-                                <span className="text-sm text-gray-700">
-                                  J&apos;atteste sur l&apos;honneur l&apos;absence de condamnation ou d&apos;interdiction de gérer de président.
-                                </span>
+                                <input type="checkbox" checked={answers.president_non_condamnation === "true"} onChange={(e) => setAnswer("president_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                              </label>
+                              <label className="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked={answers.president_non_interdiction === "true"} onChange={(e) => setAnswer("president_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
                               </label>
                             </div>
                           </div>
                         )}
 
-                        {/* Président PM — recherche SIREN + formulaire */}
+                        {/* ── Président PM : SIREN + infos + RP filiation + non-condamnation ── */}
                         {answers.president_type === "morale" && (
                           <div className="space-y-4 border-t border-gray-200 pt-5">
                             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-                              <p className="text-sm text-gray-700">
-                                Pour nommer un dirigeant personne morale non associé, indiquez directement le numéro RCS de la société. Nous pourrons ainsi la retrouver automatiquement dans le registre officiel et pré remplir ses informations (dénomination, adresse, dirigeants, etc.)
-                              </p>
+                              <p className="text-sm text-gray-700">Pour nommer un dirigeant personne morale non associé, indiquez directement le numéro RCS de la société. Nous pourrons ainsi la retrouver automatiquement dans le registre officiel et pré remplir ses informations (dénomination, adresse, dirigeants, etc.)</p>
                               <p className="text-sm text-gray-700">Vous trouverez ce numéro sur votre extrait Kbis.</p>
                               <p className="text-sm text-gray-700">Si vous ne le trouvez pas, vous pouvez tout de même remplir les informations manuellement.</p>
                               <div className="flex justify-end">
-                                <button
-                                  onClick={() => setAnswer("president_pm_mode", "manuel")}
-                                  className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
-                                >
-                                  Remplir manuellement
-                                </button>
+                                <button onClick={() => setAnswer("president_pm_mode", "manuel")} className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity">Remplir manuellement</button>
                               </div>
                             </div>
 
@@ -2997,13 +2959,7 @@ export default function CreationSASUPage() {
                             <div>
                               <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
                               <div className="flex gap-3">
-                                <input
-                                  type="text"
-                                  value={answers.president_pm_siren || ""}
-                                  onChange={(e) => setAnswer("president_pm_siren", e.target.value)}
-                                  placeholder="Ex : 824330799"
-                                  className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                />
+                                <input type="text" value={answers.president_pm_siren || ""} onChange={(e) => setAnswer("president_pm_siren", e.target.value)} placeholder="Ex : 824330799" className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                 <button
                                   onClick={async () => {
                                     const siren = (answers.president_pm_siren || "").replace(/\s/g, "");
@@ -3025,102 +2981,52 @@ export default function CreationSASUPage() {
                                   }}
                                   disabled={!answers.president_pm_siren || answers.president_pm_siren.replace(/\s/g, "").length !== 9}
                                   className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] disabled:bg-[#9CA3AF] transition-colors"
-                                >
-                                  Confirmer mon Numéro
-                                </button>
+                                >Confirmer mon Numéro</button>
                               </div>
                             </div>
 
-                            {/* Infos entreprise (après recherche ou mode manuel) */}
+                            {/* Infos entreprise */}
                             {(answers.president_pm_mode === "siren" || answers.president_pm_mode === "manuel") && (
                               <div className="space-y-4 border-t border-gray-200 pt-4">
                                 <p className="text-sm font-bold text-[#2563EB]">Informations entreprise</p>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la société</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_nom || ""}
-                                      onChange={(e) => setAnswer("president_pm_nom", e.target.value)}
-                                      placeholder="Ex : LAW AND CO"
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <input type="text" value={answers.president_pm_nom || ""} onChange={(e) => setAnswer("president_pm_nom", e.target.value)} placeholder="Ex : LAW AND CO" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                   <div>
                                     <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Type de société</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_forme || ""}
-                                      onChange={(e) => setAnswer("president_pm_forme", e.target.value)}
-                                      placeholder="Ex : SASU"
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <input type="text" value={answers.president_pm_forme || ""} onChange={(e) => setAnswer("president_pm_forme", e.target.value)} placeholder="Ex : SASU" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Capital social de la société</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_capital || ""}
-                                      onChange={(e) => setAnswer("president_pm_capital", e.target.value)}
-                                      placeholder="Ex : 100"
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Capital social</label>
+                                    <input type="text" value={answers.president_pm_capital || ""} onChange={(e) => setAnswer("president_pm_capital", e.target.value)} placeholder="Ex : 100" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                   <div>
                                     <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom et prénom du représentant</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_representant || ""}
-                                      onChange={(e) => setAnswer("president_pm_representant", e.target.value)}
-                                      placeholder="Ex : Nora Gabsi"
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <input type="text" value={answers.president_pm_representant || ""} onChange={(e) => setAnswer("president_pm_representant", e.target.value)} placeholder="Ex : Nora Gabsi" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_adresse || ""}
-                                      onChange={(e) => setAnswer("president_pm_adresse", e.target.value)}
-                                      placeholder="Ex : 7 RUE MEYERBEER"
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <input type="text" value={answers.president_pm_adresse || ""} onChange={(e) => setAnswer("president_pm_adresse", e.target.value)} placeholder="Ex : 7 RUE MEYERBEER" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                   <div>
                                     <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Complément d&apos;adresse</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_adresse_complement || ""}
-                                      onChange={(e) => setAnswer("president_pm_adresse_complement", e.target.value)}
-                                      placeholder=""
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <input type="text" value={answers.president_pm_adresse_complement || ""} onChange={(e) => setAnswer("president_pm_adresse_complement", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Ville RCS</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_ville_rcs || ""}
-                                      onChange={(e) => setAnswer("president_pm_ville_rcs", e.target.value)}
-                                      placeholder="Ex : PARIS"
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <input type="text" value={answers.president_pm_ville_rcs || ""} onChange={(e) => setAnswer("president_pm_ville_rcs", e.target.value)} placeholder="Ex : PARIS" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                   <div>
                                     <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Code postal</label>
-                                    <input
-                                      type="text"
-                                      value={answers.president_pm_code_postal || ""}
-                                      onChange={(e) => setAnswer("president_pm_code_postal", e.target.value)}
-                                      placeholder="Ex : 75009"
-                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                    />
+                                    <input type="text" value={answers.president_pm_code_postal || ""} onChange={(e) => setAnswer("president_pm_code_postal", e.target.value)} placeholder="Ex : 75009" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                   </div>
                                 </div>
 
@@ -3132,11 +3038,9 @@ export default function CreationSASUPage() {
                                   </div>
                                 )}
 
-                                {/* Représentant permanent */}
+                                {/* Représentant permanent + filiation + non-condamnation */}
                                 <div className="border border-gray-200 rounded-xl p-5 space-y-4">
-                                  <div className="flex items-center justify-between">
-                                    <h4 className="text-base font-bold text-[#1E3A8A]">Représentant permanent de la société dirigeante</h4>
-                                  </div>
+                                  <h4 className="text-base font-bold text-[#1E3A8A]">Représentant permanent de la société dirigeante</h4>
 
                                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
                                     <p className="text-sm font-bold text-[#1E3A8A]">Représentant permanent</p>
@@ -3148,11 +3052,7 @@ export default function CreationSASUPage() {
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Civilité</label>
-                                      <select
-                                        value={answers.president_rp_civilite || ""}
-                                        onChange={(e) => setAnswer("president_rp_civilite", e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all"
-                                      >
+                                      <select value={answers.president_rp_civilite || ""} onChange={(e) => setAnswer("president_rp_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
                                         <option value="">Choisir</option>
                                         <option value="M.">M.</option>
                                         <option value="Mme">Mme</option>
@@ -3160,33 +3060,17 @@ export default function CreationSASUPage() {
                                     </div>
                                     <div>
                                       <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
-                                      <input
-                                        type="text"
-                                        value={answers.president_rp_nom || ""}
-                                        onChange={(e) => setAnswer("president_rp_nom", e.target.value)}
-                                        placeholder="Nom de famille"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                      />
+                                      <input type="text" value={answers.president_rp_nom || ""} onChange={(e) => setAnswer("president_rp_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                     </div>
                                   </div>
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
-                                      <input
-                                        type="text"
-                                        value={answers.president_rp_prenom || ""}
-                                        onChange={(e) => setAnswer("president_rp_prenom", e.target.value)}
-                                        placeholder="Prénom"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                      />
+                                      <input type="text" value={answers.president_rp_prenom || ""} onChange={(e) => setAnswer("president_rp_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                     </div>
                                     <div>
                                       <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Fonction dans la société</label>
-                                      <select
-                                        value={answers.president_rp_fonction || ""}
-                                        onChange={(e) => setAnswer("president_rp_fonction", e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all"
-                                      >
+                                      <select value={answers.president_rp_fonction || ""} onChange={(e) => setAnswer("president_rp_fonction", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
                                         <option value="">Choisir</option>
                                         <option value="president">Président</option>
                                         <option value="dg">Directeur Général</option>
@@ -3198,24 +3082,37 @@ export default function CreationSASUPage() {
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                                      <input
-                                        type="text"
-                                        value={answers.president_rp_adresse || ""}
-                                        onChange={(e) => setAnswer("president_rp_adresse", e.target.value)}
-                                        placeholder="Adresse complète"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                      />
+                                      <input type="text" value={answers.president_rp_adresse || ""} onChange={(e) => setAnswer("president_rp_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                     </div>
                                     <div>
                                       <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
-                                      <input
-                                        type="text"
-                                        value={answers.president_rp_nationalite || ""}
-                                        onChange={(e) => setAnswer("president_rp_nationalite", e.target.value)}
-                                        placeholder="Ex : Française"
-                                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                                      />
+                                      <input type="text" value={answers.president_rp_nationalite || ""} onChange={(e) => setAnswer("president_rp_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
                                     </div>
+                                  </div>
+
+                                  {/* Filiation du RP */}
+                                  <p className="text-sm font-bold text-[#1E3A8A] pt-2">Filiation du représentant permanent</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du père</label>
+                                      <input type="text" value={answers.president_rp_pere_nom || ""} onChange={(e) => setAnswer("president_rp_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
+                                      <input type="text" value={answers.president_rp_mere_nom || ""} onChange={(e) => setAnswer("president_rp_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+
+                                  {/* Non-condamnation du RP */}
+                                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                      <input type="checkbox" checked={answers.president_rp_non_condamnation === "true"} onChange={(e) => setAnswer("president_rp_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                      <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                    </label>
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                      <input type="checkbox" checked={answers.president_rp_non_interdiction === "true"} onChange={(e) => setAnswer("president_rp_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                      <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                    </label>
                                   </div>
                                 </div>
                               </div>
@@ -3231,8 +3128,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "depot_capital" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Dépôt du capital</h2>
-                      <p className="text-gray-500 text-sm">Informations sur le dépôt de votre capital social</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     <div className="space-y-5">
@@ -3260,6 +3156,80 @@ export default function CreationSASUPage() {
                           className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
                         />
                       </div>
+
+                      {/* État du versement — formule personnalisée */}
+                      {answers.formule_capital === "personnalisee" && (
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                              Quel est l&apos;état du versement de vos apports en numéraire (argent) ?
+                            </label>
+                            <p className="text-xs text-gray-500 italic mb-3">
+                              Si un versement a déjà eu lieu, le justificatif devra être déposé dans la partie &quot;Justificatifs&quot;.
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("etat_versement", "100")}
+                              className={cn(
+                                "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                                answers.etat_versement === "100"
+                                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                                  : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              <span className="text-sm font-medium text-[#2563EB]">100 % deja versé  (attestation bancaire à fournir)</span>
+                            </button>
+                            <button
+                              onClick={() => setAnswer("etat_versement", "partiel")}
+                              className={cn(
+                                "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                                answers.etat_versement === "partiel"
+                                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                                  : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              <span className="text-sm font-medium text-[#2563EB]">Un versement partiel a été effectué (minimum légal : 50 %)</span>
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("etat_versement", "aucun")}
+                              className={cn(
+                                "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                                answers.etat_versement === "aucun"
+                                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                                  : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              <span className="text-sm font-medium text-[#2563EB]">Aucun versement n&apos;a ete effectué pour le moment</span>
+                            </button>
+                          </div>
+
+                          {/* Si versement partiel : champ pourcentage */}
+                          {answers.etat_versement === "partiel" && (
+                            <div className="mt-3">
+                              <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                                Pourcentage versé (%)
+                              </label>
+                              <p className="text-xs text-gray-500 mb-2">Minimum légal : 50 % du montant des apports en numéraire</p>
+                              <input
+                                type="number"
+                                min="50"
+                                max="99"
+                                value={answers.pourcentage_verse || "50"}
+                                onChange={(e) => setAnswer("pourcentage_verse", e.target.value)}
+                                placeholder="50"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                              />
+                              {Number(answers.pourcentage_verse) < 50 && answers.pourcentage_verse && (
+                                <p className="text-xs text-red-500 mt-1">Le minimum légal est de 50 % pour une SASU.</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 type QuestionType = "choice" | "input" | "textarea";
 
-interface Choice { value: string; label: string }
+interface Choice { value: string; label: string; subtitle?: string }
 
 interface Question {
   id: string;
@@ -105,39 +105,33 @@ const QUESTIONS: Question[] = [
   },
   {
     id: "statut_micro",
-    title: "Êtes-vous actuellement micro-entrepreneur ?",
+    title: "Êtes-vous actuellement micro-entrepreneur (auto-entrepreneur / entreprise individuelle) ?",
     description:
-      "Si vous êtes actuellement en micro-entreprise et souhaitez passer en SASU, nous aurons besoin des informations de votre entreprise actuelle.",
+      "Vous êtes micro-entrepreneur si vous possédez un SIRET qui vous permet d'exercer une activité en votre nom personnel",
     type: "choice",
     choices: [
-      { value: "oui", label: "Oui, je suis micro-entrepreneur" },
-      { value: "non", label: "Non" },
+      { value: "oui", label: "Oui, je suis micro-entrepreneur (auto-entrepreneur / EI)" },
+      { value: "non", label: "Non, je ne suis pas micro-entrepreneur" },
+    ],
+  },
+  {
+    id: "action_micro",
+    title: "Que souhaitez-vous faire de votre activité actuelle ?",
+    type: "choice",
+    choices: [
+      { value: "transformer", label: "Transformer ma micro-entreprise en SASU", subtitle: "Vous conservez vos clients, votre nom commercial et vos contrats actuels. Votre micro sera fermée après la création de SASU." },
+      { value: "garder", label: "Garder ma micro + créer la SASU à côté", subtitle: "Deux structures séparées, selon vos besoins." },
+      { value: "arreter", label: "Arrêter la micro et repartir via la SASU", subtitle: "Nouveau départ, simple et propre." },
     ],
   },
   {
     id: "fermeture_micro",
-    title: "Souhaitez-vous que nous nous occupions de la fermeture de votre micro-entreprise ?",
-    description:
-      "Nous pouvons gérer l'ensemble des démarches de cessation de votre micro-entreprise auprès de l'URSSAF et du guichet unique.",
+    title: "Souhaitez-vous que nous nous occupions de la fermeture ou du transfert de votre micro-entreprise ?",
     type: "choice",
     choices: [
-      { value: "oui", label: "Oui, je souhaite que vous fermiez ma micro-entreprise (+99 € HT)" },
-      { value: "non", label: "Non, je m'en occupe moi-même" },
+      { value: "oui", label: "Oui (frais supplémentaires +89 € HT)" },
+      { value: "non", label: "Non, je ferai la démarche moi-même" },
     ],
-    info: {
-      title: "Ce qui est inclus",
-      content: (
-        <>
-          <p>Notre service de fermeture de micro-entreprise comprend :</p>
-          <ul className="list-disc list-inside mt-2 space-y-1">
-            <li>Déclaration de cessation d&apos;activité auprès du guichet unique (INPI)</li>
-            <li>Radiation auprès de l&apos;URSSAF</li>
-            <li>Suivi complet du dossier jusqu&apos;à confirmation de la radiation</li>
-          </ul>
-          <p className="mt-3 font-semibold text-[#2563EB]">Tarif : 99 € HT (soit 118,80 € TTC)</p>
-        </>
-      ),
-    },
   },
   {
     id: "demarrage",
@@ -239,23 +233,23 @@ const QUESTIONS: Question[] = [
 interface PageDef {
   questions: number[];
   sidebarStep: number;
-  special?: "brand_protection" | "micro_search" | "micro_fermeture";
+  special?: "brand_protection" | "micro_page" | "micro_search" | "pricing";
 }
 
 const STATIC_PAGES: PageDef[] = [
-  { questions: [0],    sidebarStep: 1 },  // qui_realise
-  { questions: [1, 2], sidebarStep: 2 },  // nom_societe + proteger_nom (together)
-  { questions: [],     sidebarStep: 2, special: "brand_protection" }, // conditional
-  { questions: [3],    sidebarStep: 2 },  // capital_social
-  { questions: [4],    sidebarStep: 2 },  // statut_micro
-  { questions: [],     sidebarStep: 2, special: "micro_search" },    // micro search (if oui)
-  { questions: [5],    sidebarStep: 2, special: "micro_fermeture" }, // fermeture micro (if oui)
-  { questions: [6],    sidebarStep: 2 },  // demarrage
-  { questions: [7],    sidebarStep: 2 },  // activite_artisanale
-  { questions: [9],    sidebarStep: 4 },  // regime_fiscal
-  { questions: [8],    sidebarStep: 4 },  // objet_social
-  { questions: [10],   sidebarStep: 4 },  // adresse_siege
-  { questions: [11],   sidebarStep: 4 },  // president_remunere
+  { questions: [0],        sidebarStep: 1 },  // qui_realise
+  { questions: [1, 2],    sidebarStep: 2 },  // nom_societe + proteger_nom (together)
+  { questions: [],         sidebarStep: 2, special: "brand_protection" }, // conditional
+  { questions: [3],        sidebarStep: 2 },  // capital_social
+  { questions: [4, 5, 6], sidebarStep: 2, special: "micro_page" },      // micro: statut + action + fermeture (all on 1 page)
+  { questions: [],         sidebarStep: 2, special: "micro_search" },    // micro search (if oui)
+  { questions: [7],        sidebarStep: 2 },  // demarrage
+  { questions: [8],        sidebarStep: 2 },  // activite_artisanale
+  { questions: [],         sidebarStep: 3, special: "pricing" },         // 3 formules
+  { questions: [10],       sidebarStep: 4 },  // regime_fiscal
+  { questions: [9],        sidebarStep: 4 },  // objet_social
+  { questions: [11],       sidebarStep: 4 },  // adresse_siege
+  { questions: [12],       sidebarStep: 4 },  // president_remunere
 ];
 
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */
@@ -272,18 +266,19 @@ const STEPS = [
 
 /* ───────── Components ───────── */
 
-function ChoiceCard({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+function ChoiceCard({ label, subtitle, selected, onClick }: { label: string; subtitle?: string; selected: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left px-6 py-4 rounded-lg border transition-all text-[15px] font-medium",
+        "w-full text-left px-6 py-4 rounded-lg border transition-all",
         selected
-          ? "border-[#2563EB] border-2 bg-[#EFF6FF] text-[#2563EB]"
-          : "border-[#D1D5DB] bg-transparent text-[#2563EB] hover:border-[#2563EB] hover:bg-[#EFF6FF]"
+          ? "border-[#2563EB] border-2 bg-[#EFF6FF]"
+          : "border-[#D1D5DB] bg-transparent hover:border-[#2563EB] hover:bg-[#EFF6FF]"
       )}
     >
-      {label}
+      <span className="text-[15px] font-medium text-[#2563EB]">{label}</span>
+      {subtitle && <p className="text-sm text-[#6B7280] mt-1 font-normal">{subtitle}</p>}
     </button>
   );
 }
@@ -527,6 +522,7 @@ function QuestionBlock({
             <ChoiceCard
               key={c.value}
               label={c.label}
+              subtitle={c.subtitle}
               selected={answer === c.value}
               onClick={() => onAnswer(c.value)}
             />
@@ -633,6 +629,162 @@ function SidebarStep({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+/* ───────── Pricing Plans (Step 3: Paiement) ───────── */
+
+const PRICING_PLANS = [
+  {
+    id: "essentielle",
+    name: "Essentielle",
+    subtitle: "Pour débuter sereinement",
+    price: 139,
+    popular: false,
+    highlighted: false,
+    features: [
+      "Téléchargement des statuts à la fin",
+      "Préparation du dossier complet",
+      "Envoi au greffe",
+      "Accompagnement par mail",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    subtitle: "Le plus populaire",
+    price: 199,
+    popular: true,
+    highlighted: false,
+    features: [
+      "Téléchargement des statuts à la fin",
+      "Préparation du dossier complet",
+      "Envoi au greffe",
+      "Garantie anti-rejet du greffe",
+      "Accompagnement téléphonique et par mail",
+      "Réponses par un juriste dédié jusqu'à l'immatriculation",
+      "Vérification par un juriste sous 24h ouvrées",
+    ],
+  },
+  {
+    id: "avocat",
+    name: "Rédaction par un avocat",
+    subtitle: "",
+    price: 850,
+    popular: false,
+    highlighted: true,
+    features: [
+      "Version personnalisée des statuts",
+      "Préparation du dossier complet par l'avocat",
+      "Envoi au greffe",
+      "Garantie anti-rejet du greffe",
+      "Accompagnement téléphonique, mail et rendez-vous possible",
+      "Réponses par un avocat dédié jusqu'à l'immatriculation",
+      "Vérification par l'avocat sous 24h ouvrées",
+    ],
+  },
+];
+
+const TARIF_DETAILS = [
+  { title: "Essentielle" },
+  { title: "Premium" },
+  { title: "Rédaction par un avocat" },
+];
+
+const FRAIS_ANNEXES = [
+  { title: "Frais de greffe" },
+  { title: "Publication d'annonce légale" },
+  { title: "Déclaration des bénéficiaires effectifs (RBE)" },
+];
+
+function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
+  const [openTarif, setOpenTarif] = useState<string | null>(null);
+  const [openFrais, setOpenFrais] = useState<string | null>(null);
+
+  return (
+    <div className="mb-10">
+      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] mb-2">
+        Choisissez votre formule
+      </h2>
+      <p className="text-sm text-[#6B7280] mb-6">
+        Sélectionnez l&apos;accompagnement qui correspond à vos besoins.
+      </p>
+
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        {PRICING_PLANS.map((plan) => (
+          <button
+            key={plan.id}
+            onClick={() => onSelect(plan.id)}
+            className={cn(
+              "relative text-left rounded-xl border-2 p-6 transition-all flex flex-col",
+              selected === plan.id
+                ? "border-[#2563EB] bg-[#EFF6FF]"
+                : plan.highlighted
+                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                  : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+            )}
+          >
+            {plan.popular && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2563EB] text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                Plus populaire ⭐
+              </span>
+            )}
+            <h3 className={cn(
+              "text-lg font-bold mb-1",
+              plan.highlighted ? "text-[#2563EB]" : "text-[#1E293B]"
+            )}>
+              {plan.name}
+            </h3>
+            {plan.subtitle && (
+              <p className="text-sm text-[#6B7280] mb-4">{plan.subtitle}</p>
+            )}
+            <p className="text-4xl font-bold text-[#1E293B] mb-1">
+              {plan.price}€
+            </p>
+            <p className="text-xs text-[#6B7280] mb-5">+ frais annexes obligatoires</p>
+            <ul className="space-y-2.5 mt-auto">
+              {plan.features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
+                  <span className="text-green-500 mt-0.5 shrink-0">●</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </button>
+        ))}
+      </div>
+
+      {/* On vous explique les tarifs */}
+      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les tarifs :</h3>
+      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden mb-8">
+        {TARIF_DETAILS.map((t) => (
+          <button
+            key={t.title}
+            onClick={() => setOpenTarif(openTarif === t.title ? null : t.title)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
+          >
+            <span className="font-semibold text-[#1E293B]">{t.title}</span>
+            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openTarif === t.title && "rotate-180")} />
+          </button>
+        ))}
+      </div>
+
+      {/* Frais annexes */}
+      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les frais annexes a la creation d&apos;une societe :</h3>
+      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden">
+        {FRAIS_ANNEXES.map((f) => (
+          <button
+            key={f.title}
+            onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
+          >
+            <span className="font-semibold text-[#1E293B]">{f.title}</span>
+            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openFrais === f.title && "rotate-180")} />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -807,7 +959,6 @@ export default function CreationSASUPage() {
   const pages = STATIC_PAGES.filter((p) => {
     if (p.special === "brand_protection") return answers.proteger_nom === "oui";
     if (p.special === "micro_search") return answers.statut_micro === "oui";
-    if (p.special === "micro_fermeture") return answers.statut_micro === "oui";
     return true;
   });
 
@@ -900,16 +1051,47 @@ export default function CreationSASUPage() {
               }}
             />
           )}
-
-          {/* Questions for this page */}
-          {pageQuestions.map((q) => (
-            <QuestionBlock
-              key={q.id}
-              question={q}
-              answer={answers[q.id] || ""}
-              onAnswer={(val) => setAnswer(q.id, val)}
+          {page.special === "pricing" && (
+            <PricingSection
+              selected={answers.formule || ""}
+              onSelect={(val) => setAnswer("formule", val)}
             />
-          ))}
+          )}
+
+          {/* Micro page: show sub-questions conditionally */}
+          {page.special === "micro_page" ? (
+            <>
+              <QuestionBlock
+                question={QUESTIONS[4]}
+                answer={answers.statut_micro || ""}
+                onAnswer={(val) => setAnswer("statut_micro", val)}
+              />
+              {answers.statut_micro === "oui" && (
+                <>
+                  <QuestionBlock
+                    question={QUESTIONS[5]}
+                    answer={answers.action_micro || ""}
+                    onAnswer={(val) => setAnswer("action_micro", val)}
+                  />
+                  <QuestionBlock
+                    question={QUESTIONS[6]}
+                    answer={answers.fermeture_micro || ""}
+                    onAnswer={(val) => setAnswer("fermeture_micro", val)}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            /* Questions for this page */
+            pageQuestions.map((q) => (
+              <QuestionBlock
+                key={q.id}
+                question={q}
+                answer={answers[q.id] || ""}
+                onAnswer={(val) => setAnswer(q.id, val)}
+              />
+            ))
+          )}
 
           {/* ── Navigation ── */}
           <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#E5E7EB]">

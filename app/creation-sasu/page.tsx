@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 /*
  * Color palette (LegalCorners):
- *   Primary:      #5B6FD6
+ *   Primary:      #4A73E8 (true blue, no purple)
  *   Inactive bg:  #D6DEEF
  *   Labels:       #2D3E6B / #8B9DC3
  *   Borders:      #B8C9ED / #D6E0F5
@@ -101,7 +101,7 @@ const QUESTIONS: Question[] = [
             <li><strong>Praticité :</strong> un capital plus élevé permet de couvrir vos premiers frais.</li>
             <li><strong>Souplesse :</strong> vous restez libre d&apos;augmenter le capital plus tard.</li>
           </ul>
-          <p className="mt-3 font-semibold text-[#5B6FD6]">Conseil pratique : fixez un capital cohérent avec votre activité.</p>
+          <p className="mt-3 font-semibold text-[#4A73E8]">Conseil pratique : fixez un capital cohérent avec votre activité.</p>
         </>
       ),
     },
@@ -137,7 +137,7 @@ const QUESTIONS: Question[] = [
       content: (
         <>
           <p><strong>Toute activité artisanale doit être immatriculée au Répertoire des Métiers (RM)</strong>, tenu par la <strong>CMA</strong>.</p>
-          <p className="mt-2 italic text-[#5B6FD6]">
+          <p className="mt-2 italic text-[#4A73E8]">
             Supplément de 79 € HT si nous réalisons cette démarche pour vous.
           </p>
         </>
@@ -220,8 +220,8 @@ function ChoiceCard({ label, selected, onClick }: { label: string; selected: boo
       className={cn(
         "w-full text-left px-6 py-4 rounded-lg border transition-all text-[15px] font-medium",
         selected
-          ? "border-[#5B6FD6] bg-[#E8EEFF] text-[#5B6FD6]"
-          : "border-[#D6E0F5] bg-[#F5F7FF] text-[#5B6FD6] hover:border-[#5B6FD6] hover:bg-[#E8EEFF]"
+          ? "border-[#4A73E8] bg-[#E8EEFF] text-[#4A73E8]"
+          : "border-[#D6E0F5] bg-[#F5F7FF] text-[#4A73E8] hover:border-[#4A73E8] hover:bg-[#E8EEFF]"
       )}
     >
       {label}
@@ -245,7 +245,7 @@ function InfoAccordion({ title, children }: { title: string; children: React.Rea
       </button>
       {open && (
         <div className="px-5 py-4 bg-white border-t border-[#B8C9ED]">
-          <p className="text-sm font-bold text-[#5B6FD6] mb-2">{title}</p>
+          <p className="text-sm font-bold text-[#4A73E8] mb-2">{title}</p>
           <div className="text-sm text-gray-700 leading-relaxed">{children}</div>
         </div>
       )}
@@ -278,7 +278,7 @@ function SidebarStep({
           className={cn(
             "w-[46px] h-[46px] rounded-full flex items-center justify-center text-[15px] font-bold shrink-0",
             highlighted
-              ? "bg-[#5B6FD6] text-white"
+              ? "bg-[#4A73E8] text-white"
               : "bg-[#DCE3F2] text-[#98A7C8]"
           )}
         >
@@ -288,7 +288,7 @@ function SidebarStep({
         <Icon
           className={cn(
             "w-[26px] h-[26px] shrink-0 ml-3",
-            highlighted ? "text-[#5B6FD6]" : "text-[#B5C1D8]"
+            highlighted ? "text-[#4A73E8]" : "text-[#B5C1D8]"
           )}
         />
         {/* Label */}
@@ -307,7 +307,7 @@ function SidebarStep({
           <div
             className={cn(
               "border-l-[2px] border-dotted",
-              isDone ? "border-[#5B6FD6]" : "border-[#B8C9ED]"
+              isDone ? "border-[#4A73E8]" : "border-[#B8C9ED]"
             )}
             style={{ height: 48 }}
           />
@@ -358,13 +358,13 @@ export default function CreationSASUPage() {
           <div key={s.id} className="flex items-center">
             <div className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-              sidebarStep > s.id ? "bg-[#5B6FD6] text-white"
-                : sidebarStep === s.id ? "bg-[#5B6FD6] text-white"
+              sidebarStep > s.id ? "bg-[#4A73E8] text-white"
+                : sidebarStep === s.id ? "bg-[#4A73E8] text-white"
                 : "bg-[#DCE3F2] text-[#98A7C8]"
             )}>
               {sidebarStep > s.id ? <Check className="w-3 h-3" /> : s.id}
             </div>
-            {i < STEPS.length - 1 && <div className={cn("w-3 h-[2px] mx-0.5", sidebarStep > s.id ? "bg-[#5B6FD6]" : "bg-[#DCE3F2]")} />}
+            {i < STEPS.length - 1 && <div className={cn("w-3 h-[2px] mx-0.5", sidebarStep > s.id ? "bg-[#4A73E8]" : "bg-[#DCE3F2]")} />}
           </div>
         ))}
       </div>
@@ -392,12 +392,12 @@ export default function CreationSASUPage() {
               <span>{Math.round(((currentQ + 1) / totalQ) * 100)}%</span>
             </div>
             <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-[#5B6FD6] rounded-full transition-all duration-500" style={{ width: `${((currentQ + 1) / totalQ) * 100}%` }} />
+              <div className="h-full bg-[#4A73E8] rounded-full transition-all duration-500" style={{ width: `${((currentQ + 1) / totalQ) * 100}%` }} />
             </div>
           </div>
 
           {/* Title */}
-          <h1 className="text-[28px] sm:text-[34px] md:text-[40px] font-bold text-[#5B6FD6] mb-6 md:mb-8 leading-tight">
+          <h1 className="text-[28px] sm:text-[34px] md:text-[40px] font-bold text-[#4A73E8] mb-6 md:mb-8 leading-tight">
             Création d&apos;une SASU
           </h1>
 
@@ -430,7 +430,7 @@ export default function CreationSASUPage() {
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={question.placeholder}
-              className="w-full mt-4 px-5 py-4 rounded-lg border border-[#D6E0F5] focus:border-[#5B6FD6] focus:outline-none text-sm bg-white transition-colors"
+              className="w-full mt-4 px-5 py-4 rounded-lg border border-[#D6E0F5] focus:border-[#4A73E8] focus:outline-none text-sm bg-white transition-colors"
             />
           )}
 
@@ -441,15 +441,15 @@ export default function CreationSASUPage() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={question.placeholder}
               rows={4}
-              className="w-full mt-4 px-5 py-4 rounded-lg border border-[#D6E0F5] focus:border-[#5B6FD6] focus:outline-none text-sm resize-none bg-white transition-colors"
+              className="w-full mt-4 px-5 py-4 rounded-lg border border-[#D6E0F5] focus:border-[#4A73E8] focus:outline-none text-sm resize-none bg-white transition-colors"
             />
           )}
 
-          {question.hint && <p className="text-sm text-[#5B6FD6] italic mt-3">{question.hint}</p>}
+          {question.hint && <p className="text-sm text-[#4A73E8] italic mt-3">{question.hint}</p>}
 
           {question.optional && (
             <div className="flex justify-end mt-3">
-              <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[#5B6FD6] text-[#5B6FD6] text-sm font-semibold hover:bg-[#EDF2FF] transition-colors">
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[#4A73E8] text-[#4A73E8] text-sm font-semibold hover:bg-[#EDF2FF] transition-colors">
                 <HelpCircle className="w-4 h-4" /> Aide IA
               </button>
             </div>
@@ -473,7 +473,7 @@ export default function CreationSASUPage() {
               onClick={goNext}
               className={cn(
                 "flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all",
-                "bg-[#5B6FD6] text-white hover:bg-[#4A5EC8] active:bg-[#3D4FB5]"
+                "bg-[#4A73E8] text-white hover:bg-[#3D63D4] active:bg-[#3356C2]"
               )}
             >
               Suivant <ArrowRight className="w-4 h-4" />

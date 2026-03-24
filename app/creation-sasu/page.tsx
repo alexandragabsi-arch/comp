@@ -10,6 +10,17 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/*
+ * Color palette (matches LegalCorners):
+ *   Primary:      #5B6FD6 (cornflower blue)
+ *   Primary dark: #4A5EC8 (button hover)
+ *   Labels:       #3B4A7A (sidebar active labels)
+ *   Muted:        #8B9DC3 (inactive labels)
+ *   Borders:      #B8C9ED / #D6E0F5
+ *   Card bg:      #F0F4FF
+ *   Selected:     #E0E8FF
+ */
+
 /* ───────── Types ───────── */
 
 type QuestionType = "choice" | "input" | "textarea" | "date";
@@ -107,7 +118,7 @@ const QUESTIONS: Question[] = [
             <li><strong>Praticité :</strong> un capital plus élevé permet de couvrir vos premiers frais (comptabilité, site internet, dépôt de marque...).</li>
             <li><strong>Souplesse :</strong> vous restez libre d&apos;augmenter le capital plus tard si nécessaire.</li>
           </ul>
-          <p className="mt-3 font-semibold text-[#4A6FE3]">
+          <p className="mt-3 font-semibold text-[#5B6FD6]">
             Conseil pratique : fixez un capital cohérent avec votre activité et vos besoins immédiats.
           </p>
         </>
@@ -151,7 +162,7 @@ const QUESTIONS: Question[] = [
             <strong>Toute activité artisanale doit être immatriculée au Répertoire des Métiers (RM)</strong>, tenu par la <strong>Chambre de Métiers et de l&apos;Artisanat
             (CMA)</strong>. Il s&apos;agit d&apos;une <strong>obligation légale distincte</strong> de l&apos;immatriculation au <strong>Registre du Commerce et des Sociétés (RCS)</strong>.
           </p>
-          <p className="mt-2 italic text-[#4A6FE3]">
+          <p className="mt-2 italic text-[#5B6FD6]">
             Si vous souhaitez que nous réalisions cette démarche pour vous, un supplément de 79 € HT sera appliqué, auquel s&apos;ajoutent les
             frais légaux obligatoires (frais CMA et frais de greffe), dont le montant exact sera précisé au moment du paiement.
           </p>
@@ -252,8 +263,8 @@ function ChoiceCard({
       className={cn(
         "w-full text-left px-5 py-4 rounded-lg border text-sm font-medium transition-all",
         selected
-          ? "border-[#4A6FE3] bg-[#EEF2FF] text-[#4A6FE3] shadow-sm"
-          : "border-[#D6E0F5] bg-[#F8FAFF] text-[#4A6FE3] hover:border-[#4A6FE3] hover:bg-[#EEF2FF]"
+          ? "border-[#5B6FD6] bg-[#E0E8FF] text-[#5B6FD6] shadow-sm"
+          : "border-[#D6E0F5] bg-[#F0F4FF] text-[#5B6FD6] hover:border-[#5B6FD6] hover:bg-[#E0E8FF]"
       )}
     >
       {label}
@@ -264,10 +275,10 @@ function ChoiceCard({
 function InfoAccordion({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="mt-6 border-2 border-[#c5d5f0] rounded-xl overflow-hidden">
+    <div className="mt-6 border-2 border-[#B8C9ED] rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#f0f5ff] text-sm font-semibold text-[#1E3A8A]"
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EDF2FF] text-sm font-semibold text-[#3B4A7A]"
       >
         <span className="flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-yellow-500" />
@@ -276,8 +287,8 @@ function InfoAccordion({ title, children }: { title: string; children: React.Rea
         {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
       {open && (
-        <div className="px-5 py-4 bg-white border-t border-[#c5d5f0]">
-          <p className="text-sm font-bold text-[#4A6FE3] mb-2">{title}</p>
+        <div className="px-5 py-4 bg-white border-t border-[#B8C9ED]">
+          <p className="text-sm font-bold text-[#5B6FD6] mb-2">{title}</p>
           <div className="text-sm text-gray-700 leading-relaxed">{children}</div>
         </div>
       )}
@@ -328,13 +339,13 @@ export default function CreationSASUPage() {
           />
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
-          <span className="cursor-pointer hover:text-[#1E3A8A] transition-colors flex items-center gap-1">
+          <span className="cursor-pointer hover:text-[#3B4A7A] transition-colors flex items-center gap-1">
             Nos services <ChevronDown className="w-4 h-4" />
           </span>
         </nav>
         <Link
           href="/login"
-          className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] transition-colors"
+          className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-[#3B4A7A] transition-colors"
         >
           <User className="w-4 h-4" /> Connexion
         </Link>
@@ -348,9 +359,9 @@ export default function CreationSASUPage() {
               className={cn(
                 "w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
                 sidebarStep > s.id
-                  ? "bg-[#4A6FE3] text-white"
+                  ? "bg-[#5B6FD6] text-white"
                   : sidebarStep === s.id
-                    ? "bg-[#4A6FE3] text-white"
+                    ? "bg-[#5B6FD6] text-white"
                     : "bg-white text-[#7B9AE6] border-2 border-[#A5B8F0]"
               )}
             >
@@ -359,7 +370,7 @@ export default function CreationSASUPage() {
             {i < STEPS.length - 1 && (
               <div className={cn(
                 "w-4 h-0.5 mx-0.5",
-                sidebarStep > s.id ? "bg-[#4A6FE3]" : "bg-[#C5D5F0]"
+                sidebarStep > s.id ? "bg-[#5B6FD6]" : "bg-[#B8C9ED]"
               )} />
             )}
           </div>
@@ -367,7 +378,7 @@ export default function CreationSASUPage() {
       </div>
 
       {/* ── Mobile step label ── */}
-      <div className="md:hidden text-center py-2 text-xs font-medium text-[#4A6FE3] bg-white border-b border-gray-100">
+      <div className="md:hidden text-center py-2 text-xs font-medium text-[#5B6FD6] bg-white border-b border-gray-100">
         {STEPS.find((s) => s.id === sidebarStep)?.label.replace("\n", " ")}
       </div>
 
@@ -386,8 +397,8 @@ export default function CreationSASUPage() {
                     className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-all",
                       done || active
-                        ? "bg-[#4A6FE3] text-white"
-                        : "bg-white text-[#4A6FE3] border-2 border-[#A5B8F0]"
+                        ? "bg-[#5B6FD6] text-white"
+                        : "bg-white text-[#5B6FD6] border-2 border-[#A5B8F0]"
                     )}
                   >
                     {done ? <Check className="w-4 h-4" /> : s.id}
@@ -395,7 +406,7 @@ export default function CreationSASUPage() {
                   <Icon
                     className={cn(
                       "w-5 h-5 shrink-0",
-                      done || active ? "text-[#4A6FE3]" : "text-[#A5B8F0]"
+                      done || active ? "text-[#5B6FD6]" : "text-[#A5B8F0]"
                     )}
                   />
                 </div>
@@ -403,7 +414,7 @@ export default function CreationSASUPage() {
                 <span
                   className={cn(
                     "text-xs font-medium text-center whitespace-pre-line leading-tight mt-1.5",
-                    done || active ? "text-[#1E3A8A]" : "text-[#8B9DC3]"
+                    done || active ? "text-[#3B4A7A]" : "text-[#8B9DC3]"
                   )}
                 >
                   {s.label}
@@ -413,7 +424,7 @@ export default function CreationSASUPage() {
                   <div
                     className={cn(
                       "h-9 my-1.5 border-l-2 border-dashed",
-                      done ? "border-[#4A6FE3]" : "border-[#A5B8F0]"
+                      done ? "border-[#5B6FD6]" : "border-[#A5B8F0]"
                     )}
                   />
                 )}
@@ -432,13 +443,13 @@ export default function CreationSASUPage() {
             </div>
             <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#4A6FE3] rounded-full transition-all duration-500"
+                className="h-full bg-[#5B6FD6] rounded-full transition-all duration-500"
                 style={{ width: `${((currentQ + 1) / totalQ) * 100}%` }}
               />
             </div>
           </div>
 
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#1E3A8A] mb-6 md:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#5B6FD6] mb-6 md:mb-8">
             Création d&apos;une SASU
           </h1>
 
@@ -478,7 +489,7 @@ export default function CreationSASUPage() {
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={question.placeholder}
-              className="w-full mt-3 md:mt-4 px-4 md:px-5 py-3.5 md:py-4 rounded-xl border-2 border-[#c5d5f0] focus:border-[#4A6FE3] focus:outline-none text-sm transition-colors"
+              className="w-full mt-3 md:mt-4 px-4 md:px-5 py-3.5 md:py-4 rounded-xl border-2 border-[#B8C9ED] focus:border-[#5B6FD6] focus:outline-none text-sm transition-colors"
             />
           )}
 
@@ -489,19 +500,19 @@ export default function CreationSASUPage() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={question.placeholder}
               rows={4}
-              className="w-full mt-3 md:mt-4 px-4 md:px-5 py-3.5 md:py-4 rounded-xl border-2 border-[#c5d5f0] focus:border-[#4A6FE3] focus:outline-none text-sm resize-none transition-colors"
+              className="w-full mt-3 md:mt-4 px-4 md:px-5 py-3.5 md:py-4 rounded-xl border-2 border-[#B8C9ED] focus:border-[#5B6FD6] focus:outline-none text-sm resize-none transition-colors"
             />
           )}
 
           {/* ── Hint ── */}
           {question.hint && (
-            <p className="text-sm text-[#4A6FE3] italic mt-3">{question.hint}</p>
+            <p className="text-sm text-[#5B6FD6] italic mt-3">{question.hint}</p>
           )}
 
           {/* ── Aide IA button ── */}
           {question.optional && (
             <div className="flex justify-end mt-3">
-              <button className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-full border-2 border-[#4A6FE3] text-[#4A6FE3] text-sm font-semibold hover:bg-[#f0f5ff] active:bg-[#e0e8ff] transition-colors">
+              <button className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-full border-2 border-[#5B6FD6] text-[#5B6FD6] text-sm font-semibold hover:bg-[#EDF2FF] active:bg-[#D6E0F5] transition-colors">
                 <HelpCircle className="w-4 h-4" /> Aide IA
               </button>
             </div>
@@ -530,7 +541,7 @@ export default function CreationSASUPage() {
               className={cn(
                 "flex items-center gap-2 px-6 md:px-7 py-3 rounded-xl text-sm font-semibold transition-all",
                 canGoNext
-                  ? "bg-[#4A6FE3] text-white hover:bg-[#3b5cc5] active:bg-[#2f4da8]"
+                  ? "bg-[#5B6FD6] text-white hover:bg-[#4A5EC8] active:bg-[#3D4FB5]"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
               )}
             >

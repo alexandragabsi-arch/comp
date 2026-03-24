@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3
+  Coins, Percent, Edit3, AlertTriangle, FileText, Trash2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -566,19 +566,22 @@ function QuestionBlock({
 
 /* ───────── Accordion Item (dissolution style) ───────── */
 
-function AccordionItem({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
+function AccordionItem({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+    <div className="rounded-xl border border-blue-200 bg-blue-50 overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-4 py-3.5 text-left gap-3"
       >
-        <span className="text-sm font-semibold text-[#1E3A8A]">{title}</span>
-        <ChevronRight className={cn("w-4 h-4 text-[#2563EB] flex-shrink-0 transition-transform", open && "rotate-90")} />
+        <div className="flex items-center gap-2">
+          <span className="text-base">💡</span>
+          <span className="text-sm font-semibold text-[#2563EB]">{title}</span>
+        </div>
+        <ChevronDown className={cn("w-5 h-5 text-[#2563EB] flex-shrink-0 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+        <div className="px-4 pb-4 border-t border-blue-100 pt-3">
           {children}
         </div>
       )}
@@ -1159,10 +1162,12 @@ export default function CreationSASUPage() {
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
-    { id: "nomination_dg" },        // nomination DG / DGD (optionnel, PP ou PM)
+    { id: "nomination_dg" },        // souhaitez-vous nommer DG/DGD ? oui/non + formulaire
+    { id: "mandat_dg" },           // majorité, révocation, durée, renouvellement, rémunération DG/DGD
     { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_fiscal" },        // IS / IR
-    { id: "adresse_siege" },        // adresse
+    { id: "adresse_siege" },        // adresse + type d'hébergement
+    { id: "rbe" },                  // bénéficiaires effectifs (détection auto >25%)
   ];
 
   // Determine sidebar step from phase
@@ -1934,7 +1939,14 @@ export default function CreationSASUPage() {
                         <input
                           type="text"
                           value={answers.activite_principale_desc || ""}
-                          onChange={(e) => setAnswer("activite_principale_desc", e.target.value)}
+                          onChange={(e) => {
+                            setAnswer("activite_principale_desc", e.target.value);
+                            // Reset NAF detection on change
+                            setAnswer("naf_code", "");
+                            setAnswer("naf_label", "");
+                            setAnswer("naf_reglemente", "");
+                            setAnswer("naf_justifs", "");
+                          }}
                           placeholder="Ex : Soutien scolaire"
                           className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
                         />
@@ -1955,29 +1967,141 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
-                    {/* Code NAF suggestion */}
-                    {answers.activite_principale_desc && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <p className="text-sm text-[#1E3A8A]">
-                          <strong>Suggestion du code NAF :</strong> Le code NAF attribué officiellement sera celui correspondant à l&apos;activité principale, telle que déterminée par l&apos;INSEE.
-                        </p>
-                      </div>
+                    {/* Bouton détection NAF */}
+                    {answers.activite_principale_desc && !answers.naf_code && (
+                      <button
+                        onClick={() => {
+                          const desc = (answers.activite_principale_desc || "").toLowerCase();
+                          // Dictionnaire de correspondances NAF + réglementation
+                          const NAF_DB: { keywords: string[]; code: string; label: string; reglemente: boolean; justifs: string[] }[] = [
+                            { keywords: ["coiffure", "coiffeur"], code: "96.02A", label: "Coiffure", reglemente: true, justifs: ["Brevet professionnel (BP) de coiffure ou diplôme équivalent", "Justificatif d'inscription au répertoire des métiers"] },
+                            { keywords: ["boulangerie", "boulanger", "pain"], code: "10.71A", label: "Fabrication industrielle de pain et de pâtisserie fraîche", reglemente: true, justifs: ["CAP Boulanger ou diplôme équivalent", "Carte d'artisan"] },
+                            { keywords: ["patisserie", "patissier", "pâtisserie"], code: "10.71B", label: "Cuisson de produits de boulangerie", reglemente: true, justifs: ["CAP Pâtissier ou diplôme équivalent"] },
+                            { keywords: ["plomberie", "plombier", "chauffagiste", "sanitaire"], code: "43.22A", label: "Travaux d'installation d'eau et de gaz en tous locaux", reglemente: true, justifs: ["Qualification professionnelle (CAP/BEP/diplôme)", "Attestation de capacité professionnelle", "Assurance décennale obligatoire"] },
+                            { keywords: ["electrici", "électrici"], code: "43.21A", label: "Travaux d'installation électrique dans tous locaux", reglemente: true, justifs: ["Qualification professionnelle en électricité", "Habilitation électrique", "Assurance décennale obligatoire"] },
+                            { keywords: ["batiment", "bâtiment", "construction", "maçon", "maconnerie"], code: "41.20A", label: "Construction de bâtiments résidentiels et non résidentiels", reglemente: true, justifs: ["Qualification professionnelle dans le bâtiment", "Assurance décennale obligatoire", "Carte BTP si salariés"] },
+                            { keywords: ["restaurant", "restauration", "traiteur"], code: "56.10A", label: "Restauration traditionnelle", reglemente: true, justifs: ["Permis d'exploitation (formation hygiène HACCP)", "Licence de débit de boissons (si alcool)", "Déclaration auprès de la DDPP"] },
+                            { keywords: ["bar", "café", "débit de boissons"], code: "56.30Z", label: "Débits de boissons", reglemente: true, justifs: ["Permis d'exploitation", "Licence IV ou licence de débit de boissons", "Déclaration en mairie"] },
+                            { keywords: ["pharmacie", "pharmacien"], code: "47.73Z", label: "Commerce de détail de produits pharmaceutiques en magasin spécialisé", reglemente: true, justifs: ["Diplôme d'État de docteur en pharmacie", "Inscription à l'Ordre des pharmaciens"] },
+                            { keywords: ["immobilier", "agent immobilier", "transaction immobili"], code: "68.31Z", label: "Agences immobilières", reglemente: true, justifs: ["Carte professionnelle T (Transaction) ou G (Gestion)", "Garantie financière", "Assurance responsabilité civile professionnelle"] },
+                            { keywords: ["transport", "vtc", "chauffeur", "taxi"], code: "49.32Z", label: "Transports de voyageurs par taxis", reglemente: true, justifs: ["Carte professionnelle VTC ou licence de taxi", "Attestation de capacité de transport", "Assurance RC professionnelle"] },
+                            { keywords: ["sécurité", "gardiennage", "surveillance", "agent de sécurité"], code: "80.10Z", label: "Activités de sécurité privée", reglemente: true, justifs: ["Autorisation préalable du CNAPS", "Carte professionnelle CNAPS", "Assurance responsabilité civile professionnelle"] },
+                            { keywords: ["comptab", "expert-comptable", "expertise comptable"], code: "69.20Z", label: "Activités comptables", reglemente: true, justifs: ["Diplôme d'expertise comptable (DEC)", "Inscription à l'Ordre des experts-comptables"] },
+                            { keywords: ["avocat", "cabinet d'avocat"], code: "69.10Z", label: "Activités juridiques", reglemente: true, justifs: ["CAPA (Certificat d'Aptitude à la Profession d'Avocat)", "Inscription au barreau"] },
+                            { keywords: ["médecin", "médical", "cabinet médical", "médecine"], code: "86.21Z", label: "Activité des médecins généralistes", reglemente: true, justifs: ["Diplôme d'État de docteur en médecine", "Inscription à l'Ordre des médecins"] },
+                            { keywords: ["infirmier", "infirmière", "soins infirmiers"], code: "86.90C", label: "Autres activités pour la santé humaine n.c.a.", reglemente: true, justifs: ["Diplôme d'État d'infirmier", "Inscription à l'Ordre des infirmiers", "Enregistrement ADELI/RPPS"] },
+                            { keywords: ["opticien", "optique"], code: "47.78A", label: "Commerces de détail d'optique", reglemente: true, justifs: ["BTS Opticien-lunetier", "Inscription au registre des opticiens"] },
+                            { keywords: ["auto-école", "auto ecole", "conduite"], code: "85.53Z", label: "Enseignement de la conduite", reglemente: true, justifs: ["Agrément préfectoral", "BEPECASER ou Titre professionnel ECSR", "Autorisation d'enseigner"] },
+                            { keywords: ["formation", "organisme de formation", "centre de formation"], code: "85.59A", label: "Formation continue d'adultes", reglemente: false, justifs: ["Numéro de déclaration d'activité (DREETS)", "Certification Qualiopi (si financement public)"] },
+                            { keywords: ["crèche", "garde d'enfant", "petite enfance", "assistante maternelle"], code: "88.91A", label: "Accueil de jeunes enfants", reglemente: true, justifs: ["Agrément PMI (Protection Maternelle et Infantile)", "Diplôme petite enfance (CAP AEPE)"] },
+                            { keywords: ["consulting", "conseil", "consultant", "stratégi"], code: "70.22Z", label: "Conseil pour les affaires et autres conseils de gestion", reglemente: false, justifs: [] },
+                            { keywords: ["informatique", "développement", "logiciel", "programmation", "web", "application"], code: "62.01Z", label: "Programmation informatique", reglemente: false, justifs: [] },
+                            { keywords: ["e-commerce", "ecommerce", "vente en ligne", "boutique en ligne"], code: "47.91A", label: "Vente à distance sur catalogue général", reglemente: false, justifs: [] },
+                            { keywords: ["marketing", "communication", "publicité", "pub"], code: "73.11Z", label: "Activités des agences de publicité", reglemente: false, justifs: [] },
+                            { keywords: ["design", "graphi", "créati"], code: "74.10Z", label: "Activités spécialisées de design", reglemente: false, justifs: [] },
+                            { keywords: ["photo", "vidéo", "audiovisuel", "production"], code: "59.11A", label: "Production de films et de programmes pour la télévision", reglemente: false, justifs: [] },
+                            { keywords: ["import", "export", "négoce", "commerce de gros"], code: "46.90Z", label: "Commerce de gros non spécialisé", reglemente: false, justifs: [] },
+                            { keywords: ["déménagement"], code: "49.42Z", label: "Services de déménagement", reglemente: true, justifs: ["Inscription au registre des transporteurs", "Attestation de capacité professionnelle en transport"] },
+                            { keywords: ["nettoyage", "propreté", "entretien"], code: "81.21Z", label: "Nettoyage courant des bâtiments", reglemente: false, justifs: [] },
+                            { keywords: ["coach", "coaching", "développement personnel", "bien-être"], code: "96.09Z", label: "Autres services personnels n.c.a.", reglemente: false, justifs: [] },
+                            { keywords: ["soutien scolaire", "cours particulier", "tutorat", "aide aux devoirs"], code: "85.59B", label: "Autres enseignements", reglemente: false, justifs: [] },
+                            { keywords: ["fitness", "sport", "salle de sport", "musculation"], code: "93.13Z", label: "Activités des centres de culture physique", reglemente: true, justifs: ["Carte professionnelle d'éducateur sportif", "Diplôme BPJEPS ou équivalent", "Déclaration DDCS"] },
+                            { keywords: ["architecte", "architecture"], code: "71.11Z", label: "Activités d'architecture", reglemente: true, justifs: ["Diplôme d'architecte DPLG/HMONP", "Inscription à l'Ordre des architectes"] },
+                            { keywords: ["assurance", "courtage", "courtier"], code: "66.22Z", label: "Activités des agents et courtiers d'assurances", reglemente: true, justifs: ["Inscription à l'ORIAS", "Capacité professionnelle (150h de formation)", "Assurance RC professionnelle", "Garantie financière"] },
+                          ];
+
+                          let match = NAF_DB.find((n) => n.keywords.some((k) => desc.includes(k)));
+                          if (!match) {
+                            // Fallback: activité non réglementée générique
+                            match = { keywords: [], code: "82.99Z", label: "Autres activités de soutien aux entreprises n.c.a.", reglemente: false, justifs: [] };
+                          }
+
+                          setAnswer("naf_code", match.code);
+                          setAnswer("naf_label", match.label);
+                          setAnswer("naf_reglemente", match.reglemente ? "oui" : "non");
+                          setAnswer("naf_justifs", JSON.stringify(match.justifs));
+                        }}
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Détecter le code NAF et vérifier la réglementation
+                      </button>
                     )}
 
-                    {/* Analyse réglementaire */}
-                    <div className="space-y-3">
-                      <h3 className="text-base font-bold text-[#1E3A8A]">Analyse réglementaire de votre activité</h3>
-                      <p className="text-sm text-gray-600">
-                        À partir des activités que vous avez décrites, nous vérifions si certaines obligations réglementaires ou justificatifs sont requis afin d&apos;éviter tout refus lors de l&apos;immatriculation auprès de l&apos;INPI.
-                      </p>
-                      {answers.activite_principale_desc && (
-                        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                          <p className="text-sm text-green-800">
-                            <strong>Analyse :</strong> Nous vérifierons la conformité réglementaire de votre activité lors de la constitution du dossier.
-                          </p>
+                    {/* Résultat détection NAF */}
+                    {answers.naf_code && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4"
+                      >
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3">
+                          <div className="flex items-center gap-3">
+                            <Sparkles className="w-5 h-5 text-[#2563EB]" />
+                            <p className="text-sm font-bold text-[#1E3A8A]">Résultat de l&apos;analyse</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-gray-500">Code NAF suggéré</p>
+                              <p className="text-lg font-bold text-[#2563EB]">{answers.naf_code}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Libellé</p>
+                              <p className="text-sm font-semibold text-[#1E3A8A]">{answers.naf_label}</p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-400 italic">Le code NAF définitif sera attribué par l&apos;INSEE lors de l&apos;immatriculation.</p>
                         </div>
-                      )}
-                    </div>
+
+                        {/* Activité réglementée */}
+                        {answers.naf_reglemente === "oui" ? (
+                          <div className="bg-orange-50 border border-orange-300 rounded-xl p-5 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <AlertTriangle className="w-5 h-5 text-orange-500" />
+                              <p className="text-sm font-bold text-orange-800">Activité réglementée détectée</p>
+                            </div>
+                            <p className="text-sm text-orange-700">
+                              L&apos;activité <strong>&quot;{answers.activite_principale_desc}&quot;</strong> est une activité réglementée. Les justificatifs suivants seront nécessaires pour votre immatriculation :
+                            </p>
+                            <ul className="space-y-2">
+                              {(() => {
+                                try {
+                                  const justifs: string[] = JSON.parse(answers.naf_justifs || "[]");
+                                  return justifs.map((j, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <FileText className="w-4 h-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                                      <span className="text-sm text-orange-800">{j}</span>
+                                    </li>
+                                  ));
+                                } catch { return null; }
+                              })()}
+                            </ul>
+                            <p className="text-xs text-orange-600 italic mt-2">Ces documents vous seront demandés à l&apos;étape &quot;Pièces justificatives&quot;.</p>
+                          </div>
+                        ) : (
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                            <div className="flex items-center gap-2">
+                              <Check className="w-5 h-5 text-green-600" />
+                              <p className="text-sm font-semibold text-green-800">Activité non réglementée</p>
+                            </div>
+                            <p className="text-sm text-green-700 mt-1">Aucun justificatif spécifique n&apos;est requis pour cette activité. Vous pouvez continuer.</p>
+                          </div>
+                        )}
+
+                        {/* Bouton réinitialiser */}
+                        <button
+                          onClick={() => {
+                            setAnswer("naf_code", "");
+                            setAnswer("naf_label", "");
+                            setAnswer("naf_reglemente", "");
+                            setAnswer("naf_justifs", "");
+                          }}
+                          className="text-sm text-[#2563EB] hover:underline"
+                        >
+                          Relancer l&apos;analyse
+                        </button>
+                      </motion.div>
+                    )}
                   </div>
                 )}
 
@@ -3847,27 +3971,386 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Page 8: Adresse siège social ── */}
+                {/* ── Page: Adresse siège social ── */}
                 {POST_PAGES[postPage]?.id === "adresse_siege" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
-                    {QUESTIONS[11].info && (
-                      <AccordionItem title={QUESTIONS[11].info.title}>
-                        <div className="text-sm text-gray-600">{QUESTIONS[11].info.content}</div>
-                      </AccordionItem>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p className="font-bold text-[#1E3A8A]">Le saviez-vous ?</p>
+                        <p>Tout siège social doit être déclaré avec une adresse précise et un justificatif de jouissance légale des locaux. Cette adresse détermine la nationalité de la société, sa juridiction compétente (greffe, impôts, URSSAF...) et doit figurer dans les statuts.</p>
+                      </div>
+                    </AccordionItem>
+
+                    {/* Type d'hébergement */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setAnswer("siege_type", "domicile")}
+                        className={cn(
+                          "text-left rounded-xl border-2 p-5 transition-all space-y-1",
+                          answers.siege_type === "domicile"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Au domicile de l&apos;associé unique ou d&apos;un dirigeant</p>
+                        <p className="text-xs text-gray-500 italic">Possible si aucun texte (bail, règlement de copropriété) ne s&apos;y oppose.</p>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("siege_type", "local_commercial")}
+                        className={cn(
+                          "text-left rounded-xl border-2 p-5 transition-all space-y-1",
+                          answers.siege_type === "local_commercial"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Dans un local professionnel ou commercial loué par la société</p>
+                        <p className="text-xs text-gray-500 italic">Bureaux, boutique, entrepôt, coworking, etc.</p>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("siege_type", "local_gratuit")}
+                        className={cn(
+                          "text-left rounded-xl border-2 p-5 transition-all space-y-1",
+                          answers.siege_type === "local_gratuit"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Dans un local mis à disposition gratuitement (par un tiers)</p>
+                        <p className="text-xs text-gray-500 italic">Ex : pièce prêtée par un proche ou une entreprise sans contrepartie.</p>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("siege_type", "domiciliation")}
+                        className={cn(
+                          "text-left rounded-xl border-2 p-5 transition-all space-y-1",
+                          answers.siege_type === "domiciliation"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Via une société de domiciliation commerciale agréée</p>
+                        <p className="text-xs text-gray-500 italic">Exemples : Regus, Sofradom, Kandbaz, etc.</p>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("siege_type", "partenaire")}
+                        className={cn(
+                          "text-left rounded-xl border-2 p-5 transition-all space-y-1 md:col-span-2",
+                          answers.siege_type === "partenaire"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Je souhaite être mis en contact avec une société de domiciliation partenaire</p>
+                        <p className="text-xs text-gray-500 italic">Notre équipe vous proposera une solution adaptée.</p>
+                      </button>
+                    </div>
+
+                    {/* Adresse du siège */}
+                    {answers.siege_type && answers.siege_type !== "partenaire" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4 border-t border-gray-200 pt-5"
+                      >
+                        <p className="text-base font-bold text-[#1E3A8A]">Adresse du siège social</p>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse (numéro et rue)</label>
+                          <input
+                            type="text"
+                            value={answers.adresse_siege || ""}
+                            onChange={(e) => setAnswer("adresse_siege", e.target.value)}
+                            placeholder="Ex : 12 rue de la Paix"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Code postal</label>
+                            <input
+                              type="text"
+                              value={answers.siege_code_postal || ""}
+                              onChange={(e) => setAnswer("siege_code_postal", e.target.value)}
+                              placeholder="Ex : 75001"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Ville</label>
+                            <input
+                              type="text"
+                              value={answers.siege_ville || ""}
+                              onChange={(e) => setAnswer("siege_ville", e.target.value)}
+                              placeholder="Ex : Paris"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Info contextuelle selon le type */}
+                        {answers.siege_type === "domicile" && (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                            <p className="text-sm text-gray-700"><strong className="text-yellow-700">Rappel :</strong> la domiciliation au domicile personnel est possible pour une durée maximale de <strong>5 ans</strong> si le bail ou le règlement de copropriété l&apos;interdit. Pensez à vérifier votre bail.</p>
+                          </div>
+                        )}
+                        {answers.siege_type === "domiciliation" && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                            <p className="text-sm text-gray-700"><strong className="text-[#2563EB]">Important :</strong> un justificatif du contrat de domiciliation sera à fournir dans la partie &quot;Pièces justificatives&quot;.</p>
+                          </div>
+                        )}
+                        {answers.siege_type === "local_gratuit" && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                            <p className="text-sm text-gray-700"><strong className="text-[#2563EB]">Important :</strong> une attestation de mise à disposition gratuite signée par le propriétaire sera à fournir.</p>
+                          </div>
+                        )}
+                      </motion.div>
                     )}
-                    <input
-                      type="text"
-                      value={answers.adresse_siege || ""}
-                      onChange={(e) => setAnswer("adresse_siege", e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter" && answers.adresse_siege) { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); } }}
-                      placeholder={QUESTIONS[11].placeholder}
-                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
-                    />
+
+                    {answers.siege_type === "partenaire" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-blue-50 border border-blue-200 rounded-xl p-5"
+                      >
+                        <p className="text-sm text-gray-700">Notre équipe vous contactera après validation de votre dossier pour vous proposer une solution de domiciliation adaptée à vos besoins et à votre budget.</p>
+                      </motion.div>
+                    )}
                   </div>
                 )}
+
+                {/* ── Page: RBE — Bénéficiaires effectifs ── */}
+                {POST_PAGES[postPage]?.id === "rbe" && (() => {
+                  // Auto-detect: en SASU, l'associé unique détient 100% donc toujours >25%
+                  const isAssociePP = answers.type_associe === "physique";
+                  const isAssociePM = answers.type_associe === "morale";
+                  const associeName = isAssociePP
+                    ? [answers.associe_prenom, answers.associe_nom].filter(Boolean).join(" ") || "L'associé unique"
+                    : answers.associe_societe_nom || "La société associée";
+
+                  // Pour une PM: aucun associé PP >25% détecté → le bénéficiaire effectif est le Président (contrôle effectif)
+                  const presidentName = [answers.president_prenom, answers.president_nom].filter(Boolean).join(" ") || "Le Président";
+
+                  // Parse rbe_list
+                  const rbeList: { id: string; nom: string; prenom: string; date_naissance: string; lieu_naissance: string; nationalite: string; adresse: string; date_debut: string; modalite: string }[] = answers.rbe_list ? JSON.parse(answers.rbe_list) : [];
+
+                  return (
+                    <div className="space-y-6">
+                      <div className="text-center space-y-1">
+                        <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      </div>
+
+                      <AccordionItem title="Plus d'informations">
+                        <div className="text-sm text-gray-600 space-y-3">
+                          <p className="font-bold text-[#1E3A8A]">Qu&apos;est-ce que la déclaration des bénéficiaires effectifs (RBE) ?</p>
+                          <p>En application de la loi anti-blanchiment, toute société doit déclarer les <strong>personnes physiques</strong> qui détiennent, directement ou indirectement, <strong>plus de 25 % du capital ou des droits de vote</strong>.</p>
+                          <p>Si aucune personne physique ne dépasse ce seuil, le <strong>représentant légal</strong> (le Président) est déclaré comme bénéficiaire effectif par défaut.</p>
+                          <p>Lorsque l&apos;associé unique est une <strong>personne morale</strong>, il faut identifier la personne physique qui contrôle cette société (dirigeant ou actionnaire majoritaire).</p>
+                        </div>
+                      </AccordionItem>
+
+                      {/* Détection automatique */}
+                      <div className="space-y-4">
+                        <h3 className="text-base font-bold text-[#1E3A8A]">Option 1 : Choisissez une personne associée</h3>
+
+                        {isAssociePP && (
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+                            <p className="text-sm text-gray-700">
+                              <strong className="text-green-700">Détection automatique :</strong> {associeName} détient <strong>100 %</strong> du capital et des droits de vote (supérieur à 25 %).
+                            </p>
+                            <p className="text-sm text-gray-500 italic">
+                              En tant qu&apos;associé unique (personne physique), il/elle est automatiquement déclaré(e) bénéficiaire effectif.
+                            </p>
+                          </div>
+                        )}
+
+                        {isAssociePM && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+                            <p className="text-sm text-gray-700">
+                              <strong className="text-amber-700">Associé unique = Personne Morale :</strong> {associeName} détient 100 % du capital.
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              Aucun associé détenant plus de 25 % du capital ou des droits de vote n&apos;a été détecté.
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              Dans ce cas, le bénéficiaire effectif est <strong className="text-[#1E3A8A]">la personne exercant le contrôle effectif</strong>, c&apos;est-à-dire le Président. En effet, le <strong className="text-[#2563EB]">Président</strong> est considéré comme bénéficiaire effectif par défaut lorsque personne ne détient plus de 25 % du capital.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Carte du bénéficiaire détecté */}
+                        <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF]">
+                          {isAssociePM ? (
+                            <Building2 className="w-6 h-6 text-[#2563EB]" />
+                          ) : (
+                            <User className="w-6 h-6 text-[#2563EB]" />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">
+                              {isAssociePM ? `${associeName} (Le Président)` : associeName}
+                              <span className="text-xs font-normal text-gray-500 ml-2">
+                                {isAssociePP ? "100 % — associé unique" : "Contrôle effectif — Président"}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Date de début */}
+                      <div className="border-t border-gray-200 pt-5 space-y-5">
+                        <div className="bg-white border-2 border-gray-200 rounded-xl p-5 space-y-4">
+                          <div className="flex items-start gap-3">
+                            <Edit3 className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="font-bold text-[#1E3A8A]">{isAssociePM ? associeName : associeName}</p>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                              Quelle est la date de début de votre statut de bénéficiaire effectif ?
+                            </label>
+                            <p className="text-xs text-gray-500 mb-2">Cette date est identique à la date de signature des statuts lors de la création de la société.</p>
+                            <input
+                              type="date"
+                              value={answers.rbe_date_debut || ""}
+                              onChange={(e) => setAnswer("rbe_date_debut", e.target.value)}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                              Modalités du contrôle exercé
+                            </label>
+                            <div className="space-y-2">
+                              <button
+                                onClick={() => setAnswer("rbe_modalite", "capital")}
+                                className={cn(
+                                  "w-full text-left px-4 py-3 rounded-xl border-2 text-sm transition-all",
+                                  answers.rbe_modalite === "capital"
+                                    ? "border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB]"
+                                    : "border-gray-200 bg-white hover:border-[#2563EB]/50 text-gray-700"
+                                )}
+                              >
+                                Détention de plus de 25 % du capital
+                              </button>
+                              <button
+                                onClick={() => setAnswer("rbe_modalite", "droits_vote")}
+                                className={cn(
+                                  "w-full text-left px-4 py-3 rounded-xl border-2 text-sm transition-all",
+                                  answers.rbe_modalite === "droits_vote"
+                                    ? "border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB]"
+                                    : "border-gray-200 bg-white hover:border-[#2563EB]/50 text-gray-700"
+                                )}
+                              >
+                                Détention de plus de 25 % des droits de vote
+                              </button>
+                              <button
+                                onClick={() => setAnswer("rbe_modalite", "controle_effectif")}
+                                className={cn(
+                                  "w-full text-left px-4 py-3 rounded-xl border-2 text-sm transition-all",
+                                  answers.rbe_modalite === "controle_effectif"
+                                    ? "border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB]"
+                                    : "border-gray-200 bg-white hover:border-[#2563EB]/50 text-gray-700"
+                                )}
+                              >
+                                Contrôle effectif (représentant légal par défaut)
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Étape 2 : Ajouter bénéficiaire supplémentaire */}
+                      <div className="space-y-3">
+                        <h3 className="text-base font-bold text-[#1E3A8A]">Étape 2 : Remplissez et validez la fiche RBE de chaque associé</h3>
+
+                        <button
+                          onClick={() => {
+                            const newBe = { id: Date.now().toString(), nom: "", prenom: "", date_naissance: "", lieu_naissance: "", nationalite: "", adresse: "", date_debut: "", modalite: "" };
+                            setAnswer("rbe_list", JSON.stringify([...rbeList, newBe]));
+                            setAnswer("rbe_editing", newBe.id);
+                          }}
+                          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                        >
+                          Ajouter un bénéficiaire effectif supplémentaire <span className="text-lg">+</span>
+                        </button>
+
+                        {/* Liste des bénéficiaires supplémentaires */}
+                        {rbeList.map((be) => (
+                          <div key={be.id} className="space-y-3">
+                            <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF]">
+                              <User className="w-6 h-6 text-[#2563EB]" />
+                              <div className="flex-1">
+                                <p className="font-bold text-[#1E3A8A]">
+                                  {[be.prenom, be.nom].filter(Boolean).join(" ") || "Nouveau bénéficiaire"}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  const updated = rbeList.filter((b) => b.id !== be.id);
+                                  setAnswer("rbe_list", JSON.stringify(updated));
+                                  if (answers.rbe_editing === be.id) setAnswer("rbe_editing", "");
+                                }}
+                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="w-5 h-5 text-red-400" />
+                              </button>
+                            </div>
+
+                            {answers.rbe_editing === be.id && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="border-2 border-gray-200 rounded-xl p-5 space-y-4"
+                              >
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                    <input type="text" value={be.nom} onChange={(e) => { const updated = rbeList.map((b) => b.id === be.id ? { ...b, nom: e.target.value } : b); setAnswer("rbe_list", JSON.stringify(updated)); }} placeholder="Nom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                    <input type="text" value={be.prenom} onChange={(e) => { const updated = rbeList.map((b) => b.id === be.id ? { ...b, prenom: e.target.value } : b); setAnswer("rbe_list", JSON.stringify(updated)); }} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                    <input type="date" value={be.date_naissance} onChange={(e) => { const updated = rbeList.map((b) => b.id === be.id ? { ...b, date_naissance: e.target.value } : b); setAnswer("rbe_list", JSON.stringify(updated)); }} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                                    <input type="text" value={be.lieu_naissance} onChange={(e) => { const updated = rbeList.map((b) => b.id === be.id ? { ...b, lieu_naissance: e.target.value } : b); setAnswer("rbe_list", JSON.stringify(updated)); }} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                    <input type="text" value={be.nationalite} onChange={(e) => { const updated = rbeList.map((b) => b.id === be.id ? { ...b, nationalite: e.target.value } : b); setAnswer("rbe_list", JSON.stringify(updated)); }} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse</label>
+                                    <input type="text" value={be.adresse} onChange={(e) => { const updated = rbeList.map((b) => b.id === be.id ? { ...b, adresse: e.target.value } : b); setAnswer("rbe_list", JSON.stringify(updated)); }} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => setAnswer("rbe_editing", "")}
+                                  className="w-full py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                                >
+                                  Valider ce bénéficiaire
+                                </button>
+                              </motion.div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* ── Page 9: Président rémunéré ── */}
                 {POST_PAGES[postPage]?.id === "president_remunere" && (

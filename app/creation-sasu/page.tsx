@@ -233,7 +233,7 @@ const QUESTIONS: Question[] = [
 interface PageDef {
   questions: number[];
   sidebarStep: number;
-  special?: "brand_protection" | "micro_page" | "micro_search" | "pricing";
+  special?: "brand_protection" | "micro_page" | "micro_search" | "pricing" | "avocat_confirmation";
 }
 
 const STATIC_PAGES: PageDef[] = [
@@ -246,6 +246,7 @@ const STATIC_PAGES: PageDef[] = [
   { questions: [7],        sidebarStep: 2 },  // demarrage
   { questions: [8],        sidebarStep: 2 },  // activite_artisanale
   { questions: [],         sidebarStep: 3, special: "pricing" },         // 3 formules
+  { questions: [],         sidebarStep: 3, special: "avocat_confirmation" }, // avocat: confirmation page
   { questions: [10],       sidebarStep: 4 },  // regime_fiscal
   { questions: [9],        sidebarStep: 4 },  // objet_social
   { questions: [11],       sidebarStep: 4 },  // adresse_siege
@@ -687,15 +688,15 @@ const PRICING_PLANS = [
 ];
 
 const TARIF_DETAILS = [
-  { title: "Essentielle" },
-  { title: "Premium" },
-  { title: "Rédaction par un avocat" },
+  { title: "Essentielle — 139 € HT", description: "Idéal pour les créateurs autonomes. Vous remplissez le questionnaire, nous générons vos statuts et préparons votre dossier complet. Accompagnement par mail inclus." },
+  { title: "Premium — 199 € HT", description: "Notre formule la plus populaire. Un juriste dédié vérifie l'intégralité de votre dossier sous 24h ouvrées, avec garantie anti-rejet du greffe et accompagnement téléphonique." },
+  { title: "Rédaction par un avocat — 850 € HT", description: "Un avocat rédige vos statuts sur mesure et vous accompagne personnellement. Idéal pour les projets complexes ou les associés multiples." },
 ];
 
 const FRAIS_ANNEXES = [
-  { title: "Frais de greffe" },
-  { title: "Publication d'annonce légale" },
-  { title: "Déclaration des bénéficiaires effectifs (RBE)" },
+  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", description: "Frais versés au Greffe du Tribunal de Commerce pour l'immatriculation de votre SASU au Registre du Commerce et des Sociétés." },
+  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT", description: "Tarif forfaitaire fixé par décret pour les SAS/SASU. Obligatoire pour officialiser la création de votre société." },
+  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", description: "Frais pour la déclaration obligatoire des bénéficiaires effectifs, déposée en même temps que l'immatriculation." },
 ];
 
 function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
@@ -743,8 +744,10 @@ function PricingSection({ selected, onSelect }: { selected: string; onSelect: (v
             <p className="text-4xl font-bold text-[#1E293B] mb-1">
               {plan.price}€
             </p>
-            <p className="text-xs text-[#6B7280] mb-5">+ frais annexes obligatoires</p>
-            <ul className="space-y-2.5 mt-auto">
+            <p className="text-xs text-[#6B7280] mb-1">+ frais annexes obligatoires (~196,86 € HT)</p>
+            <p className="text-xs text-[#9CA3AF] mb-5">Prix HT — TVA applicable en sus</p>
+            <div className="border-t border-[#E5E7EB] pt-4 mt-auto" />
+            <ul className="space-y-2.5">
               {plan.features.map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
                   <span className="text-green-500 mt-0.5 shrink-0">●</span>
@@ -758,31 +761,42 @@ function PricingSection({ selected, onSelect }: { selected: string; onSelect: (v
 
       {/* On vous explique les tarifs */}
       <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les tarifs :</h3>
-      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden mb-8">
+      <div className="border border-[#D1D5DB] rounded-xl overflow-hidden mb-8">
         {TARIF_DETAILS.map((t) => (
-          <button
-            key={t.title}
-            onClick={() => setOpenTarif(openTarif === t.title ? null : t.title)}
-            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
-          >
-            <span className="font-semibold text-[#1E293B]">{t.title}</span>
-            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openTarif === t.title && "rotate-180")} />
-          </button>
+          <div key={t.title} className="border-b border-[#D1D5DB] last:border-b-0">
+            <button
+              onClick={() => setOpenTarif(openTarif === t.title ? null : t.title)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#F9FAFB] transition-colors"
+            >
+              <span className="font-semibold text-[#1E293B]">{t.title}</span>
+              <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform shrink-0", openTarif === t.title && "rotate-180")} />
+            </button>
+            {openTarif === t.title && (
+              <div className="px-5 pb-4 text-sm text-[#6B7280] leading-relaxed">{t.description}</div>
+            )}
+          </div>
         ))}
       </div>
 
       {/* Frais annexes */}
-      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les frais annexes a la creation d&apos;une societe :</h3>
-      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden">
+      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">Frais annexes obligatoires (environ 196,86 € HT) :</h3>
+      <div className="border border-[#D1D5DB] rounded-xl overflow-hidden">
         {FRAIS_ANNEXES.map((f) => (
-          <button
-            key={f.title}
-            onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
-            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
-          >
-            <span className="font-semibold text-[#1E293B]">{f.title}</span>
-            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openFrais === f.title && "rotate-180")} />
-          </button>
+          <div key={f.title} className="border-b border-[#D1D5DB] last:border-b-0">
+            <button
+              onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
+              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#F9FAFB] transition-colors"
+            >
+              <div className="flex-1">
+                <span className="font-semibold text-[#1E293B]">{f.title}</span>
+              </div>
+              <span className="font-bold text-[#2563EB] mr-3 shrink-0">{f.amount}</span>
+              <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform shrink-0", openFrais === f.title && "rotate-180")} />
+            </button>
+            {openFrais === f.title && (
+              <div className="px-5 pb-4 text-sm text-[#6B7280] leading-relaxed">{f.description}</div>
+            )}
+          </div>
         ))}
       </div>
     </div>
@@ -959,6 +973,7 @@ export default function CreationSASUPage() {
   const pages = STATIC_PAGES.filter((p) => {
     if (p.special === "brand_protection") return answers.proteger_nom === "oui";
     if (p.special === "micro_search") return answers.statut_micro === "oui";
+    if (p.special === "avocat_confirmation") return answers.formule === "avocat";
     return true;
   });
 
@@ -1056,6 +1071,44 @@ export default function CreationSASUPage() {
               selected={answers.formule || ""}
               onSelect={(val) => setAnswer("formule", val)}
             />
+          )}
+          {page.special === "avocat_confirmation" && (
+            <div className="mb-10">
+              <div className="rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF] p-8 text-center">
+                <div className="flex justify-center mb-4">
+                  <CheckCircle2 className="w-16 h-16 text-[#2563EB]" />
+                </div>
+                <h2 className="text-[22px] font-bold text-[#1E293B] mb-3">
+                  Dossier enregistré avec succès
+                </h2>
+                <p className="text-[#6B7280] leading-relaxed max-w-lg mx-auto mb-6">
+                  Vous avez choisi la formule <strong className="text-[#2563EB]">Rédaction par un avocat</strong>.
+                  Un avocat spécialisé va prendre contact avec vous <strong>sous 24h ouvrées</strong> pour
+                  rédiger vos statuts sur mesure et vous accompagner dans votre création de SASU.
+                </p>
+                <div className="bg-white rounded-lg border border-[#D1D5DB] p-5 max-w-md mx-auto text-left">
+                  <h3 className="font-semibold text-[#1E293B] mb-3">Récapitulatif tarifaire :</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-[#6B7280]">Formule avocat</span>
+                      <span className="font-semibold text-[#1E293B]">850,00 € HT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#6B7280]">Frais annexes obligatoires</span>
+                      <span className="font-semibold text-[#1E293B]">~196,86 € HT</span>
+                    </div>
+                    <div className="border-t border-[#E5E7EB] pt-2 flex justify-between">
+                      <span className="font-bold text-[#1E293B]">Total estimé HT</span>
+                      <span className="font-bold text-[#2563EB]">~1 046,86 € HT</span>
+                    </div>
+                    <p className="text-xs text-[#9CA3AF] mt-1">+ TVA applicable et options éventuelles</p>
+                  </div>
+                </div>
+                <p className="text-sm text-[#6B7280] mt-6">
+                  Vous recevrez un email de confirmation avec les détails de votre rendez-vous.
+                </p>
+              </div>
+            </div>
           )}
 
           {/* Micro page: show sub-questions conditionally */}

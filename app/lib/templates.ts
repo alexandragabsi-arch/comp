@@ -319,3 +319,342 @@ LE PRÉSIDENT DE SÉANCE
 
 L'ASSOCIÉ / LE CESSIONNAIRE
 [Nom, Prénom] — Date : _____ — Signature : _____`;
+
+// ── Attestation d'origine patrimoniale des apports (bien propre – SASU) ─────
+export const TEMPLATE_ATTESTATION_ORIGINE = `ATTESTATION D'ORIGINE PATRIMONIALE DES APPORTS
+(Personne physique — SASU / SAS — Apport en numéraire ou en nature)
+
+===
+
+## I — IDENTITÉ DE L'ASSOCIÉ(E) UNIQUE
+
+Je soussigné(e),
+
+**Civilité / Nom & Prénom :** {CiviliteAssocie} {PrenomAssocie} {NomAssocie}
+**Adresse personnelle :** {AdresseComplete-Associe}
+**Né(e) le :** {DateNaissance-Associe} **à** {LieuNaissance-Associe}
+**Qualité :** Associé(e) unique
+
+---
+
+Déclare sur l'honneur que :
+
+{BLOC_APPORT_NUMERAIRE}
+
+{BLOC_APPORT_NATURE}
+
+---
+
+## II — ENGAGEMENT ET CERTIFICATION
+
+Je certifie que les renseignements ci-dessus sont exacts et fournis sous ma seule responsabilité, afin de garantir l'origine des biens apportés et d'éviter toute contestation ultérieure.
+
+---
+
+Fait à {VilleSignature}, le {CurrentDateTime}
+
+L'ASSOCIÉ(E) UNIQUE
+{CiviliteAssocie} {PrenomAssocie} {NomAssocie}
+
+Signature :
+
+
+`;
+
+// ── Déclaration de dispense de nomination d'un commissaire aux apports ──────
+export const TEMPLATE_DISPENSE_CAA = `DÉCLARATION DE DISPENSE DE NOMINATION D'UN COMMISSAIRE AUX APPORTS
+(Article L. 227-1 du Code de commerce — renvoi aux articles L. 225-8 et L. 225-8-1)
+
+===
+
+## I — IDENTIFICATION DE LA SOCIÉTÉ EN FORMATION
+
+**Dénomination sociale :** {Denomination-Sociale}
+**Forme juridique :** Société par actions simplifiée unipersonnelle (SASU)
+**Capital social :** {montant-capital-chiffre} €
+**Siège social :** {Adresse-Complete}
+**RCS :** Société en cours de formation
+
+---
+
+## II — IDENTIFICATION DE L'ASSOCIÉ UNIQUE APPORTEUR
+
+{BLOC_IDENTITE_ASSOCIE}
+
+(ci-après dénommé « l'Associé unique »)
+
+---
+
+## III — DESCRIPTION DES APPORTS EN NATURE
+
+L'Associé unique déclare effectuer les apports en nature suivants à la société :
+
+{BLOC_LISTE_APPORTS_NATURE}
+
+**Valeur totale des apports en nature : {montant-nature-total-chiffre} €**
+
+---
+
+## IV — DÉCLARATION SUR LA DISPENSE DE COMMISSAIRE AUX APPORTS
+
+L'Associé unique déclare expressément que :
+
+• Aucun apport en nature n'a une valeur supérieure à **30 000 euros** ;
+• La valeur totale des apports en nature **n'excède pas la moitié du capital social** ;
+• En conséquence, les conditions légales de dispense de nomination d'un commissaire aux apports sont réunies, conformément aux dispositions de l'article L. 227-1 du Code de commerce.
+
+En application de ces dispositions, l'Associé unique décide de **ne pas recourir** à la désignation d'un commissaire aux apports.
+
+---
+
+## V — RESPONSABILITÉ DE L'ASSOCIÉ UNIQUE
+
+L'Associé unique reconnaît expressément que :
+
+• Il est **personnellement responsable** pendant une durée de **cinq (5) ans**, à compter de l'immatriculation de la société, de la valeur attribuée aux apports en nature ;
+• Cette responsabilité s'applique à l'égard des tiers, notamment en cas de surévaluation des apports ;
+• Il déclare que l'évaluation retenue pour chaque apport est **sincère, réelle et conforme** à la valeur vénale des biens apportés.
+
+---
+
+## VI — DÉCISION DE L'ASSOCIÉ UNIQUE
+
+En conséquence de ce qui précède, l'Associé unique décide de :
+
+• **Constater** la réalisation des apports en nature tels que décrits ci-dessus ;
+• **Approuver** leur évaluation ;
+• **Dispenser** la société de la nomination d'un commissaire aux apports ;
+• **Intégrer** la présente déclaration aux statuts constitutifs de la société et au dossier déposé auprès du Guichet unique (INPI).
+
+---
+
+## VII — DÉCLARATION SUR L'HONNEUR
+
+L'Associé unique déclare sur l'honneur que les informations figurant dans la présente déclaration sont **exactes, complètes et sincères**.
+
+---
+
+## VIII — SIGNATURE
+
+Fait à {VilleSignature}, le {CurrentDateTime}
+
+{BLOC_SIGNATURE_ASSOCIE}
+
+---
+
+### ANNEXES (le cas échéant)
+
+• Justificatifs d'évaluation des biens (factures, expertises, devis, contrats, inventaires, etc.)
+• Décision de l'organe compétent de la personne morale apporteuse (si applicable)
+`;
+
+// ── Déclaration de non-condamnation et de filiation ─────────────────────────
+export const TEMPLATE_NON_CONDAMNATION = `DÉCLARATION DE NON-CONDAMNATION ET DE FILIATION
+
+===
+
+## IDENTITÉ DU DÉCLARANT
+
+{BLOC_IDENTITE_DECLARANT}
+
+---
+
+## FILIATION
+
+Fils / Fille de **Monsieur {PrenomPere} {NomPere}** et de **Madame {PrenomMere} {NomMere}**.
+
+---
+
+## DÉCLARATION
+
+Déclare, conformément aux dispositions de l'**article A 123-51 du Code de commerce**, relatif au Registre du commerce et des sociétés, n'avoir jamais fait l'objet d'aucune condamnation pénale, ni de sanction civile ou administrative de nature à m'interdire :
+
+• d'exercer une activité commerciale ;
+• ou de gérer, administrer ou diriger une personne morale.
+
+---
+
+## SIGNATURE
+
+Fait à {VilleSignature}, le {CurrentDateTime}
+
+{BLOC_SIGNATURE_DECLARANT}
+
+Signature :
+
+
+`;
+
+// ── Attestation de mise à disposition / hébergement de locaux ────────────────
+export const TEMPLATE_ATTESTATION_HEBERGEMENT = `ATTESTATION DE MISE À DISPOSITION OU D'HÉBERGEMENT DE LOCAUX
+(Document polyvalent — valable pour domiciliation à titre gratuit ou onéreux, bail non au nom de la SASU)
+
+===
+
+**Ce document est valable pour :**
+• Hébergement à titre gratuit (domicile dirigeant / associé / tiers)
+• Mise à disposition de locaux professionnels
+• Bail non établi au nom de la SASU
+
+---
+
+## I — IDENTIFICATION DE LA SOCIÉTÉ BÉNÉFICIAIRE
+
+**Dénomination sociale :** {Denomination-Sociale}
+**Forme juridique :** Société par actions simplifiée unipersonnelle (SASU)
+**Capital social :** {montant-capital-chiffre} €
+**Adresse du siège social déclaré :** {Adresse-Complete}
+**RCS :** Société en cours de formation
+
+---
+
+## II — IDENTIFICATION DU METTEUR À DISPOSITION / HÉBERGEUR
+
+{BLOC_IDENTITE_HEBERGEUR}
+
+(ci-après dénommé « le Metteur à disposition »)
+
+---
+
+## III — DESCRIPTION DES LOCAUX
+
+**Adresse complète des locaux :** {Adresse-Complete}
+
+**Nature des locaux :** {NatureLocaux}
+
+---
+
+## IV — TITRE D'OCCUPATION DES LOCAUX
+
+Le Metteur à disposition déclare disposer d'un droit régulier d'occupation sur les locaux en qualité de :
+
+{TitreOccupation}
+
+---
+
+## V — MODALITÉS DE MISE À DISPOSITION
+
+La présente attestation vaut :
+
+{ModalitesMiseDisposition}
+
+---
+
+## VI — USAGE AUTORISÉ
+
+Les locaux sont mis à disposition de la société pour les besoins suivants :
+
+{UsageAutorise}
+
+---
+
+## VII — DURÉE — RÉSILIATION
+
+La mise à disposition est consentie **pour une durée indéterminée**. Elle pourra être résiliée à tout moment, sous réserve d'un préavis raisonnable, sauf disposition contractuelle contraire.
+
+---
+
+## VIII — DÉCLARATIONS ET AUTORISATIONS
+
+Le Metteur à disposition déclare et garantit que :
+
+• Il dispose de la **capacité juridique** et des **droits nécessaires** pour consentir la présente mise à disposition ;
+• La domiciliation de la société **n'est pas contraire** au bail, au règlement de copropriété ou à toute convention applicable ;
+• Il **autorise expressément** la société à utiliser l'adresse indiquée comme siège social ;
+• Il autorise l'utilisation de cette adresse auprès de l'ensemble des **administrations et organismes compétents** (INPI, RCS, services fiscaux et sociaux, partenaires, etc.).
+
+---
+
+## IX — DÉCLARATION SUR L'HONNEUR
+
+Le Metteur à disposition déclare sur l'honneur que les informations figurant dans la présente attestation sont **exactes, sincères et complètes**.
+
+---
+
+## X — SIGNATURE
+
+Fait à {VilleSignature}, le {CurrentDateTime}
+
+{BLOC_SIGNATURE_HEBERGEUR}
+
+---
+
+### PIÈCES À JOINDRE (selon le cas)
+
+• Justificatif du droit d'occupation des locaux (bail, acte de propriété, autorisation du bailleur, etc.)
+• Justificatif de domicile du metteur à disposition (moins de 3 mois)
+• Pièce d'identité du signataire
+• Pouvoir de signature (si personne morale)
+`;
+
+// ── Attestation d'origine de biens communs des apports (art. 1832-2 C. civ.) ──
+export const TEMPLATE_ATTESTATION_BIENS_COMMUNS = `ATTESTATION D'ORIGINE DE BIENS COMMUNS DES APPORTS — SASU
+(Document unique — SAS / SASU — Numéraire & Nature — Bien commun / PACS)
+(Article 1832-2 du Code civil — non applicable aux SAS/SASU)
+
+===
+
+## I — IDENTITÉ DE L'ASSOCIÉ(E) UNIQUE
+
+Je soussigné(e),
+
+**Civilité / Nom & Prénom :** {CiviliteAssocie} {PrenomAssocie} {NomAssocie}
+**Adresse personnelle :** {AdressePersonnelle}
+**Né(e) le :** {DateNaissance-Associe} **à** {LieuNaissance-Associe}
+**Qualité :** Associé(e) unique
+
+---
+
+Déclare sur l'honneur que les apports réalisés dans le cadre de la constitution de la société dénommée **{Denomination-Sociale}** proviennent des sources patrimoniales suivantes :
+
+{BLOC_APPORT_NUMERAIRE}
+
+{BLOC_APPORT_NATURE}
+
+---
+
+## II — ENGAGEMENT DE L'ASSOCIÉ(E) UNIQUE
+
+Je certifie que :
+
+• les informations ci-dessus sont **exactes** ;
+• lorsque des biens communs sont utilisés, mon conjoint / partenaire en a été **informé** ;
+• je reconnais que l'article 1832-2 du Code civil **ne s'applique pas** aux SAS et SASU, et qu'il ne confère aucun droit au conjoint de revendiquer la qualité d'associé ;
+• la signature éventuelle du conjoint est obtenue à titre de **simple précaution patrimoniale**, dans le seul but d'éviter toute contestation ultérieure.
+
+---
+
+Fait à {VilleSignature}, le {CurrentDateTime}
+
+L'ASSOCIÉ(E) UNIQUE
+{CiviliteAssocie} {PrenomAssocie} {NomAssocie}
+
+Signature :
+
+
+---
+
+## III — ATTESTATION DU CONJOINT / PARTENAIRE
+
+Je soussigné(e),
+
+**Civilité / Nom & Prénom :** {CiviliteConjoint} {PrenomConjoint} {NomConjoint}
+**Qualité :** {QualiteConjoint}
+**Adresse :** ___________________________________________________
+
+Déclare avoir été informé(e) de l'utilisation de fonds communs ou de biens communs pour les apports réalisés dans la société **{Denomination-Sociale}**.
+
+Je reconnais avoir pris connaissance de cette opération. Je comprends que cette information **n'emporte aucun droit** sur la qualité d'associé.
+
+---
+
+Fait à {VilleSignature}, le {CurrentDateTime}
+
+Signature du conjoint / partenaire :
+
+
+`;
+
+// ── Modèle d'annonce légale SASU ────────────────────────────────────────────
+export const TEMPLATE_ANNONCE_LEGALE_SASU = `{CONTENU_ANNONCE}
+`;

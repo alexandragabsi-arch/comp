@@ -1122,7 +1122,8 @@ function PostPaymentObjetPrincipal({
 // Flat list of pre-payment question indices (before pricing)
 const PRE_PAYMENT_QUESTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // indices into QUESTIONS[]
 
-function shouldShowQuestion(qIndex: number, answers: Record<string, string>): boolean {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function shouldShowQuestion(qIndex: number, answers: Record<string, any>): boolean {
   const q = QUESTIONS[qIndex];
   if (q.id === "action_micro" || q.id === "fermeture_micro") return answers.statut_micro === "oui";
   return true;
@@ -1135,10 +1136,12 @@ type Phase = "intro" | "questions" | "brand_protection" | "micro_search" | "pric
 export default function CreationSASUPage() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentQ, setCurrentQ] = useState(0); // index into activeQuestions
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [answers, setAnswers] = useState<Record<string, any>>({});
   const [postPage, setPostPage] = useState(0); // for post-payment pages
 
-  const setAnswer = (id: string, val: string) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setAnswer = (id: string, val: any) =>
     setAnswers((prev) => ({ ...prev, [id]: val }));
 
   // Build active pre-payment questions
@@ -2874,30 +2877,157 @@ export default function CreationSASUPage() {
 
                       {answers.formule_capital === "personnalisee" && (
                         <>
-                          {/* Apport en nature — PP et PM */}
+                          {/* Apport en nature — PP et PM — liste dynamique */}
                           <div>
-                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Apport en nature (€)</label>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Apport(s) en nature</label>
                             <p className="text-sm text-gray-500 mb-2">Biens matériels ou immatériels apportés à la société (véhicule, matériel, fonds de commerce, brevet, etc.).</p>
-                            <input
-                              type="number"
-                              min="0"
-                              value={answers.apport_nature || ""}
-                              onChange={(e) => setAnswer("apport_nature", e.target.value)}
-                              placeholder="0"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                            />
-                            {(Number(answers.apport_nature) || 0) > 0 && (
-                              <div className="mt-2">
-                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Description de l&apos;apport en nature</label>
-                                <textarea
-                                  value={answers.apport_nature_description || ""}
-                                  onChange={(e) => setAnswer("apport_nature_description", e.target.value)}
-                                  placeholder="Décrivez le(s) bien(s) apporté(s) : type, marque, estimation..."
-                                  rows={3}
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 resize-none transition-all"
-                                />
+
+                            {/* Liste des apports en nature */}
+                            {(answers.apports_nature_liste || []).map((apport: { description: string; valeur: string; bien_type?: string }, idx: number) => (
+                              <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-semibold text-[#1E3A8A]">Bien N° {idx + 1}</span>
+                                  <button
+                                    onClick={() => {
+                                      const list = [...(answers.apports_nature_liste || [])];
+                                      list.splice(idx, 1);
+                                      setAnswer("apports_nature_liste", list);
+                                      // Recalculate apport_nature total
+                                      const total = list.reduce((s: number, a: { valeur: string }) => s + (Number(a.valeur) || 0), 0);
+                                      setAnswer("apport_nature", String(total));
+                                    }}
+                                    className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                  >
+                                    Supprimer
+                                  </button>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Description du bien</label>
+                                  <textarea
+                                    value={apport.description || ""}
+                                    onChange={(e) => {
+                                      const list = [...(answers.apports_nature_liste || [])];
+                                      list[idx] = { ...list[idx], description: e.target.value };
+                                      setAnswer("apports_nature_liste", list);
+                                    }}
+                                    placeholder="Type, marque, modèle, caractéristiques..."
+                                    rows={2}
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 resize-none transition-all"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Valeur déclarée (€)</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={apport.valeur || ""}
+                                    onChange={(e) => {
+                                      const list = [...(answers.apports_nature_liste || [])];
+                                      list[idx] = { ...list[idx], valeur: e.target.value };
+                                      setAnswer("apports_nature_liste", list);
+                                      // Recalculate apport_nature total
+                                      const total = list.reduce((s: number, a: { valeur: string }) => s + (Number(a.valeur) || 0), 0);
+                                      setAnswer("apport_nature", String(total));
+                                    }}
+                                    placeholder="0"
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                  />
+                                </div>
+                                {/* Bien propre / commun — si marié communauté ou pacsé indivision */}
+                                {answers.type_associe !== "morale" && (
+                                  answers.situation_matrimoniale === "marie" && (answers.regime_matrimonial === "communaute_reduite" || answers.regime_matrimonial === "communaute_universelle" || answers.regime_matrimonial === "participation_acquets")
+                                  || answers.situation_matrimoniale === "pacse"
+                                ) && (
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Ce bien est :</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <button
+                                        onClick={() => {
+                                          const list = [...(answers.apports_nature_liste || [])];
+                                          list[idx] = { ...list[idx], bien_type: "propre" };
+                                          setAnswer("apports_nature_liste", list);
+                                        }}
+                                        className={cn(
+                                          "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                          apport.bien_type === "propre" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                        )}
+                                      >
+                                        Bien propre
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const list = [...(answers.apports_nature_liste || [])];
+                                          list[idx] = { ...list[idx], bien_type: "commun" };
+                                          setAnswer("apports_nature_liste", list);
+                                        }}
+                                        className={cn(
+                                          "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                          apport.bien_type === "commun" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                        )}
+                                      >
+                                        Bien commun
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            ))}
+
+                            {/* Bouton ajouter un apport en nature */}
+                            <button
+                              onClick={() => {
+                                const list = [...(answers.apports_nature_liste || [])];
+                                list.push({ description: "", valeur: "", bien_type: "propre" });
+                                setAnswer("apports_nature_liste", list);
+                              }}
+                              className="w-full py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <span className="text-lg">+</span> Ajouter un apport en nature
+                            </button>
+
+                            {/* Total nature calculé */}
+                            {(answers.apports_nature_liste || []).length > 0 && (() => {
+                              const totalNature = (answers.apports_nature_liste || []).reduce((s: number, a: { valeur: string }) => s + (Number(a.valeur) || 0), 0);
+                              const capitalSocial = Number(answers.capital_social) || 0;
+                              const maxApportIndividuel = Math.max(...(answers.apports_nature_liste || []).map((a: { valeur: string }) => Number(a.valeur) || 0));
+                              const needsCAA = maxApportIndividuel > 30000 || (capitalSocial > 0 && totalNature > capitalSocial / 2);
+                              const canDispense = !needsCAA;
+
+                              return (
+                                <div className="mt-2 space-y-3">
+                                  <div className="text-sm text-gray-600">
+                                    <strong>Total apports en nature :</strong> {totalNature.toLocaleString("fr-FR")} €
+                                  </div>
+
+                                  {/* Règle CAA */}
+                                  {canDispense ? (
+                                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+                                      <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-semibold text-green-800">Dispense de commissaire aux apports possible</p>
+                                        <p className="text-xs text-green-700">
+                                          Aucun apport ne dépasse 30 000 € et le total ne dépasse pas 50 % du capital social. Une déclaration de dispense sera générée automatiquement.
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                                      <Shield className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-semibold text-red-800">Commissaire aux apports obligatoire</p>
+                                        <p className="text-xs text-red-700">
+                                          {maxApportIndividuel > 30000
+                                            ? `Un apport en nature dépasse 30 000 € (${maxApportIndividuel.toLocaleString("fr-FR")} €).`
+                                            : `Le total des apports en nature (${totalNature.toLocaleString("fr-FR")} €) dépasse 50 % du capital social (${(capitalSocial / 2).toLocaleString("fr-FR")} €).`
+                                          }
+                                          {" "}La nomination d&apos;un commissaire aux apports est obligatoire (art. L. 227-1 C. com.).
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* Apport en industrie — PP uniquement */}
@@ -2991,17 +3121,53 @@ export default function CreationSASUPage() {
 
                               {answers.declaration_remploi === "oui" && (
                                 <div className="bg-white border border-yellow-200 rounded-xl p-4 space-y-3">
-                                  <p className="text-xs text-gray-600">
-                                    Un modèle de déclaration de remploi sera joint à votre dossier. Ce document atteste que les fonds proviennent de deniers propres et que les actions souscrites constituent un bien propre.
+                                  <p className="text-sm text-gray-600">
+                                    Une <strong>attestation d&apos;origine patrimoniale des apports</strong> (bien propre) sera automatiquement générée avec vos informations et jointe à votre dossier.
                                   </p>
-                                  <a
-                                    href="/modeles/declaration-remploi-sasu.pdf"
-                                    download
+                                  <button
+                                    onClick={async () => {
+                                      const { buildAttestationOrigine } = await import("@/app/lib/generateSasuDocuments");
+                                      const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                                      const text = buildAttestationOrigine(answers);
+                                      const blob = await generateSasuDocumentDocx(text);
+                                      const url = URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.href = url;
+                                      a.download = "attestation-origine-patrimoniale.docx";
+                                      a.click();
+                                      URL.revokeObjectURL(url);
+                                    }}
                                     className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
                                   >
                                     <Download className="w-4 h-4" />
-                                    Télécharger le modèle de déclaration de remploi
-                                  </a>
+                                    Télécharger l&apos;attestation d&apos;origine patrimoniale (bien propre)
+                                  </button>
+                                </div>
+                              )}
+
+                              {answers.declaration_remploi === "non" && (
+                                <div className="bg-white border border-yellow-200 rounded-xl p-4 space-y-3">
+                                  <p className="text-sm text-gray-600">
+                                    Vos apports seront qualifiés de <strong>biens communs</strong>. Une attestation sera générée avec un bloc de signature pour votre conjoint / partenaire, afin de prévenir toute contestation ultérieure.
+                                  </p>
+                                  <button
+                                    onClick={async () => {
+                                      const { buildAttestationBiensCommuns } = await import("@/app/lib/generateSasuDocuments");
+                                      const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                                      const text = buildAttestationBiensCommuns(answers);
+                                      const blob = await generateSasuDocumentDocx(text);
+                                      const url = URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.href = url;
+                                      a.download = "attestation-origine-biens-communs.docx";
+                                      a.click();
+                                      URL.revokeObjectURL(url);
+                                    }}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    Télécharger l&apos;attestation biens communs
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -4343,6 +4509,38 @@ export default function CreationSASUPage() {
                       {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
                     </div>
 
+                    {/* Attestation de mise à disposition / hébergement — génération auto */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Landmark className="w-5 h-5 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Attestation de mise à disposition / hébergement</p>
+                          <p className="text-xs text-gray-500">Document à faire signer par l&apos;hébergeur ou le metteur à disposition</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const { buildAttestationHebergement } = await import("@/app/lib/generateSasuDocuments");
+                          const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                          const text = buildAttestationHebergement(answers);
+                          const blob = await generateSasuDocumentDocx(text);
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = "attestation-hebergement-mise-a-disposition.docx";
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        <Download className="w-4 h-4" />
+                        Télécharger l&apos;attestation d&apos;hébergement
+                      </button>
+                      <p className="text-xs text-gray-500">À compléter par les champs manquants, imprimer et faire signer par l&apos;hébergeur.</p>
+                    </div>
+
                     {/* Attestation de dépôt du capital */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
@@ -4363,25 +4561,111 @@ export default function CreationSASUPage() {
                       {answers.justif_depot_capital && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_depot_capital}</p>}
                     </div>
 
-                    {/* Déclaration de non-condamnation */}
+                    {/* Déclaration de non-condamnation et de filiation — génération auto */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
                           <Shield className="w-5 h-5 text-[#2563EB]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de non-condamnation</p>
-                          <p className="text-xs text-gray-500">Attestation sur l&apos;honneur du président</p>
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de non-condamnation et de filiation</p>
+                          <p className="text-xs text-gray-500">Générée automatiquement à partir de vos informations</p>
                         </div>
-                        {answers.justif_non_condamnation && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
                       </div>
-                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        {answers.justif_non_condamnation ? "Remplacer le fichier" : "Importer le document"}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_non_condamnation", e.target.files[0].name); }} />
-                      </label>
-                      {answers.justif_non_condamnation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_non_condamnation}</p>}
+                      <button
+                        onClick={async () => {
+                          const { buildNonCondamnation } = await import("@/app/lib/generateSasuDocuments");
+                          const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                          const text = buildNonCondamnation({
+                            ...answers,
+                            prenom_pere: answers.president_pere_nom?.split(" ").slice(1).join(" ") || answers.president_rp_pere_nom?.split(" ").slice(1).join(" "),
+                            nom_pere: answers.president_pere_nom?.split(" ")[0] || answers.president_rp_pere_nom?.split(" ")[0],
+                            prenom_mere: answers.president_mere_nom?.split(" ").slice(1).join(" ") || answers.president_rp_mere_nom?.split(" ").slice(1).join(" "),
+                            nom_mere: answers.president_mere_nom?.split(" ")[0] || answers.president_rp_mere_nom?.split(" ")[0],
+                          });
+                          const blob = await generateSasuDocumentDocx(text);
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = "declaration-non-condamnation-filiation.docx";
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        <Download className="w-4 h-4" />
+                        Télécharger la déclaration de non-condamnation
+                      </button>
+                      <p className="text-xs text-gray-500">Document à imprimer, signer et joindre au dossier.</p>
                     </div>
+
+                    {/* Dispense de commissaire aux apports — si apport en nature */}
+                    {(answers.apports_nature_liste || []).length > 0 && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <FileUp className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de dispense de commissaire aux apports</p>
+                            <p className="text-xs text-gray-500">Générée automatiquement — requise si apport en nature sans commissaire</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const { buildDispenseCAA } = await import("@/app/lib/generateSasuDocuments");
+                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildDispenseCAA(answers);
+                            const blob = await generateSasuDocumentDocx(text);
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "declaration-dispense-commissaire-apports.docx";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          <Download className="w-4 h-4" />
+                          Télécharger la déclaration de dispense
+                        </button>
+                        <p className="text-xs text-gray-500">Document à imprimer, signer et joindre au dossier d&apos;immatriculation.</p>
+                      </div>
+                    )}
+
+                    {/* Attestation d'origine patrimoniale — si déclaration remploi = oui */}
+                    {answers.declaration_remploi === "oui" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Heart className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Attestation d&apos;origine patrimoniale des apports</p>
+                            <p className="text-xs text-gray-500">Générée automatiquement — bien propre</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const { buildAttestationOrigine } = await import("@/app/lib/generateSasuDocuments");
+                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildAttestationOrigine(answers);
+                            const blob = await generateSasuDocumentDocx(text);
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "attestation-origine-patrimoniale.docx";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          <Download className="w-4 h-4" />
+                          Télécharger l&apos;attestation d&apos;origine patrimoniale
+                        </button>
+                        <p className="text-xs text-gray-500">Document à imprimer, signer et joindre au dossier.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 

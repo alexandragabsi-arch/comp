@@ -3662,6 +3662,16 @@ export default function CreationSASUPage() {
                                   </div>
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                      <input type="date" value={answers.president_rp_date_naissance || ""} onChange={(e) => setAnswer("president_rp_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
+                                      <input type="text" value={answers.president_rp_lieu_naissance || ""} onChange={(e) => setAnswer("president_rp_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
                                       <input type="text" value={answers.president_rp_adresse || ""} onChange={(e) => setAnswer("president_rp_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
@@ -3685,14 +3695,16 @@ export default function CreationSASUPage() {
                                   </div>
 
                                   {/* Non-condamnation du RP */}
+                                  <p className="text-base font-bold text-[#1E3A8A] pt-2">Déclaration de non-condamnation du représentant permanent</p>
+                                  <p className="text-sm text-gray-500">En tant que représentant permanent de la société dirigeante, cette déclaration est faite en votre nom personnel.</p>
                                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
                                     <label className="flex items-start gap-3 cursor-pointer">
                                       <input type="checkbox" checked={answers.president_rp_non_condamnation === "true"} onChange={(e) => setAnswer("president_rp_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                      <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                      <span className="text-base text-gray-700">Je soussigné(e), en qualité de représentant permanent de la société dirigeante, atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
                                     </label>
                                     <label className="flex items-start gap-3 cursor-pointer">
                                       <input type="checkbox" checked={answers.president_rp_non_interdiction === "true"} onChange={(e) => setAnswer("president_rp_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                      <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                      <span className="text-base text-gray-700">Je soussigné(e), en qualité de représentant permanent de la société dirigeante, atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
                                     </label>
                                   </div>
                                 </div>
@@ -4608,7 +4620,9 @@ export default function CreationSASUPage() {
                           <User className="w-5 h-5 text-[#2563EB]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Pièce d&apos;identité du président</p>
+                          <p className="font-semibold text-[#1E3A8A] text-sm">
+                            Pièce d&apos;identité {answers.president_type === "morale" ? "du représentant permanent" : "du président"}
+                          </p>
                           <p className="text-xs text-gray-500">Carte d&apos;identité ou passeport (recto-verso)</p>
                         </div>
                         {answers.justif_identite && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
@@ -4640,6 +4654,28 @@ export default function CreationSASUPage() {
                           <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_emancipation", e.target.files[0].name); }} />
                         </label>
                         {answers.justif_emancipation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_emancipation}</p>}
+                      </div>
+                    )}
+
+                    {/* Extrait Kbis de la société dirigeante — si président PM */}
+                    {answers.president_type === "morale" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Extrait Kbis de la société dirigeante</p>
+                            <p className="text-xs text-gray-500">Kbis de moins de 3 mois de {answers.president_pm_nom || "la société présidente"}</p>
+                          </div>
+                          {answers.justif_kbis_president && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_kbis_president ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_kbis_president", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_kbis_president && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_kbis_president}</p>}
                       </div>
                     )}
 
@@ -4722,8 +4758,15 @@ export default function CreationSASUPage() {
                           <Shield className="w-5 h-5 text-[#2563EB]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de non-condamnation et de filiation</p>
-                          <p className="text-xs text-gray-500">Générée automatiquement à partir de vos informations</p>
+                          <p className="font-semibold text-[#1E3A8A] text-sm">
+                            Déclaration de non-condamnation et de filiation
+                            {answers.president_type === "morale" && " (représentant permanent)"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {answers.president_type === "morale"
+                              ? "Générée au nom du représentant permanent de la société dirigeante"
+                              : "Générée automatiquement à partir de vos informations"}
+                          </p>
                         </div>
                       </div>
                       <button

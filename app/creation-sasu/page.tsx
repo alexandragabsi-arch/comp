@@ -1161,10 +1161,10 @@ export default function CreationSASUPage() {
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
+    { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
     { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_fiscal" },        // IS / IR
     { id: "adresse_siege" },        // adresse
-    { id: "president_remunere" },   // rémunération
   ];
 
   // Determine sidebar step from phase
@@ -3121,6 +3121,208 @@ export default function CreationSASUPage() {
                         )}
                       </motion.div>
                     )}
+                  </div>
+                )}
+
+                {/* ── Mandat du Président ── */}
+                {POST_PAGES[postPage]?.id === "mandat_president" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>Même si la SASU n&apos;a qu&apos;un associé, il est utile de prévoir ces règles pour une éventuelle transformation en SAS.</p>
+                      </div>
+                    </AccordionItem>
+
+                    {/* ── Majorité nomination/révocation ── */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A]">Pour les prochaines désignations de Président (en cas de changement), quelle majorité souhaitez-vous prévoir dans les statuts pour sa nomination et sa révocation ?</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("majorite_president", "simple")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.majorite_president === "simple" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <p className="text-sm font-semibold text-[#2563EB]">Majorité simple</p>
+                          <p className="text-xs text-gray-500 mt-1">décision adoptée à la majorité des voix des associés (≥ 50 % des parts sociales).</p>
+                        </button>
+                        <button onClick={() => setAnswer("majorite_president", "renforcee")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.majorite_president === "renforcee" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <p className="text-sm font-semibold text-[#2563EB]">Majorité renforcée</p>
+                          <p className="text-xs text-gray-500 mt-1">décision adoptée à une majorité plus élevée (à préciser ci-dessous).</p>
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("majorite_president", "unanimite")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.majorite_president === "unanimite" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <p className="text-sm font-semibold text-[#2563EB]">Unanimité</p>
+                          <p className="text-xs text-gray-500 mt-1">décision adoptée uniquement si 100 % des associés votent en faveur.</p>
+                        </button>
+                      </div>
+                      {answers.majorite_president === "renforcee" && (
+                        <div className="mt-2">
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Pourcentage de majorité renforcée (%)</label>
+                          <input type="number" min="51" max="99" value={answers.majorite_president_pct || "66"} onChange={(e) => setAnswer("majorite_president_pct", e.target.value)} placeholder="66" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                        </div>
+                      )}
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* ── Révocation ── */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A]">Révocation du mandat du Président</p>
+                        <p className="text-xs text-gray-500 italic">Dans quelles conditions l&apos;associé unique peut-il mettre fin au mandat ? La révocation ne doit néanmoins pas être abusive.</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("revocation_president", "libre")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.revocation_president === "libre" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Libre (sans motif)</span>
+                        </button>
+                        <button onClick={() => setAnswer("revocation_president", "juste_motif")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.revocation_president === "juste_motif" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Pour juste motif uniquement</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* ── Durée du mandat ── */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A]">Durée du mandat du Président</p>
+                        <p className="text-xs text-gray-500">Combien de temps le président exercera ses fonctions ?</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("duree_mandat", "indeterminee")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.duree_mandat === "indeterminee" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Durée indéterminée (choix le plus courant)</span>
+                        </button>
+                        <button onClick={() => setAnswer("duree_mandat", "determinee")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.duree_mandat === "determinee" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Durée déterminée</span>
+                        </button>
+                      </div>
+                      {answers.duree_mandat === "determinee" && (
+                        <div className="mt-2">
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Durée du mandat (en années)</label>
+                          <input type="number" min="1" max="99" value={answers.duree_mandat_annees || ""} onChange={(e) => setAnswer("duree_mandat_annees", e.target.value)} placeholder="Ex : 3" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                        </div>
+                      )}
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* ── Renouvellement ── */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A]">Renouvellement du mandat du Président</p>
+                        <p className="text-xs text-gray-500">À la fin du mandat, peut-il être reconduit ?</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("renouvellement_mandat", "renouvelable")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.renouvellement_mandat === "renouvelable" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Renouvelable</span>
+                        </button>
+                        <button onClick={() => setAnswer("renouvellement_mandat", "non_renouvelable")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.renouvellement_mandat === "non_renouvelable" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Non renouvelable</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* ── Rémunération ── */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A]">Souhaitez-vous que le Président soit rémunéré pour ses fonctions ?</p>
+                        <p className="text-xs text-gray-500 italic">(Le montant de la rémunération ne doit néanmoins pas être précisé dans les statuts.)</p>
+                      </div>
+                      <button onClick={() => setAnswer("president_remunere", "non")} className={cn("w-full text-left px-5 py-4 rounded-xl border-2 transition-all", answers.president_remunere === "non" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                        <p className="text-sm font-semibold text-[#2563EB]">Non</p>
+                        <p className="text-xs text-gray-500">Le Président n&apos;est pas rémunéré.</p>
+                      </button>
+                      <button onClick={() => setAnswer("president_remunere", "oui_ulterieur")} className={cn("w-full text-left px-5 py-4 rounded-xl border-2 transition-all", answers.president_remunere === "oui_ulterieur" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                        <p className="text-sm font-semibold text-[#2563EB]">Oui, mais à décider ultérieurement par l&apos;associé unique</p>
+                        <p className="text-xs text-gray-500">Le Président pourra être rémunéré selon les conditions fixées par l&apos;associé unique</p>
+                      </button>
+                      <button onClick={() => setAnswer("president_remunere", "oui_office")} className={cn("w-full text-left px-5 py-4 rounded-xl border-2 transition-all", answers.president_remunere === "oui_office" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                        <p className="text-sm font-semibold text-[#2563EB]">Oui, rémunération prévue d&apos;office</p>
+                        <p className="text-xs text-gray-500">Le Président est rémunéré dans les conditions fixées par l&apos;associé unique</p>
+                      </button>
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* ── Limitation des pouvoirs ── */}
+                    <div className="space-y-3">
+                      <AccordionItem title="Plus d'informations">
+                        <div className="text-sm text-gray-600 space-y-2">
+                          <p><strong className="text-[#2563EB]">Le saviez-vous ?</strong> Le Président engage toujours la SASU vis-à-vis des tiers. Les limites éventuellement prévues dans les statuts n&apos;ont qu&apos;un effet interne : elles servent uniquement à encadrer ses pouvoirs vis-à-vis de l&apos;associé unique. <em className="text-[#2563EB] font-semibold">En cas de dépassement, la société reste engagée, mais le Président peut être sanctionné en interne.</em></p>
+                        </div>
+                      </AccordionItem>
+
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A]">Souhaitez-vous limiter certains pouvoirs du Président dans les statuts ?</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("limitation_pouvoirs", "oui")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.limitation_pouvoirs === "oui" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Oui</span>
+                        </button>
+                        <button onClick={() => setAnswer("limitation_pouvoirs", "non")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.limitation_pouvoirs === "non" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Non</span>
+                        </button>
+                      </div>
+
+                      {answers.limitation_pouvoirs === "oui" && (
+                        <div className="space-y-4 mt-3">
+                          <div>
+                            <p className="text-sm font-bold text-[#1E3A8A]">Limitation des pouvoirs du Président</p>
+                            <p className="text-sm text-gray-600 mt-1">Conformément à l&apos;article L.227-6 du Code de commerce, l&apos;associé unique décide que certaines décisions ne pourront pas être prises par le Président seul.</p>
+                          </div>
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <p>L&apos;accord préalable de l&apos;associé unique est requis pour les actes suivants :</p>
+                            <ul className="list-disc pl-5 space-y-1">
+                              <li>l&apos;acquisition, la vente ou l&apos;apport de tout bien immobilier ;</li>
+                              <li>la souscription de tout emprunt au nom de la société ;</li>
+                              <li>la constitution de garanties ou sûretés réelles (hypothèques, nantissements, etc.) ;</li>
+                              <li>et, plus généralement, tout engagement, contrat ou dépense excédant un montant de [_] euros HT.</li>
+                            </ul>
+                            <p className="mt-2">Tant que la société ne comporte qu&apos;un seul associé, celui-ci prend seul toutes les décisions, y compris celles nécessitant son accord préalable au titre de la présente clause.</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-[#1E3A8A] mb-1">Montant de limitation :</p>
+                            <p className="text-xs text-gray-500 mb-2">100 000 euros maximum</p>
+                            <input type="number" min="1" max="100000" value={answers.montant_limitation || ""} onChange={(e) => setAnswer("montant_limitation", e.target.value)} placeholder="Ex : 12000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* ── Majorité décisions futures (entrée associés) ── */}
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A]">En cas d&apos;évolution de la société (entrée de nouveaux associés), ces décisions seront soumises à l&apos;approbation des associés, quelle majorité souhaitez-vous prévoir ?</p>
+                        <p className="text-xs text-gray-500 italic">L&apos;associé unique reste seul décisionnaire à ce stade.</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("majorite_decisions", "simple")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.majorite_decisions === "simple" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Majorité simple (≥ 50 % des actions)</span>
+                        </button>
+                        <button onClick={() => setAnswer("majorite_decisions", "renforcee")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.majorite_decisions === "renforcee" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Majorité renforcée</span>
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onClick={() => setAnswer("majorite_decisions", "unanimite")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.majorite_decisions === "unanimite" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
+                          <span className="text-sm font-semibold text-[#2563EB]">Unanimité des associés</span>
+                        </button>
+                      </div>
+                      {answers.majorite_decisions === "renforcee" && (
+                        <div className="mt-2">
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Pourcentage de majorité renforcée (%)</label>
+                          <input type="number" min="51" max="99" value={answers.majorite_decisions_pct || "66"} onChange={(e) => setAnswer("majorite_decisions_pct", e.target.value)} placeholder="66" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -1150,17 +1150,19 @@ export default function CreationSASUPage() {
   // Post-payment pages (step 4: dossier juridique) — dynamic based on formule_capital
   const POST_PAGES = [
     { id: "denomination" },        // dénomination + sigle + nom commercial + enseigne
+    { id: "type_structure" },      // classique / holding passive / holding animatrice
     { id: "objet_principal" },      // catégories visuelles + sous-catégories
     { id: "objet_social" },         // texte libre
     { id: "activite_description" }, // activité principale + secondaires + code NAF
     { id: "activite_saisonniere" }, // saisonnière / ambulante
-    { id: "associe_unique" },       // type d'associé + infos
+    { id: "associe_unique" },       // type d'associé + infos + situation matrimoniale
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
     { id: "depot_capital" },        // établissement bancaire + date dépôt
-    { id: "regime_fiscal" },        // IS / IR
+    { id: "regime_fiscal" },        // IS / IR (adapté holdings)
+    { id: "regime_tva" },           // régime de TVA
     { id: "adresse_siege" },        // adresse
     { id: "date_lieu" },            // date et lieu de signature des statuts
     { id: "recapitulatif" },         // récapitulatif de toutes les informations
@@ -1795,6 +1797,147 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
+                {/* ── Page: Type de structure ── */}
+                {POST_PAGES[postPage]?.id === "type_structure" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Quel type de structure souhaitez-vous créer ?</p>
+                    </div>
+
+                    <AccordionItem title="Quelle différence entre ces structures ?">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p><strong>Société classique (opérationnelle) :</strong> Exerce directement une activité commerciale, artisanale, libérale ou de services.</p>
+                        <p><strong>Holding passive (pure) :</strong> Détient des participations dans d&apos;autres sociétés, perçoit des dividendes et plus-values. Aucune activité opérationnelle.</p>
+                        <p><strong>Holding animatrice :</strong> Détient des participations ET anime activement ses filiales (direction stratégique, services de gestion). Permet de bénéficier du dispositif <strong>Dutreil</strong> et de l&apos;apport-cession (150-0 B ter CGI).</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-3">
+                      {[
+                        { value: "classique", label: "Société classique (opérationnelle)", subtitle: "Exerce directement une activité", icon: Building2 },
+                        { value: "holding_passive", label: "Holding passive (pure)", subtitle: "Détention de participations uniquement", icon: Landmark },
+                        { value: "holding_animatrice", label: "Holding animatrice", subtitle: "Détention + animation des filiales", icon: Users },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setAnswer("type_structure", opt.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.type_structure === opt.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <opt.icon className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{opt.label}</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{opt.subtitle}</p>
+                          </div>
+                          {answers.type_structure === opt.value && (
+                            <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Options spécifiques holding animatrice */}
+                    {answers.type_structure === "holding_animatrice" && (
+                      <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-5 space-y-4">
+                        <p className="text-sm font-semibold text-[#1E3A8A]">Options holding animatrice</p>
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Convention de management fees</label>
+                            <p className="text-xs text-gray-500 mb-2">Facturation de prestations de direction aux filiales</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("management_fees", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.management_fees === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui
+                              </button>
+                              <button
+                                onClick={() => setAnswer("management_fees", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.management_fees === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Convention de trésorerie (cash pooling)</label>
+                            <p className="text-xs text-gray-500 mb-2">Centralisation de la trésorerie du groupe</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("cash_pooling", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.cash_pooling === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui
+                              </button>
+                              <button
+                                onClick={() => setAnswer("cash_pooling", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.cash_pooling === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Pacte Dutreil (transmission)</label>
+                            <p className="text-xs text-gray-500 mb-2">Prévoir un engagement de conservation pour bénéficier de l&apos;exonération Dutreil (art. 787 B CGI)</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("pacte_dutreil", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.pacte_dutreil === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui
+                              </button>
+                              <button
+                                onClick={() => setAnswer("pacte_dutreil", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.pacte_dutreil === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Info holding passive */}
+                    {answers.type_structure === "holding_passive" && (
+                      <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Attention :</strong> Une holding passive ne peut pas bénéficier du dispositif Dutreil ni de l&apos;exonération d&apos;ISF/IFI sur les biens professionnels. Si vous envisagez une transmission patrimoniale, la holding animatrice est plus avantageuse.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* ── Page 1: Objet principal (catégories visuelles) ── */}
                 {POST_PAGES[postPage]?.id === "objet_principal" && (
                   <PostPaymentObjetPrincipal
@@ -2142,6 +2285,92 @@ export default function CreationSASUPage() {
                             placeholder="Adresse complète"
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
                           />
+                        </div>
+
+                        {/* Situation matrimoniale */}
+                        <div className="border-t border-gray-200 pt-4 space-y-3">
+                          <label className="flex items-center gap-2 text-sm font-bold text-[#1E3A8A]">
+                            <Heart className="w-4 h-4" />
+                            Situation matrimoniale
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { value: "celibataire", label: "Célibataire" },
+                              { value: "marie", label: "Marié(e)" },
+                              { value: "pacse", label: "Pacsé(e)" },
+                              { value: "divorce", label: "Divorcé(e)" },
+                              { value: "veuf", label: "Veuf/Veuve" },
+                            ].map((s) => (
+                              <button
+                                key={s.value}
+                                onClick={() => setAnswer("situation_matrimoniale", s.value)}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.situation_matrimoniale === s.value
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Si marié : régime matrimonial */}
+                          {answers.situation_matrimoniale === "marie" && (
+                            <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
+                              <div>
+                                <label className="block text-xs font-semibold text-[#1E3A8A] mb-1">Nom du conjoint</label>
+                                <input
+                                  type="text"
+                                  value={answers.conjoint_nom || ""}
+                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                  placeholder="Prénom et nom du conjoint"
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-semibold text-[#1E3A8A] mb-1">Régime matrimonial</label>
+                                <div className="space-y-2">
+                                  {[
+                                    { value: "communaute_reduite", label: "Communauté réduite aux acquêts (défaut)" },
+                                    { value: "separation_biens", label: "Séparation de biens" },
+                                    { value: "participation_acquets", label: "Participation aux acquêts" },
+                                    { value: "communaute_universelle", label: "Communauté universelle" },
+                                  ].map((r) => (
+                                    <button
+                                      key={r.value}
+                                      onClick={() => setAnswer("regime_matrimonial", r.value)}
+                                      className={cn(
+                                        "w-full text-left p-3 rounded-xl border-2 text-sm transition-all",
+                                        answers.regime_matrimonial === r.value
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A] font-medium"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      {r.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Si pacsé : nom du partenaire */}
+                          {answers.situation_matrimoniale === "pacse" && (
+                            <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
+                              <div>
+                                <label className="block text-xs font-semibold text-[#1E3A8A] mb-1">Nom du partenaire de PACS</label>
+                                <input
+                                  type="text"
+                                  value={answers.conjoint_nom || ""}
+                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                  placeholder="Prénom et nom du partenaire"
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -2712,6 +2941,67 @@ export default function CreationSASUPage() {
                                     rows={3}
                                     className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 resize-none transition-all"
                                   />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Déclaration de remploi / bien propre — si marié communauté ou pacsé indivision */}
+                          {answers.type_associe !== "morale" && (
+                            answers.situation_matrimoniale === "marie" && (answers.regime_matrimonial === "communaute_reduite" || answers.regime_matrimonial === "communaute_universelle" || answers.regime_matrimonial === "participation_acquets")
+                            || answers.situation_matrimoniale === "pacse"
+                          ) && (
+                            <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-5 space-y-3">
+                              <div className="flex items-start gap-3">
+                                <Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                                <div className="space-y-2">
+                                  <p className="text-sm text-yellow-800 font-semibold">Apport de biens communs / indivis</p>
+                                  <p className="text-xs text-yellow-700">
+                                    {answers.situation_matrimoniale === "marie"
+                                      ? "En régime de communauté, les fonds utilisés pour l'apport peuvent être des biens communs. Votre conjoint doit être informé de cet apport (art. 1832-2 C. civ. — inapplicable en SAS, mais recommandé). Vous pouvez effectuer une déclaration de remploi pour qualifier l'apport de bien propre."
+                                      : "En PACS avec indivision, les fonds apportés peuvent être indivis. Vous pouvez effectuer une déclaration de remploi pour qualifier l'apport de bien propre."
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-yellow-800 mb-2">Souhaitez-vous faire une déclaration de remploi (bien propre) ?</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <button
+                                    onClick={() => setAnswer("declaration_remploi", "oui")}
+                                    className={cn(
+                                      "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                      answers.declaration_remploi === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-yellow-300 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                    )}
+                                  >
+                                    Oui
+                                  </button>
+                                  <button
+                                    onClick={() => setAnswer("declaration_remploi", "non")}
+                                    className={cn(
+                                      "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                      answers.declaration_remploi === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-yellow-300 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                    )}
+                                  >
+                                    Non
+                                  </button>
+                                </div>
+                              </div>
+
+                              {answers.declaration_remploi === "oui" && (
+                                <div className="bg-white border border-yellow-200 rounded-xl p-4 space-y-3">
+                                  <p className="text-xs text-gray-600">
+                                    Un modèle de déclaration de remploi sera joint à votre dossier. Ce document atteste que les fonds proviennent de deniers propres et que les actions souscrites constituent un bien propre.
+                                  </p>
+                                  <a
+                                    href="/modeles/declaration-remploi-sasu.pdf"
+                                    download
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    Télécharger le modèle de déclaration de remploi
+                                  </a>
                                 </div>
                               )}
                             </div>
@@ -3429,39 +3719,292 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Régime fiscal ── */}
+                {/* ── Régime fiscal (adapté holdings) ── */}
                 {POST_PAGES[postPage]?.id === "regime_fiscal" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Régime d&apos;imposition des bénéfices</p>
                     </div>
-                    {QUESTIONS[10].info && (
-                      <AccordionItem title={QUESTIONS[10].info.title}>
-                        <div className="text-sm text-gray-600">{QUESTIONS[10].info.content}</div>
-                      </AccordionItem>
+
+                    {/* Info holding : IS obligatoire */}
+                    {(answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                        <Landmark className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                        <div className="text-sm text-[#1E3A8A] space-y-1">
+                          <p><strong>Holding :</strong> l&apos;impôt sur les sociétés (IS) est le régime naturel et recommandé pour une holding.</p>
+                          <p>Le régime mère-fille permet d&apos;exonérer <strong>95 %</strong> des dividendes reçus des filiales (5 % de quote-part de frais réintégrée).</p>
+                          {answers.type_structure === "holding_animatrice" && (
+                            <p>En tant que holding animatrice, vous pouvez aussi bénéficier de l&apos;intégration fiscale si vous détenez au moins 95 % d&apos;une filiale.</p>
+                          )}
+                        </div>
+                      </div>
                     )}
+
+                    <AccordionItem title="Le saviez-vous ?">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>L&apos;<strong>IS</strong> est le régime par défaut de la SASU. Taux réduit de <strong>15 %</strong> sur les 42 500 premiers euros de bénéfice, puis <strong>25 %</strong>.</p>
+                        <p>L&apos;<strong>IR</strong> est une option temporaire (5 ans max) : les bénéfices sont imposés directement au nom de l&apos;associé unique.</p>
+                        {(answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                          <p><strong>Régime mère-fille :</strong> Si la holding détient au moins 5 % du capital d&apos;une filiale depuis plus de 2 ans, les dividendes reçus sont exonérés à 95 %.</p>
+                        )}
+                      </div>
+                    </AccordionItem>
+
                     <div className="space-y-3">
-                      {QUESTIONS[10].choices?.map((c) => (
+                      <button
+                        onClick={() => setAnswer("regime_fiscal", "is")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                          answers.regime_fiscal === "is"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Landmark className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Impôt sur les sociétés (IS) — recommandé</p>
+                          <p className="text-xs text-gray-500 mt-0.5">15 % jusqu&apos;à 42 500 €, puis 25 %</p>
+                        </div>
+                        {answers.regime_fiscal === "is" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+
+                      <button
+                        onClick={() => setAnswer("regime_fiscal", "ir")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                          answers.regime_fiscal === "ir"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <User className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Impôt sur le revenu (IR) — option temporaire, 5 ans max</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Bénéfices imposés au barème progressif de l&apos;associé</p>
+                        </div>
+                        {answers.regime_fiscal === "ir" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+                    </div>
+
+                    {/* Options spécifiques IS + holding */}
+                    {answers.regime_fiscal === "is" && (answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="space-y-4 border-t border-gray-200 pt-4">
+                        <p className="text-sm font-bold text-[#1E3A8A]">Options fiscales holding</p>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Régime mère-fille</label>
+                          <p className="text-xs text-gray-500 mb-2">Exonération de 95 % des dividendes reçus des filiales (détention ≥ 5 % depuis 2 ans)</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("regime_mere_fille", "oui")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                answers.regime_mere_fille === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Oui, opter
+                            </button>
+                            <button
+                              onClick={() => setAnswer("regime_mere_fille", "non")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                answers.regime_mere_fille === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Non
+                            </button>
+                          </div>
+                        </div>
+
+                        {answers.type_structure === "holding_animatrice" && (
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Intégration fiscale</label>
+                            <p className="text-xs text-gray-500 mb-2">Consolider les résultats des filiales détenues à 95 % ou plus</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("integration_fiscale", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.integration_fiscale === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui, opter
+                              </button>
+                              <button
+                                onClick={() => setAnswer("integration_fiscale", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.integration_fiscale === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Warning IR + holding */}
+                    {answers.regime_fiscal === "ir" && (answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Attention :</strong> L&apos;option IR pour une holding est rarement avantageuse. Les dividendes perçus des filiales seraient imposés au barème progressif sans bénéficier du régime mère-fille. L&apos;IS est fortement recommandé pour les holdings.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Page: Régime de TVA ── */}
+                {POST_PAGES[postPage]?.id === "regime_tva" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Régime de TVA</p>
+                    </div>
+
+                    {/* Info spécifique holding */}
+                    {(answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                        <Landmark className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                        <div className="text-sm text-[#1E3A8A] space-y-1">
+                          {answers.type_structure === "holding_passive" && (
+                            <>
+                              <p><strong>Holding passive :</strong> Les dividendes et plus-values de cession de titres sont <strong>hors champ TVA</strong>.</p>
+                              <p>Si la holding n&apos;a aucune prestation de services imposable, elle n&apos;est pas assujettie à la TVA et ne peut pas récupérer la TVA sur ses achats.</p>
+                            </>
+                          )}
+                          {answers.type_structure === "holding_animatrice" && (
+                            <>
+                              <p><strong>Holding animatrice :</strong> La facturation de management fees aux filiales est soumise à la TVA.</p>
+                              <p>Vous pouvez récupérer la TVA sur vos achats (conseils juridiques, comptabilité, etc.) au prorata de votre activité taxable.</p>
+                              <p>Un <strong>coefficient de déduction</strong> (prorata) doit être calculé entre activités taxables (management fees) et non taxables (dividendes).</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <AccordionItem title="Le saviez-vous ?">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p><strong>Franchise en base :</strong> Pas de TVA facturée ni récupérée. Plafonds : 91 900 € (ventes) / 36 800 € (services).</p>
+                        <p><strong>Réel simplifié :</strong> Déclaration annuelle (CA12) + 2 acomptes semestriels. Pour les CA ≤ 840 000 € (ventes) ou 254 000 € (services).</p>
+                        <p><strong>Réel normal :</strong> Déclaration mensuelle (CA3). Obligatoire au-delà des seuils du simplifié ou sur option.</p>
+                        <p><strong>Mini-réel :</strong> IS au réel simplifié + TVA au réel normal. Permet de récupérer la TVA mensuellement.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-3">
+                      {/* Franchise en base — pas pour les holdings animatrices avec management fees */}
+                      {!(answers.type_structure === "holding_animatrice" && answers.management_fees === "oui") && (
                         <button
-                          key={c.value}
-                          onClick={() => setAnswer("regime_fiscal", c.value)}
+                          onClick={() => setAnswer("regime_tva", "franchise")}
                           className={cn(
                             "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
-                            answers.regime_fiscal === c.value
+                            answers.regime_tva === "franchise"
                               ? "border-[#2563EB] bg-blue-50"
                               : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
                           )}
                         >
                           <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
-                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                            <Shield className="w-6 h-6 text-[#2563EB]" />
                           </div>
                           <div className="flex-1">
-                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                            <p className="font-bold text-[#1E3A8A]">Franchise en base de TVA</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Pas de TVA facturée ni récupérée — idéal pour les petites structures</p>
                           </div>
-                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                          {answers.regime_tva === "franchise" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
                         </button>
-                      ))}
+                      )}
+
+                      <button
+                        onClick={() => setAnswer("regime_tva", "reel_simplifie")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                          answers.regime_tva === "reel_simplifie"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <CreditCard className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Réel simplifié</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Déclaration annuelle + 2 acomptes — le plus courant</p>
+                        </div>
+                        {answers.regime_tva === "reel_simplifie" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+
+                      <button
+                        onClick={() => setAnswer("regime_tva", "reel_normal")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                          answers.regime_tva === "reel_normal"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Coins className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Réel normal</p>
+                          <p className="text-xs text-gray-500 mt-0.5">Déclaration mensuelle — récupération rapide de TVA</p>
+                        </div>
+                        {answers.regime_tva === "reel_normal" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+
+                      {/* Mini-réel : option spéciale */}
+                      <button
+                        onClick={() => setAnswer("regime_tva", "mini_reel")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                          answers.regime_tva === "mini_reel"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Zap className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Mini-réel</p>
+                          <p className="text-xs text-gray-500 mt-0.5">IS simplifié + TVA mensuelle — bon compromis pour récupérer la TVA rapidement</p>
+                        </div>
+                        {answers.regime_tva === "mini_reel" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
                     </div>
+
+                    {/* Holding passive : option non assujetti */}
+                    {answers.type_structure === "holding_passive" && (
+                      <div className="border-t border-gray-200 pt-4">
+                        <button
+                          onClick={() => setAnswer("regime_tva", "non_assujetti")}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.regime_tva === "non_assujetti"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <X className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">Non assujetti à la TVA</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Holding pure sans prestation de services — pas de TVA</p>
+                          </div>
+                          {answers.regime_tva === "non_assujetti" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -3609,11 +4152,22 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
+                    {/* Type de structure */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Type de structure</h3>
+                        <button onClick={() => setPostPage(1)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p><span className="text-gray-500">Structure :</span> <span className="text-gray-800 font-medium">{answers.type_structure === "classique" ? "Société classique" : answers.type_structure === "holding_passive" ? "Holding passive" : answers.type_structure === "holding_animatrice" ? "Holding animatrice" : "—"}</span></p>
+                      </div>
+                    </div>
+
                     {/* Objet social */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Objet social</h3>
-                        <button onClick={() => setPostPage(2)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(3)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800">{answers.objet_social || "—"}</p>
@@ -3624,7 +4178,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Associé unique</h3>
-                        <button onClick={() => setPostPage(5)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(6)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_associe === "physique" ? "Personne physique" : answers.type_associe === "morale" ? "Personne morale" : "—"}</span></p>
@@ -3647,7 +4201,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Capital social</h3>
-                        <button onClick={() => setPostPage(6)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(7)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_capital === "fixe" ? "Capital fixe" : answers.type_capital === "variable" ? "Capital variable" : "—"}</span></p>
@@ -3687,8 +4241,23 @@ export default function CreationSASUPage() {
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime fiscal</h3>
                         <button onClick={() => setPostPage(12)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
-                      <div className="px-5 py-3 text-sm">
+                      <div className="px-5 py-3 text-sm space-y-1">
                         <p><span className="text-gray-500">Régime :</span> <span className="text-gray-800 font-medium">{answers.regime_fiscal === "is" ? "Impôt sur les sociétés (IS)" : answers.regime_fiscal === "ir" ? "Impôt sur le revenu (IR)" : "—"}</span></p>
+                        {answers.regime_mere_fille === "oui" && <p><span className="text-gray-500">Mère-fille :</span> <span className="text-gray-800 font-medium">Oui</span></p>}
+                        {answers.integration_fiscale === "oui" && <p><span className="text-gray-500">Intégration fiscale :</span> <span className="text-gray-800 font-medium">Oui</span></p>}
+                      </div>
+                    </div>
+
+                    {/* Régime TVA */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime de TVA</h3>
+                        <button onClick={() => setPostPage(13)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p><span className="text-gray-500">TVA :</span> <span className="text-gray-800 font-medium">
+                          {answers.regime_tva === "franchise" ? "Franchise en base" : answers.regime_tva === "reel_simplifie" ? "Réel simplifié" : answers.regime_tva === "reel_normal" ? "Réel normal" : answers.regime_tva === "mini_reel" ? "Mini-réel" : answers.regime_tva === "non_assujetti" ? "Non assujetti" : "—"}
+                        </span></p>
                       </div>
                     </div>
 
@@ -3696,7 +4265,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Siège social</h3>
-                        <button onClick={() => setPostPage(13)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(14)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800 font-medium">{answers.adresse_siege || "—"}</p>
@@ -3707,7 +4276,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Date et lieu de signature</h3>
-                        <button onClick={() => setPostPage(14)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(15)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Date :</span> <span className="text-gray-800 font-medium">{answers.date_signature || "—"}</span></p>

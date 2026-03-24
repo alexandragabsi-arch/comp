@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 type QuestionType = "choice" | "input" | "textarea";
 
-interface Choice { value: string; label: string }
+interface Choice { value: string; label: string; subtitle?: string }
 
 interface Question {
   id: string;
@@ -104,24 +104,51 @@ const QUESTIONS: Question[] = [
     },
   },
   {
-    id: "objet_social",
-    title: "Quel est l'objet social de votre SASU ?",
+    id: "statut_micro",
+    title: "Êtes-vous actuellement micro-entrepreneur (auto-entrepreneur / entreprise individuelle) ?",
     description:
-      "Décrivez précisément l'activité principale de votre société.",
-    type: "textarea",
-    placeholder: "Ex : Conseil en stratégie digitale, développement de sites web...",
-    info: {
-      title: "Conseil pratique",
-      content: (
-        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em>.</p>
-      ),
-    },
+      "Vous êtes micro-entrepreneur si vous possédez un SIRET qui vous permet d'exercer une activité en votre nom personnel",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Oui, je suis micro-entrepreneur (auto-entrepreneur / EI)" },
+      { value: "non", label: "Non, je ne suis pas micro-entrepreneur" },
+    ],
+  },
+  {
+    id: "action_micro",
+    title: "Que souhaitez-vous faire de votre activité actuelle ?",
+    type: "choice",
+    choices: [
+      { value: "transformer", label: "Transformer ma micro-entreprise en SASU", subtitle: "Vous conservez vos clients, votre nom commercial et vos contrats actuels. Votre micro sera fermée après la création de SASU." },
+      { value: "garder", label: "Garder ma micro + créer la SASU à côté", subtitle: "Deux structures séparées, selon vos besoins." },
+      { value: "arreter", label: "Arrêter la micro et repartir via la SASU", subtitle: "Nouveau départ, simple et propre." },
+    ],
+  },
+  {
+    id: "fermeture_micro",
+    title: "Souhaitez-vous que nous nous occupions de la fermeture ou du transfert de votre micro-entreprise ?",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Oui (frais supplémentaires +89 € HT)" },
+      { value: "non", label: "Non, je ferai la démarche moi-même" },
+    ],
+  },
+  {
+    id: "demarrage",
+    title: "Quand souhaitez-vous démarrer votre projet ?",
+    type: "choice",
+    choices: [
+      { value: "asap", label: "Dès que possible (un de nos experts vous accompagne)" },
+      { value: "semaine", label: "Dans la semaine" },
+      { value: "mois", label: "Dans le mois" },
+      { value: "ne_sais_pas", label: "Je ne sais pas encore" },
+    ],
   },
   {
     id: "activite_artisanale",
     title: "Votre activité est-elle artisanale ? (Coiffeur, boulanger, plombier, etc...)",
     description:
-      "Une activité artisanale est une activité manuelle (ex. : coiffure, pâtisserie, couture sur mesure, mécanique, plomberie, etc.).",
+      "Une activité artisanale est une activité manuelle (ex. : coiffure, pâtisserie, couture sur mesure, mécanique, plomberie, etc.). De même, si vous fabriquez ou réparez quelque chose et que vous le vendez ensuite, votre activité est considérée comme partiellement artisanale.",
     type: "choice",
     optional: true,
     choices: [
@@ -133,11 +160,25 @@ const QUESTIONS: Question[] = [
       title: "Le saviez-vous ?",
       content: (
         <>
-          <p><strong>Toute activité artisanale doit être immatriculée au Répertoire des Métiers (RM)</strong>, tenu par la <strong>CMA</strong>.</p>
+          <p><strong>Toute activité artisanale doit être immatriculée au Répertoire des Métiers (RM)</strong>, tenu par la <strong>Chambre de Métiers et de l&apos;Artisanat (CMA)</strong>. Il s&apos;agit d&apos;une <strong>obligation légale distincte</strong> de l&apos;immatriculation au <strong>Registre du Commerce et des Sociétés (RCS)</strong>.</p>
           <p className="mt-2 italic text-[#2563EB]">
-            Supplément de 79 € HT si nous réalisons cette démarche pour vous.
+            Si vous souhaitez que nous réalisions cette démarche pour vous, un supplément de 79 € HT sera appliqué, auquel s&apos;ajoutent les frais légaux obligatoires (frais CMA et frais de greffe), dont le montant exact sera précisé au moment du paiement.
           </p>
         </>
+      ),
+    },
+  },
+  {
+    id: "objet_social",
+    title: "Quel est l'objet social de votre SASU ?",
+    description:
+      "Décrivez précisément l'activité principale de votre société.",
+    type: "textarea",
+    placeholder: "Ex : Conseil en stratégie digitale, développement de sites web...",
+    info: {
+      title: "Conseil pratique",
+      content: (
+        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em>.</p>
       ),
     },
   },
@@ -185,18 +226,6 @@ const QUESTIONS: Question[] = [
       ),
     },
   },
-  /* ── Step 5: Récapitulatif ── */
-  {
-    id: "demarrage",
-    title: "Quand souhaitez-vous démarrer votre projet ?",
-    type: "choice",
-    choices: [
-      { value: "asap", label: "Dès que possible (un de nos experts vous accompagne)" },
-      { value: "semaine", label: "Dans la semaine" },
-      { value: "mois", label: "Dans le mois" },
-      { value: "ne_sais_pas", label: "Je ne sais pas encore" },
-    ],
-  },
 ];
 
 /* ───────── Pages: each page = array of question indices shown together ───────── */
@@ -204,20 +233,23 @@ const QUESTIONS: Question[] = [
 interface PageDef {
   questions: number[];
   sidebarStep: number;
-  special?: "brand_protection";
+  special?: "brand_protection" | "micro_page" | "micro_search" | "pricing";
 }
 
 const STATIC_PAGES: PageDef[] = [
-  { questions: [0],    sidebarStep: 1 },  // qui_realise
-  { questions: [1, 2], sidebarStep: 2 },  // nom_societe + proteger_nom (together)
-  { questions: [],     sidebarStep: 2, special: "brand_protection" }, // conditional
-  { questions: [3],    sidebarStep: 2 },  // capital_social
-  { questions: [4],    sidebarStep: 2 },  // objet_social
-  { questions: [5],    sidebarStep: 2 },  // activite_artisanale
-  { questions: [6],    sidebarStep: 3 },  // regime_fiscal
-  { questions: [7],    sidebarStep: 4 },  // adresse_siege
-  { questions: [8],    sidebarStep: 4 },  // president_remunere
-  { questions: [9],    sidebarStep: 5 },  // demarrage
+  { questions: [0],        sidebarStep: 1 },  // qui_realise
+  { questions: [1, 2],    sidebarStep: 2 },  // nom_societe + proteger_nom (together)
+  { questions: [],         sidebarStep: 2, special: "brand_protection" }, // conditional
+  { questions: [3],        sidebarStep: 2 },  // capital_social
+  { questions: [4, 5, 6], sidebarStep: 2, special: "micro_page" },      // micro: statut + action + fermeture (all on 1 page)
+  { questions: [],         sidebarStep: 2, special: "micro_search" },    // micro search (if oui)
+  { questions: [7],        sidebarStep: 2 },  // demarrage
+  { questions: [8],        sidebarStep: 2 },  // activite_artisanale
+  { questions: [],         sidebarStep: 3, special: "pricing" },         // 3 formules
+  { questions: [10],       sidebarStep: 4 },  // regime_fiscal
+  { questions: [9],        sidebarStep: 4 },  // objet_social
+  { questions: [11],       sidebarStep: 4 },  // adresse_siege
+  { questions: [12],       sidebarStep: 4 },  // president_remunere
 ];
 
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */
@@ -234,18 +266,19 @@ const STEPS = [
 
 /* ───────── Components ───────── */
 
-function ChoiceCard({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+function ChoiceCard({ label, subtitle, selected, onClick }: { label: string; subtitle?: string; selected: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left px-6 py-4 rounded-lg border transition-all text-[15px] font-medium",
+        "w-full text-left px-6 py-4 rounded-lg border transition-all",
         selected
-          ? "border-[#2563EB] border-2 bg-[#EFF6FF] text-[#2563EB]"
-          : "border-[#D1D5DB] bg-transparent text-[#2563EB] hover:border-[#2563EB] hover:bg-[#EFF6FF]"
+          ? "border-[#2563EB] border-2 bg-[#EFF6FF]"
+          : "border-[#D1D5DB] bg-transparent hover:border-[#2563EB] hover:bg-[#EFF6FF]"
       )}
     >
-      {label}
+      <span className="text-[15px] font-medium text-[#2563EB]">{label}</span>
+      {subtitle && <p className="text-sm text-[#6B7280] mt-1 font-normal">{subtitle}</p>}
     </button>
   );
 }
@@ -489,6 +522,7 @@ function QuestionBlock({
             <ChoiceCard
               key={c.value}
               label={c.label}
+              subtitle={c.subtitle}
               selected={answer === c.value}
               onClick={() => onAnswer(c.value)}
             />
@@ -599,16 +633,334 @@ function SidebarStep({
   );
 }
 
+/* ───────── Pricing Plans (Step 3: Paiement) ───────── */
+
+const PRICING_PLANS = [
+  {
+    id: "essentielle",
+    name: "Essentielle",
+    subtitle: "Pour débuter sereinement",
+    price: 139,
+    popular: false,
+    highlighted: false,
+    features: [
+      "Téléchargement des statuts à la fin",
+      "Préparation du dossier complet",
+      "Envoi au greffe",
+      "Accompagnement par mail",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    subtitle: "Le plus populaire",
+    price: 199,
+    popular: true,
+    highlighted: false,
+    features: [
+      "Téléchargement des statuts à la fin",
+      "Préparation du dossier complet",
+      "Envoi au greffe",
+      "Garantie anti-rejet du greffe",
+      "Accompagnement téléphonique et par mail",
+      "Réponses par un juriste dédié jusqu'à l'immatriculation",
+      "Vérification par un juriste sous 24h ouvrées",
+    ],
+  },
+  {
+    id: "avocat",
+    name: "Rédaction par un avocat",
+    subtitle: "",
+    price: 850,
+    popular: false,
+    highlighted: true,
+    features: [
+      "Version personnalisée des statuts",
+      "Préparation du dossier complet par l'avocat",
+      "Envoi au greffe",
+      "Garantie anti-rejet du greffe",
+      "Accompagnement téléphonique, mail et rendez-vous possible",
+      "Réponses par un avocat dédié jusqu'à l'immatriculation",
+      "Vérification par l'avocat sous 24h ouvrées",
+    ],
+  },
+];
+
+const TARIF_DETAILS = [
+  { title: "Essentielle" },
+  { title: "Premium" },
+  { title: "Rédaction par un avocat" },
+];
+
+const FRAIS_ANNEXES = [
+  { title: "Frais de greffe" },
+  { title: "Publication d'annonce légale" },
+  { title: "Déclaration des bénéficiaires effectifs (RBE)" },
+];
+
+function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
+  const [openTarif, setOpenTarif] = useState<string | null>(null);
+  const [openFrais, setOpenFrais] = useState<string | null>(null);
+
+  return (
+    <div className="mb-10">
+      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] mb-2">
+        Choisissez votre formule
+      </h2>
+      <p className="text-sm text-[#6B7280] mb-6">
+        Sélectionnez l&apos;accompagnement qui correspond à vos besoins.
+      </p>
+
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        {PRICING_PLANS.map((plan) => (
+          <button
+            key={plan.id}
+            onClick={() => onSelect(plan.id)}
+            className={cn(
+              "relative text-left rounded-xl border-2 p-6 transition-all flex flex-col",
+              selected === plan.id
+                ? "border-[#2563EB] bg-[#EFF6FF]"
+                : plan.highlighted
+                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                  : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+            )}
+          >
+            {plan.popular && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2563EB] text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                Plus populaire ⭐
+              </span>
+            )}
+            <h3 className={cn(
+              "text-lg font-bold mb-1",
+              plan.highlighted ? "text-[#2563EB]" : "text-[#1E293B]"
+            )}>
+              {plan.name}
+            </h3>
+            {plan.subtitle && (
+              <p className="text-sm text-[#6B7280] mb-4">{plan.subtitle}</p>
+            )}
+            <p className="text-4xl font-bold text-[#1E293B] mb-1">
+              {plan.price}€
+            </p>
+            <p className="text-xs text-[#6B7280] mb-5">+ frais annexes obligatoires</p>
+            <ul className="space-y-2.5 mt-auto">
+              {plan.features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
+                  <span className="text-green-500 mt-0.5 shrink-0">●</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </button>
+        ))}
+      </div>
+
+      {/* On vous explique les tarifs */}
+      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les tarifs :</h3>
+      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden mb-8">
+        {TARIF_DETAILS.map((t) => (
+          <button
+            key={t.title}
+            onClick={() => setOpenTarif(openTarif === t.title ? null : t.title)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
+          >
+            <span className="font-semibold text-[#1E293B]">{t.title}</span>
+            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openTarif === t.title && "rotate-180")} />
+          </button>
+        ))}
+      </div>
+
+      {/* Frais annexes */}
+      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les frais annexes a la creation d&apos;une societe :</h3>
+      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden">
+        {FRAIS_ANNEXES.map((f) => (
+          <button
+            key={f.title}
+            onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
+          >
+            <span className="font-semibold text-[#1E293B]">{f.title}</span>
+            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openFrais === f.title && "rotate-180")} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Micro-entrepreneur Search ───────── */
+
+interface SearchResult {
+  siren: string;
+  nom: string;
+  ville?: string;
+}
+
+function MicroSearchSection({ onCompanyFound }: { onCompanyFound: (data: { denomination: string; siren: string; adresse: string }) => void }) {
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [found, setFound] = useState<{ denomination: string; siren: string; adresse: string } | null>(null);
+
+  const handleSearch = async () => {
+    if (search.length < 2) return;
+    setLoading(true);
+    setError(null);
+    setResults([]);
+    setShowResults(false);
+    try {
+      const clean = search.replace(/\s/g, "");
+      const isSiren = /^\d{9}$/.test(clean);
+      if (isSiren) {
+        const res = await fetch(`/api/siren?siren=${clean}`);
+        if (res.ok) {
+          const data = await res.json();
+          const company = {
+            denomination: data.denominationSociale || "",
+            siren: clean,
+            adresse: [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "),
+          };
+          setFound(company);
+          onCompanyFound(company);
+        } else {
+          setError("SIREN non trouvé");
+        }
+      } else {
+        const res = await fetch(`/api/siren?nom=${encodeURIComponent(search)}&list=true`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.resultats?.length > 0) {
+            setResults(data.resultats);
+            setShowResults(true);
+          } else {
+            setError("Aucune entreprise trouvée");
+          }
+        } else {
+          setError("Aucune entreprise trouvée avec ce nom");
+        }
+      }
+    } catch {
+      setError("Erreur lors de la recherche");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectResult = async (result: SearchResult) => {
+    setLoading(true);
+    setShowResults(false);
+    try {
+      const res = await fetch(`/api/siren?siren=${result.siren}`);
+      if (res.ok) {
+        const data = await res.json();
+        const company = {
+          denomination: data.denominationSociale || result.nom,
+          siren: result.siren,
+          adresse: [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "),
+        };
+        setFound(company);
+        onCompanyFound(company);
+        setSearch(result.nom);
+      }
+    } catch {
+      const company = { denomination: result.nom, siren: result.siren, adresse: result.ville || "" };
+      setFound(company);
+      onCompanyFound(company);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-10">
+      <h2 className="text-[16px] md:text-[18px] font-bold text-[#1E293B] mb-2 leading-snug">
+        Recherchez votre micro-entreprise
+      </h2>
+      <p className="text-sm text-[#6B7280] leading-relaxed mb-4">
+        Entrez le SIREN (9 chiffres) ou le nom commercial / dénomination de votre micro-entreprise
+      </p>
+
+      <div className="flex gap-3">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            placeholder="SIREN (9 chiffres) ou nom commercial de la micro-entreprise"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setShowResults(false); setResults([]); }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+            className="w-full px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] bg-white transition-colors"
+          />
+
+          {/* Dropdown results */}
+          {showResults && results.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-[#D1D5DB] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {results.map((r, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => selectResult(r)}
+                  className="w-full px-4 py-3 text-left hover:bg-[#EFF6FF] border-b border-gray-100 last:border-b-0 flex justify-between items-center"
+                >
+                  <div>
+                    <div className="font-medium text-[#1E293B]">{r.nom}</div>
+                    {r.ville && <div className="text-xs text-[#6B7280]">{r.ville}</div>}
+                  </div>
+                  <div className="text-sm text-[#2563EB] font-mono">{r.siren}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleSearch}
+          disabled={search.length < 2 || loading}
+          className="px-6 py-4 rounded-lg bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] disabled:bg-[#9CA3AF] transition-colors"
+        >
+          {loading ? "Recherche..." : "Rechercher"}
+        </button>
+      </div>
+
+      {error && (
+        <p className="text-amber-600 text-sm mt-2">{error}</p>
+      )}
+
+      <p className="text-xs text-[#6B7280] mt-2">
+        Recherchez par SIREN (9 chiffres) ou par nom commercial (ex: MON ENTREPRISE)
+      </p>
+
+      {/* Company found card */}
+      {found && (
+        <div className="mt-4 p-5 rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF]">
+          <div className="flex items-start gap-3">
+            <Building2 className="w-5 h-5 text-[#2563EB] mt-0.5" />
+            <div>
+              <p className="font-bold text-[#1E293B]">{found.denomination}</p>
+              <p className="text-sm text-[#6B7280] mt-1">SIREN : <span className="font-mono text-[#2563EB]">{found.siren}</span></p>
+              {found.adresse && <p className="text-sm text-[#6B7280]">{found.adresse}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ───────── Main page ───────── */
 
 export default function CreationSASUPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  // Build active pages: skip brand_protection page if user didn't select "oui"
-  const pages = STATIC_PAGES.filter(
-    (p) => p.special !== "brand_protection" || answers.proteger_nom === "oui"
-  );
+  // Build active pages: skip conditional pages based on answers
+  const pages = STATIC_PAGES.filter((p) => {
+    if (p.special === "brand_protection") return answers.proteger_nom === "oui";
+    if (p.special === "micro_search") return answers.statut_micro === "oui";
+    return true;
+  });
 
   const page = pages[currentPage] ?? pages[pages.length - 1];
   const activeStep = page.sidebarStep;
@@ -687,16 +1039,59 @@ export default function CreationSASUPage() {
 
           {/* Brand protection special page */}
           {page.special === "brand_protection" && <BrandProtectionSection />}
-
-          {/* Questions for this page */}
-          {pageQuestions.map((q) => (
-            <QuestionBlock
-              key={q.id}
-              question={q}
-              answer={answers[q.id] || ""}
-              onAnswer={(val) => setAnswer(q.id, val)}
+          {page.special === "micro_search" && (
+            <MicroSearchSection
+              onCompanyFound={(data) => {
+                setAnswers((prev) => ({
+                  ...prev,
+                  micro_denomination: data.denomination,
+                  micro_siren: data.siren,
+                  micro_adresse: data.adresse,
+                }));
+              }}
             />
-          ))}
+          )}
+          {page.special === "pricing" && (
+            <PricingSection
+              selected={answers.formule || ""}
+              onSelect={(val) => setAnswer("formule", val)}
+            />
+          )}
+
+          {/* Micro page: show sub-questions conditionally */}
+          {page.special === "micro_page" ? (
+            <>
+              <QuestionBlock
+                question={QUESTIONS[4]}
+                answer={answers.statut_micro || ""}
+                onAnswer={(val) => setAnswer("statut_micro", val)}
+              />
+              {answers.statut_micro === "oui" && (
+                <>
+                  <QuestionBlock
+                    question={QUESTIONS[5]}
+                    answer={answers.action_micro || ""}
+                    onAnswer={(val) => setAnswer("action_micro", val)}
+                  />
+                  <QuestionBlock
+                    question={QUESTIONS[6]}
+                    answer={answers.fermeture_micro || ""}
+                    onAnswer={(val) => setAnswer("fermeture_micro", val)}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            /* Questions for this page */
+            pageQuestions.map((q) => (
+              <QuestionBlock
+                key={q.id}
+                question={q}
+                answer={answers[q.id] || ""}
+                onAnswer={(val) => setAnswer(q.id, val)}
+              />
+            ))
+          )}
 
           {/* ── Navigation ── */}
           <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#E5E7EB]">

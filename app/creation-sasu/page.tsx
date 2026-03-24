@@ -3717,6 +3717,75 @@ export default function CreationSASUPage() {
                         )}
                       </motion.div>
                     )}
+
+                    {/* ── Question DG : souhaitez-vous nommer un DG ? ── */}
+                    <div className="border-t border-gray-200 pt-5 space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un Directeur Général ?</p>
+                      <p className="text-sm text-gray-500">Le DG dispose des mêmes pouvoirs que le Président vis-à-vis des tiers. C&apos;est facultatif en SASU.</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("nommer_dg", "oui")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.nommer_dg === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui
+                        </button>
+                        <button
+                          onClick={() => setAnswer("nommer_dg", "non")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.nommer_dg === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non
+                        </button>
+                      </div>
+
+                      {answers.nommer_dg === "oui" && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#2563EB]/30 pl-4 ml-2">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                              <select value={answers.dg_civilite || ""} onChange={(e) => setAnswer("dg_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                <option value="">Choisir</option>
+                                <option value="M.">M.</option>
+                                <option value="Mme">Mme</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                              <input type="text" value={answers.dg_nom || ""} onChange={(e) => setAnswer("dg_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                              <input type="text" value={answers.dg_prenom || ""} onChange={(e) => setAnswer("dg_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                              <input type="date" value={answers.dg_date_naissance || ""} onChange={(e) => setAnswer("dg_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                              <input type="text" value={answers.dg_lieu_naissance || ""} onChange={(e) => setAnswer("dg_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                              <input type="text" value={answers.dg_nationalite || ""} onChange={(e) => setAnswer("dg_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                            <input type="text" value={answers.dg_adresse || ""} onChange={(e) => setAnswer("dg_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -4064,6 +4133,27 @@ export default function CreationSASUPage() {
                       </div>
                     </AccordionItem>
 
+                    {/* Aide IA fiscalité */}
+                    <button
+                      onClick={() => {
+                        const isHolding = answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice";
+                        const reco = isHolding
+                          ? "Pour une holding, l'IS est fortement recommandé : vous bénéficiez du régime mère-fille (exonération de 95 % des dividendes reçus) et du taux réduit à 15 % sur les premiers 42 500 €. L'IR n'est pertinent que dans de rares cas de déficit reportable sur vos revenus personnels."
+                          : "Pour la plupart des SASU, l'IS est le choix optimal : taux réduit de 15 % jusqu'à 42 500 € de bénéfice, puis 25 %. Vous maîtrisez votre rémunération et vos dividendes. L'IR peut être intéressant les premières années si vous prévoyez des pertes (reportables sur vos revenus) ou un résultat faible imposé dans les tranches basses du barème.";
+                        setAnswer("aide_ia_fiscal", reco);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#7C3AED] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Aide IA : quelle option choisir ?
+                    </button>
+                    {answers.aide_ia_fiscal && (
+                      <div className="bg-[#F5F3FF] border border-[#7C3AED]/30 rounded-xl p-4 text-base text-gray-700 text-justify leading-relaxed">
+                        <p className="font-bold text-[#7C3AED] mb-1 flex items-center gap-2"><Sparkles className="w-4 h-4" /> Recommandation IA</p>
+                        <p>{answers.aide_ia_fiscal}</p>
+                      </div>
+                    )}
+
                     <div className="space-y-3">
                       <button
                         onClick={() => setAnswer("regime_fiscal", "is")}
@@ -4212,6 +4302,34 @@ export default function CreationSASUPage() {
                         <p><strong>Mini-réel :</strong> IS au réel simplifié + TVA au réel normal. Permet de récupérer la TVA mensuellement.</p>
                       </div>
                     </AccordionItem>
+
+                    {/* Aide IA TVA */}
+                    <button
+                      onClick={() => {
+                        const isHoldingPassive = answers.type_structure === "holding_passive";
+                        const isHoldingAnim = answers.type_structure === "holding_animatrice";
+                        const hasFees = answers.management_fees === "oui";
+                        let reco = "";
+                        if (isHoldingPassive) {
+                          reco = "Pour une holding passive, vous n'êtes généralement pas assujetti à la TVA car vos revenus (dividendes, plus-values) sont hors champ. Choisissez « Non assujetti ». Si vous facturez ponctuellement des prestations, optez pour la franchise en base.";
+                        } else if (isHoldingAnim && hasFees) {
+                          reco = "Votre holding animatrice facture des management fees : vous êtes assujetti à la TVA. Le réel simplifié est adapté si votre CA est inférieur aux seuils (254 000 € services). Si vous avez beaucoup de TVA à récupérer rapidement, le réel normal ou mini-réel permet des déclarations mensuelles.";
+                        } else {
+                          reco = "Pour une SASU classique en démarrage, la franchise en base est souvent le meilleur choix : pas de TVA à facturer ni déclarer, tant que votre CA reste sous les seuils (91 900 € ventes / 36 800 € services). Si vous avez des investissements importants à faire au démarrage (matériel, locaux), le réel simplifié vous permet de récupérer la TVA sur ces achats.";
+                        }
+                        setAnswer("aide_ia_tva", reco);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#7C3AED] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Aide IA : quel régime de TVA choisir ?
+                    </button>
+                    {answers.aide_ia_tva && (
+                      <div className="bg-[#F5F3FF] border border-[#7C3AED]/30 rounded-xl p-4 text-base text-gray-700 text-justify leading-relaxed">
+                        <p className="font-bold text-[#7C3AED] mb-1 flex items-center gap-2"><Sparkles className="w-4 h-4" /> Recommandation IA</p>
+                        <p>{answers.aide_ia_tva}</p>
+                      </div>
+                    )}
 
                     <div className="space-y-3">
                       {/* Franchise en base — pas pour les holdings animatrices avec management fees */}
@@ -4598,6 +4716,82 @@ export default function CreationSASUPage() {
                         </span></p>
                       </div>
                     </div>
+
+                    {/* Statuts — Aperçu + Téléchargement */}
+                    <div className="bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] rounded-xl p-5 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-6 h-6 text-white" />
+                        <div>
+                          <p className="text-white font-bold text-base">Statuts de votre SASU</p>
+                          <p className="text-blue-200 text-sm">Générés automatiquement à partir de vos réponses</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={async () => {
+                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
+                            const text = buildStatutsSASU(answers);
+                            setAnswer("statuts_preview", text);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-[#1E3A8A] font-semibold text-sm hover:bg-blue-50 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Aperçu
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
+                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildStatutsSASU(answers);
+                            const blob = await generateSasuDocumentDocx(text);
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/20 text-white font-semibold text-sm hover:bg-white/30 transition-colors border border-white/30"
+                        >
+                          <Download className="w-4 h-4" />
+                          Télécharger (.docx)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Modal Aperçu des statuts */}
+                    {answers.statuts_preview && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[85vh] flex flex-col">
+                          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-bold text-[#1E3A8A] flex items-center gap-2"><FileText className="w-5 h-5" /> Aperçu des statuts</h3>
+                            <button onClick={() => setAnswer("statuts_preview", "")} className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
+                          </div>
+                          <div className="flex-1 overflow-y-auto px-6 py-4">
+                            <pre className="whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">{answers.statuts_preview}</pre>
+                          </div>
+                          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                            <button onClick={() => setAnswer("statuts_preview", "")} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50">Fermer</button>
+                            <button
+                              onClick={async () => {
+                                const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                                const blob = await generateSasuDocumentDocx(answers.statuts_preview || "");
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              className="px-5 py-2.5 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] flex items-center gap-2"
+                            >
+                              <Download className="w-4 h-4" />
+                              Télécharger
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

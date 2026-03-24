@@ -58,15 +58,6 @@ const QUESTIONS: Question[] = [
     title: "Quel sera le nom de la société ?",
     type: "input",
     placeholder: "Ex : Ma Société",
-    info: {
-      title: "Le saviez-vous ?",
-      content: (
-        <p>
-          La <strong>dénomination sociale</strong> est le nom officiel de votre société, distinct du nom commercial.
-          Vérifiez sa disponibilité sur <strong>infogreffe.fr</strong> ou auprès de l&apos;INPI avant de vous décider.
-        </p>
-      ),
-    },
   },
   {
     id: "proteger_nom",
@@ -208,15 +199,19 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-/* ───────── Step → question indices mapping ───────── */
+/* ───────── Pages: each page = array of question indices shown together ───────── */
 
-const STEP_QUESTIONS: Record<number, number[]> = {
-  1: [0],           // qui_realise
-  2: [1, 2, 3, 4, 5], // nom_societe → activite_artisanale
-  3: [6],           // regime_fiscal
-  4: [7, 8],        // adresse_siege, president_remunere
-  5: [9],           // demarrage
-};
+const PAGES: { questions: number[]; sidebarStep: number }[] = [
+  { questions: [0],    sidebarStep: 1 },  // qui_realise
+  { questions: [1, 2], sidebarStep: 2 },  // nom_societe + proteger_nom (together)
+  { questions: [3],    sidebarStep: 2 },  // capital_social
+  { questions: [4],    sidebarStep: 2 },  // objet_social
+  { questions: [5],    sidebarStep: 2 },  // activite_artisanale
+  { questions: [6],    sidebarStep: 3 },  // regime_fiscal
+  { questions: [7],    sidebarStep: 4 },  // adresse_siege
+  { questions: [8],    sidebarStep: 4 },  // president_remunere
+  { questions: [9],    sidebarStep: 5 },  // demarrage
+];
 
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */
 
@@ -229,9 +224,6 @@ const STEPS = [
   { id: 6, label: "Pièces justificatives", icon: FileUp },
   { id: 7, label: "Signature", icon: PenTool },
 ];
-
-/* Steps that have questions */
-const ACTIVE_STEPS = [1, 2, 3, 4, 5];
 
 /* ───────── Components ───────── */
 
@@ -607,25 +599,25 @@ function SidebarStep({
 /* ───────── Main page ───────── */
 
 export default function CreationSASUPage() {
-  const [currentStepIdx, setCurrentStepIdx] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const activeStep = ACTIVE_STEPS[currentStepIdx];
-  const stepQuestionIndices = STEP_QUESTIONS[activeStep] || [];
-  const stepQuestions = stepQuestionIndices.map((i) => QUESTIONS[i]);
+  const page = PAGES[currentPage];
+  const activeStep = page.sidebarStep;
+  const pageQuestions = page.questions.map((i) => QUESTIONS[i]);
 
   const setAnswer = (id: string, val: string) =>
     setAnswers((prev) => ({ ...prev, [id]: val }));
 
   const goNext = () => {
-    if (currentStepIdx < ACTIVE_STEPS.length - 1) {
-      setCurrentStepIdx((s) => s + 1);
+    if (currentPage < PAGES.length - 1) {
+      setCurrentPage((p) => p + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
   const goPrev = () => {
-    if (currentStepIdx > 0) {
-      setCurrentStepIdx((s) => s - 1);
+    if (currentPage > 0) {
+      setCurrentPage((p) => p - 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -685,8 +677,8 @@ export default function CreationSASUPage() {
             Création d&apos;une SASU
           </h1>
 
-          {/* All questions for this step */}
-          {stepQuestions.map((q) => (
+          {/* Questions for this page */}
+          {pageQuestions.map((q) => (
             <QuestionBlock
               key={q.id}
               question={q}
@@ -702,7 +694,7 @@ export default function CreationSASUPage() {
               onClick={goPrev}
               className={cn(
                 "flex items-center gap-2 text-sm font-medium text-[#9CA3AF] hover:text-[#6B7280] transition-colors",
-                currentStepIdx === 0 && "invisible"
+                currentPage === 0 && "invisible"
               )}
             >
               <ArrowLeft className="w-4 h-4" /> Précédent

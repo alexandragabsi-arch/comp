@@ -1149,14 +1149,18 @@ export default function CreationSASUPage() {
   const currentQIndex = activeQuestions[currentQ]; // actual QUESTIONS index
   const question = QUESTIONS[currentQIndex];
 
-  // Post-payment pages (step 4: dossier juridique) — 6 pages
+  // Post-payment pages (step 4: dossier juridique) — 10 pages
   const POST_PAGES = [
-    { id: "denomination", sidebarStep: 4 },   // 0: dénomination + sigle + nom commercial + enseigne
-    { id: "objet_principal", sidebarStep: 4 }, // 1: catégories visuelles + sous-catégories
-    { id: "objet_social", sidebarStep: 4 },    // 2: texte libre
-    { id: "regime_fiscal", sidebarStep: 4 },   // 3: IS / IR
-    { id: "adresse_siege", sidebarStep: 4 },   // 4: adresse
-    { id: "president_remunere", sidebarStep: 4 }, // 5: rémunération
+    { id: "denomination", sidebarStep: 4 },        // 0: dénomination + sigle + nom commercial + enseigne
+    { id: "objet_principal", sidebarStep: 4 },      // 1: catégories visuelles + sous-catégories
+    { id: "objet_social", sidebarStep: 4 },         // 2: texte libre
+    { id: "activite_description", sidebarStep: 4 }, // 3: activité principale + secondaires + code NAF
+    { id: "activite_saisonniere", sidebarStep: 4 }, // 4: saisonnière / ambulante
+    { id: "associe_unique", sidebarStep: 4 },       // 5: type d'associé + infos
+    { id: "capital_social", sidebarStep: 4 },       // 6: montant + formule
+    { id: "regime_fiscal", sidebarStep: 4 },        // 7: IS / IR
+    { id: "adresse_siege", sidebarStep: 4 },        // 8: adresse
+    { id: "president_remunere", sidebarStep: 4 },   // 9: rémunération
   ];
 
   // Determine sidebar step from phase
@@ -1823,8 +1827,375 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Page 3: Régime fiscal ── */}
+                {/* ── Page 3: Activité principale + secondaires ── */}
                 {postPage === 3 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Description de vos activités</h2>
+                      <p className="text-gray-500 text-sm">Précisez votre activité principale et vos éventuelles activités secondaires</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>L&apos;activité principale est celle qui génère le plus de chiffre d&apos;affaires. Les activités secondaires sont complémentaires.</p>
+                        <p>Ces informations permettent de déterminer votre <strong>code NAF</strong> et de vérifier les obligations réglementaires.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          Parmi les activités mentionnées dans votre objet social, quelle est l&apos;activité principale de votre société ?
+                        </label>
+                        <p className="text-xs text-gray-500 mb-2">(exemple : salon de coiffure, travaux de plomberie, vente en ligne de vêtements, conseil en gestion, etc.) Décrivez en quelques mots ce que fait votre entreprise au quotidien.</p>
+                        <input
+                          type="text"
+                          value={answers.activite_principale_desc || ""}
+                          onChange={(e) => setAnswer("activite_principale_desc", e.target.value)}
+                          placeholder="Ex : Soutien scolaire"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          Votre société exercera-t-elle d&apos;autres activités secondaires (mentionnées dans l&apos;objet social) ?
+                        </label>
+                        <p className="text-xs text-gray-500 mb-2">Si oui merci de le préciser de manière simple (Exemples : vente de produits liés à l&apos;activité, formation, maintenance, prestation complémentaire, etc.)</p>
+                        <input
+                          type="text"
+                          value={answers.activites_secondaires || ""}
+                          onChange={(e) => setAnswer("activites_secondaires", e.target.value)}
+                          placeholder="Ex : Formation en ligne, vente de supports pédagogiques"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Code NAF suggestion */}
+                    {answers.activite_principale_desc && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <p className="text-sm text-[#1E3A8A]">
+                          <strong>Suggestion du code NAF :</strong> Le code NAF attribué officiellement sera celui correspondant à l&apos;activité principale, telle que déterminée par l&apos;INSEE.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Analyse réglementaire */}
+                    <div className="space-y-3">
+                      <h3 className="text-base font-bold text-[#1E3A8A]">Analyse réglementaire de votre activité</h3>
+                      <p className="text-sm text-gray-600">
+                        À partir des activités que vous avez décrites, nous vérifions si certaines obligations réglementaires ou justificatifs sont requis afin d&apos;éviter tout refus lors de l&apos;immatriculation auprès de l&apos;INPI.
+                      </p>
+                      {answers.activite_principale_desc && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                          <p className="text-sm text-green-800">
+                            <strong>Analyse :</strong> Nous vérifierons la conformité réglementaire de votre activité lors de la constitution du dossier.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 4: Activité saisonnière / ambulante ── */}
+                {postPage === 4 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Type d&apos;activité</h2>
+                      <p className="text-gray-500 text-sm">Est-ce qu&apos;une des activités est saisonnière ou ambulante ?</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {[
+                        { value: "saisonniere", label: "Oui une des activités est saisonnière" },
+                        { value: "ambulante", label: "Oui une des activités est ambulante" },
+                        { value: "ni_lun_ni_lautre", label: "Ni l'un ni l'autre" },
+                      ].map((c) => (
+                        <button
+                          key={c.value}
+                          onClick={() => setAnswer("activite_saisonniere", c.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.activite_saisonniere === c.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-3">
+                        <p><strong className="text-[#1E3A8A]">Qu&apos;est ce qu&apos;une activité saisonnière ou ambulante ?</strong></p>
+                        <p>Il s&apos;agit d&apos;un type d&apos;activité professionnelle exercée de façon temporaire ou non sédentaire, souvent soumise à des règles particulières (déclarations, autorisations, régimes sociaux spécifiques).</p>
+                        <p><strong>Exemple d&apos;activité ambulante</strong> : Vente sur les marchés, foires, brocantes</p>
+                        <p><strong>Exemple d&apos;activité saisonnière</strong> : Travail dans les stations de ski l&apos;hiver ou ventes de glace sur plage</p>
+                      </div>
+                    </AccordionItem>
+                  </div>
+                )}
+
+                {/* ── Page 5: Associé unique ── */}
+                {postPage === 5 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">ASSOCIÉ UNIQUE</h2>
+                      <p className="text-gray-500 text-sm">Veuillez remplir les informations de l&apos;associé unique</p>
+                    </div>
+
+                    {/* Info block */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3">
+                      <p className="text-sm text-gray-700">Une SASU ne comporte qu&apos;un seul associé, appelé <strong className="text-[#1E3A8A]">associé unique</strong>.</p>
+                      <p className="text-sm text-gray-700">Veuillez renseigner :</p>
+                      <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                        <li><em className="text-[#2563EB] font-medium">ses informations personnelles</em></li>
+                        <li><em className="text-[#2563EB] font-medium">sa résidence fiscale</em></li>
+                      </ul>
+                      <p className="text-sm text-gray-700">Une fois les informations saisies, cliquez sur <strong>&quot;Valider&quot;</strong> pour enregistrer l&apos;associé unique.</p>
+                    </div>
+
+                    {/* Type d'associé */}
+                    <div className="space-y-3">
+                      <p className="text-sm font-bold text-[#1E3A8A]">Type d&apos;associé :</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("type_associe", "physique")}
+                          className={cn(
+                            "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
+                            answers.type_associe === "physique"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <User className="w-10 h-10 text-[#2563EB]" />
+                          <span className="text-sm font-medium text-[#2563EB]">Particulier (personne physique)</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("type_associe", "morale")}
+                          className={cn(
+                            "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
+                            answers.type_associe === "morale"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Building2 className="w-10 h-10 text-[#2563EB]" />
+                          <span className="text-sm font-medium text-[#2563EB]">Société (personne morale)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Formulaire associé physique */}
+                    {answers.type_associe === "physique" && (
+                      <div className="space-y-4 border-t border-gray-200 pt-5">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
+                            <input
+                              type="text"
+                              value={answers.associe_nom || ""}
+                              onChange={(e) => setAnswer("associe_nom", e.target.value)}
+                              placeholder="Nom de famille"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                            <input
+                              type="text"
+                              value={answers.associe_prenom || ""}
+                              onChange={(e) => setAnswer("associe_prenom", e.target.value)}
+                              placeholder="Prénom"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                          <input
+                            type="date"
+                            value={answers.associe_date_naissance || ""}
+                            onChange={(e) => setAnswer("associe_date_naissance", e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                          <input
+                            type="text"
+                            value={answers.associe_lieu_naissance || ""}
+                            onChange={(e) => setAnswer("associe_lieu_naissance", e.target.value)}
+                            placeholder="Ville de naissance"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                          <input
+                            type="text"
+                            value={answers.associe_nationalite || ""}
+                            onChange={(e) => setAnswer("associe_nationalite", e.target.value)}
+                            placeholder="Ex : Française"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse de résidence fiscale</label>
+                          <input
+                            type="text"
+                            value={answers.associe_adresse || ""}
+                            onChange={(e) => setAnswer("associe_adresse", e.target.value)}
+                            placeholder="Adresse complète"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Formulaire associé morale */}
+                    {answers.type_associe === "morale" && (
+                      <div className="space-y-4 border-t border-gray-200 pt-5">
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Dénomination de la société associée</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_nom || ""}
+                            onChange={(e) => setAnswer("associe_societe_nom", e.target.value)}
+                            placeholder="Nom de la société"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_forme || ""}
+                            onChange={(e) => setAnswer("associe_societe_forme", e.target.value)}
+                            placeholder="Ex : SAS, SARL, SA..."
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_siren || ""}
+                            onChange={(e) => setAnswer("associe_societe_siren", e.target.value)}
+                            placeholder="Ex : 123 456 789"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse du siège de la société associée</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_adresse || ""}
+                            onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)}
+                            placeholder="Adresse complète"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_representant || ""}
+                            onChange={(e) => setAnswer("associe_societe_representant", e.target.value)}
+                            placeholder="Nom et prénom du représentant"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Page 6: Capital social ── */}
+                {postPage === 6 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Capital social</h2>
+                      <p className="text-gray-500 text-sm">Définissez le montant et les modalités de votre capital</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-3">
+                        <p>💡 Le capital minimum légal pour une SASU est de <strong>1 euro</strong>. Afin de faciliter vos démarches, nous vous proposons par défaut un ensemble de règles couramment utilisées dans les statuts afin de simplifier la création de votre SASU.</p>
+                        <p><strong className="text-[#1E3A8A]">Voici la formule dite simplifiée :</strong></p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>L&apos;associé unique a apporté la totalité du capital en numéraire (argent déposé en banque).</li>
+                          <li>Cet apport est effectué à titre de biens propres de l&apos;associé unique (pas de biens communs ou indivis)</li>
+                          <li>Aucun apport en nature ni en industrie.</li>
+                          <li>Le capital est entièrement libéré (100 % déposé).</li>
+                          <li>Le capital est fixe.</li>
+                          <li>La valeur nominale d&apos;une action est de 1 €.</li>
+                          <li>Le montant du capital social correspond à celui que vous avez défini ci-dessous.</li>
+                        </ul>
+                        <p>Toutefois, il est possible de modifier ces règles si vous le souhaitez par exemple : introduire des apports en nature (biens, matériel, véhicule, etc.), des apports en industrie, ou opter pour un capital variable.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          Quel est le montant de votre capital social ? (€)
+                        </label>
+                        <p className="text-xs text-gray-500 mb-2">Minimum 1 euro</p>
+                        <input
+                          type="number"
+                          min="1"
+                          value={answers.capital_social || "1"}
+                          onChange={(e) => setAnswer("capital_social", e.target.value)}
+                          placeholder="1"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("formule_capital", "simplifiee")}
+                            className={cn(
+                              "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
+                              answers.formule_capital === "simplifiee"
+                                ? "border-[#2563EB] bg-blue-50"
+                                : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <Zap className="w-8 h-8 text-[#2563EB]" />
+                            <span className="text-sm font-medium text-[#2563EB]">Je choisis la formule simplifiée</span>
+                            <span className="text-xs text-gray-500">(Le choix le plus fréquent)</span>
+                          </button>
+                          <button
+                            onClick={() => setAnswer("formule_capital", "personnalisee")}
+                            className={cn(
+                              "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
+                              answers.formule_capital === "personnalisee"
+                                ? "border-[#2563EB] bg-blue-50"
+                                : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <PenTool className="w-8 h-8 text-[#2563EB]" />
+                            <span className="text-sm font-medium text-[#2563EB]">Je souhaite modifier ces règles</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 7: Régime fiscal ── */}
+                {postPage === 7 && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[10].title}</h2>
@@ -1860,8 +2231,8 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Page 4: Adresse siège social ── */}
-                {postPage === 4 && (
+                {/* ── Page 8: Adresse siège social ── */}
+                {postPage === 8 && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[11].title}</h2>
@@ -1882,8 +2253,8 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Page 5: Président rémunéré ── */}
-                {postPage === 5 && (
+                {/* ── Page 9: Président rémunéré ── */}
+                {postPage === 9 && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[12].title}</h2>

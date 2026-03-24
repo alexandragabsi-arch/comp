@@ -211,10 +211,10 @@ const STATIC_PAGES: PageDef[] = [
   { questions: [1, 2], sidebarStep: 2 },  // nom_societe + proteger_nom (together)
   { questions: [],     sidebarStep: 2, special: "brand_protection" }, // conditional
   { questions: [3],    sidebarStep: 2 },  // capital_social
-  { questions: [4],    sidebarStep: 2 },  // demarrage
-  { questions: [5],    sidebarStep: 2 },  // activite_artisanale
   { questions: [6],    sidebarStep: 2 },  // objet_social
   { questions: [7],    sidebarStep: 3 },  // regime_fiscal
+  { questions: [4],    sidebarStep: 4 },  // demarrage
+  { questions: [5],    sidebarStep: 4 },  // activite_artisanale
   { questions: [8],    sidebarStep: 4 },  // adresse_siege
   { questions: [9],    sidebarStep: 4 },  // president_remunere
 ];

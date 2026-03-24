@@ -277,18 +277,18 @@ function InfoAccordion({ title, children }: { title: string; children: React.Rea
     <div className="mt-6 border border-[#D1D5DB] rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-sm font-semibold text-[#1E293B]"
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-base font-bold text-[#1E293B]"
       >
         <span className="flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-yellow-500" />
           Plus d&apos;informations
         </span>
-        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {open ? <ChevronUp className="w-5 h-5 text-[#2563EB]" /> : <ChevronDown className="w-5 h-5 text-[#2563EB]" />}
       </button>
       {open && (
-        <div className="px-5 py-4 bg-white border-t border-[#D1D5DB]">
-          <p className="text-sm font-bold text-[#2563EB] mb-2">{title}</p>
-          <div className="text-sm text-[#6B7280] leading-relaxed">{children}</div>
+        <div className="px-5 py-4 bg-[#F8FAFF] border-t border-[#D1D5DB]">
+          <p className="text-base font-bold text-[#2563EB] mb-2">{title}</p>
+          <div className="text-base text-gray-700 leading-relaxed text-justify">{children}</div>
         </div>
       )}
     </div>
@@ -569,16 +569,19 @@ function QuestionBlock({
 function AccordionItem({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+    <div className="rounded-xl border border-[#D1D5DB] overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-3.5 text-left gap-3"
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-left gap-3"
       >
-        <span className="text-sm font-semibold text-[#1E3A8A]">{title}</span>
-        <ChevronRight className={cn("w-4 h-4 text-[#2563EB] flex-shrink-0 transition-transform", open && "rotate-90")} />
+        <span className="flex items-center gap-2 text-base font-bold text-[#1E3A8A]">
+          <Lightbulb className="w-4 h-4 text-yellow-500" />
+          {title}
+        </span>
+        {open ? <ChevronUp className="w-5 h-5 text-[#2563EB] flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
       </button>
       {open && (
-        <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+        <div className="px-5 py-4 bg-[#F8FAFF] border-t border-[#D1D5DB] text-base text-gray-700 leading-relaxed text-justify">
           {children}
         </div>
       )}

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
-  FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles
+  FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -563,71 +563,83 @@ function QuestionBlock({
 
 /* SidebarStep component removed — sidebar now uses dissolution-style inline rendering */
 
-/* ───────── Pricing Plans (Step 3: Paiement) ───────── */
+/* ───────── Accordion Item (dissolution style) ───────── */
 
-const PRICING_PLANS = [
+function AccordionItem({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 py-3.5 text-left gap-3"
+      >
+        <span className="text-sm font-semibold text-[#1E3A8A]">{title}</span>
+        <ChevronRight className={cn("w-4 h-4 text-[#2563EB] flex-shrink-0 transition-transform", open && "rotate-90")} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Pricing Plans (Step 3: Paiement) — Dissolution style ───────── */
+
+type PlanFeature = { label: string; included: boolean | "partial" };
+type Plan = {
+  id: string; name: string; priceHT: number; badge?: string; featured?: boolean;
+  features: PlanFeature[]; cta: string;
+};
+
+const PRICING_PLANS: Plan[] = [
   {
     id: "essentielle",
     name: "Essentielle",
-    subtitle: "Pour débuter sereinement",
-    price: 139,
-    popular: false,
-    highlighted: false,
+    priceHT: 139,
     features: [
-      "Téléchargement des statuts à la fin",
-      "Préparation du dossier complet",
-      "Envoi au greffe",
-      "Accompagnement par mail",
+      { label: "Statuts générés automatiquement", included: true },
+      { label: "Préparation du dossier complet", included: true },
+      { label: "Envoi au greffe", included: true },
+      { label: "Accompagnement par mail", included: true },
+      { label: "Vérification par un juriste", included: false },
+      { label: "Garantie anti-rejet du greffe", included: false },
+      { label: "Accompagnement téléphonique", included: false },
     ],
+    cta: "Choisir Essentielle",
   },
   {
     id: "premium",
     name: "Premium",
-    subtitle: "Le plus populaire",
-    price: 199,
-    popular: true,
-    highlighted: false,
+    priceHT: 199,
+    featured: true,
+    badge: "Le plus choisi",
     features: [
-      "Téléchargement des statuts à la fin",
-      "Préparation du dossier complet",
-      "Envoi au greffe",
-      "Garantie anti-rejet du greffe",
-      "Accompagnement téléphonique et par mail",
-      "Réponses par un juriste dédié jusqu'à l'immatriculation",
-      "Vérification par un juriste sous 24h ouvrées",
+      { label: "Statuts générés automatiquement", included: true },
+      { label: "Préparation du dossier complet", included: true },
+      { label: "Envoi au greffe", included: true },
+      { label: "Accompagnement téléphonique et par mail", included: true },
+      { label: "Vérification par un juriste sous 24h", included: true },
+      { label: "Garantie anti-rejet du greffe", included: true },
+      { label: "Juriste dédié jusqu'à l'immatriculation", included: true },
     ],
+    cta: "Choisir Premium",
   },
   {
     id: "avocat",
-    name: "Rédaction par un avocat",
-    subtitle: "",
-    price: 850,
-    popular: false,
-    highlighted: true,
+    name: "Avocat",
+    priceHT: 850,
     features: [
-      "Version personnalisée des statuts",
-      "Préparation du dossier complet par l'avocat",
-      "Envoi au greffe",
-      "Garantie anti-rejet du greffe",
-      "Accompagnement téléphonique, mail et rendez-vous possible",
-      "Réponses par un avocat dédié jusqu'à l'immatriculation",
-      "Vérification par l'avocat sous 24h ouvrées",
+      { label: "Statuts rédigés sur mesure par un avocat", included: true },
+      { label: "Préparation du dossier complet", included: true },
+      { label: "Envoi au greffe", included: true },
+      { label: "Accompagnement téléphonique, mail, RDV", included: true },
+      { label: "Vérification par l'avocat sous 24h", included: true },
+      { label: "Garantie anti-rejet du greffe", included: true },
+      { label: "Avocat dédié jusqu'à l'immatriculation", included: true },
     ],
-  },
-];
-
-const TARIF_DETAILS = [
-  {
-    title: "Essentielle — 139 € HT",
-    description: "Idéal si vous savez ce que vous voulez et êtes à l'aise avec les démarches administratives. Vous remplissez le questionnaire en ligne, nous générons automatiquement vos statuts conformes et préparons l'intégralité de votre dossier d'immatriculation. Vous pouvez nous contacter par mail à tout moment si vous avez une question. Le dossier est ensuite transmis directement au greffe pour immatriculation.",
-  },
-  {
-    title: "Premium — 199 € HT",
-    description: "Notre formule la plus choisie. En plus de tout ce qui est inclus dans l'Essentielle, un juriste dédié relit et vérifie chaque document de votre dossier sous 24h ouvrées avant envoi au greffe. Vous bénéficiez d'un accompagnement téléphonique et par mail, ainsi que d'une garantie anti-rejet : si le greffe refuse votre dossier, nous corrigeons et renvoyons sans frais supplémentaires. C'est la tranquillité d'esprit pour votre création.",
-  },
-  {
-    title: "Rédaction par un avocat — 850 € HT",
-    description: "Pour les projets nécessitant un accompagnement juridique personnalisé. Un avocat spécialisé en droit des sociétés rédige vos statuts sur mesure, adaptés à votre situation précise (clauses spécifiques, pacte d'associés, activité réglementée…). Il vous accompagne par téléphone, mail et rendez-vous si besoin. Vos statuts sont vérifiés et validés sous 24h ouvrées avec garantie anti-rejet du greffe.",
+    cta: "Choisir Avocat",
   },
 ];
 
@@ -638,104 +650,154 @@ const FRAIS_ANNEXES = [
 ];
 
 function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
-  const [openTarif, setOpenTarif] = useState<string | null>(null);
+  const [focusedPlan, setFocusedPlan] = useState<string>("premium");
   const [openFrais, setOpenFrais] = useState<string | null>(null);
 
   return (
-    <div className="mb-10">
-      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] mb-2">
-        Choisissez votre formule
-      </h2>
-      <p className="text-sm text-[#6B7280] mb-6">
-        Sélectionnez l&apos;accompagnement qui correspond à vos besoins.
-      </p>
+    <div className="space-y-4">
+      <div className="text-center space-y-1 mb-8">
+        <h2 className="text-2xl font-bold text-[#1E3A8A]">
+          Choisissez la formule qui vous correspond le mieux
+        </h2>
+        <p className="text-gray-400 text-sm">
+          + frais annexes obligatoires (~196,86 € HT)
+        </p>
+      </div>
 
-      {/* Plan cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
         {PRICING_PLANS.map((plan) => (
-          <button
+          <div
             key={plan.id}
-            onClick={() => onSelect(plan.id)}
+            onMouseEnter={() => setFocusedPlan(plan.id)}
+            onClick={() => setFocusedPlan(plan.id)}
             className={cn(
-              "relative text-left rounded-xl border-2 p-6 transition-all flex flex-col",
-              selected === plan.id
-                ? "border-[#2563EB] bg-[#EFF6FF]"
-                : plan.highlighted
-                  ? "border-[#2563EB] bg-[#EFF6FF]"
-                  : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+              "relative rounded-2xl flex flex-col transition-all cursor-pointer",
+              plan.featured
+                ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-2xl p-6 md:-my-3"
+                : focusedPlan === plan.id
+                  ? "bg-white border-2 border-[#2563EB] p-5 shadow-md"
+                  : "bg-white border-2 border-gray-200 p-5"
             )}
           >
-            {plan.popular && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2563EB] text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                Plus populaire ⭐
-              </span>
+            {plan.badge && (
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                <span className="bg-amber-400 text-amber-900 text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow">
+                  {plan.badge}
+                </span>
+              </div>
             )}
-            <h3 className={cn(
-              "text-lg font-bold mb-1",
-              plan.highlighted ? "text-[#2563EB]" : "text-[#1E293B]"
-            )}>
-              {plan.name}
-            </h3>
-            {plan.subtitle && (
-              <p className="text-sm text-[#6B7280] mb-4">{plan.subtitle}</p>
-            )}
-            <p className="text-4xl font-bold text-[#1E293B] mb-1">
-              {plan.price}€
-            </p>
-            <p className="text-xs text-[#6B7280] mb-1">+ frais annexes obligatoires (~196,86 € HT)</p>
-            <p className="text-xs text-[#9CA3AF] mb-4">Prix HT — TVA applicable en sus</p>
-            <div className="border-t border-[#E5E7EB] mb-4" />
+
+            <div className="mb-4">
+              <p className={cn("text-xs font-bold uppercase tracking-widest mb-2",
+                plan.featured ? "text-blue-200" : "text-gray-400"
+              )}>
+                {plan.name}
+              </p>
+              <div className="flex items-baseline gap-1">
+                <span className={cn("text-5xl font-extrabold",
+                  plan.featured ? "text-white" : "text-[#1E3A8A]"
+                )}>
+                  {plan.priceHT}€
+                </span>
+                <span className={cn("text-sm font-medium", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                  HT
+                </span>
+              </div>
+              <div className={cn("mt-2 text-xs space-y-0.5", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                <div className="flex justify-between">
+                  <span>HT</span>
+                  <span>{plan.priceHT} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>TVA 20 %</span>
+                  <span>{(plan.priceHT * 0.2).toFixed(2)} €</span>
+                </div>
+                <div className={cn("flex justify-between font-semibold pt-0.5 border-t",
+                  plan.featured ? "border-blue-400 text-white" : "border-gray-200 text-gray-700"
+                )}>
+                  <span>TTC</span>
+                  <span>{(plan.priceHT * 1.2).toFixed(2)} €</span>
+                </div>
+                <p className="pt-1">+ frais annexes obligatoires</p>
+              </div>
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); onSelect(plan.id); }}
+              className={cn(
+                "w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-5",
+                plan.featured
+                  ? "bg-white text-[#1E3A8A] hover:bg-blue-50"
+                  : selected === plan.id
+                    ? "bg-[#2563EB] text-white"
+                    : "border-2 border-[#2563EB] text-[#2563EB] hover:bg-[#2563EB] hover:text-white"
+              )}
+            >
+              {selected === plan.id ? (
+                <><Check className="w-4 h-4" /> Sélectionné</>
+              ) : plan.cta}
+            </button>
+
             <ul className="space-y-2.5 flex-1">
-              {plan.features.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
-                  <span className="text-green-500 mt-0.5 shrink-0">●</span>
-                  {f}
+              {plan.features.map((f) => (
+                <li key={f.label} className="flex items-start gap-2">
+                  {f.included ? (
+                    <Check className={cn("w-4 h-4 mt-0.5 flex-shrink-0",
+                      plan.featured ? "text-blue-300" : "text-[#2563EB]"
+                    )} />
+                  ) : (
+                    <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-300" />
+                  )}
+                  <span className={cn("text-sm leading-snug",
+                    plan.featured ? "text-blue-100" : f.included ? "text-gray-700" : "text-gray-300"
+                  )}>
+                    {f.label}
+                  </span>
                 </li>
               ))}
             </ul>
-          </button>
-        ))}
-      </div>
-
-      {/* On vous explique les tarifs */}
-      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les tarifs :</h3>
-      <div className="border border-[#D1D5DB] rounded-xl overflow-hidden mb-8">
-        {TARIF_DETAILS.map((t) => (
-          <div key={t.title} className="border-b border-[#D1D5DB] last:border-b-0">
-            <button
-              onClick={() => setOpenTarif(openTarif === t.title ? null : t.title)}
-              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#F9FAFB] transition-colors"
-            >
-              <span className="font-semibold text-[#1E293B]">{t.title}</span>
-              <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform shrink-0", openTarif === t.title && "rotate-180")} />
-            </button>
-            {openTarif === t.title && (
-              <div className="px-5 pb-4 text-sm text-[#6B7280] leading-relaxed">{t.description}</div>
-            )}
           </div>
         ))}
       </div>
 
       {/* Frais annexes */}
-      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">Frais annexes obligatoires (environ 196,86 € HT) :</h3>
-      <div className="border border-[#D1D5DB] rounded-xl overflow-hidden">
-        {FRAIS_ANNEXES.map((f) => (
-          <div key={f.title} className="border-b border-[#D1D5DB] last:border-b-0">
-            <button
-              onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
-              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#F9FAFB] transition-colors"
-            >
-              <div className="flex-1">
-                <span className="font-semibold text-[#1E293B]">{f.title}</span>
+      <div className="mt-8 space-y-3 max-w-2xl mx-auto w-full">
+        <AccordionItem title="Frais annexes obligatoires (~196,86 € HT)">
+          <div className="space-y-3">
+            {FRAIS_ANNEXES.map((f) => (
+              <div key={f.title}>
+                <button
+                  onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="text-sm font-medium text-[#1E3A8A]">{f.title}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-[#2563EB]">{f.amount}</span>
+                    <ChevronRight className={cn("w-4 h-4 text-gray-400 transition-transform", openFrais === f.title && "rotate-90")} />
+                  </div>
+                </button>
+                {openFrais === f.title && (
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{f.description}</p>
+                )}
               </div>
-              <span className="font-bold text-[#2563EB] mr-3 shrink-0">{f.amount}</span>
-              <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform shrink-0", openFrais === f.title && "rotate-180")} />
-            </button>
-            {openFrais === f.title && (
-              <div className="px-5 pb-4 text-sm text-[#6B7280] leading-relaxed">{f.description}</div>
-            )}
+            ))}
           </div>
-        ))}
+        </AccordionItem>
+
+        <AccordionItem title={`Ce qui est inclus dans la formule ${PRICING_PLANS.find(p => p.id === focusedPlan)?.name ?? "Premium"}`}>
+          <ul className="space-y-2.5 text-sm text-gray-600">
+            {(PRICING_PLANS.find(p => p.id === focusedPlan) ?? PRICING_PLANS[1]).features.map((f) => (
+              <li key={f.label} className="flex items-start gap-2">
+                {f.included ? (
+                  <Check className="w-4 h-4 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                ) : (
+                  <X className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
+                )}
+                <span className={f.included ? "text-gray-700" : "text-gray-300"}>{f.label}</span>
+              </li>
+            ))}
+          </ul>
+        </AccordionItem>
       </div>
     </div>
   );

@@ -1151,8 +1151,11 @@ export default function CreationSASUPage() {
   const question = QUESTIONS[currentQIndex];
 
   // Post-payment pages (step 4: dossier juridique) — dynamic based on formule_capital
-  const POST_PAGES = [
-    { id: "denomination" },        // dénomination + sigle + nom commercial + enseigne
+  const POST_PAGES_ALL = [
+    { id: "regles_statutaires" },   // règles par défaut ou personnaliser
+    { id: "date_cloture" },         // date de clôture exercice comptable
+    { id: "services_comptables" },  // commissaire aux comptes / services comptables
+    { id: "denomination" },         // dénomination + sigle + nom commercial + enseigne
     { id: "objet_principal" },      // catégories visuelles + sous-catégories
     { id: "objet_social" },         // texte libre
     { id: "activite_description" }, // activité principale + secondaires + code NAF
@@ -1169,6 +1172,9 @@ export default function CreationSASUPage() {
     { id: "adresse_siege" },        // adresse + type d'hébergement
     { id: "rbe" },                  // bénéficiaires effectifs (détection auto >25%)
   ];
+
+  // Filter pages dynamically based on answers
+  const POST_PAGES = POST_PAGES_ALL;
 
   // Determine sidebar step from phase
   const sidebarStep =
@@ -1730,7 +1736,254 @@ export default function CreationSASUPage() {
                   </div>
                 </div>
 
-                {/* ── Page 0: Dénomination sociale ── */}
+                {/* ── Page: Règles statutaires par défaut ── */}
+                {POST_PAGES[postPage]?.id === "regles_statutaires" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-4">
+                        <p className="font-bold text-[#1E3A8A]">Règles statutaires proposées par défaut – SASU</p>
+                        <p>Afin de simplifier la rédaction de vos statuts, nous vous proposons ci-dessous les règles les plus couramment adoptées dans les SASU.</p>
+
+                        <p className="font-bold text-[#1E3A8A] text-center">Résumé des règles par défaut proposées :</p>
+
+                        <div className="space-y-2 text-center">
+                          <p><strong className="text-[#2563EB]">Actions :</strong> Les actions sont librement cessibles et négociables.</p>
+                          <p><strong className="text-[#2563EB]">Commissaire aux comptes :</strong> Aucun commissaire aux comptes n&apos;est désigné dans les statuts.</p>
+                          <p><strong className="text-[#2563EB]">Durée de la société :</strong> La société est créée pour une durée de 99 ans, durée maximale autorisée par la loi.</p>
+                          <p><strong className="text-[#2563EB]">Déclaration de l&apos;associé unique :</strong> L&apos;associé unique déclare n&apos;avoir accompli aucun acte pour le compte de la société avant sa création.</p>
+                          <p className="font-bold text-[#1E3A8A]">Décisions de l&apos;associé unique et assemblées :</p>
+                          <p className="italic">Tant que la société ne comporte qu&apos;un seul associé, toutes les décisions sont prises par l&apos;associé unique et consignées par écrit dans un registre ou un document signé et daté (papier ou électronique).</p>
+                          <p className="italic">Si la société accueille ultérieurement de nouveaux associés, les assemblées seront convoquées par le Président, par tout moyen (courrier, e-mail, etc.).</p>
+                          <p className="italic">Chaque associé dispose d&apos;un nombre de voix proportionnel au nombre d&apos;actions qu&apos;il détient.</p>
+                          <p className="italic">En cas d&apos;égalité des voix, le Président dispose d&apos;une voix prépondérante.</p>
+                          <p className="italic">Les décisions sont prises à la majorité simple (plus de 50 % des voix) des associés présents ou représentés.</p>
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-3">
+                          <p><strong>Important :</strong> Ces clauses correspondent aux usages classiques des SASU. Toutefois, si vous avez des besoins spécifiques (contrôle des cessions d&apos;actions, limitation de pouvoirs, etc.), vous pouvez les adapter librement à l&apos;aide des options de personnalisation ci-dessous.</p>
+                        </div>
+                      </div>
+                    </AccordionItem>
+
+                    {/* Bouton explication simple */}
+                    <button
+                      onClick={() => setAnswer("show_regles_explications", answers.show_regles_explications === "true" ? "" : "true")}
+                      className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                    >
+                      Explication simple des règles par défaut
+                    </button>
+
+                    {answers.show_regles_explications === "true" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3 text-sm text-gray-700"
+                      >
+                        <p><strong className="text-[#2563EB]">Actions librement cessibles :</strong> vous pouvez vendre vos actions à qui vous voulez, sans restriction.</p>
+                        <p><strong className="text-[#2563EB]">Pas de commissaire aux comptes :</strong> pas de contrôle externe obligatoire tant que votre SASU ne dépasse pas certains seuils.</p>
+                        <p><strong className="text-[#2563EB]">Durée 99 ans :</strong> la société est créée pour durer aussi longtemps que vous le souhaitez.</p>
+                        <p><strong className="text-[#2563EB]">Décisions :</strong> tant que vous êtes seul associé, vous décidez seul, par écrit. Simple et rapide.</p>
+                        <p><strong className="text-[#2563EB]">Voix prépondérante :</strong> si des associés arrivent plus tard et qu&apos;il y a égalité, le Président tranche.</p>
+                      </motion.div>
+                    )}
+
+                    {/* Choix */}
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Que préférez-vous ?</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => {
+                            setAnswer("regles_choice", "defaut");
+                            setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300);
+                          }}
+                          className={cn(
+                            "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                            answers.regles_choice === "defaut"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-[#2563EB]">Je choisis ces règles par défaut</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setAnswer("regles_choice", "personnaliser");
+                            setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300);
+                          }}
+                          className={cn(
+                            "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                            answers.regles_choice === "personnaliser"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-[#2563EB]">Je souhaite modifier certaines règles</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Date de clôture exercice comptable ── */}
+                {POST_PAGES[postPage]?.id === "date_cloture" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-4">
+                        <p className="font-bold text-[#1E3A8A]">Date de clôture de l&apos;exercice comptable, que choisir ?</p>
+                        <div className="space-y-3">
+                          <div>
+                            <p className="font-bold text-[#1E3A8A]">Clôture au 31 décembre (par défaut)</p>
+                            <p>L&apos;exercice se termine avec l&apos;année civile. Simple, courant et pratique pour la gestion.</p>
+                          </div>
+                          <div>
+                            <p className="font-bold text-[#1E3A8A]">Clôture spéciale la 1<sup>re</sup> année</p>
+                            <p>Le premier exercice comptable peut durer au maximum 24 mois à compter de la date d&apos;immatriculation.</p>
+                            <p><strong>Exemple :</strong> Si votre société est créée le 15 avril 2025, vous pourrez fixer la fin de votre premier exercice jusqu&apos;au 15 avril 2027 au plus tard. Mais, vous pouvez aussi choisir une date fixe comme le 31 décembre 2026, pour être aligné sur l&apos;année civile.</p>
+                          </div>
+                          <div>
+                            <p className="font-bold text-[#1E3A8A]">Autre date permanente</p>
+                            <p>Vous pouvez fixer une autre date chaque année (ex. 30 septembre). Ce choix peut mieux correspondre à votre cycle d&apos;activité, mais demande un suivi régulier.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionItem>
+
+                    <p className="text-base font-bold text-[#1E3A8A]">Date de clôture de l&apos;exercice comptable</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <button
+                        onClick={() => { setAnswer("date_cloture", "31_decembre"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        className={cn(
+                          "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                          answers.date_cloture === "31_decembre"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <span className="text-sm font-medium text-[#2563EB]">Clôture au 31 décembre chaque année (recommandé)</span>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("date_cloture", "speciale_1ere")}
+                        className={cn(
+                          "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                          answers.date_cloture === "speciale_1ere"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <span className="text-sm font-medium text-[#2563EB]">Je souhaite une clôture différente la 1re année</span>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("date_cloture", "autre_permanente")}
+                        className={cn(
+                          "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                          answers.date_cloture === "autre_permanente"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <span className="text-sm font-medium text-[#2563EB]">Je souhaite une autre date permanente</span>
+                      </button>
+                    </div>
+
+                    {/* Date personnalisée si spéciale 1ère année */}
+                    {answers.date_cloture === "speciale_1ere" && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                        <label className="block text-sm font-bold text-[#1E3A8A]">Date de fin du premier exercice</label>
+                        <p className="text-xs text-gray-500">Maximum 24 mois après la date d&apos;immatriculation.</p>
+                        <input
+                          type="date"
+                          value={answers.date_cloture_speciale || ""}
+                          onChange={(e) => setAnswer("date_cloture_speciale", e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </motion.div>
+                    )}
+
+                    {/* Date personnalisée si autre permanente */}
+                    {answers.date_cloture === "autre_permanente" && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                        <label className="block text-sm font-bold text-[#1E3A8A]">Jour et mois de clôture</label>
+                        <p className="text-xs text-gray-500">Ex : 30 septembre, 30 juin, etc.</p>
+                        <input
+                          type="text"
+                          value={answers.date_cloture_permanente || ""}
+                          onChange={(e) => setAnswer("date_cloture_permanente", e.target.value)}
+                          placeholder="Ex : 30 septembre"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Page: Services comptables ── */}
+                {POST_PAGES[postPage]?.id === "services_comptables" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600">
+                        <p>Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <p className="text-sm text-gray-700">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous néanmoins bénéficier de services comptables ?</p>
+                      <p className="text-sm text-gray-500">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+
+                      <button
+                        onClick={() => { setAnswer("services_comptables", "logiciel"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        className={cn(
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all",
+                          answers.services_comptables === "logiciel"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <span className="text-sm font-medium text-[#2563EB]">Oui, je suis intéressé(e) par un logiciel de comptabilité en ligne.</span>
+                      </button>
+                      <button
+                        onClick={() => { setAnswer("services_comptables", "expert_comptable"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        className={cn(
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all",
+                          answers.services_comptables === "expert_comptable"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <span className="text-sm font-medium text-[#2563EB]">Oui, je souhaite être mis(e) en relation avec un expert-comptable dans mon secteur.</span>
+                      </button>
+                      <button
+                        onClick={() => { setAnswer("services_comptables", "non"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        className={cn(
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all",
+                          answers.services_comptables === "non"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <span className="text-sm font-medium text-gray-700">Non merci</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Dénomination sociale ── */}
                 {POST_PAGES[postPage]?.id === "denomination" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
@@ -4406,6 +4659,13 @@ export default function CreationSASUPage() {
                   <button
                     onClick={() => {
                       if (postPage < POST_PAGES.length - 1) {
+                        const currentId = POST_PAGES[postPage]?.id;
+                        const nextId = POST_PAGES[postPage + 1]?.id;
+
+                        // If on regles_statutaires and chose "defaut", skip to date_cloture (jump past services_comptables stays)
+                        // If on services_comptables and regles = defaut, skip all detailed pages → go to denomination
+                        // (no skip needed, pages flow naturally: regles → date_cloture → services_comptables → denomination...)
+
                         setPostPage((p) => p + 1);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }

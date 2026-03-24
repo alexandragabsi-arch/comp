@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp,
+  ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
-  FileUp, PenTool, HelpCircle, Lightbulb
+  FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -233,24 +234,10 @@ const QUESTIONS: Question[] = [
 interface PageDef {
   questions: number[];
   sidebarStep: number;
-  special?: "brand_protection" | "micro_page" | "micro_search" | "pricing";
+  special?: "brand_protection" | "micro_page" | "micro_search" | "pricing" | "avocat_confirmation";
 }
 
-const STATIC_PAGES: PageDef[] = [
-  { questions: [0],        sidebarStep: 1 },  // qui_realise
-  { questions: [1, 2],    sidebarStep: 2 },  // nom_societe + proteger_nom (together)
-  { questions: [],         sidebarStep: 2, special: "brand_protection" }, // conditional
-  { questions: [3],        sidebarStep: 2 },  // capital_social
-  { questions: [4, 5, 6], sidebarStep: 2, special: "micro_page" },      // micro: statut + action + fermeture (all on 1 page)
-  { questions: [],         sidebarStep: 2, special: "micro_search" },    // micro search (if oui)
-  { questions: [7],        sidebarStep: 2 },  // demarrage
-  { questions: [8],        sidebarStep: 2 },  // activite_artisanale
-  { questions: [],         sidebarStep: 3, special: "pricing" },         // 3 formules
-  { questions: [10],       sidebarStep: 4 },  // regime_fiscal
-  { questions: [9],        sidebarStep: 4 },  // objet_social
-  { questions: [11],       sidebarStep: 4 },  // adresse_siege
-  { questions: [12],       sidebarStep: 4 },  // president_remunere
-];
+/* STATIC_PAGES no longer used — navigation is now phase-based */
 
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */
 
@@ -574,216 +561,243 @@ function QuestionBlock({
   );
 }
 
-/* ───────── Sidebar Step ───────── */
+/* SidebarStep component removed — sidebar now uses dissolution-style inline rendering */
 
-function SidebarStep({
-  step,
-  isActive,
-  isDone,
-  isLast,
-}: {
-  step: (typeof STEPS)[number];
-  isActive: boolean;
-  isDone: boolean;
-  isLast: boolean;
-}) {
-  const Icon = step.icon;
-  const highlighted = isDone || isActive;
+/* ───────── Accordion Item (dissolution style) ───────── */
 
+function AccordionItem({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-col">
-      <div className="flex items-center">
-        <div
-          className={cn(
-            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
-            highlighted
-              ? "bg-[#2563EB] text-white"
-              : "bg-[#E5E7EB] text-[#9CA3AF]"
-          )}
-        >
-          {isDone ? <Check className="w-4 h-4" /> : step.id}
-        </div>
-        <Icon
-          className={cn(
-            "w-5 h-5 shrink-0 ml-3",
-            highlighted ? "text-[#2563EB]" : "text-[#9CA3AF]"
-          )}
-        />
-        <span
-          className={cn(
-            "text-[13px] font-semibold leading-[1.3] ml-2",
-            highlighted ? "text-[#1E293B]" : "text-[#9CA3AF]"
-          )}
-        >
-          {step.label}
-        </span>
-      </div>
-      {!isLast && (
-        <div className="ml-[15px] my-0">
-          <div
-            className={cn(
-              "border-l-[2px] border-dotted",
-              isDone ? "border-[#2563EB]" : "border-[#D1D5DB]"
-            )}
-            style={{ height: 48 }}
-          />
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-4 py-3.5 text-left gap-3"
+      >
+        <span className="text-sm font-semibold text-[#1E3A8A]">{title}</span>
+        <ChevronRight className={cn("w-4 h-4 text-[#2563EB] flex-shrink-0 transition-transform", open && "rotate-90")} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+          {children}
         </div>
       )}
     </div>
   );
 }
 
-/* ───────── Pricing Plans (Step 3: Paiement) ───────── */
+/* ───────── Pricing Plans (Step 3: Paiement) — Dissolution style ───────── */
 
-const PRICING_PLANS = [
+type PlanFeature = { label: string; included: boolean | "partial" };
+type Plan = {
+  id: string; name: string; priceHT: number; badge?: string; featured?: boolean;
+  features: PlanFeature[]; cta: string;
+};
+
+const PRICING_PLANS: Plan[] = [
   {
     id: "essentielle",
     name: "Essentielle",
-    subtitle: "Pour débuter sereinement",
-    price: 139,
-    popular: false,
-    highlighted: false,
+    priceHT: 139,
     features: [
-      "Téléchargement des statuts à la fin",
-      "Préparation du dossier complet",
-      "Envoi au greffe",
-      "Accompagnement par mail",
+      { label: "Statuts générés automatiquement", included: true },
+      { label: "Préparation du dossier complet", included: true },
+      { label: "Envoi au greffe", included: true },
+      { label: "Accompagnement par mail", included: true },
+      { label: "Vérification par un juriste", included: false },
+      { label: "Garantie anti-rejet du greffe", included: false },
+      { label: "Accompagnement téléphonique", included: false },
     ],
+    cta: "Choisir Essentielle",
   },
   {
     id: "premium",
     name: "Premium",
-    subtitle: "Le plus populaire",
-    price: 199,
-    popular: true,
-    highlighted: false,
+    priceHT: 199,
+    featured: true,
+    badge: "Le plus choisi",
     features: [
-      "Téléchargement des statuts à la fin",
-      "Préparation du dossier complet",
-      "Envoi au greffe",
-      "Garantie anti-rejet du greffe",
-      "Accompagnement téléphonique et par mail",
-      "Réponses par un juriste dédié jusqu'à l'immatriculation",
-      "Vérification par un juriste sous 24h ouvrées",
+      { label: "Statuts générés automatiquement", included: true },
+      { label: "Préparation du dossier complet", included: true },
+      { label: "Envoi au greffe", included: true },
+      { label: "Accompagnement téléphonique et par mail", included: true },
+      { label: "Vérification par un juriste sous 24h", included: true },
+      { label: "Garantie anti-rejet du greffe", included: true },
+      { label: "Juriste dédié jusqu'à l'immatriculation", included: true },
     ],
+    cta: "Choisir Premium",
   },
   {
     id: "avocat",
-    name: "Rédaction par un avocat",
-    subtitle: "",
-    price: 850,
-    popular: false,
-    highlighted: true,
+    name: "Avocat",
+    priceHT: 850,
     features: [
-      "Version personnalisée des statuts",
-      "Préparation du dossier complet par l'avocat",
-      "Envoi au greffe",
-      "Garantie anti-rejet du greffe",
-      "Accompagnement téléphonique, mail et rendez-vous possible",
-      "Réponses par un avocat dédié jusqu'à l'immatriculation",
-      "Vérification par l'avocat sous 24h ouvrées",
+      { label: "Statuts rédigés sur mesure par un avocat", included: true },
+      { label: "Préparation du dossier complet", included: true },
+      { label: "Envoi au greffe", included: true },
+      { label: "Accompagnement téléphonique, mail, RDV", included: true },
+      { label: "Vérification par l'avocat sous 24h", included: true },
+      { label: "Garantie anti-rejet du greffe", included: true },
+      { label: "Avocat dédié jusqu'à l'immatriculation", included: true },
     ],
+    cta: "Choisir Avocat",
   },
 ];
 
-const TARIF_DETAILS = [
-  { title: "Essentielle" },
-  { title: "Premium" },
-  { title: "Rédaction par un avocat" },
-];
-
 const FRAIS_ANNEXES = [
-  { title: "Frais de greffe" },
-  { title: "Publication d'annonce légale" },
-  { title: "Déclaration des bénéficiaires effectifs (RBE)" },
+  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", description: "Frais légaux versés au Greffe du Tribunal de Commerce pour inscrire votre SASU au Registre du Commerce et des Sociétés (RCS). Ce montant est fixé par arrêté et identique partout en France métropolitaine. C'est cette inscription qui donne naissance juridiquement à votre société." },
+  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT", description: "La loi impose de publier un avis de constitution dans un Journal d'Annonces Légales (JAL) habilité dans le département du siège social. Depuis la réforme de 2021, le tarif est un forfait national fixe de 138 € HT pour les SAS/SASU (environ 165 € HT pour Mayotte et La Réunion). Nous nous chargeons de la publication pour vous." },
+  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", description: "Obligation légale anti-blanchiment : vous devez déclarer l'identité des personnes physiques qui contrôlent votre société (plus de 25 % du capital ou des droits de vote). Déposée en même temps que l'immatriculation, le tarif est de 21,41 €. Si déposée séparément, le coût passe à environ 43,35 €." },
 ];
 
 function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
-  const [openTarif, setOpenTarif] = useState<string | null>(null);
+  const [focusedPlan, setFocusedPlan] = useState<string>("premium");
   const [openFrais, setOpenFrais] = useState<string | null>(null);
 
   return (
-    <div className="mb-10">
-      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] mb-2">
-        Choisissez votre formule
-      </h2>
-      <p className="text-sm text-[#6B7280] mb-6">
-        Sélectionnez l&apos;accompagnement qui correspond à vos besoins.
-      </p>
+    <div className="space-y-4">
+      <div className="text-center space-y-1 mb-8">
+        <h2 className="text-2xl font-bold text-[#1E3A8A]">
+          Choisissez la formule qui vous correspond le mieux
+        </h2>
+        <p className="text-gray-400 text-sm">
+          + frais annexes obligatoires (~196,86 € HT)
+        </p>
+      </div>
 
-      {/* Plan cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
         {PRICING_PLANS.map((plan) => (
-          <button
+          <div
             key={plan.id}
-            onClick={() => onSelect(plan.id)}
+            onMouseEnter={() => setFocusedPlan(plan.id)}
+            onClick={() => setFocusedPlan(plan.id)}
             className={cn(
-              "relative text-left rounded-xl border-2 p-6 transition-all flex flex-col",
-              selected === plan.id
-                ? "border-[#2563EB] bg-[#EFF6FF]"
-                : plan.highlighted
-                  ? "border-[#2563EB] bg-[#EFF6FF]"
-                  : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+              "relative rounded-2xl flex flex-col transition-all cursor-pointer",
+              plan.featured
+                ? "bg-gradient-to-b from-[#1E3A8A] to-[#2d52b8] text-white shadow-2xl p-6 md:-my-3"
+                : focusedPlan === plan.id
+                  ? "bg-white border-2 border-[#2563EB] p-5 shadow-md"
+                  : "bg-white border-2 border-gray-200 p-5"
             )}
           >
-            {plan.popular && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2563EB] text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
-                Plus populaire ⭐
-              </span>
+            {plan.badge && (
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                <span className="bg-amber-400 text-amber-900 text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap shadow">
+                  {plan.badge}
+                </span>
+              </div>
             )}
-            <h3 className={cn(
-              "text-lg font-bold mb-1",
-              plan.highlighted ? "text-[#2563EB]" : "text-[#1E293B]"
-            )}>
-              {plan.name}
-            </h3>
-            {plan.subtitle && (
-              <p className="text-sm text-[#6B7280] mb-4">{plan.subtitle}</p>
-            )}
-            <p className="text-4xl font-bold text-[#1E293B] mb-1">
-              {plan.price}€
-            </p>
-            <p className="text-xs text-[#6B7280] mb-5">+ frais annexes obligatoires</p>
-            <ul className="space-y-2.5 mt-auto">
-              {plan.features.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
-                  <span className="text-green-500 mt-0.5 shrink-0">●</span>
-                  {f}
+
+            <div className="mb-4">
+              <p className={cn("text-xs font-bold uppercase tracking-widest mb-2",
+                plan.featured ? "text-blue-200" : "text-gray-400"
+              )}>
+                {plan.name}
+              </p>
+              <div className="flex items-baseline gap-1">
+                <span className={cn("text-5xl font-extrabold",
+                  plan.featured ? "text-white" : "text-[#1E3A8A]"
+                )}>
+                  {plan.priceHT}€
+                </span>
+                <span className={cn("text-sm font-medium", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                  HT
+                </span>
+              </div>
+              <div className={cn("mt-2 text-xs space-y-0.5", plan.featured ? "text-blue-200" : "text-gray-400")}>
+                <div className="flex justify-between">
+                  <span>HT</span>
+                  <span>{plan.priceHT} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>TVA 20 %</span>
+                  <span>{(plan.priceHT * 0.2).toFixed(2)} €</span>
+                </div>
+                <div className={cn("flex justify-between font-semibold pt-0.5 border-t",
+                  plan.featured ? "border-blue-400 text-white" : "border-gray-200 text-gray-700"
+                )}>
+                  <span>TTC</span>
+                  <span>{(plan.priceHT * 1.2).toFixed(2)} €</span>
+                </div>
+                <p className="pt-1">+ frais annexes obligatoires</p>
+              </div>
+            </div>
+
+            <button
+              onClick={(e) => { e.stopPropagation(); onSelect(plan.id); }}
+              className={cn(
+                "w-full py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2 mb-5",
+                plan.featured
+                  ? "bg-white text-[#1E3A8A] hover:bg-blue-50"
+                  : selected === plan.id
+                    ? "bg-[#2563EB] text-white"
+                    : "border-2 border-[#2563EB] text-[#2563EB] hover:bg-[#2563EB] hover:text-white"
+              )}
+            >
+              {selected === plan.id ? (
+                <><Check className="w-4 h-4" /> Sélectionné</>
+              ) : plan.cta}
+            </button>
+
+            <ul className="space-y-2.5 flex-1">
+              {plan.features.map((f) => (
+                <li key={f.label} className="flex items-start gap-2">
+                  {f.included ? (
+                    <Check className={cn("w-4 h-4 mt-0.5 flex-shrink-0",
+                      plan.featured ? "text-blue-300" : "text-[#2563EB]"
+                    )} />
+                  ) : (
+                    <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-300" />
+                  )}
+                  <span className={cn("text-sm leading-snug",
+                    plan.featured ? "text-blue-100" : f.included ? "text-gray-700" : "text-gray-300"
+                  )}>
+                    {f.label}
+                  </span>
                 </li>
               ))}
             </ul>
-          </button>
-        ))}
-      </div>
-
-      {/* On vous explique les tarifs */}
-      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les tarifs :</h3>
-      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden mb-8">
-        {TARIF_DETAILS.map((t) => (
-          <button
-            key={t.title}
-            onClick={() => setOpenTarif(openTarif === t.title ? null : t.title)}
-            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
-          >
-            <span className="font-semibold text-[#1E293B]">{t.title}</span>
-            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openTarif === t.title && "rotate-180")} />
-          </button>
+          </div>
         ))}
       </div>
 
       {/* Frais annexes */}
-      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les frais annexes a la creation d&apos;une societe :</h3>
-      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden">
-        {FRAIS_ANNEXES.map((f) => (
-          <button
-            key={f.title}
-            onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
-            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
-          >
-            <span className="font-semibold text-[#1E293B]">{f.title}</span>
-            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openFrais === f.title && "rotate-180")} />
-          </button>
-        ))}
+      <div className="mt-8 space-y-3 max-w-2xl mx-auto w-full">
+        <AccordionItem title="Frais annexes obligatoires (~196,86 € HT)">
+          <div className="space-y-3">
+            {FRAIS_ANNEXES.map((f) => (
+              <div key={f.title}>
+                <button
+                  onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <span className="text-sm font-medium text-[#1E3A8A]">{f.title}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-[#2563EB]">{f.amount}</span>
+                    <ChevronRight className={cn("w-4 h-4 text-gray-400 transition-transform", openFrais === f.title && "rotate-90")} />
+                  </div>
+                </button>
+                {openFrais === f.title && (
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{f.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </AccordionItem>
+
+        <AccordionItem title={`Ce qui est inclus dans la formule ${PRICING_PLANS.find(p => p.id === focusedPlan)?.name ?? "Premium"}`}>
+          <ul className="space-y-2.5 text-sm text-gray-600">
+            {(PRICING_PLANS.find(p => p.id === focusedPlan) ?? PRICING_PLANS[1]).features.map((f) => (
+              <li key={f.label} className="flex items-start gap-2">
+                {f.included ? (
+                  <Check className="w-4 h-4 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                ) : (
+                  <X className="w-4 h-4 text-gray-300 mt-0.5 flex-shrink-0" />
+                )}
+                <span className={f.included ? "text-gray-700" : "text-gray-300"}>{f.label}</span>
+              </li>
+            ))}
+          </ul>
+        </AccordionItem>
       </div>
     </div>
   );
@@ -949,171 +963,1365 @@ function MicroSearchSection({ onCompanyFound }: { onCompanyFound: (data: { denom
   );
 }
 
+/* ───────── Objet principal (catégories visuelles) ───────── */
+
+const ACTIVITE_CATEGORIES = [
+  {
+    id: "aide_personne",
+    label: "AIDE ET SERVICE\nÀ LA PERSONNE",
+    emoji: "🏠",
+    sousCategories: [
+      "Assistance à domicile non réglementée",
+      "Jardinage",
+      "Entretien du domicile / ménage",
+      "Soutien scolaire",
+      "Garde des enfants +3 ans",
+      "Garde tout public (y compris des personnes fragiles)",
+      "Conseils bien-être / coaching personnel",
+      "Coaching sportif",
+      "Sophrologue / naturopathe",
+      "Autre",
+    ],
+  },
+  {
+    id: "automobile",
+    label: "AUTOMOBILE /\nTRANSPORT",
+    emoji: "🚗",
+    sousCategories: ["Transport de personnes (VTC)", "Transport de marchandises", "Location de véhicules", "Réparation automobile", "Autre"],
+  },
+  {
+    id: "restauration",
+    label: "BAR /\nRESTAURATION",
+    emoji: "🍽️",
+    sousCategories: ["Restaurant", "Bar / café", "Restauration rapide", "Traiteur", "Food truck", "Autre"],
+  },
+  {
+    id: "batiment",
+    label: "MÉTIERS DU\nBÂTIMENT",
+    emoji: "🏗️",
+    sousCategories: ["Maçonnerie", "Plomberie", "Électricité", "Peinture", "Menuiserie", "Carrelage", "Autre"],
+  },
+  {
+    id: "coiffure",
+    label: "COIFFURE /\nBIEN-ÊTRE",
+    emoji: "✂️",
+    sousCategories: ["Coiffure", "Esthétique", "Spa / massage", "Tatouage / piercing", "Autre"],
+  },
+  {
+    id: "commerce",
+    label: "COMMERCES /\nVENTE",
+    emoji: "🏪",
+    sousCategories: ["E-commerce", "Commerce de détail", "Commerce de gros", "Vente ambulante", "Autre"],
+  },
+  {
+    id: "evenementiel",
+    label: "ÉVÉNEMENTIEL /\nCULTURE",
+    emoji: "🎪",
+    sousCategories: ["Organisation d'événements", "Production audiovisuelle", "Photographie", "Musique / spectacle", "Autre"],
+  },
+  {
+    id: "immobilier",
+    label: "LOCATION /\nIMMOBILIER",
+    emoji: "🔑",
+    sousCategories: ["Agence immobilière", "Gestion locative", "Location meublée (LMNP)", "Promotion immobilière", "SCI", "Autre"],
+  },
+  {
+    id: "conseil",
+    label: "SERVICES DE\nCONSEILS",
+    emoji: "💼",
+    sousCategories: ["Conseil en management", "Conseil en stratégie", "Conseil RH", "Conseil financier", "Coaching professionnel", "Autre"],
+  },
+  {
+    id: "informatique",
+    label: "SERVICES\nINFORMATIQUES / WEB",
+    emoji: "💻",
+    sousCategories: ["Développement web / mobile", "Infogérance / hébergement", "Conseil en IT", "Cybersécurité", "Data / IA", "Design UI/UX", "Autre"],
+  },
+  {
+    id: "autre",
+    label: "AUTRE",
+    emoji: "💬",
+    sousCategories: ["Autre activité"],
+  },
+];
+
+function PostPaymentObjetPrincipal({
+  selected, sousCategorie, onSelect, onSousCategorie,
+}: {
+  selected: string; sousCategorie: string;
+  onSelect: (val: string) => void; onSousCategorie: (val: string) => void;
+}) {
+  const activeCat = ACTIVITE_CATEGORIES.find((c) => c.id === selected);
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center space-y-1">
+        <h2 className="text-2xl font-bold text-[#1E3A8A]">
+          Quel est l&apos;objet principal de votre SASU ?
+        </h2>
+        <p className="text-gray-500 text-sm">L&apos;objet principal est l&apos;activité de base de votre société</p>
+      </div>
+
+      <AccordionItem title="Plus d'informations">
+        <div className="text-sm text-gray-600 space-y-2">
+          <p>Sélectionnez la catégorie qui correspond le mieux à votre activité. Nous définirons ensuite votre objet social en détail.</p>
+        </div>
+      </AccordionItem>
+
+      {/* Grille de catégories */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+        {ACTIVITE_CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => { onSelect(cat.id); onSousCategorie(""); }}
+            className={cn(
+              "flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center transition-all",
+              selected === cat.id
+                ? "border-[#2563EB] bg-blue-50 shadow-sm"
+                : "border-gray-200 bg-white hover:border-[#2563EB]/50 hover:bg-blue-50/50"
+            )}
+          >
+            <span className="text-3xl">{cat.emoji}</span>
+            <span className={cn(
+              "text-[10px] font-bold leading-tight whitespace-pre-line",
+              selected === cat.id ? "text-[#1E3A8A]" : "text-gray-600"
+            )}>
+              {cat.label}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Sous-catégories */}
+      {activeCat && (
+        <div className="space-y-3">
+          <p className="text-sm text-[#2563EB] font-medium">Vous avez sélectionné une activité principale</p>
+          <p className="text-sm font-bold text-[#1E3A8A]">Sous catégorie : {activeCat.label.replace(/\n/g, " ")}</p>
+          <div className="flex flex-wrap gap-2">
+            {activeCat.sousCategories.map((sc) => (
+              <button
+                key={sc}
+                onClick={() => onSousCategorie(sc)}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all",
+                  sousCategorie === sc
+                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                    : "border-gray-200 text-gray-600 hover:border-[#2563EB]/50"
+                )}
+              >
+                {sc}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Pre-payment questions (dissolution style) ───────── */
+
+// Flat list of pre-payment question indices (before pricing)
+const PRE_PAYMENT_QUESTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // indices into QUESTIONS[]
+
+function shouldShowQuestion(qIndex: number, answers: Record<string, string>): boolean {
+  const q = QUESTIONS[qIndex];
+  if (q.id === "action_micro" || q.id === "fermeture_micro") return answers.statut_micro === "oui";
+  return true;
+}
+
 /* ───────── Main page ───────── */
 
+type Phase = "intro" | "questions" | "brand_protection" | "micro_search" | "pricing" | "avocat_confirmation" | "post_payment";
+
 export default function CreationSASUPage() {
-  const [currentPage, setCurrentPage] = useState(0);
+  const [phase, setPhase] = useState<Phase>("intro");
+  const [currentQ, setCurrentQ] = useState(0); // index into activeQuestions
   const [answers, setAnswers] = useState<Record<string, string>>({});
-
-  // Build active pages: skip conditional pages based on answers
-  const pages = STATIC_PAGES.filter((p) => {
-    if (p.special === "brand_protection") return answers.proteger_nom === "oui";
-    if (p.special === "micro_search") return answers.statut_micro === "oui";
-    return true;
-  });
-
-  const page = pages[currentPage] ?? pages[pages.length - 1];
-  const activeStep = page.sidebarStep;
-  const pageQuestions = page.questions.map((i) => QUESTIONS[i]);
+  const [postPage, setPostPage] = useState(0); // for post-payment pages
 
   const setAnswer = (id: string, val: string) =>
     setAnswers((prev) => ({ ...prev, [id]: val }));
 
-  const goNext = () => {
-    if (currentPage < pages.length - 1) {
-      setCurrentPage((p) => p + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  // Build active pre-payment questions
+  const activeQuestions = PRE_PAYMENT_QUESTIONS.filter((i) => shouldShowQuestion(i, answers));
+  const totalQ = activeQuestions.length;
+  const currentQIndex = activeQuestions[currentQ]; // actual QUESTIONS index
+  const question = QUESTIONS[currentQIndex];
+
+  // Post-payment pages (step 4: dossier juridique) — 10 pages
+  const POST_PAGES = [
+    { id: "denomination", sidebarStep: 4 },        // 0: dénomination + sigle + nom commercial + enseigne
+    { id: "objet_principal", sidebarStep: 4 },      // 1: catégories visuelles + sous-catégories
+    { id: "objet_social", sidebarStep: 4 },         // 2: texte libre
+    { id: "activite_description", sidebarStep: 4 }, // 3: activité principale + secondaires + code NAF
+    { id: "activite_saisonniere", sidebarStep: 4 }, // 4: saisonnière / ambulante
+    { id: "associe_unique", sidebarStep: 4 },       // 5: type d'associé + infos
+    { id: "capital_social", sidebarStep: 4 },       // 6: montant + formule
+    { id: "regime_fiscal", sidebarStep: 4 },        // 7: IS / IR
+    { id: "adresse_siege", sidebarStep: 4 },        // 8: adresse
+    { id: "president_remunere", sidebarStep: 4 },   // 9: rémunération
+  ];
+
+  // Determine sidebar step from phase
+  const sidebarStep =
+    phase === "intro" ? 1 :
+    phase === "questions" ? (question && ["qui_realise"].includes(question.id) ? 1 : 2) :
+    phase === "brand_protection" || phase === "micro_search" ? 2 :
+    phase === "pricing" || phase === "avocat_confirmation" ? 3 :
+    4;
+
+  function goNextQuestion(freshAnswers?: Record<string, string>) {
+    const a = freshAnswers ?? answers;
+    const q = QUESTIONS[activeQuestions[currentQ]];
+
+    // After certain questions, redirect to special pages
+    if (q.id === "proteger_nom" && a.proteger_nom === "oui") {
+      setPhase("brand_protection");
+      return;
     }
-  };
-  const goPrev = () => {
-    if (currentPage > 0) {
-      setCurrentPage((p) => p - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    if (q.id === "statut_micro" && a.statut_micro === "oui") {
+      // Show action_micro next (it's in the list)
     }
-  };
+    if (q.id === "fermeture_micro" && a.statut_micro === "oui") {
+      setPhase("micro_search");
+      return;
+    }
+    if (q.id === "activite_artisanale") {
+      // Last pre-payment question → go to pricing
+      setPhase("pricing");
+      return;
+    }
+
+    // Normal: advance to next question
+    if (currentQ < totalQ - 1) {
+      setCurrentQ((c) => c + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      setPhase("pricing");
+    }
+  }
+
+  function goPrevQuestion() {
+    if (currentQ > 0) {
+      setCurrentQ((c) => c - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      setPhase("intro");
+    }
+  }
+
+  function handleChoiceAnswer(val: string) {
+    const q = QUESTIONS[activeQuestions[currentQ]];
+    const freshAnswers = { ...answers, [q.id]: val };
+    setAnswer(q.id, val);
+    // Auto-advance on choice with fresh answers
+    setTimeout(() => goNextQuestion(freshAnswers), 300);
+  }
+
+  function handleInputContinue() {
+    goNextQuestion();
+  }
 
   return (
-    <div className="min-h-screen bg-white font-sans">
-      {/* ── Header ── */}
-      <header className="border-b border-gray-100 px-4 md:px-8 py-4 flex items-center justify-between max-w-[1400px] mx-auto">
-        <Link href="/" className="block h-9 w-auto">
-          <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={140} height={36} className="h-full w-auto object-contain" priority />
-        </Link>
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#6B7280]">
-          <span className="cursor-pointer hover:text-[#1E293B] transition-colors flex items-center gap-1">
-            Nos services <ChevronDown className="w-4 h-4" />
-          </span>
-        </nav>
-        <Link href="/login" className="flex items-center gap-1.5 text-sm font-medium text-[#6B7280] hover:text-[#1E293B] transition-colors">
-          <User className="w-4 h-4" /> Connexion
-        </Link>
-      </header>
+    <div className="min-h-screen flex bg-white font-sans">
+      {/* ── Sidebar ── */}
+      <aside className="hidden md:flex flex-col w-72 bg-white border-r border-gray-100 fixed top-0 left-0 h-full z-20">
+        <div className="p-6 border-b border-gray-100">
+          <Link href="/">
+            <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={140} height={36} />
+          </Link>
+        </div>
 
-      {/* ── Mobile stepper ── */}
-      <div className="md:hidden flex items-center justify-center gap-1.5 py-3 px-4 border-b border-gray-100">
-        {STEPS.map((s, i) => (
-          <div key={s.id} className="flex items-center">
-            <div className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-              activeStep > s.id ? "bg-[#2563EB] text-white"
-                : activeStep === s.id ? "bg-[#2563EB] text-white"
-                : "bg-[#E5E7EB] text-[#9CA3AF]"
-            )}>
-              {activeStep > s.id ? <Check className="w-3 h-3" /> : s.id}
-            </div>
-            {i < STEPS.length - 1 && <div className={cn("w-3 h-[2px] mx-0.5", activeStep > s.id ? "bg-[#2563EB]" : "bg-[#E5E7EB]")} />}
+        <div className="px-6 py-4 border-b border-gray-100">
+          <p className="font-semibold text-[#1E3A8A] text-sm">Création d&apos;une SASU</p>
+          <p className="text-xs text-gray-500 mt-0.5">Société par actions simplifiée unipersonnelle</p>
+        </div>
+
+        <div className="flex-1 px-6 py-6">
+          <div className="space-y-1">
+            {STEPS.map((s, index) => {
+              const isActive = s.id === sidebarStep;
+              const isCompleted = s.id < sidebarStep;
+              const Icon = s.icon;
+              return (
+                <div key={s.id} className="flex items-start gap-3">
+                  <div className="flex flex-col items-center">
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all",
+                      isActive ? "bg-[#2563EB] text-white" :
+                      isCompleted ? "bg-green-500 text-white" :
+                      "bg-gray-100 text-gray-400"
+                    )}>
+                      {isCompleted ? <Check className="w-5 h-5" /> : s.id}
+                    </div>
+                    {index < STEPS.length - 1 && (
+                      <div className={cn("w-0.5 h-8 mt-1", isCompleted ? "bg-green-500" : "bg-gray-200")} />
+                    )}
+                  </div>
+                  <div className={cn(
+                    "flex items-center gap-2 pt-2 rounded-lg px-2 flex-1",
+                    isActive ? "bg-blue-50 py-1" : ""
+                  )}>
+                    <Icon className={cn(
+                      "w-4 h-4 flex-shrink-0",
+                      isActive ? "text-[#2563EB]" : isCompleted ? "text-green-500" : "text-gray-400"
+                    )} />
+                    <p className={cn(
+                      "text-sm font-medium flex-1",
+                      isActive ? "text-[#1E3A8A]" : "text-gray-400"
+                    )}>
+                      {s.label}
+                    </p>
+                    {isActive && <ChevronRight className="w-4 h-4 text-[#2563EB]" />}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
+        </div>
 
-      <div className="flex max-w-[1400px] mx-auto min-h-[calc(100vh-65px)]">
-        {/* ═══════ Sidebar (desktop) — fixed 240px ═══════ */}
-        <aside className="hidden md:block w-[240px] min-w-[240px] border-r border-[#E5E7EB] pt-10 pb-8 pl-5 pr-3 overflow-y-auto">
-          {STEPS.map((s, i) => (
-            <SidebarStep
-              key={s.id}
-              step={s}
-              isActive={activeStep === s.id}
-              isDone={activeStep > s.id}
-              isLast={i === STEPS.length - 1}
-            />
-          ))}
-        </aside>
-
-        {/* ═══════ Main content ═══════ */}
-        <main className="flex-1 px-5 sm:px-8 md:px-14 py-6 md:py-10 max-w-[900px]">
-          {/* Title */}
-          <h1 className="text-[28px] font-bold text-[#2563EB] mb-8 leading-tight">
-            Création d&apos;une SASU
-          </h1>
-
-          {/* Brand protection special page */}
-          {page.special === "brand_protection" && <BrandProtectionSection />}
-          {page.special === "micro_search" && (
-            <MicroSearchSection
-              onCompanyFound={(data) => {
-                setAnswers((prev) => ({
-                  ...prev,
-                  micro_denomination: data.denomination,
-                  micro_siren: data.siren,
-                  micro_adresse: data.adresse,
-                }));
-              }}
-            />
-          )}
-          {page.special === "pricing" && (
-            <PricingSection
-              selected={answers.formule || ""}
-              onSelect={(val) => setAnswer("formule", val)}
-            />
-          )}
-
-          {/* Micro page: show sub-questions conditionally */}
-          {page.special === "micro_page" ? (
-            <>
-              <QuestionBlock
-                question={QUESTIONS[4]}
-                answer={answers.statut_micro || ""}
-                onAnswer={(val) => setAnswer("statut_micro", val)}
-              />
-              {answers.statut_micro === "oui" && (
-                <>
-                  <QuestionBlock
-                    question={QUESTIONS[5]}
-                    answer={answers.action_micro || ""}
-                    onAnswer={(val) => setAnswer("action_micro", val)}
-                  />
-                  <QuestionBlock
-                    question={QUESTIONS[6]}
-                    answer={answers.fermeture_micro || ""}
-                    onAnswer={(val) => setAnswer("fermeture_micro", val)}
-                  />
-                </>
-              )}
-            </>
-          ) : (
-            /* Questions for this page */
-            pageQuestions.map((q) => (
-              <QuestionBlock
-                key={q.id}
-                question={q}
-                answer={answers[q.id] || ""}
-                onAnswer={(val) => setAnswer(q.id, val)}
-              />
-            ))
-          )}
-
-          {/* ── Navigation ── */}
-          <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#E5E7EB]">
-            <button
-              onClick={goPrev}
-              className={cn(
-                "flex items-center gap-2 text-sm font-medium text-[#9CA3AF] hover:text-[#6B7280] transition-colors",
-                currentPage === 0 && "invisible"
-              )}
-            >
-              <ArrowLeft className="w-4 h-4" /> Précédent
-            </button>
-
-            <button
-              onClick={goNext}
-              className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:bg-[#1E40AF]"
-            >
-              Suivant <ArrowRight className="w-4 h-4" />
-            </button>
+        <div className="p-6">
+          <div className="bg-slate-50 rounded-xl p-4">
+            <h3 className="font-semibold text-[#1E3A8A] mb-1 text-sm">Besoin d&apos;aide ?</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Notre équipe est disponible pour vous accompagner
+            </p>
+            <a href="mailto:support@legalcorners.fr" className="text-[#2563EB] text-sm font-medium">
+              support@legalcorners.fr
+            </a>
           </div>
-        </main>
-      </div>
+        </div>
+      </aside>
+
+      {/* ── Main content ── */}
+      <main className={cn(
+        "flex-1 flex justify-center min-h-screen",
+        phase === "questions" || phase === "intro"
+          ? "md:ml-72 p-6 md:p-10 items-center"
+          : phase === "pricing" || phase === "post_payment"
+            ? "md:ml-72 p-6 md:p-10 items-start pt-10"
+            : "md:ml-72 p-6 items-start"
+      )}>
+        <div className={cn(
+          "w-full",
+          phase === "pricing" || phase === "brand_protection" || phase === "post_payment" ? "max-w-4xl" :
+          "max-w-2xl"
+        )}>
+          <AnimatePresence mode="wait">
+
+            {/* ══════ INTRO ══════ */}
+            {phase === "intro" && (
+              <motion.div
+                key="intro"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-10 max-w-2xl mx-auto w-full"
+              >
+                <div className="flex justify-center">
+                  <div className="w-20 h-20 rounded-2xl bg-blue-50 flex items-center justify-center">
+                    <Building2 className="w-8 h-8 text-[#2563EB]" strokeWidth={2.5} />
+                  </div>
+                </div>
+
+                <div className="text-center space-y-2">
+                  <h1 className="text-3xl font-bold text-[#1E3A8A] leading-tight">
+                    Créez votre <span className="text-[#2563EB]">SASU</span><br />en quelques minutes
+                  </h1>
+                  <p className="text-gray-700 font-medium">
+                    Répondez à quelques questions, nous nous occupons du reste
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="space-y-3 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
+                      <Clock className="w-7 h-7 text-white" />
+                    </div>
+                    <p className="font-bold text-[#1E3A8A] text-sm leading-snug">
+                      5 à 10 minutes
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Le questionnaire se remplit rapidement, à votre rythme.
+                    </p>
+                  </div>
+                  <div className="space-y-3 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
+                      <Shield className="w-7 h-7 text-white" />
+                    </div>
+                    <p className="font-bold text-[#1E3A8A] text-sm leading-snug">
+                      100% conforme
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Statuts conformes, dossier vérifié, envoi au greffe.
+                    </p>
+                  </div>
+                  <div className="space-y-3 flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
+                      <Users className="w-7 h-7 text-white" />
+                    </div>
+                    <p className="font-bold text-[#1E3A8A] text-sm leading-snug">
+                      Experts disponibles
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Notre équipe vous accompagne par mail et téléphone.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 text-center">
+                  <button
+                    onClick={() => { setPhase("questions"); setCurrentQ(0); }}
+                    className="w-full py-4 bg-[#1E3A8A] hover:bg-[#162d6e] text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-base"
+                  >
+                    Commencer la création <ArrowRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ══════ QUESTIONS (dissolution style) ══════ */}
+            {phase === "questions" && question && (
+              <motion.div
+                key={`q-${currentQIndex}`}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                className="space-y-6"
+              >
+                {/* Progress bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Question {currentQ + 1} sur {totalQ}</span>
+                    <span>{Math.round((currentQ / totalQ) * 100)}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#2563EB] rounded-full transition-all duration-500"
+                      style={{ width: `${(currentQ / totalQ) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Question title */}
+                <div className="text-center space-y-1">
+                  <h2 className="text-2xl font-bold text-[#1E3A8A]">
+                    {question.title}
+                  </h2>
+                  {question.description && (
+                    <p className="text-gray-500 text-sm">{question.description}</p>
+                  )}
+                </div>
+
+                {question.optional && (
+                  <div className="flex justify-center">
+                    <span className="px-3 py-1 text-xs font-semibold text-white bg-green-500 rounded-full">
+                      optionnel
+                    </span>
+                  </div>
+                )}
+
+                {/* Choice answers */}
+                {question.type === "choice" && question.choices && (
+                  <div className="space-y-3">
+                    {question.choices.map((c) => (
+                      <button
+                        key={c.value}
+                        onClick={() => handleChoiceAnswer(c.value)}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                          answers[question.id] === c.value
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                          {c.subtitle && <p className="text-sm text-gray-500 mt-0.5">{c.subtitle}</p>}
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Text input */}
+                {question.type === "input" && (
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={answers[question.id] || ""}
+                      onChange={(e) => setAnswer(question.id, e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && answers[question.id]) handleInputContinue(); }}
+                      placeholder={question.placeholder}
+                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
+                    />
+                  </div>
+                )}
+
+                {/* Textarea */}
+                {question.type === "textarea" && (
+                  <div className="space-y-4">
+                    <textarea
+                      value={answers[question.id] || ""}
+                      onChange={(e) => setAnswer(question.id, e.target.value)}
+                      placeholder={question.placeholder}
+                      rows={4}
+                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base resize-none"
+                    />
+                  </div>
+                )}
+
+                {question.hint && (
+                  <p className="text-sm text-[#2563EB] italic text-center">{question.hint}</p>
+                )}
+
+                {/* Info accordion */}
+                {question.info && (
+                  <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                    <InfoAccordion title={question.info.title}>
+                      {question.info.content}
+                    </InfoAccordion>
+                  </div>
+                )}
+
+                {/* Navigation for input/textarea types */}
+                {(question.type === "input" || question.type === "textarea") && (
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      onClick={goPrevQuestion}
+                      className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                    >
+                      Retour
+                    </button>
+                    <button
+                      onClick={handleInputContinue}
+                      disabled={!answers[question.id]}
+                      className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-30 flex items-center justify-center gap-2"
+                    >
+                      Continuer <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Back button for choice types */}
+                {question.type === "choice" && (
+                  <div className="text-center">
+                    <button
+                      onClick={goPrevQuestion}
+                      className="text-gray-500 text-sm hover:text-[#1E3A8A] transition-colors"
+                    >
+                      ← Retour
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* ══════ BRAND PROTECTION ══════ */}
+            {phase === "brand_protection" && (
+              <motion.div
+                key="brand"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <BrandProtectionSection />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      // Go back to proteger_nom question
+                      const idx = activeQuestions.findIndex((i) => QUESTIONS[i].id === "proteger_nom");
+                      setCurrentQ(idx >= 0 ? idx : currentQ);
+                      setPhase("questions");
+                    }}
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Continue to next question after proteger_nom
+                      const idx = activeQuestions.findIndex((i) => QUESTIONS[i].id === "proteger_nom");
+                      setCurrentQ(idx >= 0 ? idx + 1 : currentQ + 1);
+                      setPhase("questions");
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 flex items-center justify-center gap-2"
+                  >
+                    Continuer <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ══════ MICRO SEARCH ══════ */}
+            {phase === "micro_search" && (
+              <motion.div
+                key="micro-search"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <MicroSearchSection
+                  onCompanyFound={(data) => {
+                    setAnswers((prev) => ({
+                      ...prev,
+                      micro_denomination: data.denomination,
+                      micro_siren: data.siren,
+                      micro_adresse: data.adresse,
+                    }));
+                  }}
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      const idx = activeQuestions.findIndex((i) => QUESTIONS[i].id === "fermeture_micro");
+                      setCurrentQ(idx >= 0 ? idx : currentQ);
+                      setPhase("questions");
+                    }}
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Continue to demarrage
+                      const idx = activeQuestions.findIndex((i) => QUESTIONS[i].id === "demarrage");
+                      setCurrentQ(idx >= 0 ? idx : currentQ + 1);
+                      setPhase("questions");
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 flex items-center justify-center gap-2"
+                  >
+                    Continuer <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ══════ PRICING ══════ */}
+            {phase === "pricing" && (
+              <motion.div
+                key="pricing"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <PricingSection
+                  selected={answers.formule || ""}
+                  onSelect={(val) => setAnswer("formule", val)}
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      const idx = activeQuestions.findIndex((i) => QUESTIONS[i].id === "activite_artisanale");
+                      setCurrentQ(idx >= 0 ? idx : totalQ - 1);
+                      setPhase("questions");
+                    }}
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (answers.formule === "avocat") {
+                        setPhase("avocat_confirmation");
+                      } else {
+                        setPhase("post_payment");
+                        setPostPage(0);
+                      }
+                    }}
+                    disabled={!answers.formule}
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-30 flex items-center justify-center gap-2"
+                  >
+                    Continuer <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ══════ AVOCAT CONFIRMATION ══════ */}
+            {phase === "avocat_confirmation" && (
+              <motion.div
+                key="avocat-confirm"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <div className="rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF] p-8 text-center">
+                  <div className="flex justify-center mb-4">
+                    <CheckCircle2 className="w-16 h-16 text-[#2563EB]" />
+                  </div>
+                  <h2 className="text-[22px] font-bold text-[#1E293B] mb-3">
+                    Dossier enregistré avec succès
+                  </h2>
+                  <p className="text-[#6B7280] leading-relaxed max-w-lg mx-auto mb-6">
+                    Vous avez choisi la formule <strong className="text-[#2563EB]">Rédaction par un avocat</strong>.
+                    Un avocat spécialisé va prendre contact avec vous <strong>sous 24h ouvrées</strong> pour
+                    rédiger vos statuts sur mesure et vous accompagner dans votre création de SASU.
+                  </p>
+                  <div className="bg-white rounded-lg border border-[#D1D5DB] p-5 max-w-md mx-auto text-left">
+                    <h3 className="font-semibold text-[#1E293B] mb-3">Récapitulatif tarifaire :</h3>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#6B7280]">Formule avocat</span>
+                        <span className="font-semibold text-[#1E293B]">850,00 € HT</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#6B7280]">Frais annexes obligatoires</span>
+                        <span className="font-semibold text-[#1E293B]">~196,86 € HT</span>
+                      </div>
+                      <div className="border-t border-[#E5E7EB] pt-2 flex justify-between">
+                        <span className="font-bold text-[#1E293B]">Total estimé HT</span>
+                        <span className="font-bold text-[#2563EB]">~1 046,86 € HT</span>
+                      </div>
+                      <p className="text-xs text-[#9CA3AF] mt-1">+ TVA applicable et options éventuelles</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-[#6B7280] mt-6">
+                    Vous recevrez un email de confirmation avec les détails de votre rendez-vous.
+                  </p>
+                </div>
+                <div className="text-center">
+                  <button
+                    onClick={() => setPhase("pricing")}
+                    className="text-gray-500 text-sm hover:text-[#1E3A8A] transition-colors"
+                  >
+                    ← Changer de formule
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ══════ POST-PAYMENT — Dissolution style ══════ */}
+            {phase === "post_payment" && (
+              <motion.div
+                key={`post-${postPage}`}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                className="space-y-6"
+              >
+                {/* Progress bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Étape {postPage + 1} sur {POST_PAGES.length}</span>
+                    <span>{Math.round((postPage / POST_PAGES.length) * 100)}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#2563EB] rounded-full transition-all duration-500"
+                      style={{ width: `${(postPage / POST_PAGES.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* ── Page 0: Dénomination sociale ── */}
+                {postPage === 0 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">
+                        Identité de votre société
+                      </h2>
+                      <p className="text-gray-500 text-sm">Dénomination, sigle, nom commercial et enseigne</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>La <strong className="text-[#1E3A8A]">dénomination sociale</strong> est le <strong>nom juridique officiel</strong> de la société. Vous pouvez aussi ajouter <strong>un sigle, un nom commercial</strong> ou <strong>une enseigne</strong>.</p>
+                        <p>Ces informations seront reprises dans les statuts, les documents légaux et commerciaux.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Dénomination sociale (obligatoire)</label>
+                        <p className="text-xs text-gray-500 mb-2">Nom juridique de la société, tel qu&apos;il figure dans les statuts et sur l&apos;extrait Kbis.</p>
+                        <input
+                          type="text"
+                          value={answers.denomination_sociale || answers.nom_societe || ""}
+                          onChange={(e) => setAnswer("denomination_sociale", e.target.value)}
+                          placeholder="Ex : Altura Conseil"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Sigle (facultatif)</label>
+                        <p className="text-xs text-gray-500 mb-2">Abréviation du nom de la société. Utilisé à titre interne ou pour simplifier la communication.</p>
+                        <input
+                          type="text"
+                          value={answers.sigle || ""}
+                          onChange={(e) => setAnswer("sigle", e.target.value)}
+                          placeholder="AC (sigle d'Altura Conseil)"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom commercial (facultatif)</label>
+                        <p className="text-xs text-gray-500 mb-2">Nom utilisé dans le cadre de l&apos;activité commerciale. Il peut être différent de la dénomination sociale.</p>
+                        <input
+                          type="text"
+                          value={answers.nom_commercial || ""}
+                          onChange={(e) => setAnswer("nom_commercial", e.target.value)}
+                          placeholder="Altura & Co (pour Altura Conseil)"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Enseigne (facultatif)</label>
+                        <p className="text-xs text-gray-500 mb-2">Nom apposé en façade du local d&apos;exploitation, s&apos;il y a lieu. Elle identifie visuellement l&apos;établissement.</p>
+                        <input
+                          type="text"
+                          value={answers.enseigne || ""}
+                          onChange={(e) => setAnswer("enseigne", e.target.value)}
+                          placeholder="Altura (enseigne visible en boutique)"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 1: Objet principal (catégories visuelles) ── */}
+                {postPage === 1 && (
+                  <PostPaymentObjetPrincipal
+                    selected={answers.objet_principal || ""}
+                    sousCategorie={answers.sous_categorie || ""}
+                    onSelect={(val) => setAnswer("objet_principal", val)}
+                    onSousCategorie={(val) => setAnswer("sous_categorie", val)}
+                  />
+                )}
+
+                {/* ── Page 2: Objet social (texte libre) ── */}
+                {postPage === 2 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Objet social</h2>
+                      <p className="text-gray-500 text-sm">Définissez l&apos;objet social de votre société</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>L&apos;objet social décrit <strong>précisément l&apos;activité</strong> de votre société. Il sera repris dans les statuts.</p>
+                        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em> pour plus de souplesse.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <textarea
+                      value={answers.objet_social || ""}
+                      onChange={(e) => setAnswer("objet_social", e.target.value)}
+                      placeholder="Ex : Conseil en stratégie digitale, développement de sites web et applications mobiles, et toutes opérations se rattachant directement ou indirectement à cet objet..."
+                      rows={6}
+                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base resize-none"
+                    />
+                  </div>
+                )}
+
+                {/* ── Page 3: Activité principale + secondaires ── */}
+                {postPage === 3 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Description de vos activités</h2>
+                      <p className="text-gray-500 text-sm">Précisez votre activité principale et vos éventuelles activités secondaires</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>L&apos;activité principale est celle qui génère le plus de chiffre d&apos;affaires. Les activités secondaires sont complémentaires.</p>
+                        <p>Ces informations permettent de déterminer votre <strong>code NAF</strong> et de vérifier les obligations réglementaires.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          Parmi les activités mentionnées dans votre objet social, quelle est l&apos;activité principale de votre société ?
+                        </label>
+                        <p className="text-xs text-gray-500 mb-2">(exemple : salon de coiffure, travaux de plomberie, vente en ligne de vêtements, conseil en gestion, etc.) Décrivez en quelques mots ce que fait votre entreprise au quotidien.</p>
+                        <input
+                          type="text"
+                          value={answers.activite_principale_desc || ""}
+                          onChange={(e) => setAnswer("activite_principale_desc", e.target.value)}
+                          placeholder="Ex : Soutien scolaire"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          Votre société exercera-t-elle d&apos;autres activités secondaires (mentionnées dans l&apos;objet social) ?
+                        </label>
+                        <p className="text-xs text-gray-500 mb-2">Si oui merci de le préciser de manière simple (Exemples : vente de produits liés à l&apos;activité, formation, maintenance, prestation complémentaire, etc.)</p>
+                        <input
+                          type="text"
+                          value={answers.activites_secondaires || ""}
+                          onChange={(e) => setAnswer("activites_secondaires", e.target.value)}
+                          placeholder="Ex : Formation en ligne, vente de supports pédagogiques"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Code NAF suggestion */}
+                    {answers.activite_principale_desc && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <p className="text-sm text-[#1E3A8A]">
+                          <strong>Suggestion du code NAF :</strong> Le code NAF attribué officiellement sera celui correspondant à l&apos;activité principale, telle que déterminée par l&apos;INSEE.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Analyse réglementaire */}
+                    <div className="space-y-3">
+                      <h3 className="text-base font-bold text-[#1E3A8A]">Analyse réglementaire de votre activité</h3>
+                      <p className="text-sm text-gray-600">
+                        À partir des activités que vous avez décrites, nous vérifions si certaines obligations réglementaires ou justificatifs sont requis afin d&apos;éviter tout refus lors de l&apos;immatriculation auprès de l&apos;INPI.
+                      </p>
+                      {answers.activite_principale_desc && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                          <p className="text-sm text-green-800">
+                            <strong>Analyse :</strong> Nous vérifierons la conformité réglementaire de votre activité lors de la constitution du dossier.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 4: Activité saisonnière / ambulante ── */}
+                {postPage === 4 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Type d&apos;activité</h2>
+                      <p className="text-gray-500 text-sm">Est-ce qu&apos;une des activités est saisonnière ou ambulante ?</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      {[
+                        { value: "saisonniere", label: "Oui une des activités est saisonnière" },
+                        { value: "ambulante", label: "Oui une des activités est ambulante" },
+                        { value: "ni_lun_ni_lautre", label: "Ni l'un ni l'autre" },
+                      ].map((c) => (
+                        <button
+                          key={c.value}
+                          onClick={() => setAnswer("activite_saisonniere", c.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.activite_saisonniere === c.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-3">
+                        <p><strong className="text-[#1E3A8A]">Qu&apos;est ce qu&apos;une activité saisonnière ou ambulante ?</strong></p>
+                        <p>Il s&apos;agit d&apos;un type d&apos;activité professionnelle exercée de façon temporaire ou non sédentaire, souvent soumise à des règles particulières (déclarations, autorisations, régimes sociaux spécifiques).</p>
+                        <p><strong>Exemple d&apos;activité ambulante</strong> : Vente sur les marchés, foires, brocantes</p>
+                        <p><strong>Exemple d&apos;activité saisonnière</strong> : Travail dans les stations de ski l&apos;hiver ou ventes de glace sur plage</p>
+                      </div>
+                    </AccordionItem>
+                  </div>
+                )}
+
+                {/* ── Page 5: Associé unique ── */}
+                {postPage === 5 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">ASSOCIÉ UNIQUE</h2>
+                      <p className="text-gray-500 text-sm">Veuillez remplir les informations de l&apos;associé unique</p>
+                    </div>
+
+                    {/* Info block */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3">
+                      <p className="text-sm text-gray-700">Une SASU ne comporte qu&apos;un seul associé, appelé <strong className="text-[#1E3A8A]">associé unique</strong>.</p>
+                      <p className="text-sm text-gray-700">Veuillez renseigner :</p>
+                      <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                        <li><em className="text-[#2563EB] font-medium">ses informations personnelles</em></li>
+                        <li><em className="text-[#2563EB] font-medium">sa résidence fiscale</em></li>
+                      </ul>
+                      <p className="text-sm text-gray-700">Une fois les informations saisies, cliquez sur <strong>&quot;Valider&quot;</strong> pour enregistrer l&apos;associé unique.</p>
+                    </div>
+
+                    {/* Type d'associé */}
+                    <div className="space-y-3">
+                      <p className="text-sm font-bold text-[#1E3A8A]">Type d&apos;associé :</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("type_associe", "physique")}
+                          className={cn(
+                            "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
+                            answers.type_associe === "physique"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <User className="w-10 h-10 text-[#2563EB]" />
+                          <span className="text-sm font-medium text-[#2563EB]">Particulier (personne physique)</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("type_associe", "morale")}
+                          className={cn(
+                            "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
+                            answers.type_associe === "morale"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Building2 className="w-10 h-10 text-[#2563EB]" />
+                          <span className="text-sm font-medium text-[#2563EB]">Société (personne morale)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Formulaire associé physique */}
+                    {answers.type_associe === "physique" && (
+                      <div className="space-y-4 border-t border-gray-200 pt-5">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
+                            <input
+                              type="text"
+                              value={answers.associe_nom || ""}
+                              onChange={(e) => setAnswer("associe_nom", e.target.value)}
+                              placeholder="Nom de famille"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                            <input
+                              type="text"
+                              value={answers.associe_prenom || ""}
+                              onChange={(e) => setAnswer("associe_prenom", e.target.value)}
+                              placeholder="Prénom"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                          <input
+                            type="date"
+                            value={answers.associe_date_naissance || ""}
+                            onChange={(e) => setAnswer("associe_date_naissance", e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                          <input
+                            type="text"
+                            value={answers.associe_lieu_naissance || ""}
+                            onChange={(e) => setAnswer("associe_lieu_naissance", e.target.value)}
+                            placeholder="Ville de naissance"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                          <input
+                            type="text"
+                            value={answers.associe_nationalite || ""}
+                            onChange={(e) => setAnswer("associe_nationalite", e.target.value)}
+                            placeholder="Ex : Française"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse de résidence fiscale</label>
+                          <input
+                            type="text"
+                            value={answers.associe_adresse || ""}
+                            onChange={(e) => setAnswer("associe_adresse", e.target.value)}
+                            placeholder="Adresse complète"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Formulaire associé morale */}
+                    {answers.type_associe === "morale" && (
+                      <div className="space-y-4 border-t border-gray-200 pt-5">
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Dénomination de la société associée</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_nom || ""}
+                            onChange={(e) => setAnswer("associe_societe_nom", e.target.value)}
+                            placeholder="Nom de la société"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_forme || ""}
+                            onChange={(e) => setAnswer("associe_societe_forme", e.target.value)}
+                            placeholder="Ex : SAS, SARL, SA..."
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_siren || ""}
+                            onChange={(e) => setAnswer("associe_societe_siren", e.target.value)}
+                            placeholder="Ex : 123 456 789"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse du siège de la société associée</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_adresse || ""}
+                            onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)}
+                            placeholder="Adresse complète"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
+                          <input
+                            type="text"
+                            value={answers.associe_societe_representant || ""}
+                            onChange={(e) => setAnswer("associe_societe_representant", e.target.value)}
+                            placeholder="Nom et prénom du représentant"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Page 6: Capital social ── */}
+                {postPage === 6 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Capital social</h2>
+                      <p className="text-gray-500 text-sm">Définissez le montant et les modalités de votre capital</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-3">
+                        <p>💡 Le capital minimum légal pour une SASU est de <strong>1 euro</strong>. Afin de faciliter vos démarches, nous vous proposons par défaut un ensemble de règles couramment utilisées dans les statuts afin de simplifier la création de votre SASU.</p>
+                        <p><strong className="text-[#1E3A8A]">Voici la formule dite simplifiée :</strong></p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>L&apos;associé unique a apporté la totalité du capital en numéraire (argent déposé en banque).</li>
+                          <li>Cet apport est effectué à titre de biens propres de l&apos;associé unique (pas de biens communs ou indivis)</li>
+                          <li>Aucun apport en nature ni en industrie.</li>
+                          <li>Le capital est entièrement libéré (100 % déposé).</li>
+                          <li>Le capital est fixe.</li>
+                          <li>La valeur nominale d&apos;une action est de 1 €.</li>
+                          <li>Le montant du capital social correspond à celui que vous avez défini ci-dessous.</li>
+                        </ul>
+                        <p>Toutefois, il est possible de modifier ces règles si vous le souhaitez par exemple : introduire des apports en nature (biens, matériel, véhicule, etc.), des apports en industrie, ou opter pour un capital variable.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          Quel est le montant de votre capital social ? (€)
+                        </label>
+                        <p className="text-xs text-gray-500 mb-2">Minimum 1 euro</p>
+                        <input
+                          type="number"
+                          min="1"
+                          value={answers.capital_social || "1"}
+                          onChange={(e) => setAnswer("capital_social", e.target.value)}
+                          placeholder="1"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <p className="text-sm font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("formule_capital", "simplifiee")}
+                            className={cn(
+                              "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
+                              answers.formule_capital === "simplifiee"
+                                ? "border-[#2563EB] bg-blue-50"
+                                : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <Zap className="w-8 h-8 text-[#2563EB]" />
+                            <span className="text-sm font-medium text-[#2563EB]">Je choisis la formule simplifiée</span>
+                            <span className="text-xs text-gray-500">(Le choix le plus fréquent)</span>
+                          </button>
+                          <button
+                            onClick={() => setAnswer("formule_capital", "personnalisee")}
+                            className={cn(
+                              "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
+                              answers.formule_capital === "personnalisee"
+                                ? "border-[#2563EB] bg-blue-50"
+                                : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <PenTool className="w-8 h-8 text-[#2563EB]" />
+                            <span className="text-sm font-medium text-[#2563EB]">Je souhaite modifier ces règles</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 7: Régime fiscal ── */}
+                {postPage === 7 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[10].title}</h2>
+                      {QUESTIONS[10].description && <p className="text-gray-500 text-sm">{QUESTIONS[10].description}</p>}
+                    </div>
+                    {QUESTIONS[10].info && (
+                      <AccordionItem title={QUESTIONS[10].info.title}>
+                        <div className="text-sm text-gray-600">{QUESTIONS[10].info.content}</div>
+                      </AccordionItem>
+                    )}
+                    <div className="space-y-3">
+                      {QUESTIONS[10].choices?.map((c) => (
+                        <button
+                          key={c.value}
+                          onClick={() => setAnswer("regime_fiscal", c.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.regime_fiscal === c.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 8: Adresse siège social ── */}
+                {postPage === 8 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[11].title}</h2>
+                    </div>
+                    {QUESTIONS[11].info && (
+                      <AccordionItem title={QUESTIONS[11].info.title}>
+                        <div className="text-sm text-gray-600">{QUESTIONS[11].info.content}</div>
+                      </AccordionItem>
+                    )}
+                    <input
+                      type="text"
+                      value={answers.adresse_siege || ""}
+                      onChange={(e) => setAnswer("adresse_siege", e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && answers.adresse_siege) { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); } }}
+                      placeholder={QUESTIONS[11].placeholder}
+                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
+                    />
+                  </div>
+                )}
+
+                {/* ── Page 9: Président rémunéré ── */}
+                {postPage === 9 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[12].title}</h2>
+                    </div>
+                    {QUESTIONS[12].info && (
+                      <AccordionItem title={QUESTIONS[12].info.title}>
+                        <div className="text-sm text-gray-600">{QUESTIONS[12].info.content}</div>
+                      </AccordionItem>
+                    )}
+                    <div className="space-y-3">
+                      {QUESTIONS[12].choices?.map((c) => (
+                        <button
+                          key={c.value}
+                          onClick={() => setAnswer("president_remunere", c.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.president_remunere === c.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Navigation */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      if (postPage > 0) {
+                        setPostPage((p) => p - 1);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      } else {
+                        setPhase("pricing");
+                      }
+                    }}
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (postPage < POST_PAGES.length - 1) {
+                        setPostPage((p) => p + 1);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  >
+                    Continuer <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
+      </main>
     </div>
   );
 }

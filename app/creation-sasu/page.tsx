@@ -2510,52 +2510,6 @@ export default function CreationSASUPage() {
 
                     <hr className="border-gray-200" />
 
-                    {/* Montant du capital social section (actions_capital inline) */}
-                    <div className="space-y-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-gray-400">ACTIONS ET CAPITAL SOCIAL</p>
-
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Montant du capital</strong> : somme totale apportée par les associés.</p>
-                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Valeur unitaire d&apos;une action</strong> : prix de base d&apos;une action (souvent 1 € pour simplifier).</p>
-                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Nombre d&apos;actions</strong> : calcul automatique = Montant du capital ÷ Valeur d&apos;une action.</p>
-                        <p className="text-base text-gray-700"><strong>Exemple</strong> : Capital 5 000 € / Valeur 1 € = 5 000 actions.</p>
-                        <p className="text-sm text-[#2563EB] font-semibold">Veuillez remplir le montant de votre capital social et la valeur d&apos;une action souhaitée, le nombre d&apos;actions s&apos;ajustera automatiquement</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={answers.capital_social || ""}
-                          onChange={(e) => setAnswer("capital_social", e.target.value)}
-                          placeholder="Ex : 12000"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={answers.valeur_action || "1"}
-                          onChange={(e) => setAnswer("valeur_action", e.target.value)}
-                          placeholder="1"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
-                        <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
-                          {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
-                        </div>
-                      </div>
-                    </div>
-
-                    <hr className="border-gray-200" />
-
                     {/* Info formule simplifiée */}
                     <AccordionItem title="Plus d'informations">
                       <div className="text-sm text-gray-600 space-y-3">
@@ -2574,12 +2528,28 @@ export default function CreationSASUPage() {
                       </div>
                     </AccordionItem>
 
+                    {/* Montant du capital social */}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Quel est le montant de votre capital social ? (€)</label>
+                        <p className="text-sm text-gray-500 mb-2">Minimum 1 euro</p>
+                        <input
+                          type="number"
+                          min="1"
+                          value={answers.capital_social || ""}
+                          onChange={(e) => setAnswer("capital_social", e.target.value)}
+                          placeholder="1"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                        />
+                      </div>
+                    </div>
+
                     {/* Formule simplifiée / personnalisée */}
                     <div>
                       <p className="text-base font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
                       <div className="grid grid-cols-2 gap-3">
                         <button
-                          onClick={() => setAnswer("formule_capital", "simplifiee")}
+                          onClick={() => { setAnswer("formule_capital", "simplifiee"); setAnswer("valeur_action", "1"); }}
                           className={cn(
                             "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
                             answers.formule_capital === "simplifiee"
@@ -2605,18 +2575,52 @@ export default function CreationSASUPage() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Si simplifiée: valeur action = 1€, afficher résumé */}
+                    {answers.formule_capital === "simplifiee" && (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+                        <p className="text-sm text-green-800"><strong>Formule simplifiée sélectionnée</strong></p>
+                        <p className="text-sm text-green-700">Valeur nominale d&apos;une action : <strong>1 €</strong></p>
+                        <p className="text-sm text-green-700">Nombre total d&apos;actions : <strong>{(Number(answers.capital_social) || 0).toLocaleString("fr-FR")}</strong></p>
+                      </div>
+                    )}
+
+                    {/* Si personnalisée: demander la valeur d'une action */}
+                    {answers.formule_capital === "personnalisee" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={answers.valeur_action || "1"}
+                            onChange={(e) => setAnswer("valeur_action", e.target.value)}
+                            placeholder="1"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
+                          <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
+                            {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* ── Actions et capital social (personnalisée only) ── */}
+                {/* ── Actions et capital social (personnalisée only — legacy, kept for route) ── */}
                 {POST_PAGES[postPage]?.id === "actions_capital" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                      <p className="text-base text-gray-700">Dans le parcours simplifié, la valeur d&apos;une action est fixée à 1 euro.</p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                      <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Montant du capital</strong> : somme totale apportée par les associés.</p>
+                      <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Valeur unitaire d&apos;une action</strong> : prix de base d&apos;une action.</p>
+                      <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Nombre d&apos;actions</strong> : calcul automatique = Montant du capital ÷ Valeur d&apos;une action.</p>
                     </div>
 
                     <div className="space-y-5">

@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -272,7 +272,7 @@ function ChoiceCard({ label, subtitle, selected, onClick }: { label: string; sub
 }
 
 function InfoAccordion({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div className="mt-6 border border-[#D1D5DB] rounded-xl overflow-hidden">
       <button
@@ -1061,7 +1061,7 @@ function PostPaymentObjetPrincipal({
       </div>
 
       <AccordionItem title="Plus d'informations">
-        <div className="text-sm text-gray-600 space-y-2">
+        <div className="text-base text-gray-600 space-y-2">
           <p>Sélectionnez la catégorie qui correspond le mieux à votre activité. Nous définirons ensuite votre objet social en détail.</p>
         </div>
       </AccordionItem>
@@ -1094,14 +1094,14 @@ function PostPaymentObjetPrincipal({
       {activeCat && (
         <div className="space-y-3">
           <p className="text-sm text-[#2563EB] font-medium">Vous avez sélectionné une activité principale</p>
-          <p className="text-sm font-bold text-[#1E3A8A]">Sous catégorie : {activeCat.label.replace(/\n/g, " ")}</p>
+          <p className="text-base font-bold text-[#1E3A8A]">Sous catégorie : {activeCat.label.replace(/\n/g, " ")}</p>
           <div className="flex flex-wrap gap-2">
             {activeCat.sousCategories.map((sc) => (
               <button
                 key={sc}
                 onClick={() => onSousCategorie(sc)}
                 className={cn(
-                  "px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all",
+                  "px-4 py-2.5 rounded-xl border-2 text-base font-medium transition-all",
                   sousCategorie === sc
                     ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
                     : "border-gray-200 text-gray-600 hover:border-[#2563EB]/50"
@@ -1122,7 +1122,8 @@ function PostPaymentObjetPrincipal({
 // Flat list of pre-payment question indices (before pricing)
 const PRE_PAYMENT_QUESTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // indices into QUESTIONS[]
 
-function shouldShowQuestion(qIndex: number, answers: Record<string, string>): boolean {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function shouldShowQuestion(qIndex: number, answers: Record<string, any>): boolean {
   const q = QUESTIONS[qIndex];
   if (q.id === "action_micro" || q.id === "fermeture_micro") return answers.statut_micro === "oui";
   return true;
@@ -1135,10 +1136,12 @@ type Phase = "intro" | "questions" | "brand_protection" | "micro_search" | "pric
 export default function CreationSASUPage() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [currentQ, setCurrentQ] = useState(0); // index into activeQuestions
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [answers, setAnswers] = useState<Record<string, any>>({});
   const [postPage, setPostPage] = useState(0); // for post-payment pages
 
-  const setAnswer = (id: string, val: string) =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setAnswer = (id: string, val: any) =>
     setAnswers((prev) => ({ ...prev, [id]: val }));
 
   // Build active pre-payment questions
@@ -1150,17 +1153,19 @@ export default function CreationSASUPage() {
   // Post-payment pages (step 4: dossier juridique) — dynamic based on formule_capital
   const POST_PAGES = [
     { id: "denomination" },        // dénomination + sigle + nom commercial + enseigne
+    { id: "type_structure" },      // classique / holding passive / holding animatrice
     { id: "objet_principal" },      // catégories visuelles + sous-catégories
     { id: "objet_social" },         // texte libre
     { id: "activite_description" }, // activité principale + secondaires + code NAF
     { id: "activite_saisonniere" }, // saisonnière / ambulante
-    { id: "associe_unique" },       // type d'associé + infos
+    { id: "associe_unique" },       // type d'associé + infos + situation matrimoniale
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
     { id: "depot_capital" },        // établissement bancaire + date dépôt
-    { id: "regime_fiscal" },        // IS / IR
+    { id: "regime_fiscal" },        // IS / IR (adapté holdings)
+    { id: "regime_tva" },           // régime de TVA
     { id: "adresse_siege" },        // adresse
     { id: "date_lieu" },            // date et lieu de signature des statuts
     { id: "recapitulatif" },         // récapitulatif de toutes les informations
@@ -1241,7 +1246,7 @@ export default function CreationSASUPage() {
 
         <div className="px-6 py-4 border-b border-gray-100">
           <p className="font-semibold text-[#1E3A8A] text-sm">Création d&apos;une SASU</p>
-          <p className="text-xs text-gray-500 mt-0.5">Société par actions simplifiée unipersonnelle</p>
+          <p className="text-sm text-gray-500 mt-0.5">Société par actions simplifiée unipersonnelle</p>
         </div>
 
         <div className="flex-1 px-6 py-6">
@@ -1436,7 +1441,7 @@ export default function CreationSASUPage() {
                         key={c.value}
                         onClick={() => handleChoiceAnswer(c.value)}
                         className={cn(
-                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
                           answers[question.id] === c.value
                             ? "border-[#2563EB] bg-blue-50"
                             : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
@@ -1500,14 +1505,14 @@ export default function CreationSASUPage() {
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={goPrevQuestion}
-                      className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                      className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-base hover:bg-gray-50 transition-colors"
                     >
                       Retour
                     </button>
                     <button
                       onClick={handleInputContinue}
                       disabled={!answers[question.id]}
-                      className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-30 flex items-center justify-center gap-2"
+                      className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-30 flex items-center justify-center gap-2"
                     >
                       Continuer <ArrowRight className="w-4 h-4" />
                     </button>
@@ -1546,7 +1551,7 @@ export default function CreationSASUPage() {
                       setCurrentQ(idx >= 0 ? idx : currentQ);
                       setPhase("questions");
                     }}
-                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-base hover:bg-gray-50 transition-colors"
                   >
                     Retour
                   </button>
@@ -1557,7 +1562,7 @@ export default function CreationSASUPage() {
                       setCurrentQ(idx >= 0 ? idx + 1 : currentQ + 1);
                       setPhase("questions");
                     }}
-                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 flex items-center justify-center gap-2"
                   >
                     Continuer <ArrowRight className="w-4 h-4" />
                   </button>
@@ -1591,7 +1596,7 @@ export default function CreationSASUPage() {
                       setCurrentQ(idx >= 0 ? idx : currentQ);
                       setPhase("questions");
                     }}
-                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-base hover:bg-gray-50 transition-colors"
                   >
                     Retour
                   </button>
@@ -1602,7 +1607,7 @@ export default function CreationSASUPage() {
                       setCurrentQ(idx >= 0 ? idx : currentQ + 1);
                       setPhase("questions");
                     }}
-                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 flex items-center justify-center gap-2"
                   >
                     Continuer <ArrowRight className="w-4 h-4" />
                   </button>
@@ -1630,7 +1635,7 @@ export default function CreationSASUPage() {
                       setCurrentQ(idx >= 0 ? idx : totalQ - 1);
                       setPhase("questions");
                     }}
-                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-base hover:bg-gray-50 transition-colors"
                   >
                     Retour
                   </button>
@@ -1644,7 +1649,7 @@ export default function CreationSASUPage() {
                       }
                     }}
                     disabled={!answers.formule}
-                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 disabled:opacity-30 flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 disabled:opacity-30 flex items-center justify-center gap-2"
                   >
                     Continuer <ArrowRight className="w-4 h-4" />
                   </button>
@@ -1737,7 +1742,7 @@ export default function CreationSASUPage() {
                     </div>
 
                     <AccordionItem title="Plus d'informations">
-                      <div className="text-sm text-gray-600 space-y-2">
+                      <div className="text-base text-gray-600 space-y-2">
                         <p>La <strong className="text-[#1E3A8A]">dénomination sociale</strong> est le <strong>nom juridique officiel</strong> de la société. Vous pouvez aussi ajouter <strong>un sigle, un nom commercial</strong> ou <strong>une enseigne</strong>.</p>
                         <p>Ces informations seront reprises dans les statuts, les documents légaux et commerciaux.</p>
                       </div>
@@ -1745,53 +1750,194 @@ export default function CreationSASUPage() {
 
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Dénomination sociale (obligatoire)</label>
-                        <p className="text-xs text-gray-500 mb-2">Nom juridique de la société, tel qu&apos;il figure dans les statuts et sur l&apos;extrait Kbis.</p>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination sociale (obligatoire)</label>
+                        <p className="text-sm text-gray-500 mb-2">Nom juridique de la société, tel qu&apos;il figure dans les statuts et sur l&apos;extrait Kbis.</p>
                         <input
                           type="text"
                           value={answers.denomination_sociale || answers.nom_societe || ""}
                           onChange={(e) => setAnswer("denomination_sociale", e.target.value)}
                           placeholder="Ex : Altura Conseil"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Sigle (facultatif)</label>
-                        <p className="text-xs text-gray-500 mb-2">Abréviation du nom de la société. Utilisé à titre interne ou pour simplifier la communication.</p>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Sigle (facultatif)</label>
+                        <p className="text-sm text-gray-500 mb-2">Abréviation du nom de la société. Utilisé à titre interne ou pour simplifier la communication.</p>
                         <input
                           type="text"
                           value={answers.sigle || ""}
                           onChange={(e) => setAnswer("sigle", e.target.value)}
                           placeholder="AC (sigle d'Altura Conseil)"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom commercial (facultatif)</label>
-                        <p className="text-xs text-gray-500 mb-2">Nom utilisé dans le cadre de l&apos;activité commerciale. Il peut être différent de la dénomination sociale.</p>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom commercial (facultatif)</label>
+                        <p className="text-sm text-gray-500 mb-2">Nom utilisé dans le cadre de l&apos;activité commerciale. Il peut être différent de la dénomination sociale.</p>
                         <input
                           type="text"
                           value={answers.nom_commercial || ""}
                           onChange={(e) => setAnswer("nom_commercial", e.target.value)}
                           placeholder="Altura & Co (pour Altura Conseil)"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Enseigne (facultatif)</label>
-                        <p className="text-xs text-gray-500 mb-2">Nom apposé en façade du local d&apos;exploitation, s&apos;il y a lieu. Elle identifie visuellement l&apos;établissement.</p>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Enseigne (facultatif)</label>
+                        <p className="text-sm text-gray-500 mb-2">Nom apposé en façade du local d&apos;exploitation, s&apos;il y a lieu. Elle identifie visuellement l&apos;établissement.</p>
                         <input
                           type="text"
                           value={answers.enseigne || ""}
                           onChange={(e) => setAnswer("enseigne", e.target.value)}
                           placeholder="Altura (enseigne visible en boutique)"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* ── Page: Type de structure ── */}
+                {POST_PAGES[postPage]?.id === "type_structure" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Quel type de structure souhaitez-vous créer ?</p>
+                    </div>
+
+                    <AccordionItem title="Quelle différence entre ces structures ?">
+                      <div className="text-base text-gray-600 space-y-2">
+                        <p><strong>Société classique (opérationnelle) :</strong> Exerce directement une activité commerciale, artisanale, libérale ou de services.</p>
+                        <p><strong>Holding passive (pure) :</strong> Détient des participations dans d&apos;autres sociétés, perçoit des dividendes et plus-values. Aucune activité opérationnelle.</p>
+                        <p><strong>Holding animatrice :</strong> Détient des participations ET anime activement ses filiales (direction stratégique, services de gestion). Permet de bénéficier du dispositif <strong>Dutreil</strong> et de l&apos;apport-cession (150-0 B ter CGI).</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-3">
+                      {[
+                        { value: "classique", label: "Société classique (opérationnelle)", subtitle: "Exerce directement une activité", icon: Building2 },
+                        { value: "holding_passive", label: "Holding passive (pure)", subtitle: "Détention de participations uniquement", icon: Landmark },
+                        { value: "holding_animatrice", label: "Holding animatrice", subtitle: "Détention + animation des filiales", icon: Users },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setAnswer("type_structure", opt.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                            answers.type_structure === opt.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <opt.icon className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{opt.label}</p>
+                            <p className="text-sm text-gray-500 mt-0.5">{opt.subtitle}</p>
+                          </div>
+                          {answers.type_structure === opt.value && (
+                            <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Options spécifiques holding animatrice */}
+                    {answers.type_structure === "holding_animatrice" && (
+                      <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-5 space-y-4">
+                        <p className="text-sm font-semibold text-[#1E3A8A]">Options holding animatrice</p>
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de management fees</label>
+                            <p className="text-sm text-gray-500 mb-2">Facturation de prestations de direction aux filiales</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("management_fees", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.management_fees === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui
+                              </button>
+                              <button
+                                onClick={() => setAnswer("management_fees", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.management_fees === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de trésorerie (cash pooling)</label>
+                            <p className="text-sm text-gray-500 mb-2">Centralisation de la trésorerie du groupe</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("cash_pooling", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.cash_pooling === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui
+                              </button>
+                              <button
+                                onClick={() => setAnswer("cash_pooling", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.cash_pooling === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pacte Dutreil (transmission)</label>
+                            <p className="text-sm text-gray-500 mb-2">Prévoir un engagement de conservation pour bénéficier de l&apos;exonération Dutreil (art. 787 B CGI)</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("pacte_dutreil", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.pacte_dutreil === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui
+                              </button>
+                              <button
+                                onClick={() => setAnswer("pacte_dutreil", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.pacte_dutreil === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Info holding passive */}
+                    {answers.type_structure === "holding_passive" && (
+                      <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
+                        <p className="text-base text-yellow-800">
+                          <strong>Attention :</strong> Une holding passive ne peut pas bénéficier du dispositif Dutreil ni de l&apos;exonération d&apos;ISF/IFI sur les biens professionnels. Si vous envisagez une transmission patrimoniale, la holding animatrice est plus avantageuse.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1815,7 +1961,7 @@ export default function CreationSASUPage() {
                     {/* Option 1: Rédaction manuelle */}
                     <div className="border border-gray-200 rounded-xl p-5 space-y-3">
                       <h3 className="text-lg font-bold text-[#1E3A8A]">Option 1 – Rédaction manuelle complète</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-base text-gray-600">
                         Vous rédigez vous-même votre objet social. Les champs peuvent être préremplis selon les activités choisies à l&apos;étape précédente (modifiable), ou vous pouvez les compléter maintenant. Vous écrivez ensuite votre objet social directement dans l&apos;encadré prévu à cet effet.
                       </p>
                     </div>
@@ -1823,13 +1969,13 @@ export default function CreationSASUPage() {
                     {/* Option 2: Assistance IA */}
                     <div className="border-2 border-[#2563EB] rounded-xl p-5 space-y-4 bg-[#EFF6FF]">
                       <h3 className="text-lg font-bold text-[#1E3A8A]">Option 2 – Assistance à la rédaction par notre intelligence artificielle</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-base text-gray-600">
                         Nous avons prévu l&apos;aide de notre intelligence artificielle afin de vous aider à la rédaction, vous pouvez modifier le texte par vous même si besoin. Il vous faudra ajouter vos activités principales si cela n&apos;a pas été choisi dans la page précédente.
                       </p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Activité principale</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Activité principale</label>
                           <input
                             type="text"
                             value={answers.activite_principale_desc || answers.sous_categorie || ""}
@@ -1839,7 +1985,7 @@ export default function CreationSASUPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Activités secondaires <span className="font-normal text-gray-400">facultatif</span></label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Activités secondaires <span className="font-normal text-gray-400">facultatif</span></label>
                           <input
                             type="text"
                             value={answers.activites_secondaires || ""}
@@ -1923,7 +2069,7 @@ export default function CreationSASUPage() {
                     </div>
 
                     <AccordionItem title="Plus d'informations">
-                      <div className="text-sm text-gray-600 space-y-2">
+                      <div className="text-base text-gray-600 space-y-2">
                         <p>L&apos;activité principale est celle qui génère le plus de chiffre d&apos;affaires. Les activités secondaires sont complémentaires.</p>
                         <p>Ces informations permettent de déterminer votre <strong>code NAF</strong> et de vérifier les obligations réglementaires.</p>
                       </div>
@@ -1931,30 +2077,30 @@ export default function CreationSASUPage() {
 
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                           Parmi les activités mentionnées dans votre objet social, quelle est l&apos;activité principale de votre société ?
                         </label>
-                        <p className="text-xs text-gray-500 mb-2">(exemple : salon de coiffure, travaux de plomberie, vente en ligne de vêtements, conseil en gestion, etc.) Décrivez en quelques mots ce que fait votre entreprise au quotidien.</p>
+                        <p className="text-sm text-gray-500 mb-2">(exemple : salon de coiffure, travaux de plomberie, vente en ligne de vêtements, conseil en gestion, etc.) Décrivez en quelques mots ce que fait votre entreprise au quotidien.</p>
                         <input
                           type="text"
                           value={answers.activite_principale_desc || ""}
                           onChange={(e) => setAnswer("activite_principale_desc", e.target.value)}
                           placeholder="Ex : Soutien scolaire"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                           Votre société exercera-t-elle d&apos;autres activités secondaires (mentionnées dans l&apos;objet social) ?
                         </label>
-                        <p className="text-xs text-gray-500 mb-2">Si oui merci de le préciser de manière simple (Exemples : vente de produits liés à l&apos;activité, formation, maintenance, prestation complémentaire, etc.)</p>
+                        <p className="text-sm text-gray-500 mb-2">Si oui merci de le préciser de manière simple (Exemples : vente de produits liés à l&apos;activité, formation, maintenance, prestation complémentaire, etc.)</p>
                         <input
                           type="text"
                           value={answers.activites_secondaires || ""}
                           onChange={(e) => setAnswer("activites_secondaires", e.target.value)}
                           placeholder="Ex : Formation en ligne, vente de supports pédagogiques"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
                     </div>
@@ -1962,7 +2108,7 @@ export default function CreationSASUPage() {
                     {/* Code NAF suggestion */}
                     {answers.activite_principale_desc && (
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <p className="text-sm text-[#1E3A8A]">
+                        <p className="text-base text-[#1E3A8A]">
                           <strong>Suggestion du code NAF :</strong> Le code NAF attribué officiellement sera celui correspondant à l&apos;activité principale, telle que déterminée par l&apos;INSEE.
                         </p>
                       </div>
@@ -1971,7 +2117,7 @@ export default function CreationSASUPage() {
                     {/* Analyse réglementaire */}
                     <div className="space-y-3">
                       <h3 className="text-base font-bold text-[#1E3A8A]">Analyse réglementaire de votre activité</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-base text-gray-600">
                         À partir des activités que vous avez décrites, nous vérifions si certaines obligations réglementaires ou justificatifs sont requis afin d&apos;éviter tout refus lors de l&apos;immatriculation auprès de l&apos;INPI.
                       </p>
                       {answers.activite_principale_desc && (
@@ -2002,7 +2148,7 @@ export default function CreationSASUPage() {
                           key={c.value}
                           onClick={() => setAnswer("activite_saisonniere", c.value)}
                           className={cn(
-                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
                             answers.activite_saisonniere === c.value
                               ? "border-[#2563EB] bg-blue-50"
                               : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
@@ -2039,18 +2185,18 @@ export default function CreationSASUPage() {
 
                     {/* Info block */}
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3">
-                      <p className="text-sm text-gray-700">Une SASU ne comporte qu&apos;un seul associé, appelé <strong className="text-[#1E3A8A]">associé unique</strong>.</p>
-                      <p className="text-sm text-gray-700">Veuillez renseigner :</p>
-                      <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
+                      <p className="text-base text-gray-700">Une SASU ne comporte qu&apos;un seul associé, appelé <strong className="text-[#1E3A8A]">associé unique</strong>.</p>
+                      <p className="text-base text-gray-700">Veuillez renseigner :</p>
+                      <ul className="text-base text-gray-700 list-disc pl-5 space-y-1">
                         <li><em className="text-[#2563EB] font-medium">ses informations personnelles</em></li>
                         <li><em className="text-[#2563EB] font-medium">sa résidence fiscale</em></li>
                       </ul>
-                      <p className="text-sm text-gray-700">Une fois les informations saisies, cliquez sur <strong>&quot;Valider&quot;</strong> pour enregistrer l&apos;associé unique.</p>
+                      <p className="text-base text-gray-700">Une fois les informations saisies, cliquez sur <strong>&quot;Valider&quot;</strong> pour enregistrer l&apos;associé unique.</p>
                     </div>
 
                     {/* Type d'associé */}
                     <div className="space-y-3">
-                      <p className="text-sm font-bold text-[#1E3A8A]">Type d&apos;associé :</p>
+                      <p className="text-base font-bold text-[#1E3A8A]">Type d&apos;associé :</p>
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => setAnswer("type_associe", "physique")}
@@ -2084,64 +2230,150 @@ export default function CreationSASUPage() {
                       <div className="space-y-4 border-t border-gray-200 pt-5">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
                             <input
                               type="text"
                               value={answers.associe_nom || ""}
                               onChange={(e) => setAnswer("associe_nom", e.target.value)}
                               placeholder="Nom de famille"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                             <input
                               type="text"
                               value={answers.associe_prenom || ""}
                               onChange={(e) => setAnswer("associe_prenom", e.target.value)}
                               placeholder="Prénom"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
                           <input
                             type="date"
                             value={answers.associe_date_naissance || ""}
                             onChange={(e) => setAnswer("associe_date_naissance", e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
                           <input
                             type="text"
                             value={answers.associe_lieu_naissance || ""}
                             onChange={(e) => setAnswer("associe_lieu_naissance", e.target.value)}
                             placeholder="Ville de naissance"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
                           <input
                             type="text"
                             value={answers.associe_nationalite || ""}
                             onChange={(e) => setAnswer("associe_nationalite", e.target.value)}
                             placeholder="Ex : Française"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse de résidence fiscale</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse de résidence fiscale</label>
                           <input
                             type="text"
                             value={answers.associe_adresse || ""}
                             onChange={(e) => setAnswer("associe_adresse", e.target.value)}
                             placeholder="Adresse complète"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
+                        </div>
+
+                        {/* Situation matrimoniale */}
+                        <div className="border-t border-gray-200 pt-4 space-y-3">
+                          <label className="flex items-center gap-2 text-base font-bold text-[#1E3A8A]">
+                            <Heart className="w-4 h-4" />
+                            Situation matrimoniale
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { value: "celibataire", label: "Célibataire" },
+                              { value: "marie", label: "Marié(e)" },
+                              { value: "pacse", label: "Pacsé(e)" },
+                              { value: "divorce", label: "Divorcé(e)" },
+                              { value: "veuf", label: "Veuf/Veuve" },
+                            ].map((s) => (
+                              <button
+                                key={s.value}
+                                onClick={() => setAnswer("situation_matrimoniale", s.value)}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.situation_matrimoniale === s.value
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Si marié : régime matrimonial */}
+                          {answers.situation_matrimoniale === "marie" && (
+                            <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
+                              <div>
+                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du conjoint</label>
+                                <input
+                                  type="text"
+                                  value={answers.conjoint_nom || ""}
+                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                  placeholder="Prénom et nom du conjoint"
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Régime matrimonial</label>
+                                <div className="space-y-2">
+                                  {[
+                                    { value: "communaute_reduite", label: "Communauté réduite aux acquêts (défaut)" },
+                                    { value: "separation_biens", label: "Séparation de biens" },
+                                    { value: "participation_acquets", label: "Participation aux acquêts" },
+                                    { value: "communaute_universelle", label: "Communauté universelle" },
+                                  ].map((r) => (
+                                    <button
+                                      key={r.value}
+                                      onClick={() => setAnswer("regime_matrimonial", r.value)}
+                                      className={cn(
+                                        "w-full text-left p-3 rounded-xl border-2 text-sm transition-all",
+                                        answers.regime_matrimonial === r.value
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A] font-medium"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      {r.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Si pacsé : nom du partenaire */}
+                          {answers.situation_matrimoniale === "pacse" && (
+                            <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
+                              <div>
+                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du partenaire de PACS</label>
+                                <input
+                                  type="text"
+                                  value={answers.conjoint_nom || ""}
+                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                  placeholder="Prénom et nom du partenaire"
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -2150,53 +2382,53 @@ export default function CreationSASUPage() {
                     {answers.type_associe === "morale" && (
                       <div className="space-y-4 border-t border-gray-200 pt-5">
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Dénomination de la société associée</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination de la société associée</label>
                           <input
                             type="text"
                             value={answers.associe_societe_nom || ""}
                             onChange={(e) => setAnswer("associe_societe_nom", e.target.value)}
                             placeholder="Nom de la société"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
                           <input
                             type="text"
                             value={answers.associe_societe_forme || ""}
                             onChange={(e) => setAnswer("associe_societe_forme", e.target.value)}
                             placeholder="Ex : SAS, SARL, SA..."
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
                           <input
                             type="text"
                             value={answers.associe_societe_siren || ""}
                             onChange={(e) => setAnswer("associe_societe_siren", e.target.value)}
                             placeholder="Ex : 123 456 789"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse du siège de la société associée</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège de la société associée</label>
                           <input
                             type="text"
                             value={answers.associe_societe_adresse || ""}
                             onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)}
                             placeholder="Adresse complète"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
                           <input
                             type="text"
                             value={answers.associe_societe_representant || ""}
                             onChange={(e) => setAnswer("associe_societe_representant", e.target.value)}
                             placeholder="Nom et prénom du représentant"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                       </div>
@@ -2246,25 +2478,25 @@ export default function CreationSASUPage() {
                     {answers.type_capital === "variable" && (
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant minimum</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant minimum</label>
                           <input
                             type="number"
                             min="1"
                             value={answers.capital_minimum || ""}
                             onChange={(e) => setAnswer("capital_minimum", e.target.value)}
                             placeholder="Ex : 1 000"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant maximum</label>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant maximum</label>
                           <input
                             type="number"
                             min="1"
                             value={answers.capital_maximum || ""}
                             onChange={(e) => setAnswer("capital_maximum", e.target.value)}
                             placeholder="Ex : 100 000"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
                       </div>
@@ -2283,39 +2515,39 @@ export default function CreationSASUPage() {
                       <p className="text-xs font-bold uppercase tracking-wider text-gray-400">ACTIONS ET CAPITAL SOCIAL</p>
 
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-                        <p className="text-sm text-gray-700"><strong className="text-[#1E3A8A]">Montant du capital</strong> : somme totale apportée par les associés.</p>
-                        <p className="text-sm text-gray-700"><strong className="text-[#1E3A8A]">Valeur unitaire d&apos;une action</strong> : prix de base d&apos;une action (souvent 1 € pour simplifier).</p>
-                        <p className="text-sm text-gray-700"><strong className="text-[#1E3A8A]">Nombre d&apos;actions</strong> : calcul automatique = Montant du capital ÷ Valeur d&apos;une action.</p>
-                        <p className="text-sm text-gray-700"><strong>Exemple</strong> : Capital 5 000 € / Valeur 1 € = 5 000 actions.</p>
+                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Montant du capital</strong> : somme totale apportée par les associés.</p>
+                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Valeur unitaire d&apos;une action</strong> : prix de base d&apos;une action (souvent 1 € pour simplifier).</p>
+                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Nombre d&apos;actions</strong> : calcul automatique = Montant du capital ÷ Valeur d&apos;une action.</p>
+                        <p className="text-base text-gray-700"><strong>Exemple</strong> : Capital 5 000 € / Valeur 1 € = 5 000 actions.</p>
                         <p className="text-sm text-[#2563EB] font-semibold">Veuillez remplir le montant de votre capital social et la valeur d&apos;une action souhaitée, le nombre d&apos;actions s&apos;ajustera automatiquement</p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
                         <input
                           type="number"
                           min="1"
                           value={answers.capital_social || ""}
                           onChange={(e) => setAnswer("capital_social", e.target.value)}
                           placeholder="Ex : 12000"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
                         <input
                           type="number"
                           min="1"
                           value={answers.valeur_action || "1"}
                           onChange={(e) => setAnswer("valeur_action", e.target.value)}
                           placeholder="1"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
                         <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
                           {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
                         </div>
@@ -2326,7 +2558,7 @@ export default function CreationSASUPage() {
 
                     {/* Formule simplifiée / personnalisée */}
                     <div>
-                      <p className="text-sm font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
+                      <p className="text-base font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           onClick={() => setAnswer("formule_capital", "simplifiee")}
@@ -2366,34 +2598,34 @@ export default function CreationSASUPage() {
                     </div>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                      <p className="text-sm text-gray-700">Dans le parcours simplifié, la valeur d&apos;une action est fixée à 1 euro.</p>
+                      <p className="text-base text-gray-700">Dans le parcours simplifié, la valeur d&apos;une action est fixée à 1 euro.</p>
                     </div>
 
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
                         <input
                           type="number"
                           min="1"
                           value={answers.capital_social || "1"}
                           onChange={(e) => setAnswer("capital_social", e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
                         <input
                           type="number"
                           min="1"
                           value={answers.valeur_action || "1"}
                           onChange={(e) => setAnswer("valeur_action", e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
                         <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
                           {((Number(answers.capital_social) || 1) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
                         </div>
@@ -2406,7 +2638,8 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "apport_associe" && (() => {
                   const capitalTotal = Number(answers.capital_social) || 0;
                   const apportNum = Number(answers.apport_numeraire) || 0;
-                  const apportNature = Number(answers.apport_nature) || 0;
+                  const apportsNatureListe: { description: string; valeur: string; bien_type?: string }[] = answers.apports_nature_liste || [];
+                  const apportNature = apportsNatureListe.reduce((s: number, a) => s + (Number(a.valeur) || 0), 0) || Number(answers.apport_nature) || 0;
                   const totalApports = apportNum + apportNature;
                   const valeurAction = Number(answers.valeur_action) || 1;
                   const nbActions = capitalTotal > 0 ? capitalTotal / valeurAction : 0;
@@ -2422,14 +2655,14 @@ export default function CreationSASUPage() {
                     </div>
 
                     <AccordionItem title="Plus d'informations">
-                      <div className="text-sm text-gray-600 space-y-2">
+                      <div className="text-base text-gray-600 space-y-2">
                         <p>Comment remplir la fiche apport de l&apos;associé unique ? Cliquez sur l&apos;associé, remplissez sa fiche d&apos;apport, puis validez le profil.</p>
                       </div>
                     </AccordionItem>
 
                     {answers.formule_capital === "simplifiee" && (
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                        <p className="text-sm text-gray-700">
+                        <p className="text-base text-gray-700">
                           <Lightbulb className="inline w-4 h-4 mr-1 text-[#2563EB]" />
                           <strong>Dans le parcours simplifié d&apos;une SASU, l&apos;associé unique apporte uniquement une somme d&apos;argent</strong> (&quot;apport en numéraire&quot;), <strong>entièrement libérée</strong>, c&apos;est-à-dire réellement versée et déposée sur le compte bancaire dédié dès la création. La valeur d&apos;une action est fixée à 1 euro. Le capital social correspond donc à la somme effectivement déposée, et l&apos;associé unique détient 100 % des actions.
                         </p>
@@ -2490,6 +2723,7 @@ export default function CreationSASUPage() {
                             </tr>
                           </thead>
                           <tbody>
+                            {/* Apport en numéraire */}
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -2504,7 +2738,34 @@ export default function CreationSASUPage() {
                                 {apportNum.toLocaleString("fr-FR")} €
                               </td>
                             </motion.tr>
-                            {apportNature > 0 && (
+
+                            {/* Détail apports en nature (un par ligne) */}
+                            {apportsNatureListe.length > 0 ? (
+                              apportsNatureListe.map((apport, idx) => (
+                                <motion.tr
+                                  key={`nature-${idx}`}
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.35 + idx * 0.05 }}
+                                  className="border-b border-gray-100"
+                                >
+                                  <td className="py-3">
+                                    <div className="flex items-center gap-2 text-gray-700">
+                                      <FolderOpen className="w-4 h-4 text-[#2563EB] flex-shrink-0" />
+                                      <div>
+                                        <span>Apport en nature N°{idx + 1}</span>
+                                        {apport.description && (
+                                          <p className="text-xs text-gray-400 truncate max-w-[200px]">{apport.description}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 text-right font-semibold text-[#1E3A8A]">
+                                    {(Number(apport.valeur) || 0).toLocaleString("fr-FR")} €
+                                  </td>
+                                </motion.tr>
+                              ))
+                            ) : apportNature > 0 ? (
                               <motion.tr
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -2519,12 +2780,14 @@ export default function CreationSASUPage() {
                                   {apportNature.toLocaleString("fr-FR")} €
                                 </td>
                               </motion.tr>
-                            )}
+                            ) : null}
+
+                            {/* Apport en industrie */}
                             {answers.apport_industrie === "oui" && (
                               <motion.tr
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.35 }}
+                                transition={{ delay: 0.35 + apportsNatureListe.length * 0.05 }}
                                 className="border-b border-gray-100"
                               >
                                 <td className="py-3 flex items-center gap-2 text-gray-700">
@@ -2536,10 +2799,35 @@ export default function CreationSASUPage() {
                                 </td>
                               </motion.tr>
                             )}
+
+                            {/* ── Total des apports (intégrés au capital) ── */}
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.4 }}
+                              transition={{ delay: 0.45 + apportsNatureListe.length * 0.05 }}
+                              className="border-t-2 border-[#1E3A8A]"
+                            >
+                              <td className="py-3 flex items-center gap-2 font-bold text-[#1E3A8A]">
+                                <Sparkles className="w-4 h-4 text-[#2563EB]" />
+                                Total des apports
+                              </td>
+                              <td className={cn(
+                                "py-3 text-right font-bold text-lg",
+                                totalApports === capitalTotal && capitalTotal > 0
+                                  ? "text-green-600"
+                                  : totalApports > 0
+                                    ? "text-yellow-600"
+                                    : "text-gray-400"
+                              )}>
+                                {totalApports.toLocaleString("fr-FR")} €
+                              </td>
+                            </motion.tr>
+
+                            {/* Détails actions */}
+                            <motion.tr
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.5 + apportsNatureListe.length * 0.05 }}
                               className="border-b border-gray-100"
                             >
                               <td className="py-3 flex items-center gap-2 text-gray-700">
@@ -2553,7 +2841,7 @@ export default function CreationSASUPage() {
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.5 }}
+                              transition={{ delay: 0.55 + apportsNatureListe.length * 0.05 }}
                               className="border-b border-gray-100"
                             >
                               <td className="py-3 flex items-center gap-2 text-gray-700">
@@ -2567,7 +2855,7 @@ export default function CreationSASUPage() {
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.6 }}
+                              transition={{ delay: 0.6 + apportsNatureListe.length * 0.05 }}
                             >
                               <td className="py-3 flex items-center gap-2 text-gray-700">
                                 <Percent className="w-4 h-4 text-[#2563EB]" />
@@ -2608,14 +2896,14 @@ export default function CreationSASUPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 space-y-3"
                       >
-                        <p className="text-sm text-yellow-800">
+                        <p className="text-base text-yellow-800">
                           <strong>Attention</strong> — la répartition du capital social semble incohérente. Les apports intégrés au capital totalisent {totalApports.toLocaleString("fr-FR")} €, alors que le capital déclaré est {capitalTotal.toLocaleString("fr-FR")} € ({capitalTotal > 0 ? Math.round((totalApports / capitalTotal) * 100) : 0}%).
                         </p>
-                        <p className="text-sm text-yellow-800">L&apos;apport doit être égale à 100% du capital social déclaré avant validation</p>
-                        <p className="text-sm text-yellow-800 font-semibold">Deux options s&apos;offrent à vous :</p>
-                        <p className="text-sm text-yellow-800"><strong>1 – Modifier la répartition du capital social</strong></p>
+                        <p className="text-base text-yellow-800">L&apos;apport doit être égale à 100% du capital social déclaré avant validation</p>
+                        <p className="text-base text-yellow-800 font-semibold">Deux options s&apos;offrent à vous :</p>
+                        <p className="text-base text-yellow-800"><strong>1 – Modifier la répartition du capital social</strong></p>
                         <p className="text-xs text-yellow-700">Si le montant de l&apos;apport est incorrect ou incomplet, dans ce cas il faut modifier l&apos;apport de l&apos;associé unique</p>
-                        <p className="text-sm text-yellow-800"><strong>2 – Modifier le capital social</strong></p>
+                        <p className="text-base text-yellow-800"><strong>2 – Modifier le capital social</strong></p>
                         <p className="text-xs text-yellow-700">Si vous voulez changer le capital social, veuillez cliquer sur ce bouton.</p>
                         <div className="flex flex-wrap gap-2">
                           <button
@@ -2631,58 +2919,185 @@ export default function CreationSASUPage() {
                     {/* Input apports — types différents selon PP/PM */}
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Apport en numéraire (€)</label>
-                        <p className="text-xs text-gray-500 mb-2">Somme d&apos;argent effectivement déposée sur le compte bancaire dédié à la société.</p>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Apport en numéraire (€)</label>
+                        <p className="text-sm text-gray-500 mb-2">Somme d&apos;argent effectivement déposée sur le compte bancaire dédié à la société.</p>
                         <input
                           type="number"
                           min="0"
                           value={answers.apport_numeraire || ""}
                           onChange={(e) => setAnswer("apport_numeraire", e.target.value)}
                           placeholder={String(capitalTotal) || "0"}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       {answers.formule_capital === "personnalisee" && (
                         <>
-                          {/* Apport en nature — PP et PM */}
+                          {/* Apport en nature — PP et PM — liste dynamique */}
                           <div>
-                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Apport en nature (€)</label>
-                            <p className="text-xs text-gray-500 mb-2">Biens matériels ou immatériels apportés à la société (véhicule, matériel, fonds de commerce, brevet, etc.).</p>
-                            <input
-                              type="number"
-                              min="0"
-                              value={answers.apport_nature || ""}
-                              onChange={(e) => setAnswer("apport_nature", e.target.value)}
-                              placeholder="0"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                            />
-                            {(Number(answers.apport_nature) || 0) > 0 && (
-                              <div className="mt-2">
-                                <label className="block text-xs font-semibold text-[#1E3A8A] mb-1">Description de l&apos;apport en nature</label>
-                                <textarea
-                                  value={answers.apport_nature_description || ""}
-                                  onChange={(e) => setAnswer("apport_nature_description", e.target.value)}
-                                  placeholder="Décrivez le(s) bien(s) apporté(s) : type, marque, estimation..."
-                                  rows={3}
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 resize-none transition-all"
-                                />
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Apport(s) en nature</label>
+                            <p className="text-sm text-gray-500 mb-2">Biens matériels ou immatériels apportés à la société (véhicule, matériel, fonds de commerce, brevet, etc.).</p>
+
+                            {/* Liste des apports en nature */}
+                            {(answers.apports_nature_liste || []).map((apport: { description: string; valeur: string; bien_type?: string }, idx: number) => (
+                              <div key={idx} className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3 space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-semibold text-[#1E3A8A]">Bien N° {idx + 1}</span>
+                                  <button
+                                    onClick={() => {
+                                      const list = [...(answers.apports_nature_liste || [])];
+                                      list.splice(idx, 1);
+                                      setAnswer("apports_nature_liste", list);
+                                      // Recalculate apport_nature total
+                                      const total = list.reduce((s: number, a: { valeur: string }) => s + (Number(a.valeur) || 0), 0);
+                                      setAnswer("apport_nature", String(total));
+                                    }}
+                                    className="text-xs text-red-500 hover:text-red-700 font-medium"
+                                  >
+                                    Supprimer
+                                  </button>
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Description du bien</label>
+                                  <textarea
+                                    value={apport.description || ""}
+                                    onChange={(e) => {
+                                      const list = [...(answers.apports_nature_liste || [])];
+                                      list[idx] = { ...list[idx], description: e.target.value };
+                                      setAnswer("apports_nature_liste", list);
+                                    }}
+                                    placeholder="Type, marque, modèle, caractéristiques..."
+                                    rows={2}
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 resize-none transition-all"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Valeur déclarée (€)</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    value={apport.valeur || ""}
+                                    onChange={(e) => {
+                                      const list = [...(answers.apports_nature_liste || [])];
+                                      list[idx] = { ...list[idx], valeur: e.target.value };
+                                      setAnswer("apports_nature_liste", list);
+                                      // Recalculate apport_nature total
+                                      const total = list.reduce((s: number, a: { valeur: string }) => s + (Number(a.valeur) || 0), 0);
+                                      setAnswer("apport_nature", String(total));
+                                    }}
+                                    placeholder="0"
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                  />
+                                </div>
+                                {/* Bien propre / commun — si marié communauté ou pacsé indivision */}
+                                {answers.type_associe !== "morale" && (
+                                  answers.situation_matrimoniale === "marie" && (answers.regime_matrimonial === "communaute_reduite" || answers.regime_matrimonial === "communaute_universelle" || answers.regime_matrimonial === "participation_acquets")
+                                  || answers.situation_matrimoniale === "pacse"
+                                ) && (
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Ce bien est :</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <button
+                                        onClick={() => {
+                                          const list = [...(answers.apports_nature_liste || [])];
+                                          list[idx] = { ...list[idx], bien_type: "propre" };
+                                          setAnswer("apports_nature_liste", list);
+                                        }}
+                                        className={cn(
+                                          "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                          apport.bien_type === "propre" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                        )}
+                                      >
+                                        Bien propre
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const list = [...(answers.apports_nature_liste || [])];
+                                          list[idx] = { ...list[idx], bien_type: "commun" };
+                                          setAnswer("apports_nature_liste", list);
+                                        }}
+                                        className={cn(
+                                          "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                          apport.bien_type === "commun" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                        )}
+                                      >
+                                        Bien commun
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            ))}
+
+                            {/* Bouton ajouter un apport en nature */}
+                            <button
+                              onClick={() => {
+                                const list = [...(answers.apports_nature_liste || [])];
+                                list.push({ description: "", valeur: "", bien_type: "propre" });
+                                setAnswer("apports_nature_liste", list);
+                              }}
+                              className="w-full py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <span className="text-lg">+</span> Ajouter un apport en nature
+                            </button>
+
+                            {/* Total nature calculé */}
+                            {(answers.apports_nature_liste || []).length > 0 && (() => {
+                              const totalNature = (answers.apports_nature_liste || []).reduce((s: number, a: { valeur: string }) => s + (Number(a.valeur) || 0), 0);
+                              const capitalSocial = Number(answers.capital_social) || 0;
+                              const maxApportIndividuel = Math.max(...(answers.apports_nature_liste || []).map((a: { valeur: string }) => Number(a.valeur) || 0));
+                              const needsCAA = maxApportIndividuel > 30000 || (capitalSocial > 0 && totalNature > capitalSocial / 2);
+                              const canDispense = !needsCAA;
+
+                              return (
+                                <div className="mt-2 space-y-3">
+                                  <div className="text-sm text-gray-600">
+                                    <strong>Total apports en nature :</strong> {totalNature.toLocaleString("fr-FR")} €
+                                  </div>
+
+                                  {/* Règle CAA */}
+                                  {canDispense ? (
+                                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
+                                      <Check className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-semibold text-green-800">Dispense de commissaire aux apports possible</p>
+                                        <p className="text-xs text-green-700">
+                                          Aucun apport ne dépasse 30 000 € et le total ne dépasse pas 50 % du capital social. Une déclaration de dispense sera générée automatiquement.
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                                      <Shield className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-semibold text-red-800">Commissaire aux apports obligatoire</p>
+                                        <p className="text-xs text-red-700">
+                                          {maxApportIndividuel > 30000
+                                            ? `Un apport en nature dépasse 30 000 € (${maxApportIndividuel.toLocaleString("fr-FR")} €).`
+                                            : `Le total des apports en nature (${totalNature.toLocaleString("fr-FR")} €) dépasse 50 % du capital social (${(capitalSocial / 2).toLocaleString("fr-FR")} €).`
+                                          }
+                                          {" "}La nomination d&apos;un commissaire aux apports est obligatoire (art. L. 227-1 C. com.).
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           {/* Apport en industrie — PP uniquement */}
                           {answers.type_associe !== "morale" && (
                             <div>
-                              <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Apport en industrie</label>
-                              <p className="text-xs text-gray-500 mb-2">
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Apport en industrie</label>
+                              <p className="text-sm text-gray-500 mb-2">
                                 Mise à disposition de connaissances techniques, de travail ou de services. <strong>Attention :</strong> l&apos;apport en industrie ne concourt pas à la formation du capital social, mais donne droit à des actions.
                               </p>
                               <div className="grid grid-cols-2 gap-3">
                                 <button
                                   onClick={() => setAnswer("apport_industrie", "oui")}
                                   className={cn(
-                                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 text-sm font-medium transition-all",
+                                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 text-base font-medium transition-all",
                                     answers.apport_industrie === "oui"
                                       ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
                                       : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
@@ -2693,7 +3108,7 @@ export default function CreationSASUPage() {
                                 <button
                                   onClick={() => setAnswer("apport_industrie", "non")}
                                   className={cn(
-                                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 text-sm font-medium transition-all",
+                                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 text-base font-medium transition-all",
                                     answers.apport_industrie === "non"
                                       ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
                                       : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
@@ -2704,7 +3119,7 @@ export default function CreationSASUPage() {
                               </div>
                               {answers.apport_industrie === "oui" && (
                                 <div className="mt-3">
-                                  <label className="block text-xs font-semibold text-[#1E3A8A] mb-1">Description de l&apos;apport en industrie</label>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Description de l&apos;apport en industrie</label>
                                   <textarea
                                     value={answers.apport_industrie_description || ""}
                                     onChange={(e) => setAnswer("apport_industrie_description", e.target.value)}
@@ -2717,10 +3132,107 @@ export default function CreationSASUPage() {
                             </div>
                           )}
 
+                          {/* Déclaration de remploi / bien propre — si marié communauté ou pacsé indivision */}
+                          {answers.type_associe !== "morale" && (
+                            answers.situation_matrimoniale === "marie" && (answers.regime_matrimonial === "communaute_reduite" || answers.regime_matrimonial === "communaute_universelle" || answers.regime_matrimonial === "participation_acquets")
+                            || answers.situation_matrimoniale === "pacse"
+                          ) && (
+                            <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-5 space-y-3">
+                              <div className="flex items-start gap-3">
+                                <Lightbulb className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                                <div className="space-y-2">
+                                  <p className="text-base text-yellow-800 font-semibold">Apport de biens communs / indivis</p>
+                                  <p className="text-xs text-yellow-700">
+                                    {answers.situation_matrimoniale === "marie"
+                                      ? "En régime de communauté, les fonds utilisés pour l'apport peuvent être des biens communs. Votre conjoint doit être informé de cet apport (art. 1832-2 C. civ. — inapplicable en SAS, mais recommandé). Vous pouvez effectuer une déclaration de remploi pour qualifier l'apport de bien propre."
+                                      : "En PACS avec indivision, les fonds apportés peuvent être indivis. Vous pouvez effectuer une déclaration de remploi pour qualifier l'apport de bien propre."
+                                    }
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-yellow-800 mb-2">Souhaitez-vous faire une déclaration de remploi (bien propre) ?</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <button
+                                    onClick={() => setAnswer("declaration_remploi", "oui")}
+                                    className={cn(
+                                      "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                      answers.declaration_remploi === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-yellow-300 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                    )}
+                                  >
+                                    Oui
+                                  </button>
+                                  <button
+                                    onClick={() => setAnswer("declaration_remploi", "non")}
+                                    className={cn(
+                                      "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                      answers.declaration_remploi === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-yellow-300 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                    )}
+                                  >
+                                    Non
+                                  </button>
+                                </div>
+                              </div>
+
+                              {answers.declaration_remploi === "oui" && (
+                                <div className="bg-white border border-yellow-200 rounded-xl p-4 space-y-3">
+                                  <p className="text-sm text-gray-600">
+                                    Une <strong>attestation d&apos;origine patrimoniale des apports</strong> (bien propre) sera automatiquement générée avec vos informations et jointe à votre dossier.
+                                  </p>
+                                  <button
+                                    onClick={async () => {
+                                      const { buildAttestationOrigine } = await import("@/app/lib/generateSasuDocuments");
+                                      const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                                      const text = buildAttestationOrigine(answers);
+                                      const blob = await generateSasuDocumentDocx(text);
+                                      const url = URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.href = url;
+                                      a.download = "attestation-origine-patrimoniale.docx";
+                                      a.click();
+                                      URL.revokeObjectURL(url);
+                                    }}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    Télécharger l&apos;attestation d&apos;origine patrimoniale (bien propre)
+                                  </button>
+                                </div>
+                              )}
+
+                              {answers.declaration_remploi === "non" && (
+                                <div className="bg-white border border-yellow-200 rounded-xl p-4 space-y-3">
+                                  <p className="text-sm text-gray-600">
+                                    Vos apports seront qualifiés de <strong>biens communs</strong>. Une attestation sera générée avec un bloc de signature pour votre conjoint / partenaire, afin de prévenir toute contestation ultérieure.
+                                  </p>
+                                  <button
+                                    onClick={async () => {
+                                      const { buildAttestationBiensCommuns } = await import("@/app/lib/generateSasuDocuments");
+                                      const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                                      const text = buildAttestationBiensCommuns(answers);
+                                      const blob = await generateSasuDocumentDocx(text);
+                                      const url = URL.createObjectURL(blob);
+                                      const a = document.createElement("a");
+                                      a.href = url;
+                                      a.download = "attestation-origine-biens-communs.docx";
+                                      a.click();
+                                      URL.revokeObjectURL(url);
+                                    }}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                    Télécharger l&apos;attestation biens communs
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Info PM: pas d'apport en industrie */}
                           {answers.type_associe === "morale" && (
                             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                              <p className="text-sm text-gray-700">
+                              <p className="text-base text-gray-700">
                                 <Lightbulb className="inline w-4 h-4 mr-1 text-[#2563EB]" />
                                 <strong>Note :</strong> Une personne morale ne peut pas effectuer d&apos;apport en industrie. Seuls les apports en numéraire et en nature sont possibles.
                               </p>
@@ -2741,14 +3253,14 @@ export default function CreationSASUPage() {
                     </div>
 
                     <AccordionItem title="Plus d'informations">
-                      <div className="text-sm text-gray-600 space-y-2">
+                      <div className="text-base text-gray-600 space-y-2">
                         <p>Sélectionnez une personne</p>
                       </div>
                     </AccordionItem>
 
                     {/* Info block */}
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                      <p className="text-sm text-gray-700 text-justify">
+                      <p className="text-base text-gray-700 text-justify">
                         Afin de compléter les informations légales relatives au Président, merci d&apos;indiquer les éléments de filiation ci-dessous et attester sur l&apos;honneur l&apos;absence de condamnation ou d&apos;interdiction de gérer de président. <em>(Ces informations sont requises pour les formalités d&apos;immatriculation au registre du commerce.)</em>
                       </p>
                     </div>
@@ -2756,13 +3268,13 @@ export default function CreationSASUPage() {
                     {/* Option 1 */}
                     <div className="space-y-1">
                       <h3 className="text-base font-bold text-[#1E3A8A]">Option 1 : L&apos;associé unique est également Président</h3>
-                      <p className="text-sm text-gray-600">C&apos;est la solution la plus courante : vous cumulez les fonctions d&apos;associé unique et de Président.</p>
+                      <p className="text-base text-gray-600">C&apos;est la solution la plus courante : vous cumulez les fonctions d&apos;associé unique et de Président.</p>
                     </div>
 
                     {/* Option 2 */}
                     <div className="space-y-1">
                       <h3 className="text-base font-bold text-[#2563EB]">Option 2 : Nommer un Président distinct</h3>
-                      <p className="text-sm text-gray-600">Vous pouvez désigner une autre personne physique ou morale (par exemple un proche ou un partenaire professionnel) comme Président non associé.</p>
+                      <p className="text-base text-gray-600">Vous pouvez désigner une autre personne physique ou morale (par exemple un proche ou un partenaire professionnel) comme Président non associé.</p>
                     </div>
 
                     {/* Choix associé unique dans la liste */}
@@ -2824,7 +3336,7 @@ export default function CreationSASUPage() {
                         className="border-2 border-gray-200 rounded-xl p-5 space-y-5"
                       >
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-bold text-[#1E3A8A]">Type de profil :</p>
+                          <p className="text-base font-bold text-[#1E3A8A]">Type de profil :</p>
                           <button
                             onClick={() => {
                               setAnswer("president_option", "");
@@ -2868,7 +3380,7 @@ export default function CreationSASUPage() {
                           <div className="space-y-4 border-t border-gray-200 pt-5">
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                                 <select
                                   value={answers.president_civilite || ""}
                                   onChange={(e) => setAnswer("president_civilite", e.target.value)}
@@ -2880,45 +3392,45 @@ export default function CreationSASUPage() {
                                 </select>
                               </div>
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
-                                <input type="text" value={answers.president_nom || ""} onChange={(e) => setAnswer("president_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                <input type="text" value={answers.president_nom || ""} onChange={(e) => setAnswer("president_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
-                                <input type="text" value={answers.president_prenom || ""} onChange={(e) => setAnswer("president_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                <input type="text" value={answers.president_prenom || ""} onChange={(e) => setAnswer("president_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
-                                <input type="date" value={answers.president_date_naissance || ""} onChange={(e) => setAnswer("president_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                <input type="date" value={answers.president_date_naissance || ""} onChange={(e) => setAnswer("president_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
-                                <input type="text" value={answers.president_lieu_naissance || ""} onChange={(e) => setAnswer("president_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
+                                <input type="text" value={answers.president_lieu_naissance || ""} onChange={(e) => setAnswer("president_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
-                                <input type="text" value={answers.president_nationalite || ""} onChange={(e) => setAnswer("president_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                <input type="text" value={answers.president_nationalite || ""} onChange={(e) => setAnswer("president_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
                             <div>
-                              <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                              <input type="text" value={answers.president_adresse || ""} onChange={(e) => setAnswer("president_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                              <input type="text" value={answers.president_adresse || ""} onChange={(e) => setAnswer("president_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                             </div>
 
                             {/* Filiation */}
-                            <p className="text-sm font-bold text-[#1E3A8A] pt-2">Filiation</p>
+                            <p className="text-base font-bold text-[#1E3A8A] pt-2">Filiation</p>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du père</label>
-                                <input type="text" value={answers.president_pere_nom || ""} onChange={(e) => setAnswer("president_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du père</label>
+                                <input type="text" value={answers.president_pere_nom || ""} onChange={(e) => setAnswer("president_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                               <div>
-                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
-                                <input type="text" value={answers.president_mere_nom || ""} onChange={(e) => setAnswer("president_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
+                                <input type="text" value={answers.president_mere_nom || ""} onChange={(e) => setAnswer("president_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
 
@@ -2926,11 +3438,11 @@ export default function CreationSASUPage() {
                             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
                               <label className="flex items-start gap-3 cursor-pointer">
                                 <input type="checkbox" checked={answers.president_non_condamnation === "true"} onChange={(e) => setAnswer("president_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
                               </label>
                               <label className="flex items-start gap-3 cursor-pointer">
                                 <input type="checkbox" checked={answers.president_non_interdiction === "true"} onChange={(e) => setAnswer("president_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
                               </label>
                             </div>
                           </div>
@@ -2940,9 +3452,9 @@ export default function CreationSASUPage() {
                         {answers.president_type === "morale" && (
                           <div className="space-y-4 border-t border-gray-200 pt-5">
                             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-                              <p className="text-sm text-gray-700">Pour nommer un dirigeant personne morale non associé, indiquez directement le numéro RCS de la société. Nous pourrons ainsi la retrouver automatiquement dans le registre officiel et pré remplir ses informations (dénomination, adresse, dirigeants, etc.)</p>
-                              <p className="text-sm text-gray-700">Vous trouverez ce numéro sur votre extrait Kbis.</p>
-                              <p className="text-sm text-gray-700">Si vous ne le trouvez pas, vous pouvez tout de même remplir les informations manuellement.</p>
+                              <p className="text-base text-gray-700">Pour nommer un dirigeant personne morale non associé, indiquez directement le numéro RCS de la société. Nous pourrons ainsi la retrouver automatiquement dans le registre officiel et pré remplir ses informations (dénomination, adresse, dirigeants, etc.)</p>
+                              <p className="text-base text-gray-700">Vous trouverez ce numéro sur votre extrait Kbis.</p>
+                              <p className="text-base text-gray-700">Si vous ne le trouvez pas, vous pouvez tout de même remplir les informations manuellement.</p>
                               <div className="flex justify-end">
                                 <button onClick={() => setAnswer("president_pm_mode", "manuel")} className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity">Remplir manuellement</button>
                               </div>
@@ -2950,9 +3462,9 @@ export default function CreationSASUPage() {
 
                             {/* SIREN search */}
                             <div>
-                              <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
                               <div className="flex gap-3">
-                                <input type="text" value={answers.president_pm_siren || ""} onChange={(e) => setAnswer("president_pm_siren", e.target.value)} placeholder="Ex : 824330799" className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                <input type="text" value={answers.president_pm_siren || ""} onChange={(e) => setAnswer("president_pm_siren", e.target.value)} placeholder="Ex : 824330799" className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                 <button
                                   onClick={async () => {
                                     const siren = (answers.president_pm_siren || "").replace(/\s/g, "");
@@ -2984,42 +3496,42 @@ export default function CreationSASUPage() {
                                 <p className="text-sm font-bold text-[#2563EB]">Informations entreprise</p>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la société</label>
-                                    <input type="text" value={answers.president_pm_nom || ""} onChange={(e) => setAnswer("president_pm_nom", e.target.value)} placeholder="Ex : LAW AND CO" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom de la société</label>
+                                    <input type="text" value={answers.president_pm_nom || ""} onChange={(e) => setAnswer("president_pm_nom", e.target.value)} placeholder="Ex : LAW AND CO" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Type de société</label>
-                                    <input type="text" value={answers.president_pm_forme || ""} onChange={(e) => setAnswer("president_pm_forme", e.target.value)} placeholder="Ex : SASU" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Capital social</label>
-                                    <input type="text" value={answers.president_pm_capital || ""} onChange={(e) => setAnswer("president_pm_capital", e.target.value)} placeholder="Ex : 100" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
-                                  </div>
-                                  <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom et prénom du représentant</label>
-                                    <input type="text" value={answers.president_pm_representant || ""} onChange={(e) => setAnswer("president_pm_representant", e.target.value)} placeholder="Ex : Nora Gabsi" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Type de société</label>
+                                    <input type="text" value={answers.president_pm_forme || ""} onChange={(e) => setAnswer("president_pm_forme", e.target.value)} placeholder="Ex : SASU" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse</label>
-                                    <input type="text" value={answers.president_pm_adresse || ""} onChange={(e) => setAnswer("president_pm_adresse", e.target.value)} placeholder="Ex : 7 RUE MEYERBEER" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
+                                    <input type="text" value={answers.president_pm_capital || ""} onChange={(e) => setAnswer("president_pm_capital", e.target.value)} placeholder="Ex : 100" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Complément d&apos;adresse</label>
-                                    <input type="text" value={answers.president_pm_adresse_complement || ""} onChange={(e) => setAnswer("president_pm_adresse_complement", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du représentant</label>
+                                    <input type="text" value={answers.president_pm_representant || ""} onChange={(e) => setAnswer("president_pm_representant", e.target.value)} placeholder="Ex : Nora Gabsi" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Ville RCS</label>
-                                    <input type="text" value={answers.president_pm_ville_rcs || ""} onChange={(e) => setAnswer("president_pm_ville_rcs", e.target.value)} placeholder="Ex : PARIS" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse</label>
+                                    <input type="text" value={answers.president_pm_adresse || ""} onChange={(e) => setAnswer("president_pm_adresse", e.target.value)} placeholder="Ex : 7 RUE MEYERBEER" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Code postal</label>
-                                    <input type="text" value={answers.president_pm_code_postal || ""} onChange={(e) => setAnswer("president_pm_code_postal", e.target.value)} placeholder="Ex : 75009" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Complément d&apos;adresse</label>
+                                    <input type="text" value={answers.president_pm_adresse_complement || ""} onChange={(e) => setAnswer("president_pm_adresse_complement", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Ville RCS</label>
+                                    <input type="text" value={answers.president_pm_ville_rcs || ""} onChange={(e) => setAnswer("president_pm_ville_rcs", e.target.value)} placeholder="Ex : PARIS" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Code postal</label>
+                                    <input type="text" value={answers.president_pm_code_postal || ""} onChange={(e) => setAnswer("president_pm_code_postal", e.target.value)} placeholder="Ex : 75009" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
 
@@ -3036,15 +3548,15 @@ export default function CreationSASUPage() {
                                   <h4 className="text-base font-bold text-[#1E3A8A]">Représentant permanent de la société dirigeante</h4>
 
                                   <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-                                    <p className="text-sm font-bold text-[#1E3A8A]">Représentant permanent</p>
-                                    <p className="text-sm text-gray-700">
+                                    <p className="text-base font-bold text-[#1E3A8A]">Représentant permanent</p>
+                                    <p className="text-base text-gray-700">
                                       Lorsqu&apos;une société est nommée dirigeante, elle doit désigner une <strong>personne physique</strong> chargée de la représenter. Ce <em className="font-semibold text-[#2563EB]">représentant permanent</em> exerce les droits de la société dirigeante (signature, vote en assemblée). Ces informations seront inscrites dans les statuts et déclarées au greffe.
                                     </p>
                                   </div>
 
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                                       <select value={answers.president_rp_civilite || ""} onChange={(e) => setAnswer("president_rp_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
                                         <option value="">Choisir</option>
                                         <option value="M.">M.</option>
@@ -3052,17 +3564,17 @@ export default function CreationSASUPage() {
                                       </select>
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
-                                      <input type="text" value={answers.president_rp_nom || ""} onChange={(e) => setAnswer("president_rp_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                      <input type="text" value={answers.president_rp_nom || ""} onChange={(e) => setAnswer("president_rp_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                   </div>
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
-                                      <input type="text" value={answers.president_rp_prenom || ""} onChange={(e) => setAnswer("president_rp_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                      <input type="text" value={answers.president_rp_prenom || ""} onChange={(e) => setAnswer("president_rp_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Fonction dans la société</label>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Fonction dans la société</label>
                                       <select value={answers.president_rp_fonction || ""} onChange={(e) => setAnswer("president_rp_fonction", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
                                         <option value="">Choisir</option>
                                         <option value="president">Président</option>
@@ -3074,25 +3586,25 @@ export default function CreationSASUPage() {
                                   </div>
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                                      <input type="text" value={answers.president_rp_adresse || ""} onChange={(e) => setAnswer("president_rp_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                                      <input type="text" value={answers.president_rp_adresse || ""} onChange={(e) => setAnswer("president_rp_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
-                                      <input type="text" value={answers.president_rp_nationalite || ""} onChange={(e) => setAnswer("president_rp_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                      <input type="text" value={answers.president_rp_nationalite || ""} onChange={(e) => setAnswer("president_rp_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                   </div>
 
                                   {/* Filiation du RP */}
-                                  <p className="text-sm font-bold text-[#1E3A8A] pt-2">Filiation du représentant permanent</p>
+                                  <p className="text-base font-bold text-[#1E3A8A] pt-2">Filiation du représentant permanent</p>
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du père</label>
-                                      <input type="text" value={answers.president_rp_pere_nom || ""} onChange={(e) => setAnswer("president_rp_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du père</label>
+                                      <input type="text" value={answers.president_rp_pere_nom || ""} onChange={(e) => setAnswer("president_rp_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                     <div>
-                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
-                                      <input type="text" value={answers.president_rp_mere_nom || ""} onChange={(e) => setAnswer("president_rp_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
+                                      <input type="text" value={answers.president_rp_mere_nom || ""} onChange={(e) => setAnswer("president_rp_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                   </div>
 
@@ -3100,11 +3612,11 @@ export default function CreationSASUPage() {
                                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
                                     <label className="flex items-start gap-3 cursor-pointer">
                                       <input type="checkbox" checked={answers.president_rp_non_condamnation === "true"} onChange={(e) => setAnswer("president_rp_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                      <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                      <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
                                     </label>
                                     <label className="flex items-start gap-3 cursor-pointer">
                                       <input type="checkbox" checked={answers.president_rp_non_interdiction === "true"} onChange={(e) => setAnswer("president_rp_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                      <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                      <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
                                     </label>
                                   </div>
                                 </div>
@@ -3125,7 +3637,7 @@ export default function CreationSASUPage() {
                     </div>
 
                     <AccordionItem title="Plus d'informations">
-                      <div className="text-sm text-gray-600 space-y-2">
+                      <div className="text-base text-gray-600 space-y-2">
                         <p>Même si la SASU n&apos;a qu&apos;un associé, il est utile de prévoir ces règles pour une éventuelle transformation en SAS.</p>
                       </div>
                     </AccordionItem>
@@ -3133,7 +3645,7 @@ export default function CreationSASUPage() {
                     {/* ── Majorité nomination/révocation ── */}
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A]">Pour les prochaines désignations de Président (en cas de changement), quelle majorité souhaitez-vous prévoir dans les statuts pour sa nomination et sa révocation ?</p>
+                        <p className="text-base font-bold text-[#1E3A8A]">Pour les prochaines désignations de Président (en cas de changement), quelle majorité souhaitez-vous prévoir dans les statuts pour sa nomination et sa révocation ?</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <button onClick={() => setAnswer("majorite_president", "simple")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.majorite_president === "simple" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
@@ -3153,8 +3665,8 @@ export default function CreationSASUPage() {
                       </div>
                       {answers.majorite_president === "renforcee" && (
                         <div className="mt-2">
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Pourcentage de majorité renforcée (%)</label>
-                          <input type="number" min="51" max="99" value={answers.majorite_president_pct || "66"} onChange={(e) => setAnswer("majorite_president_pct", e.target.value)} placeholder="66" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pourcentage de majorité renforcée (%)</label>
+                          <input type="number" min="51" max="99" value={answers.majorite_president_pct || "66"} onChange={(e) => setAnswer("majorite_president_pct", e.target.value)} placeholder="66" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                         </div>
                       )}
                     </div>
@@ -3164,7 +3676,7 @@ export default function CreationSASUPage() {
                     {/* ── Révocation ── */}
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A]">Révocation du mandat du Président</p>
+                        <p className="text-base font-bold text-[#1E3A8A]">Révocation du mandat du Président</p>
                         <p className="text-xs text-gray-500 italic">Dans quelles conditions l&apos;associé unique peut-il mettre fin au mandat ? La révocation ne doit néanmoins pas être abusive.</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3182,7 +3694,7 @@ export default function CreationSASUPage() {
                     {/* ── Durée du mandat ── */}
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A]">Durée du mandat du Président</p>
+                        <p className="text-base font-bold text-[#1E3A8A]">Durée du mandat du Président</p>
                         <p className="text-xs text-gray-500">Combien de temps le président exercera ses fonctions ?</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3195,8 +3707,8 @@ export default function CreationSASUPage() {
                       </div>
                       {answers.duree_mandat === "determinee" && (
                         <div className="mt-2">
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Durée du mandat (en années)</label>
-                          <input type="number" min="1" max="99" value={answers.duree_mandat_annees || ""} onChange={(e) => setAnswer("duree_mandat_annees", e.target.value)} placeholder="Ex : 3" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Durée du mandat (en années)</label>
+                          <input type="number" min="1" max="99" value={answers.duree_mandat_annees || ""} onChange={(e) => setAnswer("duree_mandat_annees", e.target.value)} placeholder="Ex : 3" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                         </div>
                       )}
                     </div>
@@ -3206,7 +3718,7 @@ export default function CreationSASUPage() {
                     {/* ── Renouvellement ── */}
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A]">Renouvellement du mandat du Président</p>
+                        <p className="text-base font-bold text-[#1E3A8A]">Renouvellement du mandat du Président</p>
                         <p className="text-xs text-gray-500">À la fin du mandat, peut-il être reconduit ?</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3224,7 +3736,7 @@ export default function CreationSASUPage() {
                     {/* ── Rémunération ── */}
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A]">Souhaitez-vous que le Président soit rémunéré pour ses fonctions ?</p>
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous que le Président soit rémunéré pour ses fonctions ?</p>
                         <p className="text-xs text-gray-500 italic">(Le montant de la rémunération ne doit néanmoins pas être précisé dans les statuts.)</p>
                       </div>
                       <button onClick={() => setAnswer("president_remunere", "non")} className={cn("w-full text-left px-5 py-4 rounded-xl border-2 transition-all", answers.president_remunere === "non" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
@@ -3246,13 +3758,13 @@ export default function CreationSASUPage() {
                     {/* ── Limitation des pouvoirs ── */}
                     <div className="space-y-3">
                       <AccordionItem title="Plus d'informations">
-                        <div className="text-sm text-gray-600 space-y-2">
+                        <div className="text-base text-gray-600 space-y-2">
                           <p><strong className="text-[#2563EB]">Le saviez-vous ?</strong> Le Président engage toujours la SASU vis-à-vis des tiers. Les limites éventuellement prévues dans les statuts n&apos;ont qu&apos;un effet interne : elles servent uniquement à encadrer ses pouvoirs vis-à-vis de l&apos;associé unique. <em className="text-[#2563EB] font-semibold">En cas de dépassement, la société reste engagée, mais le Président peut être sanctionné en interne.</em></p>
                         </div>
                       </AccordionItem>
 
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A]">Souhaitez-vous limiter certains pouvoirs du Président dans les statuts ?</p>
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous limiter certains pouvoirs du Président dans les statuts ?</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <button onClick={() => setAnswer("limitation_pouvoirs", "oui")} className={cn("text-left px-5 py-4 rounded-xl border-2 transition-all", answers.limitation_pouvoirs === "oui" ? "border-[#2563EB] bg-[#EFF6FF]" : "border-gray-200 bg-white hover:border-[#2563EB]/50")}>
@@ -3266,7 +3778,7 @@ export default function CreationSASUPage() {
                       {answers.limitation_pouvoirs === "oui" && (
                         <div className="space-y-4 mt-3">
                           <div>
-                            <p className="text-sm font-bold text-[#1E3A8A]">Limitation des pouvoirs du Président</p>
+                            <p className="text-base font-bold text-[#1E3A8A]">Limitation des pouvoirs du Président</p>
                             <p className="text-sm text-gray-600 mt-1">Conformément à l&apos;article L.227-6 du Code de commerce, l&apos;associé unique décide que certaines décisions ne pourront pas être prises par le Président seul.</p>
                           </div>
                           <div className="text-sm text-gray-600 space-y-1">
@@ -3280,9 +3792,9 @@ export default function CreationSASUPage() {
                             <p className="mt-2">Tant que la société ne comporte qu&apos;un seul associé, celui-ci prend seul toutes les décisions, y compris celles nécessitant son accord préalable au titre de la présente clause.</p>
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-[#1E3A8A] mb-1">Montant de limitation :</p>
-                            <p className="text-xs text-gray-500 mb-2">100 000 euros maximum</p>
-                            <input type="number" min="1" max="100000" value={answers.montant_limitation || ""} onChange={(e) => setAnswer("montant_limitation", e.target.value)} placeholder="Ex : 12000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                            <p className="text-base font-bold text-[#1E3A8A] mb-1">Montant de limitation :</p>
+                            <p className="text-sm text-gray-500 mb-2">100 000 euros maximum</p>
+                            <input type="number" min="1" max="100000" value={answers.montant_limitation || ""} onChange={(e) => setAnswer("montant_limitation", e.target.value)} placeholder="Ex : 12000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                           </div>
                         </div>
                       )}
@@ -3293,7 +3805,7 @@ export default function CreationSASUPage() {
                     {/* ── Majorité décisions futures (entrée associés) ── */}
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A]">En cas d&apos;évolution de la société (entrée de nouveaux associés), ces décisions seront soumises à l&apos;approbation des associés, quelle majorité souhaitez-vous prévoir ?</p>
+                        <p className="text-base font-bold text-[#1E3A8A]">En cas d&apos;évolution de la société (entrée de nouveaux associés), ces décisions seront soumises à l&apos;approbation des associés, quelle majorité souhaitez-vous prévoir ?</p>
                         <p className="text-xs text-gray-500 italic">L&apos;associé unique reste seul décisionnaire à ce stade.</p>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -3311,8 +3823,8 @@ export default function CreationSASUPage() {
                       </div>
                       {answers.majorite_decisions === "renforcee" && (
                         <div className="mt-2">
-                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Pourcentage de majorité renforcée (%)</label>
-                          <input type="number" min="51" max="99" value={answers.majorite_decisions_pct || "66"} onChange={(e) => setAnswer("majorite_decisions_pct", e.target.value)} placeholder="66" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pourcentage de majorité renforcée (%)</label>
+                          <input type="number" min="51" max="99" value={answers.majorite_decisions_pct || "66"} onChange={(e) => setAnswer("majorite_decisions_pct", e.target.value)} placeholder="66" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                         </div>
                       )}
                     </div>
@@ -3328,7 +3840,7 @@ export default function CreationSASUPage() {
 
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                           Dans quel établissement bancaire avez-vous déposé le capital ?
                         </label>
                         <input
@@ -3336,19 +3848,19 @@ export default function CreationSASUPage() {
                           value={answers.banque_depot || ""}
                           onChange={(e) => setAnswer("banque_depot", e.target.value)}
                           placeholder="Nom de la banque / néobanque"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                           À quelle date le dépôt a-t-il été effectué ?
                         </label>
                         <input
                           type="date"
                           value={answers.date_depot || ""}
                           onChange={(e) => setAnswer("date_depot", e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
 
@@ -3356,7 +3868,7 @@ export default function CreationSASUPage() {
                       {answers.formule_capital === "personnalisee" && (
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                               Quel est l&apos;état du versement de vos apports en numéraire (argent) ?
                             </label>
                             <p className="text-xs text-gray-500 italic mb-3">
@@ -3405,10 +3917,10 @@ export default function CreationSASUPage() {
                           {/* Si versement partiel : champ pourcentage */}
                           {answers.etat_versement === "partiel" && (
                             <div className="mt-3">
-                              <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                                 Pourcentage versé (%)
                               </label>
-                              <p className="text-xs text-gray-500 mb-2">Minimum légal : 50 % du montant des apports en numéraire</p>
+                              <p className="text-sm text-gray-500 mb-2">Minimum légal : 50 % du montant des apports en numéraire</p>
                               <input
                                 type="number"
                                 min="50"
@@ -3416,7 +3928,7 @@ export default function CreationSASUPage() {
                                 value={answers.pourcentage_verse || "50"}
                                 onChange={(e) => setAnswer("pourcentage_verse", e.target.value)}
                                 placeholder="50"
-                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                               />
                               {Number(answers.pourcentage_verse) < 50 && answers.pourcentage_verse && (
                                 <p className="text-xs text-red-500 mt-1">Le minimum légal est de 50 % pour une SASU.</p>
@@ -3429,39 +3941,292 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Régime fiscal ── */}
+                {/* ── Régime fiscal (adapté holdings) ── */}
                 {POST_PAGES[postPage]?.id === "regime_fiscal" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Régime d&apos;imposition des bénéfices</p>
                     </div>
-                    {QUESTIONS[10].info && (
-                      <AccordionItem title={QUESTIONS[10].info.title}>
-                        <div className="text-sm text-gray-600">{QUESTIONS[10].info.content}</div>
-                      </AccordionItem>
+
+                    {/* Info holding : IS obligatoire */}
+                    {(answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                        <Landmark className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                        <div className="text-base text-[#1E3A8A] space-y-1">
+                          <p><strong>Holding :</strong> l&apos;impôt sur les sociétés (IS) est le régime naturel et recommandé pour une holding.</p>
+                          <p>Le régime mère-fille permet d&apos;exonérer <strong>95 %</strong> des dividendes reçus des filiales (5 % de quote-part de frais réintégrée).</p>
+                          {answers.type_structure === "holding_animatrice" && (
+                            <p>En tant que holding animatrice, vous pouvez aussi bénéficier de l&apos;intégration fiscale si vous détenez au moins 95 % d&apos;une filiale.</p>
+                          )}
+                        </div>
+                      </div>
                     )}
+
+                    <AccordionItem title="Le saviez-vous ?">
+                      <div className="text-base text-gray-600 space-y-2">
+                        <p>L&apos;<strong>IS</strong> est le régime par défaut de la SASU. Taux réduit de <strong>15 %</strong> sur les 42 500 premiers euros de bénéfice, puis <strong>25 %</strong>.</p>
+                        <p>L&apos;<strong>IR</strong> est une option temporaire (5 ans max) : les bénéfices sont imposés directement au nom de l&apos;associé unique.</p>
+                        {(answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                          <p><strong>Régime mère-fille :</strong> Si la holding détient au moins 5 % du capital d&apos;une filiale depuis plus de 2 ans, les dividendes reçus sont exonérés à 95 %.</p>
+                        )}
+                      </div>
+                    </AccordionItem>
+
                     <div className="space-y-3">
-                      {QUESTIONS[10].choices?.map((c) => (
+                      <button
+                        onClick={() => setAnswer("regime_fiscal", "is")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                          answers.regime_fiscal === "is"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Landmark className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Impôt sur les sociétés (IS) — recommandé</p>
+                          <p className="text-sm text-gray-500 mt-0.5">15 % jusqu&apos;à 42 500 €, puis 25 %</p>
+                        </div>
+                        {answers.regime_fiscal === "is" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+
+                      <button
+                        onClick={() => setAnswer("regime_fiscal", "ir")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                          answers.regime_fiscal === "ir"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <User className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Impôt sur le revenu (IR) — option temporaire, 5 ans max</p>
+                          <p className="text-sm text-gray-500 mt-0.5">Bénéfices imposés au barème progressif de l&apos;associé</p>
+                        </div>
+                        {answers.regime_fiscal === "ir" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+                    </div>
+
+                    {/* Options spécifiques IS + holding */}
+                    {answers.regime_fiscal === "is" && (answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="space-y-4 border-t border-gray-200 pt-4">
+                        <p className="text-base font-bold text-[#1E3A8A]">Options fiscales holding</p>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Régime mère-fille</label>
+                          <p className="text-sm text-gray-500 mb-2">Exonération de 95 % des dividendes reçus des filiales (détention ≥ 5 % depuis 2 ans)</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("regime_mere_fille", "oui")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.regime_mere_fille === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Oui, opter
+                            </button>
+                            <button
+                              onClick={() => setAnswer("regime_mere_fille", "non")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.regime_mere_fille === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Non
+                            </button>
+                          </div>
+                        </div>
+
+                        {answers.type_structure === "holding_animatrice" && (
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Intégration fiscale</label>
+                            <p className="text-sm text-gray-500 mb-2">Consolider les résultats des filiales détenues à 95 % ou plus</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("integration_fiscale", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.integration_fiscale === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui, opter
+                              </button>
+                              <button
+                                onClick={() => setAnswer("integration_fiscale", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  answers.integration_fiscale === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Warning IR + holding */}
+                    {answers.regime_fiscal === "ir" && (answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
+                        <p className="text-base text-yellow-800">
+                          <strong>Attention :</strong> L&apos;option IR pour une holding est rarement avantageuse. Les dividendes perçus des filiales seraient imposés au barème progressif sans bénéficier du régime mère-fille. L&apos;IS est fortement recommandé pour les holdings.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Page: Régime de TVA ── */}
+                {POST_PAGES[postPage]?.id === "regime_tva" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Régime de TVA</p>
+                    </div>
+
+                    {/* Info spécifique holding */}
+                    {(answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice") && (
+                      <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                        <Landmark className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                        <div className="text-base text-[#1E3A8A] space-y-1">
+                          {answers.type_structure === "holding_passive" && (
+                            <>
+                              <p><strong>Holding passive :</strong> Les dividendes et plus-values de cession de titres sont <strong>hors champ TVA</strong>.</p>
+                              <p>Si la holding n&apos;a aucune prestation de services imposable, elle n&apos;est pas assujettie à la TVA et ne peut pas récupérer la TVA sur ses achats.</p>
+                            </>
+                          )}
+                          {answers.type_structure === "holding_animatrice" && (
+                            <>
+                              <p><strong>Holding animatrice :</strong> La facturation de management fees aux filiales est soumise à la TVA.</p>
+                              <p>Vous pouvez récupérer la TVA sur vos achats (conseils juridiques, comptabilité, etc.) au prorata de votre activité taxable.</p>
+                              <p>Un <strong>coefficient de déduction</strong> (prorata) doit être calculé entre activités taxables (management fees) et non taxables (dividendes).</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <AccordionItem title="Le saviez-vous ?">
+                      <div className="text-base text-gray-600 space-y-2">
+                        <p><strong>Franchise en base :</strong> Pas de TVA facturée ni récupérée. Plafonds : 91 900 € (ventes) / 36 800 € (services).</p>
+                        <p><strong>Réel simplifié :</strong> Déclaration annuelle (CA12) + 2 acomptes semestriels. Pour les CA ≤ 840 000 € (ventes) ou 254 000 € (services).</p>
+                        <p><strong>Réel normal :</strong> Déclaration mensuelle (CA3). Obligatoire au-delà des seuils du simplifié ou sur option.</p>
+                        <p><strong>Mini-réel :</strong> IS au réel simplifié + TVA au réel normal. Permet de récupérer la TVA mensuellement.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-3">
+                      {/* Franchise en base — pas pour les holdings animatrices avec management fees */}
+                      {!(answers.type_structure === "holding_animatrice" && answers.management_fees === "oui") && (
                         <button
-                          key={c.value}
-                          onClick={() => setAnswer("regime_fiscal", c.value)}
+                          onClick={() => setAnswer("regime_tva", "franchise")}
                           className={cn(
-                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
-                            answers.regime_fiscal === c.value
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                            answers.regime_tva === "franchise"
                               ? "border-[#2563EB] bg-blue-50"
                               : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
                           )}
                         >
                           <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
-                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                            <Shield className="w-6 h-6 text-[#2563EB]" />
                           </div>
                           <div className="flex-1">
-                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                            <p className="font-bold text-[#1E3A8A]">Franchise en base de TVA</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Pas de TVA facturée ni récupérée — idéal pour les petites structures</p>
                           </div>
-                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                          {answers.regime_tva === "franchise" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
                         </button>
-                      ))}
+                      )}
+
+                      <button
+                        onClick={() => setAnswer("regime_tva", "reel_simplifie")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                          answers.regime_tva === "reel_simplifie"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <CreditCard className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Réel simplifié</p>
+                          <p className="text-sm text-gray-500 mt-0.5">Déclaration annuelle + 2 acomptes — le plus courant</p>
+                        </div>
+                        {answers.regime_tva === "reel_simplifie" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+
+                      <button
+                        onClick={() => setAnswer("regime_tva", "reel_normal")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                          answers.regime_tva === "reel_normal"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Coins className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Réel normal</p>
+                          <p className="text-sm text-gray-500 mt-0.5">Déclaration mensuelle — récupération rapide de TVA</p>
+                        </div>
+                        {answers.regime_tva === "reel_normal" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
+
+                      {/* Mini-réel : option spéciale */}
+                      <button
+                        onClick={() => setAnswer("regime_tva", "mini_reel")}
+                        className={cn(
+                          "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                          answers.regime_tva === "mini_reel"
+                            ? "border-[#2563EB] bg-blue-50"
+                            : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                        )}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                          <Zap className="w-6 h-6 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1E3A8A]">Mini-réel</p>
+                          <p className="text-sm text-gray-500 mt-0.5">IS simplifié + TVA mensuelle — bon compromis pour récupérer la TVA rapidement</p>
+                        </div>
+                        {answers.regime_tva === "mini_reel" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                      </button>
                     </div>
+
+                    {/* Holding passive : option non assujetti */}
+                    {answers.type_structure === "holding_passive" && (
+                      <div className="border-t border-gray-200 pt-4">
+                        <button
+                          onClick={() => setAnswer("regime_tva", "non_assujetti")}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
+                            answers.regime_tva === "non_assujetti"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-gray-100 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <X className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">Non assujetti à la TVA</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Holding pure sans prestation de services — pas de TVA</p>
+                          </div>
+                          {answers.regime_tva === "non_assujetti" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -3473,7 +4238,7 @@ export default function CreationSASUPage() {
                     </div>
                     {QUESTIONS[11].info && (
                       <AccordionItem title={QUESTIONS[11].info.title}>
-                        <div className="text-sm text-gray-600">{QUESTIONS[11].info.content}</div>
+                        <div className="text-base text-gray-600">{QUESTIONS[11].info.content}</div>
                       </AccordionItem>
                     )}
                     <input
@@ -3496,7 +4261,7 @@ export default function CreationSASUPage() {
                     </div>
 
                     <AccordionItem title="Le saviez-vous ?">
-                      <div className="text-sm text-gray-600">
+                      <div className="text-base text-gray-600">
                         <p>
                           La <strong>date de signature des statuts</strong> marque officiellement la constitution de votre société.
                           Le <strong>lieu</strong> correspond généralement à l&apos;adresse du siège social, mais peut être différent
@@ -3529,7 +4294,7 @@ export default function CreationSASUPage() {
                         <button
                           onClick={() => setAnswer("lieu_signature_type", "siege")}
                           className={cn(
-                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
                             answers.lieu_signature_type === "siege"
                               ? "border-[#2563EB] bg-blue-50"
                               : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
@@ -3540,7 +4305,7 @@ export default function CreationSASUPage() {
                           </div>
                           <div className="flex-1">
                             <p className="font-bold text-[#1E3A8A]">Au siège social</p>
-                            <p className="text-xs text-gray-500 mt-0.5">{answers.adresse_siege || "Adresse du siège social"}</p>
+                            <p className="text-sm text-gray-500 mt-0.5">{answers.adresse_siege || "Adresse du siège social"}</p>
                           </div>
                           {answers.lieu_signature_type === "siege" && (
                             <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
@@ -3549,7 +4314,7 @@ export default function CreationSASUPage() {
                         <button
                           onClick={() => setAnswer("lieu_signature_type", "autre")}
                           className={cn(
-                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
                             answers.lieu_signature_type === "autre"
                               ? "border-[#2563EB] bg-blue-50"
                               : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
@@ -3560,7 +4325,7 @@ export default function CreationSASUPage() {
                           </div>
                           <div className="flex-1">
                             <p className="font-bold text-[#1E3A8A]">Autre adresse</p>
-                            <p className="text-xs text-gray-500 mt-0.5">Précisez une adresse différente</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Précisez une adresse différente</p>
                           </div>
                           {answers.lieu_signature_type === "autre" && (
                             <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
@@ -3590,7 +4355,7 @@ export default function CreationSASUPage() {
 
                     <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
                       <Eye className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-[#1E3A8A]">
+                      <p className="text-base text-[#1E3A8A]">
                         Vérifiez attentivement les informations ci-dessous avant de continuer. Vous pourrez revenir modifier chaque section en cliquant sur &quot;Modifier&quot;.
                       </p>
                     </div>
@@ -3609,11 +4374,22 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
+                    {/* Type de structure */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Type de structure</h3>
+                        <button onClick={() => setPostPage(1)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p><span className="text-gray-500">Structure :</span> <span className="text-gray-800 font-medium">{answers.type_structure === "classique" ? "Société classique" : answers.type_structure === "holding_passive" ? "Holding passive" : answers.type_structure === "holding_animatrice" ? "Holding animatrice" : "—"}</span></p>
+                      </div>
+                    </div>
+
                     {/* Objet social */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Objet social</h3>
-                        <button onClick={() => setPostPage(2)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(3)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800">{answers.objet_social || "—"}</p>
@@ -3624,7 +4400,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Associé unique</h3>
-                        <button onClick={() => setPostPage(5)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(6)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_associe === "physique" ? "Personne physique" : answers.type_associe === "morale" ? "Personne morale" : "—"}</span></p>
@@ -3647,7 +4423,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Capital social</h3>
-                        <button onClick={() => setPostPage(6)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(7)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_capital === "fixe" ? "Capital fixe" : answers.type_capital === "variable" ? "Capital variable" : "—"}</span></p>
@@ -3687,8 +4463,23 @@ export default function CreationSASUPage() {
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime fiscal</h3>
                         <button onClick={() => setPostPage(12)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
-                      <div className="px-5 py-3 text-sm">
+                      <div className="px-5 py-3 text-sm space-y-1">
                         <p><span className="text-gray-500">Régime :</span> <span className="text-gray-800 font-medium">{answers.regime_fiscal === "is" ? "Impôt sur les sociétés (IS)" : answers.regime_fiscal === "ir" ? "Impôt sur le revenu (IR)" : "—"}</span></p>
+                        {answers.regime_mere_fille === "oui" && <p><span className="text-gray-500">Mère-fille :</span> <span className="text-gray-800 font-medium">Oui</span></p>}
+                        {answers.integration_fiscale === "oui" && <p><span className="text-gray-500">Intégration fiscale :</span> <span className="text-gray-800 font-medium">Oui</span></p>}
+                      </div>
+                    </div>
+
+                    {/* Régime TVA */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime de TVA</h3>
+                        <button onClick={() => setPostPage(13)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p><span className="text-gray-500">TVA :</span> <span className="text-gray-800 font-medium">
+                          {answers.regime_tva === "franchise" ? "Franchise en base" : answers.regime_tva === "reel_simplifie" ? "Réel simplifié" : answers.regime_tva === "reel_normal" ? "Réel normal" : answers.regime_tva === "mini_reel" ? "Mini-réel" : answers.regime_tva === "non_assujetti" ? "Non assujetti" : "—"}
+                        </span></p>
                       </div>
                     </div>
 
@@ -3696,7 +4487,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Siège social</h3>
-                        <button onClick={() => setPostPage(13)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(14)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800 font-medium">{answers.adresse_siege || "—"}</p>
@@ -3707,7 +4498,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Date et lieu de signature</h3>
-                        <button onClick={() => setPostPage(14)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(15)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Date :</span> <span className="text-gray-800 font-medium">{answers.date_signature || "—"}</span></p>
@@ -3729,7 +4520,7 @@ export default function CreationSASUPage() {
 
                     <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
                       <FileUp className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
-                      <p className="text-sm text-[#1E3A8A]">
+                      <p className="text-base text-[#1E3A8A]">
                         Veuillez fournir les documents ci-dessous pour constituer votre dossier. Les formats acceptés sont <strong>PDF, JPG, PNG</strong> (max 10 Mo par fichier).
                       </p>
                     </div>
@@ -3774,6 +4565,38 @@ export default function CreationSASUPage() {
                       {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
                     </div>
 
+                    {/* Attestation de mise à disposition / hébergement — génération auto */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Landmark className="w-5 h-5 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Attestation de mise à disposition / hébergement</p>
+                          <p className="text-xs text-gray-500">Document à faire signer par l&apos;hébergeur ou le metteur à disposition</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          const { buildAttestationHebergement } = await import("@/app/lib/generateSasuDocuments");
+                          const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                          const text = buildAttestationHebergement(answers);
+                          const blob = await generateSasuDocumentDocx(text);
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = "attestation-hebergement-mise-a-disposition.docx";
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        <Download className="w-4 h-4" />
+                        Télécharger l&apos;attestation d&apos;hébergement
+                      </button>
+                      <p className="text-xs text-gray-500">À compléter par les champs manquants, imprimer et faire signer par l&apos;hébergeur.</p>
+                    </div>
+
                     {/* Attestation de dépôt du capital */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
@@ -3794,25 +4617,111 @@ export default function CreationSASUPage() {
                       {answers.justif_depot_capital && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_depot_capital}</p>}
                     </div>
 
-                    {/* Déclaration de non-condamnation */}
+                    {/* Déclaration de non-condamnation et de filiation — génération auto */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
                           <Shield className="w-5 h-5 text-[#2563EB]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de non-condamnation</p>
-                          <p className="text-xs text-gray-500">Attestation sur l&apos;honneur du président</p>
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de non-condamnation et de filiation</p>
+                          <p className="text-xs text-gray-500">Générée automatiquement à partir de vos informations</p>
                         </div>
-                        {answers.justif_non_condamnation && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
                       </div>
-                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        {answers.justif_non_condamnation ? "Remplacer le fichier" : "Importer le document"}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_non_condamnation", e.target.files[0].name); }} />
-                      </label>
-                      {answers.justif_non_condamnation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_non_condamnation}</p>}
+                      <button
+                        onClick={async () => {
+                          const { buildNonCondamnation } = await import("@/app/lib/generateSasuDocuments");
+                          const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                          const text = buildNonCondamnation({
+                            ...answers,
+                            prenom_pere: answers.president_pere_nom?.split(" ").slice(1).join(" ") || answers.president_rp_pere_nom?.split(" ").slice(1).join(" "),
+                            nom_pere: answers.president_pere_nom?.split(" ")[0] || answers.president_rp_pere_nom?.split(" ")[0],
+                            prenom_mere: answers.president_mere_nom?.split(" ").slice(1).join(" ") || answers.president_rp_mere_nom?.split(" ").slice(1).join(" "),
+                            nom_mere: answers.president_mere_nom?.split(" ")[0] || answers.president_rp_mere_nom?.split(" ")[0],
+                          });
+                          const blob = await generateSasuDocumentDocx(text);
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = "declaration-non-condamnation-filiation.docx";
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                      >
+                        <Download className="w-4 h-4" />
+                        Télécharger la déclaration de non-condamnation
+                      </button>
+                      <p className="text-xs text-gray-500">Document à imprimer, signer et joindre au dossier.</p>
                     </div>
+
+                    {/* Dispense de commissaire aux apports — si apport en nature */}
+                    {(answers.apports_nature_liste || []).length > 0 && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <FileUp className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de dispense de commissaire aux apports</p>
+                            <p className="text-xs text-gray-500">Générée automatiquement — requise si apport en nature sans commissaire</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const { buildDispenseCAA } = await import("@/app/lib/generateSasuDocuments");
+                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildDispenseCAA(answers);
+                            const blob = await generateSasuDocumentDocx(text);
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "declaration-dispense-commissaire-apports.docx";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          <Download className="w-4 h-4" />
+                          Télécharger la déclaration de dispense
+                        </button>
+                        <p className="text-xs text-gray-500">Document à imprimer, signer et joindre au dossier d&apos;immatriculation.</p>
+                      </div>
+                    )}
+
+                    {/* Attestation d'origine patrimoniale — si déclaration remploi = oui */}
+                    {answers.declaration_remploi === "oui" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Heart className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Attestation d&apos;origine patrimoniale des apports</p>
+                            <p className="text-xs text-gray-500">Générée automatiquement — bien propre</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            const { buildAttestationOrigine } = await import("@/app/lib/generateSasuDocuments");
+                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildAttestationOrigine(answers);
+                            const blob = await generateSasuDocumentDocx(text);
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "attestation-origine-patrimoniale.docx";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                        >
+                          <Download className="w-4 h-4" />
+                          Télécharger l&apos;attestation d&apos;origine patrimoniale
+                        </button>
+                        <p className="text-xs text-gray-500">Document à imprimer, signer et joindre au dossier.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -3824,7 +4733,7 @@ export default function CreationSASUPage() {
                     </div>
                     {QUESTIONS[12].info && (
                       <AccordionItem title={QUESTIONS[12].info.title}>
-                        <div className="text-sm text-gray-600">{QUESTIONS[12].info.content}</div>
+                        <div className="text-base text-gray-600">{QUESTIONS[12].info.content}</div>
                       </AccordionItem>
                     )}
                     <div className="space-y-3">
@@ -3833,7 +4742,7 @@ export default function CreationSASUPage() {
                           key={c.value}
                           onClick={() => setAnswer("president_remunere", c.value)}
                           className={cn(
-                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group text-base",
                             answers.president_remunere === c.value
                               ? "border-[#2563EB] bg-blue-50"
                               : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
@@ -3863,7 +4772,7 @@ export default function CreationSASUPage() {
                         setPhase("pricing");
                       }
                     }}
-                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-base hover:bg-gray-50 transition-colors"
                   >
                     Retour
                   </button>
@@ -3874,7 +4783,7 @@ export default function CreationSASUPage() {
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }
                     }}
-                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   >
                     Continuer <ArrowRight className="w-4 h-4" />
                   </button>

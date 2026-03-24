@@ -260,7 +260,7 @@ function parseBodyText(text: string): Array<Paragraph | Table> {
     }
 
     // ── Main document title (ALL-CAPS, no # prefix) ──
-    if (/^(CESSION D|ACTE DE CESSION|PROC[EÈ]S-VERBAL|D[EÉ]CISIONS UNANIMES|D[ÉE]CLARATION DE NON)/i.test(cleanT)) {
+    if (/^(CESSION D|ACTE DE CESSION|PROC[EÈ]S-VERBAL|D[EÉ]CISIONS UNANIMES|D[ÉE]CLARATION DE NON|D[ÉE]CLARATION DE DISPENSE|ATTESTATION D)/i.test(cleanT)) {
       result.push(new Paragraph({
         children: [navyRun(cleanT, true, 28)],
         alignment: AlignmentType.CENTER,
@@ -294,7 +294,7 @@ function parseBodyText(text: string): Array<Paragraph | Table> {
     }
 
     // ── Signature block labels ──
-    if (/^(LE C[EÉ]DANT|LE CESSIONNAIRE|LE PR[EÉ]SIDENT|LE CONJOINT|L[''']ASSOCI[EÉ]|LE G[EÉ]RANT|L[''']ASSOCI[EÉ] UNIQUE)/i.test(cleanT)) {
+    if (/^(LE C[EÉ]DANT|LE CESSIONNAIRE|LE PR[EÉ]SIDENT|LE CONJOINT|L[''']ASSOCI[EÉ]|LE G[EÉ]RANT|L[''']ASSOCI[EÉ] UNIQUE|LA SOCI[EÉ]T[EÉ] D[EÉ]NOMM[EÉ]E|Signature\s*:)/i.test(cleanT)) {
       result.push(new Paragraph({
         children: [navyRun(cleanT, true, 22)],
         spacing: { before: 300, after: 80 },
@@ -400,6 +400,25 @@ export async function generateDissolutionDocx(pvText: string): Promise<Blob> {
 
 export async function generateDeclarationDocx(declarationText: string, data: FormData): Promise<Blob> {
   const bodyChildren = parseBodyText(declarationText);
+
+  const doc = new Document({
+    sections: [
+      {
+        headers: { default: buildHeader() },
+        footers: { default: buildFooter() },
+        properties: { page: { margin: PAGE_MARGINS } },
+        children: bodyChildren,
+      },
+    ],
+    styles: DOC_STYLES,
+  });
+
+  return Packer.toBlob(doc);
+}
+
+// ── Génération générique pour les documents SASU (attestation, dispense, non-condamnation) ──
+export async function generateSasuDocumentDocx(text: string): Promise<Blob> {
+  const bodyChildren = parseBodyText(text);
 
   const doc = new Document({
     sections: [

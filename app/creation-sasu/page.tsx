@@ -2259,6 +2259,43 @@ export default function CreationSASUPage() {
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
+
+                        {/* Mineur émancipé */}
+                        {(() => {
+                          if (!answers.associe_date_naissance) return null;
+                          const birth = new Date(answers.associe_date_naissance);
+                          const today = new Date();
+                          let age = today.getFullYear() - birth.getFullYear();
+                          const m = today.getMonth() - birth.getMonth();
+                          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                          if (age >= 18) return null;
+                          return (
+                            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-3">
+                              <p className="text-sm font-semibold text-amber-800">L&apos;associé a moins de 18 ans. Un mineur ne peut créer une SASU que s&apos;il est émancipé.</p>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => setAnswer("associe_emancipe", "oui")}
+                                  className={cn("flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all", answers.associe_emancipe === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}
+                                >
+                                  Oui, mineur émancipé
+                                </button>
+                                <button
+                                  onClick={() => setAnswer("associe_emancipe", "non")}
+                                  className={cn("flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all", answers.associe_emancipe === "non" ? "border-red-500 bg-red-50 text-red-700" : "border-gray-200 bg-white text-gray-600 hover:border-red-300")}
+                                >
+                                  Non
+                                </button>
+                              </div>
+                              {answers.associe_emancipe === "non" && (
+                                <p className="text-sm text-red-600 font-medium">Un mineur non émancipé ne peut pas être associé unique d&apos;une SASU. Veuillez vérifier la date de naissance.</p>
+                              )}
+                              {answers.associe_emancipe === "oui" && (
+                                <p className="text-sm text-green-700">Un justificatif d&apos;émancipation (jugement du tribunal) vous sera demandé dans la section pièces justificatives.</p>
+                              )}
+                            </div>
+                          );
+                        })()}
+
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
                           <input
@@ -4583,6 +4620,28 @@ export default function CreationSASUPage() {
                       </label>
                       {answers.justif_identite && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_identite}</p>}
                     </div>
+
+                    {/* Justificatif d'émancipation — si mineur émancipé */}
+                    {answers.associe_emancipe === "oui" && (
+                      <div className="bg-white border border-amber-300 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                            <Shield className="w-5 h-5 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif d&apos;émancipation</p>
+                            <p className="text-xs text-gray-500">Jugement du tribunal judiciaire prononçant l&apos;émancipation du mineur</p>
+                          </div>
+                          {answers.justif_emancipation && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-amber-400 text-amber-700 text-sm font-medium cursor-pointer hover:bg-amber-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_emancipation ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_emancipation", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_emancipation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_emancipation}</p>}
+                      </div>
+                    )}
 
                     {/* Justificatif de domicile */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">

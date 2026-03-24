@@ -389,7 +389,7 @@ function BrandProtectionSection() {
             </button>
             {dropdownOpen && (
               <div className="absolute z-10 mt-1 w-full bg-white border border-[#D1D5DB] rounded-lg shadow-lg overflow-hidden">
-                {[1, 2, 3, 4, 5].map((n) => (
+                {Array.from({ length: 45 }, (_, i) => i + 1).map((n) => (
                   <button
                     key={n}
                     onClick={() => { setSelectedClasses(n); setDropdownOpen(false); }}

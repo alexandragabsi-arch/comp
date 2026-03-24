@@ -1232,6 +1232,7 @@ export default function CreationSASUPage() {
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
     { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_fiscal" },        // IS / IR (adapté holdings)
+    { id: "exercice_comptable" },   // date clôture exercice comptable
     { id: "regime_tva" },           // régime de TVA
     { id: "adresse_siege" },        // adresse
     { id: "date_lieu" },            // date et lieu de signature des statuts
@@ -1943,6 +1944,12 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+                          {answers.management_fees === "oui" && (
+                            <div className="mt-3 ml-4">
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pourcentage des management fees (% du CA filiale)</label>
+                              <input type="text" value={answers.management_fees_pct || ""} onChange={(e) => setAnswer("management_fees_pct", e.target.value)} placeholder="Ex : 5" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          )}
 
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de trésorerie (cash pooling)</label>
@@ -1968,6 +1975,20 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+                          {answers.cash_pooling === "oui" && (
+                            <div className="mt-3 ml-4">
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Plafond par filiale et par exercice (€)</label>
+                                  <input type="text" value={answers.cash_pooling_plafond || ""} onChange={(e) => setAnswer("cash_pooling_plafond", e.target.value)} placeholder="Ex : 500000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Majoration du taux légal (points)</label>
+                                  <input type="text" value={answers.cash_pooling_taux || ""} onChange={(e) => setAnswer("cash_pooling_taux", e.target.value)} placeholder="Ex : 2" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
 
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pacte Dutreil (transmission)</label>
@@ -1993,6 +2014,12 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+                          {answers.pacte_dutreil === "oui" && (
+                            <div className="mt-3 ml-4">
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Durée de l&apos;engagement collectif de conservation (années)</label>
+                              <input type="text" value={answers.pacte_dutreil_duree || ""} onChange={(e) => setAnswer("pacte_dutreil_duree", e.target.value)} placeholder="Ex : 2" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -2065,26 +2092,35 @@ export default function CreationSASUPage() {
 
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => {
-                            // Popup placeholder — generates a draft objet social from activities
+                          onClick={async () => {
                             const principale = answers.activite_principale_desc || answers.sous_categorie || "";
-                            const secondaires = answers.activites_secondaires || "";
-                            if (principale) {
-                              const draft = `La société a pour objet : ${principale}${secondaires ? `, ${secondaires}` : ""}. Et plus généralement, toutes opérations industrielles, commerciales, financières, civiles, mobilières ou immobilières, pouvant se rattacher directement ou indirectement à l'objet social ou à tout objet similaire, connexe ou complémentaire.`;
-                              setAnswer("objet_social", draft);
-                            }
+                            if (!principale) return;
+                            setAnswer("objet_social_loading", "true");
+                            try {
+                              const res = await fetch("/api/generate-objet-social", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  activite_principale: principale,
+                                  activites_secondaires: answers.activites_secondaires || "",
+                                  type_structure: answers.type_structure || "classique",
+                                }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                setAnswer("objet_social", data.objet_social);
+                              }
+                            } catch { /* ignore */ }
+                            setAnswer("objet_social_loading", "");
                           }}
-                          disabled={!answers.activite_principale_desc && !answers.sous_categorie}
+                          disabled={(!answers.activite_principale_desc && !answers.sous_categorie) || answers.objet_social_loading === "true"}
                           className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] disabled:bg-[#9CA3AF] transition-colors flex items-center gap-2"
                         >
-                          <Sparkles className="w-4 h-4" />
-                          Rédiger mon objet social
-                        </button>
-                        <button
-                          onClick={() => setAnswer("show_objet_popup", answers.show_objet_popup === "true" ? "" : "true")}
-                          className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
-                        >
-                          Popup
+                          {answers.objet_social_loading === "true" ? (
+                            <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Rédaction en cours…</>
+                          ) : (
+                            <><Sparkles className="w-4 h-4" /> Rédiger mon objet social (IA avocat)</>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -3845,6 +3881,32 @@ export default function CreationSASUPage() {
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
                             <AddressAutocomplete value={answers.dg_adresse || ""} onChange={(v) => setAnswer("dg_adresse", v)} placeholder="Adresse complète" />
                           </div>
+
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Pouvoirs du Directeur Général</p>
+                            <div className="space-y-2">
+                              <button
+                                onClick={() => setAnswer("dg_pouvoirs", "interne")}
+                                className={cn(
+                                  "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                                  answers.dg_pouvoirs === "interne" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Direction interne uniquement
+                                <span className="block text-sm font-normal text-gray-500 mt-1">Pas de représentation externe</span>
+                              </button>
+                              <button
+                                onClick={() => setAnswer("dg_pouvoirs", "representation")}
+                                className={cn(
+                                  "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                                  answers.dg_pouvoirs === "representation" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Direction interne + représentation externe
+                                <span className="block text-sm font-normal text-gray-500 mt-1">Engage la société vis-à-vis des tiers</span>
+                              </button>
+                            </div>
+                          </div>
                         </motion.div>
                       )}
                     </div>
@@ -4323,6 +4385,83 @@ export default function CreationSASUPage() {
                         </p>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* ── Page: Exercice comptable ── */}
+                {POST_PAGES[postPage]?.id === "exercice_comptable" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Date de clôture de l&apos;exercice comptable</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Date de clôture de l&apos;exercice comptable</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("cloture_exercice", "31_dec")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.cloture_exercice === "31_dec" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          31 décembre
+                          <span className="block text-sm font-normal text-gray-500 mt-1">Par défaut, le plus courant</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("cloture_exercice", "personnalisee")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.cloture_exercice === "personnalisee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Date personnalisée
+                          <span className="block text-sm font-normal text-gray-500 mt-1">Ex : 30/06</span>
+                        </button>
+                      </div>
+
+                      {answers.cloture_exercice === "personnalisee" && (
+                        <div className="mt-3 ml-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Jour</label>
+                              <input type="text" value={answers.cloture_exercice_jour || ""} onChange={(e) => setAnswer("cloture_exercice_jour", e.target.value)} placeholder="Ex : 30" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Mois</label>
+                              <input type="text" value={answers.cloture_exercice_mois || ""} onChange={(e) => setAnswer("cloture_exercice_mois", e.target.value)} placeholder="Ex : 06" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="border-t border-gray-200 pt-5 space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous prolonger le premier exercice jusqu&apos;à la clôture suivante ?</p>
+                        <p className="text-sm text-gray-500">Le premier exercice peut être prolongé (jusqu&apos;à 24 mois maximum) pour se terminer à la prochaine date de clôture choisie.</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("cloture_prolongee", "oui")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                              answers.cloture_prolongee === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui
+                          </button>
+                          <button
+                            onClick={() => setAnswer("cloture_prolongee", "non")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                              answers.cloture_prolongee === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 

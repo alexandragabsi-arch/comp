@@ -1158,11 +1158,7 @@ export default function CreationSASUPage() {
     { id: "activite_description" }, // activité principale + secondaires + code NAF
     { id: "activite_saisonniere" }, // saisonnière / ambulante
     { id: "associe_unique" },       // type d'associé + infos
-    { id: "capital_social" },       // montant + formule simplifiée/personnalisée
-    // Conditional: only if personnalisée
-    ...(answers.formule_capital === "personnalisee" ? [
-      { id: "actions_capital" },    // montant total, valeur action, nombre actions
-    ] : []),
+    { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_fiscal" },        // IS / IR
@@ -1809,7 +1805,7 @@ export default function CreationSASUPage() {
                   />
                 )}
 
-                {/* ── Page 2: Objet social (texte libre) ── */}
+                {/* ── Page 2: Objet social (2 options: manuelle / IA) ── */}
                 {POST_PAGES[postPage]?.id === "objet_social" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
@@ -1817,13 +1813,99 @@ export default function CreationSASUPage() {
                       <p className="text-gray-500 text-sm">Définissez l&apos;objet social de votre société</p>
                     </div>
 
-                    <AccordionItem title="Plus d'informations">
-                      <div className="text-sm text-gray-600 space-y-2">
-                        <p>L&apos;objet social décrit <strong>précisément l&apos;activité</strong> de votre société. Il sera repris dans les statuts.</p>
-                        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em> pour plus de souplesse.</p>
-                      </div>
-                    </AccordionItem>
+                    {/* Option 1: Rédaction manuelle */}
+                    <div className="border border-gray-200 rounded-xl p-5 space-y-3">
+                      <h3 className="text-lg font-bold text-[#1E3A8A]">Option 1 – Rédaction manuelle complète</h3>
+                      <p className="text-sm text-gray-600">
+                        Vous rédigez vous-même votre objet social. Les champs peuvent être préremplis selon les activités choisies à l&apos;étape précédente (modifiable), ou vous pouvez les compléter maintenant. Vous écrivez ensuite votre objet social directement dans l&apos;encadré prévu à cet effet.
+                      </p>
+                    </div>
 
+                    {/* Option 2: Assistance IA */}
+                    <div className="border-2 border-[#2563EB] rounded-xl p-5 space-y-4 bg-[#EFF6FF]">
+                      <h3 className="text-lg font-bold text-[#1E3A8A]">Option 2 – Assistance à la rédaction par notre intelligence artificielle</h3>
+                      <p className="text-sm text-gray-600">
+                        Nous avons prévu l&apos;aide de notre intelligence artificielle afin de vous aider à la rédaction, vous pouvez modifier le texte par vous même si besoin. Il vous faudra ajouter vos activités principales si cela n&apos;a pas été choisi dans la page précédente.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Activité principale</label>
+                          <input
+                            type="text"
+                            value={answers.activite_principale_desc || answers.sous_categorie || ""}
+                            onChange={(e) => setAnswer("activite_principale_desc", e.target.value)}
+                            placeholder="Ex : Soutien scolaire"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Activités secondaires <span className="font-normal text-gray-400">facultatif</span></label>
+                          <input
+                            type="text"
+                            value={answers.activites_secondaires || ""}
+                            onChange={(e) => setAnswer("activites_secondaires", e.target.value)}
+                            placeholder="Ex : Formation en ligne, vente de supports"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => {
+                            // Popup placeholder — generates a draft objet social from activities
+                            const principale = answers.activite_principale_desc || answers.sous_categorie || "";
+                            const secondaires = answers.activites_secondaires || "";
+                            if (principale) {
+                              const draft = `La société a pour objet : ${principale}${secondaires ? `, ${secondaires}` : ""}. Et plus généralement, toutes opérations industrielles, commerciales, financières, civiles, mobilières ou immobilières, pouvant se rattacher directement ou indirectement à l'objet social ou à tout objet similaire, connexe ou complémentaire.`;
+                              setAnswer("objet_social", draft);
+                            }
+                          }}
+                          disabled={!answers.activite_principale_desc && !answers.sous_categorie}
+                          className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] disabled:bg-[#9CA3AF] transition-colors flex items-center gap-2"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          Rédiger mon objet social
+                        </button>
+                        <button
+                          onClick={() => setAnswer("show_objet_popup", answers.show_objet_popup === "true" ? "" : "true")}
+                          className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                        >
+                          Popup
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Popup modal for objet social preview */}
+                    {answers.show_objet_popup === "true" && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-[#1E3A8A]">Aperçu de l&apos;objet social</h3>
+                            <button onClick={() => setAnswer("show_objet_popup", "")} className="p-1 hover:bg-gray-100 rounded-lg">
+                              <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                          </div>
+                          <textarea
+                            value={answers.objet_social || ""}
+                            onChange={(e) => setAnswer("objet_social", e.target.value)}
+                            rows={8}
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 resize-none"
+                          />
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => setAnswer("show_objet_popup", "")}
+                              className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                            >
+                              Valider
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Zone de rédaction finale */}
                     <textarea
                       value={answers.objet_social || ""}
                       onChange={(e) => setAnswer("objet_social", e.target.value)}
@@ -2130,72 +2212,151 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "capital_social" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Capital social</h2>
-                      <p className="text-gray-500 text-sm">Définissez le montant et les modalités de votre capital</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
+
+                    {/* Capital fixe / variable choice */}
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez vous prévoir un capital fixe ou variable ?</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <button
+                          onClick={() => setAnswer("type_capital", "fixe")}
+                          className={cn(
+                            "text-left rounded-xl border-2 p-5 transition-all",
+                            answers.type_capital === "fixe"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <p className="text-sm font-semibold text-[#2563EB] mb-1">Capital fixe</p>
+                          <p className="text-xs text-gray-500">Le montant est fixé une fois pour toutes dans les statuts. Toute modification future nécessitera une modification statutaire.</p>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("type_capital", "variable")}
+                          className={cn(
+                            "text-left rounded-xl border-2 p-5 transition-all",
+                            answers.type_capital === "variable"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <p className="text-sm font-semibold text-[#2563EB] mb-1">Capital variable</p>
+                          <p className="text-xs text-gray-500">Le montant peut évoluer librement entre un minimum et un maximum prévus dans les statuts, sans formalités lourdes.</p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Capital variable: montant min/max */}
+                    {answers.type_capital === "variable" && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant minimum</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={answers.capital_minimum || ""}
+                            onChange={(e) => setAnswer("capital_minimum", e.target.value)}
+                            placeholder="Ex : 1 000"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant maximum</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={answers.capital_maximum || ""}
+                            onChange={(e) => setAnswer("capital_maximum", e.target.value)}
+                            placeholder="Ex : 100 000"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <AccordionItem title="Plus d'informations">
                       <div className="text-sm text-gray-600 space-y-3">
-                        <p>💡 Le capital minimum légal pour une SASU est de <strong>1 euro</strong>. Afin de faciliter vos démarches, nous vous proposons par défaut un ensemble de règles couramment utilisées dans les statuts afin de simplifier la création de votre SASU.</p>
-                        <p><strong className="text-[#1E3A8A]">Voici la formule dite simplifiée :</strong></p>
-                        <ul className="list-disc pl-5 space-y-1">
-                          <li>L&apos;associé unique a apporté la totalité du capital en numéraire (argent déposé en banque).</li>
-                          <li>Cet apport est effectué à titre de biens propres de l&apos;associé unique (pas de biens communs ou indivis)</li>
-                          <li>Aucun apport en nature ni en industrie.</li>
-                          <li>Le capital est entièrement libéré (100 % déposé).</li>
-                          <li>Le capital est fixe.</li>
-                          <li>La valeur nominale d&apos;une action est de 1 €.</li>
-                          <li>Le montant du capital social correspond à celui que vous avez défini ci-dessous.</li>
-                        </ul>
-                        <p>Toutefois, il est possible de modifier ces règles si vous le souhaitez par exemple : introduire des apports en nature (biens, matériel, véhicule, etc.), des apports en industrie, ou opter pour un capital variable.</p>
+                        <p><strong className="text-[#1E3A8A]">Un capital fixe ne peut pas bouger sans modifier les statuts.</strong> Un capital variable, lui, permet d&apos;ajouter ou retirer des fonds plus facilement, <em>sans formalités lourdes : idéal si vous pensez faire évoluer votre capital au fil du temps (investissements, entrée de ressources, réajustements...).</em></p>
                       </div>
                     </AccordionItem>
 
-                    <div className="space-y-5">
+                    <hr className="border-gray-200" />
+
+                    {/* Montant du capital social section (actions_capital inline) */}
+                    <div className="space-y-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-gray-400">ACTIONS ET CAPITAL SOCIAL</p>
+
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                        <p className="text-sm text-gray-700"><strong className="text-[#1E3A8A]">Montant du capital</strong> : somme totale apportée par les associés.</p>
+                        <p className="text-sm text-gray-700"><strong className="text-[#1E3A8A]">Valeur unitaire d&apos;une action</strong> : prix de base d&apos;une action (souvent 1 € pour simplifier).</p>
+                        <p className="text-sm text-gray-700"><strong className="text-[#1E3A8A]">Nombre d&apos;actions</strong> : calcul automatique = Montant du capital ÷ Valeur d&apos;une action.</p>
+                        <p className="text-sm text-gray-700"><strong>Exemple</strong> : Capital 5 000 € / Valeur 1 € = 5 000 actions.</p>
+                        <p className="text-sm text-[#2563EB] font-semibold">Veuillez remplir le montant de votre capital social et la valeur d&apos;une action souhaitée, le nombre d&apos;actions s&apos;ajustera automatiquement</p>
+                      </div>
+
                       <div>
-                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
-                          Quel est le montant de votre capital social ? (€)
-                        </label>
-                        <p className="text-xs text-gray-500 mb-2">Minimum 1 euro</p>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
                         <input
                           type="number"
                           min="1"
-                          value={answers.capital_social || "1"}
+                          value={answers.capital_social || ""}
                           onChange={(e) => setAnswer("capital_social", e.target.value)}
+                          placeholder="Ex : 12000"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={answers.valeur_action || "1"}
+                          onChange={(e) => setAnswer("valeur_action", e.target.value)}
                           placeholder="1"
                           className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
                         />
                       </div>
 
                       <div>
-                        <p className="text-sm font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            onClick={() => setAnswer("formule_capital", "simplifiee")}
-                            className={cn(
-                              "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
-                              answers.formule_capital === "simplifiee"
-                                ? "border-[#2563EB] bg-blue-50"
-                                : "border-gray-200 bg-white hover:border-[#2563EB]/50"
-                            )}
-                          >
-                            <Zap className="w-8 h-8 text-[#2563EB]" />
-                            <span className="text-sm font-medium text-[#2563EB]">Je choisis la formule simplifiée</span>
-                            <span className="text-xs text-gray-500">(Le choix le plus fréquent)</span>
-                          </button>
-                          <button
-                            onClick={() => setAnswer("formule_capital", "personnalisee")}
-                            className={cn(
-                              "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
-                              answers.formule_capital === "personnalisee"
-                                ? "border-[#2563EB] bg-blue-50"
-                                : "border-gray-200 bg-white hover:border-[#2563EB]/50"
-                            )}
-                          >
-                            <PenTool className="w-8 h-8 text-[#2563EB]" />
-                            <span className="text-sm font-medium text-[#2563EB]">Je souhaite modifier ces règles</span>
-                          </button>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
+                        <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
+                          {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
                         </div>
+                      </div>
+                    </div>
+
+                    <hr className="border-gray-200" />
+
+                    {/* Formule simplifiée / personnalisée */}
+                    <div>
+                      <p className="text-sm font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("formule_capital", "simplifiee")}
+                          className={cn(
+                            "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
+                            answers.formule_capital === "simplifiee"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Zap className="w-8 h-8 text-[#2563EB]" />
+                          <span className="text-sm font-medium text-[#2563EB]">Je choisis la formule simplifiée</span>
+                          <span className="text-xs text-gray-500">(Le choix le plus fréquent)</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("formule_capital", "personnalisee")}
+                          className={cn(
+                            "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
+                            answers.formule_capital === "personnalisee"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <PenTool className="w-8 h-8 text-[#2563EB]" />
+                          <span className="text-sm font-medium text-[#2563EB]">Je souhaite modifier ces règles</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2250,9 +2411,11 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "apport_associe" && (() => {
                   const capitalTotal = Number(answers.capital_social) || 0;
                   const apportNum = Number(answers.apport_numeraire) || 0;
+                  const apportNature = Number(answers.apport_nature) || 0;
+                  const totalApports = apportNum + apportNature;
                   const valeurAction = Number(answers.valeur_action) || 1;
                   const nbActions = capitalTotal > 0 ? capitalTotal / valeurAction : 0;
-                  const pctApport = capitalTotal > 0 ? Math.round((apportNum / capitalTotal) * 100) : 0;
+                  const pctApport = capitalTotal > 0 ? Math.round((totalApports / capitalTotal) * 100) : 0;
                   const nomComplet = answers.type_associe === "morale"
                     ? (answers.associe_denomination || "Société non renseignée")
                     : [answers.associe_prenom, answers.associe_nom].filter(Boolean).join(" ") || "Associé non renseigné";
@@ -2347,6 +2510,38 @@ export default function CreationSASUPage() {
                                 {apportNum.toLocaleString("fr-FR")} €
                               </td>
                             </motion.tr>
+                            {apportNature > 0 && (
+                              <motion.tr
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.35 }}
+                                className="border-b border-gray-100"
+                              >
+                                <td className="py-3 flex items-center gap-2 text-gray-700">
+                                  <FolderOpen className="w-4 h-4 text-[#2563EB]" />
+                                  Apport en nature
+                                </td>
+                                <td className="py-3 text-right font-semibold text-[#1E3A8A]">
+                                  {apportNature.toLocaleString("fr-FR")} €
+                                </td>
+                              </motion.tr>
+                            )}
+                            {answers.apport_industrie === "oui" && (
+                              <motion.tr
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.35 }}
+                                className="border-b border-gray-100"
+                              >
+                                <td className="py-3 flex items-center gap-2 text-gray-700">
+                                  <PenTool className="w-4 h-4 text-[#2563EB]" />
+                                  Apport en industrie
+                                </td>
+                                <td className="py-3 text-right font-semibold text-[#1E3A8A] text-xs">
+                                  hors capital
+                                </td>
+                              </motion.tr>
+                            )}
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -2413,46 +2608,132 @@ export default function CreationSASUPage() {
                     </motion.div>
 
                     {/* Warning si incohérence (personnalisée) */}
-                    {answers.formule_capital === "personnalisee" && apportNum !== capitalTotal && (
+                    {totalApports !== capitalTotal && totalApports > 0 && (
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 space-y-3"
                       >
                         <p className="text-sm text-yellow-800">
-                          <strong>Attention</strong> — la répartition du capital social semble incohérente. Les apports intégrés au capital totalisent {apportNum.toLocaleString("fr-FR")} €, alors que le capital déclaré est {capitalTotal.toLocaleString("fr-FR")} € ({capitalTotal > 0 ? Math.round((apportNum / capitalTotal) * 100) : 0} %).
+                          <strong>Attention</strong> — la répartition du capital social semble incohérente. Les apports intégrés au capital totalisent {totalApports.toLocaleString("fr-FR")} €, alors que le capital déclaré est {capitalTotal.toLocaleString("fr-FR")} € ({capitalTotal > 0 ? Math.round((totalApports / capitalTotal) * 100) : 0}%).
                         </p>
+                        <p className="text-sm text-yellow-800">L&apos;apport doit être égale à 100% du capital social déclaré avant validation</p>
+                        <p className="text-sm text-yellow-800 font-semibold">Deux options s&apos;offrent à vous :</p>
+                        <p className="text-sm text-yellow-800"><strong>1 – Modifier la répartition du capital social</strong></p>
+                        <p className="text-xs text-yellow-700">Si le montant de l&apos;apport est incorrect ou incomplet, dans ce cas il faut modifier l&apos;apport de l&apos;associé unique</p>
+                        <p className="text-sm text-yellow-800"><strong>2 – Modifier le capital social</strong></p>
+                        <p className="text-xs text-yellow-700">Si vous voulez changer le capital social, veuillez cliquer sur ce bouton.</p>
                         <div className="flex flex-wrap gap-2">
                           <button
-                            onClick={() => {
-                              const idx = POST_PAGES.findIndex(p => p.id === "capital_social");
-                              if (idx >= 0) setPostPage(idx);
-                            }}
-                            className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+                            onClick={() => setAnswer("capital_social", String(totalApports))}
+                            className="px-4 py-2 rounded-xl bg-[#2563EB] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
                           >
-                            Modifier le capital social
-                          </button>
-                          <button
-                            onClick={() => setAnswer("apport_numeraire", String(capitalTotal))}
-                            className="px-4 py-2 rounded-xl bg-white border border-[#1E3A8A] text-[#1E3A8A] text-xs font-semibold hover:bg-blue-50 transition-colors"
-                          >
-                            Définir {capitalTotal.toLocaleString("fr-FR")} € comme apport
+                            Définir {totalApports.toLocaleString("fr-FR")} € comme nouveau capital social
                           </button>
                         </div>
                       </motion.div>
                     )}
 
-                    {/* Input apport */}
-                    <div>
-                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant de l&apos;apport en numéraire (€)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={answers.apport_numeraire || ""}
-                        onChange={(e) => setAnswer("apport_numeraire", e.target.value)}
-                        placeholder={String(capitalTotal) || "0"}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
-                      />
+                    {/* Input apports — types différents selon PP/PM */}
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Apport en numéraire (€)</label>
+                        <p className="text-xs text-gray-500 mb-2">Somme d&apos;argent effectivement déposée sur le compte bancaire dédié à la société.</p>
+                        <input
+                          type="number"
+                          min="0"
+                          value={answers.apport_numeraire || ""}
+                          onChange={(e) => setAnswer("apport_numeraire", e.target.value)}
+                          placeholder={String(capitalTotal) || "0"}
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      {answers.formule_capital === "personnalisee" && (
+                        <>
+                          {/* Apport en nature — PP et PM */}
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Apport en nature (€)</label>
+                            <p className="text-xs text-gray-500 mb-2">Biens matériels ou immatériels apportés à la société (véhicule, matériel, fonds de commerce, brevet, etc.).</p>
+                            <input
+                              type="number"
+                              min="0"
+                              value={answers.apport_nature || ""}
+                              onChange={(e) => setAnswer("apport_nature", e.target.value)}
+                              placeholder="0"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                            {(Number(answers.apport_nature) || 0) > 0 && (
+                              <div className="mt-2">
+                                <label className="block text-xs font-semibold text-[#1E3A8A] mb-1">Description de l&apos;apport en nature</label>
+                                <textarea
+                                  value={answers.apport_nature_description || ""}
+                                  onChange={(e) => setAnswer("apport_nature_description", e.target.value)}
+                                  placeholder="Décrivez le(s) bien(s) apporté(s) : type, marque, estimation..."
+                                  rows={3}
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 resize-none transition-all"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Apport en industrie — PP uniquement */}
+                          {answers.type_associe !== "morale" && (
+                            <div>
+                              <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Apport en industrie</label>
+                              <p className="text-xs text-gray-500 mb-2">
+                                Mise à disposition de connaissances techniques, de travail ou de services. <strong>Attention :</strong> l&apos;apport en industrie ne concourt pas à la formation du capital social, mais donne droit à des actions.
+                              </p>
+                              <div className="grid grid-cols-2 gap-3">
+                                <button
+                                  onClick={() => setAnswer("apport_industrie", "oui")}
+                                  className={cn(
+                                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 text-sm font-medium transition-all",
+                                    answers.apport_industrie === "oui"
+                                      ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                      : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                  )}
+                                >
+                                  Oui, il y a un apport en industrie
+                                </button>
+                                <button
+                                  onClick={() => setAnswer("apport_industrie", "non")}
+                                  className={cn(
+                                    "flex items-center justify-center gap-2 p-4 rounded-xl border-2 text-sm font-medium transition-all",
+                                    answers.apport_industrie === "non"
+                                      ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                      : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                  )}
+                                >
+                                  Non
+                                </button>
+                              </div>
+                              {answers.apport_industrie === "oui" && (
+                                <div className="mt-3">
+                                  <label className="block text-xs font-semibold text-[#1E3A8A] mb-1">Description de l&apos;apport en industrie</label>
+                                  <textarea
+                                    value={answers.apport_industrie_description || ""}
+                                    onChange={(e) => setAnswer("apport_industrie_description", e.target.value)}
+                                    placeholder="Décrivez les compétences, connaissances ou services apportés..."
+                                    rows={3}
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 resize-none transition-all"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Info PM: pas d'apport en industrie */}
+                          {answers.type_associe === "morale" && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                              <p className="text-sm text-gray-700">
+                                <Lightbulb className="inline w-4 h-4 mr-1 text-[#2563EB]" />
+                                <strong>Note :</strong> Une personne morale ne peut pas effectuer d&apos;apport en industrie. Seuls les apports en numéraire et en nature sont possibles.
+                              </p>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                   );

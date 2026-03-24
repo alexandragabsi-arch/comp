@@ -1149,18 +1149,24 @@ export default function CreationSASUPage() {
   const currentQIndex = activeQuestions[currentQ]; // actual QUESTIONS index
   const question = QUESTIONS[currentQIndex];
 
-  // Post-payment pages (step 4: dossier juridique) — 10 pages
+  // Post-payment pages (step 4: dossier juridique) — dynamic based on formule_capital
   const POST_PAGES = [
-    { id: "denomination", sidebarStep: 4 },        // 0: dénomination + sigle + nom commercial + enseigne
-    { id: "objet_principal", sidebarStep: 4 },      // 1: catégories visuelles + sous-catégories
-    { id: "objet_social", sidebarStep: 4 },         // 2: texte libre
-    { id: "activite_description", sidebarStep: 4 }, // 3: activité principale + secondaires + code NAF
-    { id: "activite_saisonniere", sidebarStep: 4 }, // 4: saisonnière / ambulante
-    { id: "associe_unique", sidebarStep: 4 },       // 5: type d'associé + infos
-    { id: "capital_social", sidebarStep: 4 },       // 6: montant + formule
-    { id: "regime_fiscal", sidebarStep: 4 },        // 7: IS / IR
-    { id: "adresse_siege", sidebarStep: 4 },        // 8: adresse
-    { id: "president_remunere", sidebarStep: 4 },   // 9: rémunération
+    { id: "denomination" },        // dénomination + sigle + nom commercial + enseigne
+    { id: "objet_principal" },      // catégories visuelles + sous-catégories
+    { id: "objet_social" },         // texte libre
+    { id: "activite_description" }, // activité principale + secondaires + code NAF
+    { id: "activite_saisonniere" }, // saisonnière / ambulante
+    { id: "associe_unique" },       // type d'associé + infos
+    { id: "capital_social" },       // montant + formule simplifiée/personnalisée
+    // Conditional: only if personnalisée
+    ...(answers.formule_capital === "personnalisee" ? [
+      { id: "actions_capital" },    // montant total, valeur action, nombre actions
+    ] : []),
+    { id: "apport_associe" },      // apport de l'associé unique
+    { id: "depot_capital" },        // établissement bancaire + date dépôt
+    { id: "regime_fiscal" },        // IS / IR
+    { id: "adresse_siege" },        // adresse
+    { id: "president_remunere" },   // rémunération
   ];
 
   // Determine sidebar step from phase
@@ -1724,7 +1730,7 @@ export default function CreationSASUPage() {
                 </div>
 
                 {/* ── Page 0: Dénomination sociale ── */}
-                {postPage === 0 && (
+                {POST_PAGES[postPage]?.id === "denomination" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">
@@ -1793,7 +1799,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 1: Objet principal (catégories visuelles) ── */}
-                {postPage === 1 && (
+                {POST_PAGES[postPage]?.id === "objet_principal" && (
                   <PostPaymentObjetPrincipal
                     selected={answers.objet_principal || ""}
                     sousCategorie={answers.sous_categorie || ""}
@@ -1803,7 +1809,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 2: Objet social (texte libre) ── */}
-                {postPage === 2 && (
+                {POST_PAGES[postPage]?.id === "objet_social" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Objet social</h2>
@@ -1828,7 +1834,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 3: Activité principale + secondaires ── */}
-                {postPage === 3 && (
+                {POST_PAGES[postPage]?.id === "activite_description" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Description de vos activités</h2>
@@ -1899,7 +1905,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 4: Activité saisonnière / ambulante ── */}
-                {postPage === 4 && (
+                {POST_PAGES[postPage]?.id === "activite_saisonniere" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Type d&apos;activité</h2>
@@ -1945,7 +1951,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 5: Associé unique ── */}
-                {postPage === 5 && (
+                {POST_PAGES[postPage]?.id === "associe_unique" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">ASSOCIÉ UNIQUE</h2>
@@ -2120,7 +2126,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 6: Capital social ── */}
-                {postPage === 6 && (
+                {POST_PAGES[postPage]?.id === "capital_social" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Capital social</h2>
@@ -2194,8 +2200,159 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Page 7: Régime fiscal ── */}
-                {postPage === 7 && (
+                {/* ── Actions et capital social (personnalisée only) ── */}
+                {POST_PAGES[postPage]?.id === "actions_capital" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">ACTIONS ET CAPITAL SOCIAL</h2>
+                      <p className="text-gray-500 text-sm">Dans le parcours simplifié, la valeur d&apos;une action est fixée à 1 euro.</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <p className="text-sm text-gray-700">Dans le parcours simplifié, la valeur d&apos;une action est fixée à 1 euro.</p>
+                    </div>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={answers.capital_social || "1"}
+                          onChange={(e) => setAnswer("capital_social", e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={answers.valeur_action || "1"}
+                          onChange={(e) => setAnswer("valeur_action", e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
+                        <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
+                          {((Number(answers.capital_social) || 1) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Apport de l'associé unique ── */}
+                {POST_PAGES[postPage]?.id === "apport_associe" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Apport de l&apos;associé unique</h2>
+                      <p className="text-gray-500 text-sm">Remplissez la fiche apport de l&apos;associé unique</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>Comment remplir la fiche apport de l&apos;associé unique ? Cliquez sur l&apos;associé, remplissez sa fiche d&apos;apport, puis validez le profil.</p>
+                      </div>
+                    </AccordionItem>
+
+                    {answers.formule_capital === "simplifiee" ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3">
+                        <p className="text-sm text-gray-700">
+                          💡 <strong>Dans le parcours simplifié d&apos;une SASU, l&apos;associé unique apporte uniquement une somme d&apos;argent</strong> (&quot;apport en numéraire&quot;), <strong>entièrement libérée</strong>, c&apos;est-à-dire réellement versée et déposée sur le compte bancaire dédié dès la création. La valeur d&apos;une action est fixée à 1 euro. Le capital social correspond donc à la somme effectivement déposée, et l&apos;associé unique détient 100 % des actions.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
+                          <p className="text-sm text-yellow-800">
+                            ⚠ Attention la répartition du capital social doit être cohérente. Les apports intégrés au capital totalisent le montant que vous avez déclaré ({answers.capital_social || "0"} €).
+                          </p>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          La somme des apports doit être égale à 100 % du capital social déclaré avant validation.
+                        </p>
+                        <div className="space-y-2">
+                          <p className="text-sm font-bold text-[#1E3A8A]">1 – Modifier la répartition du capital social</p>
+                          <p className="text-sm text-gray-600">Si un ou plusieurs montants d&apos;apport sont incorrects ou incomplets, dans ce cas il faut modifier le profil de ou des associés concernés</p>
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-bold text-[#1E3A8A]">2 – Modifier le capital social</p>
+                          <p className="text-sm text-gray-600">Si vous voulez changer le capital social, veuillez cliquer sur ce bouton.</p>
+                          <button
+                            onClick={() => {
+                              const idx = POST_PAGES.findIndex(p => p.id === "capital_social");
+                              if (idx >= 0) setPostPage(idx);
+                            }}
+                            className="px-5 py-2.5 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                          >
+                            Modifier le capital social
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="border-t border-gray-200 pt-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Capital Social : {answers.capital_social || "0"} €</p>
+                    </div>
+
+                    {/* Montant apport numéraire */}
+                    <div>
+                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant de l&apos;apport en numéraire (€)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={answers.apport_numeraire || answers.capital_social || ""}
+                        onChange={(e) => setAnswer("apport_numeraire", e.target.value)}
+                        placeholder={answers.capital_social || "0"}
+                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Dépôt du capital ── */}
+                {POST_PAGES[postPage]?.id === "depot_capital" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Dépôt du capital</h2>
+                      <p className="text-gray-500 text-sm">Informations sur le dépôt de votre capital social</p>
+                    </div>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          Dans quel établissement bancaire avez-vous déposé le capital ?
+                        </label>
+                        <input
+                          type="text"
+                          value={answers.banque_depot || ""}
+                          onChange={(e) => setAnswer("banque_depot", e.target.value)}
+                          placeholder="Nom de la banque / néobanque"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">
+                          À quelle date le dépôt a-t-il été effectué ?
+                        </label>
+                        <input
+                          type="date"
+                          value={answers.date_depot || ""}
+                          onChange={(e) => setAnswer("date_depot", e.target.value)}
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Régime fiscal ── */}
+                {POST_PAGES[postPage]?.id === "regime_fiscal" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[10].title}</h2>
@@ -2232,7 +2389,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 8: Adresse siège social ── */}
-                {postPage === 8 && (
+                {POST_PAGES[postPage]?.id === "adresse_siege" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[11].title}</h2>
@@ -2254,7 +2411,7 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Page 9: Président rémunéré ── */}
-                {postPage === 9 && (
+                {POST_PAGES[postPage]?.id === "president_remunere" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[12].title}</h2>

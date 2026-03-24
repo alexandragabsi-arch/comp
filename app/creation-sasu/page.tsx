@@ -272,7 +272,7 @@ function ChoiceCard({ label, subtitle, selected, onClick }: { label: string; sub
 }
 
 function InfoAccordion({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div className="mt-6 border border-[#D1D5DB] rounded-xl overflow-hidden">
       <button

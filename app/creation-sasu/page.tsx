@@ -1154,7 +1154,9 @@ export default function CreationSASUPage() {
   const POST_PAGES_ALL = [
     { id: "regles_statutaires" },   // règles par défaut ou personnaliser
     { id: "date_cloture" },         // date de clôture exercice comptable
-    { id: "services_comptables" },  // commissaire aux comptes / services comptables
+    { id: "services_comptables" },  // commissaire aux comptes
+    { id: "duree_societe" },        // durée de la société (99 ans ou personnalisée)
+    { id: "cession_actions" },      // modalités de cession/transmission des actions
     { id: "denomination" },         // dénomination + sigle + nom commercial + enseigne
     { id: "objet_principal" },      // catégories visuelles + sous-catégories
     { id: "objet_social" },         // texte libre
@@ -2113,6 +2115,208 @@ export default function CreationSASUPage() {
                               </div>
                             </motion.div>
                           )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Page: Durée de la société ── */}
+                {POST_PAGES[postPage]?.id === "duree_societe" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Durée de la société</p>
+                      <p className="text-sm text-gray-600">La durée légale maximale d&apos;une société est de 99 ans. Elle peut être plus courte si vous le souhaitez.</p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setAnswer("duree_societe", "99"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                          className={cn(
+                            "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                            answers.duree_societe === "99"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-[#2563EB]">Durée standard de 99 ans</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("duree_societe", "personnalisee")}
+                          className={cn(
+                            "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                            answers.duree_societe === "personnalisee"
+                              ? "border-[#2563EB] bg-[#EFF6FF]"
+                              : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="text-sm font-medium text-[#2563EB]">Je souhaite une durée déterminée</span>
+                        </button>
+                      </div>
+
+                      {answers.duree_societe === "personnalisee" && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 pt-2">
+                          <label className="block text-sm font-bold text-[#1E3A8A]">Durée souhaitée (en années)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="99"
+                            value={answers.duree_societe_valeur || ""}
+                            onChange={(e) => setAnswer("duree_societe_valeur", e.target.value)}
+                            placeholder="Ex : 50"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                          />
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Cession / transmission des actions ── */}
+                {POST_PAGES[postPage]?.id === "cession_actions" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Comment souhaitez-vous encadrer les modalités de cession ou transmission de vos actions ?</p>
+                      <p className="text-sm text-gray-600">
+                        En SASU, l&apos;associé unique reste libre de décider seul de toute cession ou transmission de ses actions. Les options ci-dessous n&apos;ont <strong>aucun effet tant que la société demeure unipersonnelle</strong>. Elles permettent uniquement <strong>d&apos;anticiper les règles applicables le jour où de nouveaux associés entreraient au capital</strong> (cession, donation, succession).
+                      </p>
+
+                      <button
+                        onClick={() => { setAnswer("cession_actions", "libre"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        className={cn(
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                          answers.cession_actions === "libre"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Cession et transmission libres (par défaut)</p>
+                        <p className="text-xs text-gray-500">Je ne souhaite pas imposer de restrictions</p>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("cession_actions", "agrement")}
+                        className={cn(
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                          answers.cession_actions === "agrement"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Clause d&apos;agrément</p>
+                        <p className="text-xs text-gray-500">Je souhaite prévoir une clause d&apos;agrément</p>
+                      </button>
+                      <button
+                        onClick={() => setAnswer("cession_actions", "heritiers")}
+                        className={cn(
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                          answers.cession_actions === "heritiers"
+                            ? "border-[#2563EB] bg-[#EFF6FF]"
+                            : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                        )}
+                      >
+                        <p className="text-sm font-semibold text-[#2563EB]">Transmission libre uniquement à certains héritiers</p>
+                        <p className="text-xs text-gray-500">Je souhaite que mes actions soient transmises librement uniquement à certaines personnes</p>
+                      </button>
+                    </div>
+
+                    {/* Explications clause agrément */}
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-500 italic">Cliquez pour des explications si besoin</p>
+                      <button
+                        onClick={() => setAnswer("show_agrement_explications", answers.show_agrement_explications === "true" ? "" : "true")}
+                        className="px-5 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                      >
+                        Explications clause agrément
+                      </button>
+
+                      {answers.show_agrement_explications === "true" && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3 text-sm text-gray-700"
+                        >
+                          <p><strong className="text-[#2563EB]">Clause d&apos;agrément :</strong> elle impose que toute cession d&apos;actions à un tiers soit préalablement approuvée par l&apos;associé unique (ou les associés si la société devient pluripersonnelle). Cela permet de contrôler qui entre au capital.</p>
+                          <p><strong className="text-[#2563EB]">Transmission aux héritiers :</strong> vous pouvez prévoir que les actions soient transmises librement en cas de décès uniquement à certains héritiers désignés (conjoint, descendants, etc.), tout en soumettant les autres transferts à agrément.</p>
+                          <p><strong className="text-[#2563EB]">Aucune restriction :</strong> les actions sont librement cessibles et transmissibles sans aucune condition. C&apos;est la règle par défaut en SASU.</p>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* Si clause d'agrément : détails */}
+                    {answers.cession_actions === "agrement" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4 border-t border-gray-200 pt-5"
+                      >
+                        <p className="text-sm font-bold text-[#1E3A8A]">Qui doit donner son agrément ?</p>
+                        <div className="space-y-2">
+                          <button
+                            onClick={() => setAnswer("agrement_qui", "associe_unique")}
+                            className={cn(
+                              "w-full text-left px-4 py-3 rounded-xl border-2 text-sm transition-all",
+                              answers.agrement_qui === "associe_unique"
+                                ? "border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB]"
+                                : "border-gray-200 bg-white hover:border-[#2563EB]/50 text-gray-700"
+                            )}
+                          >
+                            L&apos;associé unique (ou la collectivité des associés à la majorité simple)
+                          </button>
+                          <button
+                            onClick={() => setAnswer("agrement_qui", "president")}
+                            className={cn(
+                              "w-full text-left px-4 py-3 rounded-xl border-2 text-sm transition-all",
+                              answers.agrement_qui === "president"
+                                ? "border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB]"
+                                : "border-gray-200 bg-white hover:border-[#2563EB]/50 text-gray-700"
+                            )}
+                          >
+                            Le Président seul
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Si héritiers : préciser */}
+                    {answers.cession_actions === "heritiers" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-4 border-t border-gray-200 pt-5"
+                      >
+                        <p className="text-sm font-bold text-[#1E3A8A]">À quels héritiers la transmission est-elle libre ?</p>
+                        <div className="space-y-2">
+                          {[
+                            { value: "conjoint", label: "Conjoint survivant" },
+                            { value: "descendants", label: "Descendants (enfants, petits-enfants)" },
+                            { value: "ascendants", label: "Ascendants (parents, grands-parents)" },
+                          ].map((opt) => {
+                            const currentList: string[] = answers.heritiers_liste ? JSON.parse(answers.heritiers_liste) : [];
+                            const isChecked = currentList.includes(opt.value);
+                            return (
+                              <label key={opt.value} className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-[#2563EB]/50 cursor-pointer transition-all">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    const updated = isChecked
+                                      ? currentList.filter((v) => v !== opt.value)
+                                      : [...currentList, opt.value];
+                                    setAnswer("heritiers_liste", JSON.stringify(updated));
+                                  }}
+                                  className="h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]"
+                                />
+                                <span className="text-sm text-gray-700">{opt.label}</span>
+                              </label>
+                            );
+                          })}
                         </div>
                       </motion.div>
                     )}

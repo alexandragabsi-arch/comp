@@ -275,16 +275,175 @@ function InfoAccordion({ title, children }: { title: string; children: React.Rea
   );
 }
 
+/* ───────── Brand Protection Plans ───────── */
+
+const BRAND_PLANS = [
+  {
+    id: "france",
+    flag: "🇫🇷",
+    label: "France",
+    badge: "1 classe incluse",
+    price: 269,
+    details: ["Frais INPI : 190 €", "Service LegalCorners : 79 €", "Classe supplémentaire : +40 €"],
+    zone: "Marque nationale (INPI)",
+    baseFees: 190,
+    serviceFees: 79,
+    extraClassPrice: 40,
+  },
+  {
+    id: "eu",
+    flag: "🇪🇺",
+    label: "Union européenne",
+    badge: "1 classe incluse",
+    price: 950,
+    details: ["Frais EUIPO : 850 €", "Service LegalCorners : 100 €", "Classe supplémentaire : +60 €"],
+    zone: "Marque européenne (EUIPO)",
+    baseFees: 850,
+    serviceFees: 100,
+    extraClassPrice: 60,
+  },
+  {
+    id: "international",
+    flag: "🌍",
+    label: "International",
+    badge: "Base + pays choisis",
+    price: 1150,
+    details: ["Frais OMPI (base) : 1 000 €", "Service LegalCorners : 150 €", "+ Frais par pays sélectionné (variable)"],
+    zone: "Marque internationale (OMPI)",
+    baseFees: 1000,
+    serviceFees: 150,
+    extraClassPrice: 0,
+  },
+];
+
+function BrandProtectionSection() {
+  const [selectedPlan, setSelectedPlan] = useState("france");
+  const [selectedClasses, setSelectedClasses] = useState(0);
+
+  const plan = BRAND_PLANS.find((p) => p.id === selectedPlan)!;
+  const extraCost = selectedClasses > 1 ? (selectedClasses - 1) * plan.extraClassPrice : 0;
+  const total = plan.price + extraCost;
+
+  return (
+    <div className="mb-10">
+      {/* Section title */}
+      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] text-center mb-2">
+        Protégez votre nom / logo
+      </h2>
+      <p className="text-sm text-[#6B7280] text-center mb-6">
+        Choisissez la zone de protection. Le tarif indiqué comprend <strong className="text-[#1E293B]">1 classe incluse</strong>.
+      </p>
+
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {BRAND_PLANS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setSelectedPlan(p.id)}
+            className={cn(
+              "text-left rounded-xl border-2 p-5 transition-all",
+              selectedPlan === p.id
+                ? "border-[#2563EB] bg-[#EFF6FF]"
+                : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+            )}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="flex items-center gap-2 font-semibold text-[#1E293B]">
+                <span className="text-lg">{p.flag}</span> {p.label}
+              </span>
+              <span className="text-xs font-medium text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded-full">
+                {p.badge}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-[#1E293B] mb-3">
+              {p.price} € <span className="text-sm font-normal text-[#9CA3AF]">TTC</span>
+            </p>
+            <ul className="space-y-1">
+              {p.details.map((d, i) => (
+                <li key={i} className="text-xs text-[#6B7280]">• {d}</li>
+              ))}
+            </ul>
+          </button>
+        ))}
+      </div>
+
+      {/* Bottom: Paramètres + Récapitulatif */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Paramètres */}
+        <div className="border border-[#D1D5DB] rounded-xl p-5">
+          <h3 className="font-bold text-[#1E293B] mb-1">Paramètres</h3>
+          <p className="text-sm text-[#6B7280] mb-3">Choisir vos classes</p>
+          <select
+            value={selectedClasses}
+            onChange={(e) => setSelectedClasses(Number(e.target.value))}
+            className="w-full px-4 py-3 rounded-lg border border-[#D1D5DB] text-sm text-[#1E293B] bg-white focus:border-[#2563EB] focus:outline-none"
+          >
+            <option value={0}>Choisir la classe</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>{n} classe{n > 1 ? "s" : ""}</option>
+            ))}
+          </select>
+          {plan.extraClassPrice > 0 && (
+            <p className="text-xs text-[#6B7280] mt-3">
+              Chaque classe au-delà de la 1ʳᵉ ajoute {plan.extraClassPrice} €.
+            </p>
+          )}
+          <p className="text-xs text-[#6B7280] mt-2">
+            <strong className="text-[#1E293B]">Qu&apos;est-ce qu&apos;une classe ?</strong> Une classe est une catégorie de produits/services
+            (classification de Nice). Ajoutez des classes si vous exercez dans plusieurs domaines.
+          </p>
+        </div>
+
+        {/* Récapitulatif */}
+        <div className="border border-[#D1D5DB] rounded-xl p-5">
+          <h3 className="font-bold text-[#2563EB] mb-4">Récapitulatif</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Zone sélectionnée</span>
+              <span className="text-[#1E293B] font-medium">{plan.zone}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Nombre de classes</span>
+              <span className="text-[#1E293B] font-medium">{selectedClasses}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Frais officiels</span>
+              <span className="text-[#1E293B] font-medium">{plan.baseFees} €</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Service LegalCorners</span>
+              <span className="text-[#1E293B] font-medium">{plan.serviceFees} €</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Supplément classes</span>
+              <span className="text-[#1E293B] font-medium">{extraCost > 0 ? `${extraCost} €` : "—"}</span>
+            </div>
+          </div>
+          <div className="border-t border-[#D1D5DB] mt-4 pt-4 flex justify-between items-center">
+            <span className="font-bold text-[#1E293B]">Total indicatif</span>
+            <span className="text-lg font-bold text-[#2563EB]">{total} € TTC</span>
+          </div>
+          <button className="w-full mt-4 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] transition-colors">
+            Choisir cette formule
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ───────── Single Question Block ───────── */
 
 function QuestionBlock({
   question,
   answer,
   onAnswer,
+  showBrandProtection,
 }: {
   question: Question;
   answer: string;
   onAnswer: (val: string) => void;
+  showBrandProtection?: boolean;
 }) {
   return (
     <div className="mb-10">
@@ -355,6 +514,9 @@ function QuestionBlock({
           {question.info.content}
         </InfoAccordion>
       )}
+
+      {/* Conditional brand protection section */}
+      {showBrandProtection && answer === "oui" && <BrandProtectionSection />}
     </div>
   );
 }
@@ -506,6 +668,7 @@ export default function CreationSASUPage() {
               question={q}
               answer={answers[q.id] || ""}
               onAnswer={(val) => setAnswer(q.id, val)}
+              showBrandProtection={q.id === "proteger_nom"}
             />
           ))}
 

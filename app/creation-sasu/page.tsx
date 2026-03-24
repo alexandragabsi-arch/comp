@@ -1009,18 +1009,19 @@ export default function CreationSASUPage() {
     phase === "pricing" || phase === "avocat_confirmation" ? 3 :
     4;
 
-  function goNextQuestion() {
+  function goNextQuestion(freshAnswers?: Record<string, string>) {
+    const a = freshAnswers ?? answers;
     const q = QUESTIONS[activeQuestions[currentQ]];
 
     // After certain questions, redirect to special pages
-    if (q.id === "proteger_nom" && answers.proteger_nom === "oui") {
+    if (q.id === "proteger_nom" && a.proteger_nom === "oui") {
       setPhase("brand_protection");
       return;
     }
-    if (q.id === "statut_micro" && answers.statut_micro === "oui") {
+    if (q.id === "statut_micro" && a.statut_micro === "oui") {
       // Show action_micro next (it's in the list)
     }
-    if (q.id === "fermeture_micro" && answers.statut_micro === "oui") {
+    if (q.id === "fermeture_micro" && a.statut_micro === "oui") {
       setPhase("micro_search");
       return;
     }
@@ -1050,9 +1051,10 @@ export default function CreationSASUPage() {
 
   function handleChoiceAnswer(val: string) {
     const q = QUESTIONS[activeQuestions[currentQ]];
+    const freshAnswers = { ...answers, [q.id]: val };
     setAnswer(q.id, val);
-    // Auto-advance on choice
-    setTimeout(() => goNextQuestion(), 300);
+    // Auto-advance on choice with fresh answers
+    setTimeout(() => goNextQuestion(freshAnswers), 300);
   }
 
   function handleInputContinue() {

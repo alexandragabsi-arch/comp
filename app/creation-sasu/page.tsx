@@ -41,6 +41,7 @@ interface Question {
 /* ───────── Questions ───────── */
 
 const QUESTIONS: Question[] = [
+  /* ── Step 1: Informations utilisateur ── */
   {
     id: "qui_realise",
     title: "Qui réalise cette formalité ?",
@@ -51,6 +52,7 @@ const QUESTIONS: Question[] = [
       { value: "professionnel", label: "Un professionnel mandataire" },
     ],
   },
+  /* ── Step 2: Société (infos de base) ── */
   {
     id: "nom_societe",
     title: "Quel sera le nom de la société ?",
@@ -79,8 +81,11 @@ const QUESTIONS: Question[] = [
       title: "Le saviez-vous ?",
       content: (
         <p>
-          En déposant votre marque auprès de l&apos;<strong>INPI</strong>, vous en devenez
-          le propriétaire. <em>La protection est valable 10 ans et peut être renouvelée indéfiniment.</em>
+          En déposant votre marque ou votre logo auprès de l&apos;<strong>INPI</strong> (Institut National de la Propriété Intellectuelle),
+          vous en devenez officiellement le propriétaire. Cela signifie que vous êtes le seul à pouvoir l&apos;utiliser et vous pouvez
+          empêcher tout concurrent de s&apos;en servir sans votre accord.{" "}
+          <em>La protection est valable 10 ans et peut être renouvelée indéfiniment.</em>{" "}
+          Vous avez aussi la possibilité d&apos;étendre votre protection à l&apos;Europe (EUIPO) ou à l&apos;international.
         </p>
       ),
     },
@@ -145,6 +150,23 @@ const QUESTIONS: Question[] = [
       ),
     },
   },
+  /* ── Step 3: Paiement ── */
+  {
+    id: "regime_fiscal",
+    title: "Quel régime fiscal souhaitez-vous ?",
+    type: "choice",
+    choices: [
+      { value: "is", label: "Impôt sur les sociétés (IS) — recommandé" },
+      { value: "ir", label: "Impôt sur le revenu (IR) — option temporaire, 5 ans max" },
+    ],
+    info: {
+      title: "Le saviez-vous ?",
+      content: (
+        <p>L&apos;<strong>IS</strong> est le régime par défaut. Taux réduit de <strong>15 %</strong> sur les 42 500 premiers euros, puis <strong>25 %</strong>.</p>
+      ),
+    },
+  },
+  /* ── Step 4: Dossier juridique ── */
   {
     id: "adresse_siege",
     title: "Quelle est l'adresse du siège social ?",
@@ -172,21 +194,7 @@ const QUESTIONS: Question[] = [
       ),
     },
   },
-  {
-    id: "regime_fiscal",
-    title: "Quel régime fiscal souhaitez-vous ?",
-    type: "choice",
-    choices: [
-      { value: "is", label: "Impôt sur les sociétés (IS) — recommandé" },
-      { value: "ir", label: "Impôt sur le revenu (IR) — option temporaire, 5 ans max" },
-    ],
-    info: {
-      title: "Le saviez-vous ?",
-      content: (
-        <p>L&apos;<strong>IS</strong> est le régime par défaut. Taux réduit de <strong>15 %</strong> sur les 42 500 premiers euros, puis <strong>25 %</strong>.</p>
-      ),
-    },
-  },
+  /* ── Step 5: Récapitulatif ── */
   {
     id: "demarrage",
     title: "Quand souhaitez-vous démarrer votre projet ?",
@@ -200,6 +208,16 @@ const QUESTIONS: Question[] = [
   },
 ];
 
+/* ───────── Step → question indices mapping ───────── */
+
+const STEP_QUESTIONS: Record<number, number[]> = {
+  1: [0],           // qui_realise
+  2: [1, 2, 3, 4, 5], // nom_societe → activite_artisanale
+  3: [6],           // regime_fiscal
+  4: [7, 8],        // adresse_siege, president_remunere
+  5: [9],           // demarrage
+};
+
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */
 
 const STEPS = [
@@ -211,6 +229,9 @@ const STEPS = [
   { id: 6, label: "Pièces justificatives", icon: FileUp },
   { id: 7, label: "Signature", icon: PenTool },
 ];
+
+/* Steps that have questions */
+const ACTIVE_STEPS = [1, 2, 3, 4, 5];
 
 /* ───────── Components ───────── */
 
@@ -233,7 +254,7 @@ function ChoiceCard({ label, selected, onClick }: { label: string; selected: boo
 function InfoAccordion({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="mt-8 border border-[#D1D5DB] rounded-xl overflow-hidden">
+    <div className="mt-6 border border-[#D1D5DB] rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-sm font-semibold text-[#1E293B]"
@@ -250,6 +271,252 @@ function InfoAccordion({ title, children }: { title: string; children: React.Rea
           <div className="text-sm text-[#6B7280] leading-relaxed">{children}</div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ───────── Brand Protection Plans ───────── */
+
+const BRAND_PLANS = [
+  {
+    id: "france",
+    flag: "🇫🇷",
+    label: "France",
+    badge: "1 classe incluse",
+    price: 269,
+    details: ["Frais INPI : 190 €", "Service LegalCorners : 79 €", "Classe supplémentaire : +40 €"],
+    zone: "Marque nationale (INPI)",
+    baseFees: 190,
+    serviceFees: 79,
+    extraClassPrice: 40,
+  },
+  {
+    id: "eu",
+    flag: "🇪🇺",
+    label: "Union européenne",
+    badge: "1 classe incluse",
+    price: 950,
+    details: ["Frais EUIPO : 850 €", "Service LegalCorners : 100 €", "Classe supplémentaire : +60 €"],
+    zone: "Marque européenne (EUIPO)",
+    baseFees: 850,
+    serviceFees: 100,
+    extraClassPrice: 60,
+  },
+  {
+    id: "international",
+    flag: "🌍",
+    label: "International",
+    badge: "Base + pays choisis",
+    price: 1150,
+    details: ["Frais OMPI (base) : 1 000 €", "Service LegalCorners : 150 €", "+ Frais par pays sélectionné (variable)"],
+    zone: "Marque internationale (OMPI)",
+    baseFees: 1000,
+    serviceFees: 150,
+    extraClassPrice: 0,
+  },
+];
+
+function BrandProtectionSection() {
+  const [selectedPlan, setSelectedPlan] = useState("france");
+  const [selectedClasses, setSelectedClasses] = useState(0);
+
+  const plan = BRAND_PLANS.find((p) => p.id === selectedPlan)!;
+  const extraCost = selectedClasses > 1 ? (selectedClasses - 1) * plan.extraClassPrice : 0;
+  const total = plan.price + extraCost;
+
+  return (
+    <div className="mb-10">
+      {/* Section title */}
+      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] text-center mb-2">
+        Protégez votre nom / logo
+      </h2>
+      <p className="text-sm text-[#6B7280] text-center mb-6">
+        Choisissez la zone de protection. Le tarif indiqué comprend <strong className="text-[#1E293B]">1 classe incluse</strong>.
+      </p>
+
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {BRAND_PLANS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setSelectedPlan(p.id)}
+            className={cn(
+              "text-left rounded-xl border-2 p-5 transition-all",
+              selectedPlan === p.id
+                ? "border-[#2563EB] bg-[#EFF6FF]"
+                : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+            )}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="flex items-center gap-2 font-semibold text-[#1E293B]">
+                <span className="text-lg">{p.flag}</span> {p.label}
+              </span>
+              <span className="text-xs font-medium text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded-full">
+                {p.badge}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-[#1E293B] mb-3">
+              {p.price} € <span className="text-sm font-normal text-[#9CA3AF]">TTC</span>
+            </p>
+            <ul className="space-y-1">
+              {p.details.map((d, i) => (
+                <li key={i} className="text-xs text-[#6B7280]">• {d}</li>
+              ))}
+            </ul>
+          </button>
+        ))}
+      </div>
+
+      {/* Bottom: Paramètres + Récapitulatif */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Paramètres */}
+        <div className="border border-[#D1D5DB] rounded-xl p-5">
+          <h3 className="font-bold text-[#1E293B] mb-1">Paramètres</h3>
+          <p className="text-sm text-[#6B7280] mb-3">Choisir vos classes</p>
+          <select
+            value={selectedClasses}
+            onChange={(e) => setSelectedClasses(Number(e.target.value))}
+            className="w-full px-4 py-3 rounded-lg border border-[#D1D5DB] text-sm text-[#1E293B] bg-white focus:border-[#2563EB] focus:outline-none"
+          >
+            <option value={0}>Choisir la classe</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>{n} classe{n > 1 ? "s" : ""}</option>
+            ))}
+          </select>
+          {plan.extraClassPrice > 0 && (
+            <p className="text-xs text-[#6B7280] mt-3">
+              Chaque classe au-delà de la 1ʳᵉ ajoute {plan.extraClassPrice} €.
+            </p>
+          )}
+          <p className="text-xs text-[#6B7280] mt-2">
+            <strong className="text-[#1E293B]">Qu&apos;est-ce qu&apos;une classe ?</strong> Une classe est une catégorie de produits/services
+            (classification de Nice). Ajoutez des classes si vous exercez dans plusieurs domaines.
+          </p>
+        </div>
+
+        {/* Récapitulatif */}
+        <div className="border border-[#D1D5DB] rounded-xl p-5">
+          <h3 className="font-bold text-[#2563EB] mb-4">Récapitulatif</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Zone sélectionnée</span>
+              <span className="text-[#1E293B] font-medium">{plan.zone}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Nombre de classes</span>
+              <span className="text-[#1E293B] font-medium">{selectedClasses}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Frais officiels</span>
+              <span className="text-[#1E293B] font-medium">{plan.baseFees} €</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Service LegalCorners</span>
+              <span className="text-[#1E293B] font-medium">{plan.serviceFees} €</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Supplément classes</span>
+              <span className="text-[#1E293B] font-medium">{extraCost > 0 ? `${extraCost} €` : "—"}</span>
+            </div>
+          </div>
+          <div className="border-t border-[#D1D5DB] mt-4 pt-4 flex justify-between items-center">
+            <span className="font-bold text-[#1E293B]">Total indicatif</span>
+            <span className="text-lg font-bold text-[#2563EB]">{total} € TTC</span>
+          </div>
+          <button className="w-full mt-4 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] transition-colors">
+            Choisir cette formule
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Single Question Block ───────── */
+
+function QuestionBlock({
+  question,
+  answer,
+  onAnswer,
+  showBrandProtection,
+}: {
+  question: Question;
+  answer: string;
+  onAnswer: (val: string) => void;
+  showBrandProtection?: boolean;
+}) {
+  return (
+    <div className="mb-10">
+      <h2 className="text-[16px] md:text-[18px] font-bold text-[#1E293B] mb-2 leading-snug">
+        {question.title}
+      </h2>
+
+      {question.description && (
+        <p className="text-sm text-[#6B7280] leading-relaxed mb-4">{question.description}</p>
+      )}
+
+      {question.optional && (
+        <span className="inline-block mb-4 px-3 py-1 text-xs font-semibold text-white bg-green-500 rounded-full">
+          optionnel
+        </span>
+      )}
+
+      {/* Choice cards */}
+      {question.type === "choice" && question.choices && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          {question.choices.map((c) => (
+            <ChoiceCard
+              key={c.value}
+              label={c.label}
+              selected={answer === c.value}
+              onClick={() => onAnswer(c.value)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Text input */}
+      {question.type === "input" && (
+        <input
+          type="text"
+          value={answer}
+          onChange={(e) => onAnswer(e.target.value)}
+          placeholder={question.placeholder}
+          className="w-full mt-3 px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] bg-white transition-colors"
+        />
+      )}
+
+      {/* Textarea */}
+      {question.type === "textarea" && (
+        <textarea
+          value={answer}
+          onChange={(e) => onAnswer(e.target.value)}
+          placeholder={question.placeholder}
+          rows={4}
+          className="w-full mt-3 px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] resize-none bg-white transition-colors"
+        />
+      )}
+
+      {question.hint && (
+        <p className="text-sm text-[#2563EB] italic mt-3">{question.hint}</p>
+      )}
+
+      {question.optional && (
+        <div className="flex justify-end mt-3">
+          <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[#2563EB] text-[#2563EB] text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
+            <HelpCircle className="w-4 h-4" /> Aide IA
+          </button>
+        </div>
+      )}
+
+      {question.info && (
+        <InfoAccordion title={question.info.title}>
+          {question.info.content}
+        </InfoAccordion>
+      )}
+
+      {/* Conditional brand protection section */}
+      {showBrandProtection && answer === "oui" && <BrandProtectionSection />}
     </div>
   );
 }
@@ -272,9 +539,7 @@ function SidebarStep({
 
   return (
     <div className="flex flex-col">
-      {/* Row: circle + icon + label */}
       <div className="flex items-center">
-        {/* Number circle */}
         <div
           className={cn(
             "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
@@ -285,14 +550,12 @@ function SidebarStep({
         >
           {isDone ? <Check className="w-4 h-4" /> : step.id}
         </div>
-        {/* Icon */}
         <Icon
           className={cn(
             "w-5 h-5 shrink-0 ml-3",
             highlighted ? "text-[#2563EB]" : "text-[#9CA3AF]"
           )}
         />
-        {/* Label */}
         <span
           className={cn(
             "text-[13px] font-semibold leading-[1.3] ml-2",
@@ -302,7 +565,6 @@ function SidebarStep({
           {step.label}
         </span>
       </div>
-      {/* Dotted connector */}
       {!isLast && (
         <div className="ml-[15px] my-0">
           <div
@@ -321,20 +583,28 @@ function SidebarStep({
 /* ───────── Main page ───────── */
 
 export default function CreationSASUPage() {
-  const [currentQ, setCurrentQ] = useState(0);
+  const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const question = QUESTIONS[currentQ];
-  const totalQ = QUESTIONS.length;
+  const activeStep = ACTIVE_STEPS[currentStepIdx];
+  const stepQuestionIndices = STEP_QUESTIONS[activeStep] || [];
+  const stepQuestions = stepQuestionIndices.map((i) => QUESTIONS[i]);
 
-  // Map question index → sidebar step
-  const sidebarStep = currentQ < 1 ? 1 : currentQ < 6 ? 2 : currentQ < 8 ? 4 : currentQ < 9 ? 3 : 5;
+  const setAnswer = (id: string, val: string) =>
+    setAnswers((prev) => ({ ...prev, [id]: val }));
 
-  const answer = answers[question.id] || "";
-  const setAnswer = (val: string) => setAnswers((prev) => ({ ...prev, [question.id]: val }));
-  const canGoNext = question.optional || answer.trim().length > 0;
-  const goNext = () => { if (currentQ < totalQ - 1) setCurrentQ((q) => q + 1); };
-  const goPrev = () => { if (currentQ > 0) setCurrentQ((q) => q - 1); };
+  const goNext = () => {
+    if (currentStepIdx < ACTIVE_STEPS.length - 1) {
+      setCurrentStepIdx((s) => s + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+  const goPrev = () => {
+    if (currentStepIdx > 0) {
+      setCurrentStepIdx((s) => s - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans">
@@ -359,13 +629,13 @@ export default function CreationSASUPage() {
           <div key={s.id} className="flex items-center">
             <div className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-              sidebarStep > s.id ? "bg-[#2563EB] text-white"
-                : sidebarStep === s.id ? "bg-[#2563EB] text-white"
+              activeStep > s.id ? "bg-[#2563EB] text-white"
+                : activeStep === s.id ? "bg-[#2563EB] text-white"
                 : "bg-[#E5E7EB] text-[#9CA3AF]"
             )}>
-              {sidebarStep > s.id ? <Check className="w-3 h-3" /> : s.id}
+              {activeStep > s.id ? <Check className="w-3 h-3" /> : s.id}
             </div>
-            {i < STEPS.length - 1 && <div className={cn("w-3 h-[2px] mx-0.5", sidebarStep > s.id ? "bg-[#2563EB]" : "bg-[#E5E7EB]")} />}
+            {i < STEPS.length - 1 && <div className={cn("w-3 h-[2px] mx-0.5", activeStep > s.id ? "bg-[#2563EB]" : "bg-[#E5E7EB]")} />}
           </div>
         ))}
       </div>
@@ -377,8 +647,8 @@ export default function CreationSASUPage() {
             <SidebarStep
               key={s.id}
               step={s}
-              isActive={sidebarStep === s.id}
-              isDone={sidebarStep > s.id}
+              isActive={activeStep === s.id}
+              isDone={activeStep > s.id}
               isLast={i === STEPS.length - 1}
             />
           ))}
@@ -386,85 +656,29 @@ export default function CreationSASUPage() {
 
         {/* ═══════ Main content ═══════ */}
         <main className="flex-1 px-5 sm:px-8 md:px-14 py-6 md:py-10 max-w-[900px]">
-          {/* Mobile progress */}
-          <div className="md:hidden mb-4">
-            <div className="flex justify-between text-xs text-[#9CA3AF] mb-1">
-              <span>Question {currentQ + 1} / {totalQ}</span>
-              <span>{Math.round(((currentQ + 1) / totalQ) * 100)}%</span>
-            </div>
-            <div className="w-full h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
-              <div className="h-full bg-[#2563EB] rounded-full transition-all duration-500" style={{ width: `${((currentQ + 1) / totalQ) * 100}%` }} />
-            </div>
-          </div>
-
           {/* Title */}
-          <h1 className="text-[28px] font-bold text-[#2563EB] mb-6 md:mb-8 leading-tight">
+          <h1 className="text-[28px] font-bold text-[#2563EB] mb-8 leading-tight">
             Création d&apos;une SASU
           </h1>
 
-          {/* Question */}
-          <h2 className="text-[16px] md:text-[18px] font-bold text-[#1E293B] mb-2 leading-snug">{question.title}</h2>
-
-          {question.description && (
-            <p className="text-sm text-[#6B7280] leading-relaxed mb-4 md:mb-5">{question.description}</p>
-          )}
-
-          {question.optional && (
-            <span className="inline-block mb-4 px-3 py-1 text-xs font-semibold text-white bg-green-500 rounded-full">
-              optionnel
-            </span>
-          )}
-
-          {/* Choice cards */}
-          {question.type === "choice" && question.choices && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-              {question.choices.map((c) => (
-                <ChoiceCard key={c.value} label={c.label} selected={answer === c.value} onClick={() => setAnswer(c.value)} />
-              ))}
-            </div>
-          )}
-
-          {/* Text input */}
-          {question.type === "input" && (
-            <input
-              type="text"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder={question.placeholder}
-              className="w-full mt-4 px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] bg-white transition-colors"
+          {/* All questions for this step */}
+          {stepQuestions.map((q) => (
+            <QuestionBlock
+              key={q.id}
+              question={q}
+              answer={answers[q.id] || ""}
+              onAnswer={(val) => setAnswer(q.id, val)}
+              showBrandProtection={q.id === "proteger_nom"}
             />
-          )}
-
-          {/* Textarea */}
-          {question.type === "textarea" && (
-            <textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              placeholder={question.placeholder}
-              rows={4}
-              className="w-full mt-4 px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] resize-none bg-white transition-colors"
-            />
-          )}
-
-          {question.hint && <p className="text-sm text-[#2563EB] italic mt-3">{question.hint}</p>}
-
-          {question.optional && (
-            <div className="flex justify-end mt-3">
-              <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[#2563EB] text-[#2563EB] text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
-                <HelpCircle className="w-4 h-4" /> Aide IA
-              </button>
-            </div>
-          )}
-
-          {question.info && <InfoAccordion title={question.info.title}>{question.info.content}</InfoAccordion>}
+          ))}
 
           {/* ── Navigation ── */}
-          <div className="flex justify-between items-center mt-10 pt-6 border-t border-[#E5E7EB]">
+          <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#E5E7EB]">
             <button
               onClick={goPrev}
               className={cn(
                 "flex items-center gap-2 text-sm font-medium text-[#9CA3AF] hover:text-[#6B7280] transition-colors",
-                currentQ === 0 && "invisible"
+                currentStepIdx === 0 && "invisible"
               )}
             >
               <ArrowLeft className="w-4 h-4" /> Précédent

@@ -2381,56 +2381,73 @@ export default function CreationSASUPage() {
                     {/* Formulaire associé morale */}
                     {answers.type_associe === "morale" && (
                       <div className="space-y-4 border-t border-gray-200 pt-5">
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination de la société associée</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_nom || ""}
-                            onChange={(e) => setAnswer("associe_societe_nom", e.target.value)}
-                            placeholder="Nom de la société"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                          <p className="text-base text-gray-700">Indiquez le numéro SIREN de la société associée pour retrouver automatiquement ses informations dans le registre officiel.</p>
+                          <p className="text-base text-gray-700">Vous trouverez ce numéro sur votre extrait Kbis.</p>
+                          <div className="flex justify-end">
+                            <button onClick={() => setAnswer("associe_societe_mode", "manuel")} className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity">Remplir manuellement</button>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_forme || ""}
-                            onChange={(e) => setAnswer("associe_societe_forme", e.target.value)}
-                            placeholder="Ex : SAS, SARL, SA..."
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
-                        </div>
+
+                        {/* SIREN search */}
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_siren || ""}
-                            onChange={(e) => setAnswer("associe_societe_siren", e.target.value)}
-                            placeholder="Ex : 123 456 789"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
+                          <div className="flex gap-3">
+                            <input type="text" value={answers.associe_societe_siren || ""} onChange={(e) => setAnswer("associe_societe_siren", e.target.value)} placeholder="Ex : 824330799" className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            <button
+                              onClick={async () => {
+                                const siren = (answers.associe_societe_siren || "").replace(/\s/g, "");
+                                if (siren.length !== 9) return;
+                                try {
+                                  const res = await fetch(`/api/siren?siren=${siren}`);
+                                  if (res.ok) {
+                                    const data = await res.json();
+                                    setAnswer("associe_societe_nom", data.denominationSociale || "");
+                                    setAnswer("associe_societe_forme", data.formeJuridique || "");
+                                    setAnswer("associe_societe_capital", data.capitalSocial || "");
+                                    setAnswer("associe_societe_representant", data.representant || "");
+                                    setAnswer("associe_societe_adresse", [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "));
+                                    setAnswer("associe_societe_ville_rcs", data.ville || "");
+                                    setAnswer("associe_societe_mode", "siren");
+                                  }
+                                } catch { /* ignore */ }
+                              }}
+                              disabled={!answers.associe_societe_siren || answers.associe_societe_siren.replace(/\s/g, "").length !== 9}
+                              className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] disabled:bg-[#9CA3AF] transition-colors"
+                            >Confirmer mon Numéro</button>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège de la société associée</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_adresse || ""}
-                            onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)}
-                            placeholder="Adresse complète"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_representant || ""}
-                            onChange={(e) => setAnswer("associe_societe_representant", e.target.value)}
-                            placeholder="Nom et prénom du représentant"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
-                        </div>
+
+                        {/* Infos entreprise */}
+                        {(answers.associe_societe_mode === "siren" || answers.associe_societe_mode === "manuel") && (
+                          <div className="space-y-4 border-t border-gray-200 pt-4">
+                            <p className="text-sm font-bold text-[#2563EB]">Informations de la société associée</p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination de la société</label>
+                                <input type="text" value={answers.associe_societe_nom || ""} onChange={(e) => setAnswer("associe_societe_nom", e.target.value)} placeholder="Nom de la société" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
+                                <input type="text" value={answers.associe_societe_forme || ""} onChange={(e) => setAnswer("associe_societe_forme", e.target.value)} placeholder="Ex : SAS, SARL, SA..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
+                                <input type="text" value={answers.associe_societe_capital || ""} onChange={(e) => setAnswer("associe_societe_capital", e.target.value)} placeholder="Ex : 1000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
+                                <input type="text" value={answers.associe_societe_representant || ""} onChange={(e) => setAnswer("associe_societe_representant", e.target.value)} placeholder="Nom et prénom du représentant" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège</label>
+                              <input type="text" value={answers.associe_societe_adresse || ""} onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -4429,7 +4446,7 @@ export default function CreationSASUPage() {
                         {answers.type_associe === "physique" && (
                           <>
                             {answers.assoc_nom && <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.assoc_prenom} {answers.assoc_nom}</span></p>}
-                            {answers.assoc_date_naissance && <p><span className="text-gray-500">Né(e) le :</span> <span className="text-gray-800 font-medium">{answers.assoc_date_naissance}</span></p>}
+                            {answers.associe_date_naissance && <p><span className="text-gray-500">Né(e) le :</span> <span className="text-gray-800 font-medium">{answers.associe_date_naissance}</span></p>}
                           </>
                         )}
                         {answers.type_associe === "morale" && (

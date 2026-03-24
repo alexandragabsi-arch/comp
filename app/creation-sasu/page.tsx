@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
-  FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X
+  FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
+  Coins, Percent, Edit3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -2246,11 +2247,21 @@ export default function CreationSASUPage() {
                 )}
 
                 {/* ── Apport de l'associé unique ── */}
-                {POST_PAGES[postPage]?.id === "apport_associe" && (
+                {POST_PAGES[postPage]?.id === "apport_associe" && (() => {
+                  const capitalTotal = Number(answers.capital_social) || 0;
+                  const apportNum = Number(answers.apport_numeraire) || 0;
+                  const valeurAction = Number(answers.valeur_action) || 1;
+                  const nbActions = capitalTotal > 0 ? capitalTotal / valeurAction : 0;
+                  const pctApport = capitalTotal > 0 ? Math.round((apportNum / capitalTotal) * 100) : 0;
+                  const nomComplet = answers.type_associe === "morale"
+                    ? (answers.associe_denomination || "Société non renseignée")
+                    : [answers.associe_prenom, answers.associe_nom].filter(Boolean).join(" ") || "Associé non renseigné";
+
+                  return (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Apport de l&apos;associé unique</h2>
-                      <p className="text-gray-500 text-sm">Remplissez la fiche apport de l&apos;associé unique</p>
+                      <p className="text-gray-500 text-sm">Cliquez sur l&apos;associé, remplissez sa fiche d&apos;apport, puis validez</p>
                     </div>
 
                     <AccordionItem title="Plus d'informations">
@@ -2259,60 +2270,193 @@ export default function CreationSASUPage() {
                       </div>
                     </AccordionItem>
 
-                    {answers.formule_capital === "simplifiee" ? (
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3">
+                    {answers.formule_capital === "simplifiee" && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
                         <p className="text-sm text-gray-700">
-                          💡 <strong>Dans le parcours simplifié d&apos;une SASU, l&apos;associé unique apporte uniquement une somme d&apos;argent</strong> (&quot;apport en numéraire&quot;), <strong>entièrement libérée</strong>, c&apos;est-à-dire réellement versée et déposée sur le compte bancaire dédié dès la création. La valeur d&apos;une action est fixée à 1 euro. Le capital social correspond donc à la somme effectivement déposée, et l&apos;associé unique détient 100 % des actions.
+                          <Lightbulb className="inline w-4 h-4 mr-1 text-[#2563EB]" />
+                          <strong>Dans le parcours simplifié d&apos;une SASU, l&apos;associé unique apporte uniquement une somme d&apos;argent</strong> (&quot;apport en numéraire&quot;), <strong>entièrement libérée</strong>, c&apos;est-à-dire réellement versée et déposée sur le compte bancaire dédié dès la création. La valeur d&apos;une action est fixée à 1 euro. Le capital social correspond donc à la somme effectivement déposée, et l&apos;associé unique détient 100 % des actions.
                         </p>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
-                          <p className="text-sm text-yellow-800">
-                            ⚠ Attention la répartition du capital social doit être cohérente. Les apports intégrés au capital totalisent le montant que vous avez déclaré ({answers.capital_social || "0"} €).
+                    )}
+
+                    {/* ── Recap Capital ── */}
+                    <div className="flex items-center justify-between bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] rounded-xl px-5 py-3 text-white">
+                      <span className="text-sm font-medium">Capital Social</span>
+                      <span className="text-lg font-bold">{capitalTotal.toLocaleString("fr-FR")} €</span>
+                    </div>
+
+                    {/* ── Carte associé animée ── */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-[#2563EB] transition-colors"
+                    >
+                      {/* Header carte */}
+                      <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-white">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                          className="flex items-center justify-center w-14 h-14 rounded-full bg-[#1E3A8A] text-white text-lg font-bold shadow-lg"
+                        >
+                          {answers.type_associe === "morale" ? (
+                            <Building2 className="w-7 h-7" />
+                          ) : (
+                            (answers.associe_prenom?.[0] || "A").toUpperCase()
+                          )}
+                        </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-bold text-[#1E3A8A] truncate">{nomComplet}</p>
+                          <p className="text-xs text-gray-500">
+                            {answers.type_associe === "morale" ? "Personne morale" : "Personne physique"} — Associé unique
                           </p>
                         </div>
-                        <p className="text-sm text-gray-600">
-                          La somme des apports doit être égale à 100 % du capital social déclaré avant validation.
-                        </p>
-                        <div className="space-y-2">
-                          <p className="text-sm font-bold text-[#1E3A8A]">1 – Modifier la répartition du capital social</p>
-                          <p className="text-sm text-gray-600">Si un ou plusieurs montants d&apos;apport sont incorrects ou incomplets, dans ce cas il faut modifier le profil de ou des associés concernés</p>
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.5, type: "spring" }}
+                          className="flex items-center gap-1 px-3 py-1 rounded-full bg-blue-100 text-[#2563EB] text-xs font-bold"
+                        >
+                          <Percent className="w-3 h-3" />
+                          100 %
+                        </motion.div>
+                      </div>
+
+                      {/* Tableau d'apport */}
+                      <div className="px-5 pb-5 pt-3">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-gray-200">
+                              <th className="text-left py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Détail</th>
+                              <th className="text-right py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Valeur</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <motion.tr
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.3 }}
+                              className="border-b border-gray-100"
+                            >
+                              <td className="py-3 flex items-center gap-2 text-gray-700">
+                                <Coins className="w-4 h-4 text-[#2563EB]" />
+                                Apport en numéraire
+                              </td>
+                              <td className="py-3 text-right font-semibold text-[#1E3A8A]">
+                                {apportNum.toLocaleString("fr-FR")} €
+                              </td>
+                            </motion.tr>
+                            <motion.tr
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.4 }}
+                              className="border-b border-gray-100"
+                            >
+                              <td className="py-3 flex items-center gap-2 text-gray-700">
+                                <CreditCard className="w-4 h-4 text-[#2563EB]" />
+                                Valeur d&apos;une action
+                              </td>
+                              <td className="py-3 text-right font-semibold text-[#1E3A8A]">
+                                {valeurAction.toLocaleString("fr-FR")} €
+                              </td>
+                            </motion.tr>
+                            <motion.tr
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.5 }}
+                              className="border-b border-gray-100"
+                            >
+                              <td className="py-3 flex items-center gap-2 text-gray-700">
+                                <Users className="w-4 h-4 text-[#2563EB]" />
+                                Nombre d&apos;actions
+                              </td>
+                              <td className="py-3 text-right font-semibold text-[#1E3A8A]">
+                                {nbActions.toLocaleString("fr-FR", { minimumFractionDigits: 0 })}
+                              </td>
+                            </motion.tr>
+                            <motion.tr
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.6 }}
+                            >
+                              <td className="py-3 flex items-center gap-2 text-gray-700">
+                                <Percent className="w-4 h-4 text-[#2563EB]" />
+                                Part du capital
+                              </td>
+                              <td className="py-3 text-right font-semibold text-[#1E3A8A]">
+                                100 %
+                              </td>
+                            </motion.tr>
+                          </tbody>
+                        </table>
+
+                        {/* Barre de progression animée */}
+                        <div className="mt-4">
+                          <div className="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Répartition du capital</span>
+                            <span>{pctApport} % libéré</span>
+                          </div>
+                          <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min(pctApport, 100)}%` }}
+                              transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+                              className={cn(
+                                "h-full rounded-full",
+                                pctApport >= 100 ? "bg-green-500" : pctApport > 0 ? "bg-[#2563EB]" : "bg-red-400"
+                              )}
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <p className="text-sm font-bold text-[#1E3A8A]">2 – Modifier le capital social</p>
-                          <p className="text-sm text-gray-600">Si vous voulez changer le capital social, veuillez cliquer sur ce bouton.</p>
+                      </div>
+                    </motion.div>
+
+                    {/* Warning si incohérence (personnalisée) */}
+                    {answers.formule_capital === "personnalisee" && apportNum !== capitalTotal && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="bg-yellow-50 border border-yellow-300 rounded-xl p-4 space-y-3"
+                      >
+                        <p className="text-sm text-yellow-800">
+                          <strong>Attention</strong> — la répartition du capital social semble incohérente. Les apports intégrés au capital totalisent {apportNum.toLocaleString("fr-FR")} €, alors que le capital déclaré est {capitalTotal.toLocaleString("fr-FR")} € ({capitalTotal > 0 ? Math.round((apportNum / capitalTotal) * 100) : 0} %).
+                        </p>
+                        <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => {
                               const idx = POST_PAGES.findIndex(p => p.id === "capital_social");
                               if (idx >= 0) setPostPage(idx);
                             }}
-                            className="px-5 py-2.5 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity"
+                            className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
                           >
                             Modifier le capital social
                           </button>
+                          <button
+                            onClick={() => setAnswer("apport_numeraire", String(capitalTotal))}
+                            className="px-4 py-2 rounded-xl bg-white border border-[#1E3A8A] text-[#1E3A8A] text-xs font-semibold hover:bg-blue-50 transition-colors"
+                          >
+                            Définir {capitalTotal.toLocaleString("fr-FR")} € comme apport
+                          </button>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
 
-                    <div className="border-t border-gray-200 pt-4">
-                      <p className="text-base font-bold text-[#1E3A8A]">Capital Social : {answers.capital_social || "0"} €</p>
-                    </div>
-
-                    {/* Montant apport numéraire */}
+                    {/* Input apport */}
                     <div>
                       <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Montant de l&apos;apport en numéraire (€)</label>
                       <input
                         type="number"
                         min="0"
-                        value={answers.apport_numeraire || answers.capital_social || ""}
+                        value={answers.apport_numeraire || ""}
                         onChange={(e) => setAnswer("apport_numeraire", e.target.value)}
-                        placeholder={answers.capital_social || "0"}
+                        placeholder={String(capitalTotal) || "0"}
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
                       />
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* ── Dépôt du capital ── */}
                 {POST_PAGES[postPage]?.id === "depot_capital" && (

@@ -340,8 +340,39 @@ export default function CreationSASUPage() {
         </Link>
       </header>
 
+      {/* ── Mobile stepper ── */}
+      <div className="md:hidden flex items-center justify-center gap-2 py-4 px-4 border-b border-gray-100 bg-[#fafbff]">
+        {STEPS.map((s, i) => (
+          <div key={s.id} className="flex items-center">
+            <div
+              className={cn(
+                "w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+                sidebarStep > s.id
+                  ? "bg-[#4A6FE3] text-white"
+                  : sidebarStep === s.id
+                    ? "bg-[#1E3A8A] text-white ring-3 ring-[#4A6FE3]/20"
+                    : "bg-white text-gray-400 border-2 border-gray-200"
+              )}
+            >
+              {sidebarStep > s.id ? <Check className="w-3.5 h-3.5" /> : s.id}
+            </div>
+            {i < STEPS.length - 1 && (
+              <div className={cn(
+                "w-4 h-0.5 mx-0.5",
+                sidebarStep > s.id ? "bg-[#4A6FE3]" : "bg-gray-200"
+              )} />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Mobile step label ── */}
+      <div className="md:hidden text-center py-2 text-xs font-medium text-[#4A6FE3] bg-[#fafbff] border-b border-gray-100">
+        {STEPS.find((s) => s.id === sidebarStep)?.label.replace("\n", " ")}
+      </div>
+
       <div className="flex max-w-[1400px] mx-auto">
-        {/* ── Sidebar stepper ── */}
+        {/* ── Sidebar stepper (desktop) ── */}
         <aside className="hidden md:flex flex-col items-center w-[220px] min-w-[220px] border-r border-gray-100 py-10 px-4">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
@@ -392,37 +423,32 @@ export default function CreationSASUPage() {
           })}
         </aside>
 
-        {/* ── Mobile stepper ── */}
-        <div className="md:hidden flex items-center justify-center gap-1.5 py-4 px-4 border-b border-gray-100 w-full">
-          {STEPS.map((s) => (
-            <div
-              key={s.id}
-              className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold",
-                sidebarStep > s.id
-                  ? "bg-[#4A6FE3] text-white"
-                  : sidebarStep === s.id
-                    ? "bg-[#1E3A8A] text-white"
-                    : "bg-gray-100 text-gray-400"
-              )}
-            >
-              {sidebarStep > s.id ? <Check className="w-3.5 h-3.5" /> : s.id}
-            </div>
-          ))}
-        </div>
-
         {/* ── Main content ── */}
-        <main className="flex-1 px-6 md:px-12 py-8 md:py-10 max-w-4xl">
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1E3A8A] mb-8">
+        <main className="flex-1 px-4 sm:px-6 md:px-12 py-6 md:py-10 max-w-4xl">
+          {/* ── Progress bar (mobile) ── */}
+          <div className="md:hidden mb-5">
+            <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
+              <span>Question {currentQ + 1} / {totalQ}</span>
+              <span>{Math.round(((currentQ + 1) / totalQ) * 100)}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#4A6FE3] rounded-full transition-all duration-500"
+                style={{ width: `${((currentQ + 1) / totalQ) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#1E3A8A] mb-6 md:mb-8">
             Création d&apos;une SASU
           </h1>
 
           {/* ── Question title ── */}
-          <h2 className="text-base md:text-lg font-bold text-gray-900 mb-2">{question.title}</h2>
+          <h2 className="text-base md:text-lg font-bold text-gray-900 mb-2 leading-snug">{question.title}</h2>
 
           {/* ── Description ── */}
           {question.description && (
-            <p className="text-sm text-gray-600 leading-relaxed mb-5">{question.description}</p>
+            <p className="text-sm text-gray-600 leading-relaxed mb-4 md:mb-5">{question.description}</p>
           )}
 
           {/* ── Optional badge ── */}
@@ -434,7 +460,7 @@ export default function CreationSASUPage() {
 
           {/* ── Choice cards ── */}
           {question.type === "choice" && question.choices && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 md:mt-4">
               {question.choices.map((c) => (
                 <ChoiceCard
                   key={c.value}
@@ -453,7 +479,7 @@ export default function CreationSASUPage() {
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={question.placeholder}
-              className="w-full mt-4 px-5 py-4 rounded-xl border-2 border-[#c5d5f0] focus:border-[#4A6FE3] focus:outline-none text-sm transition-colors"
+              className="w-full mt-3 md:mt-4 px-4 md:px-5 py-3.5 md:py-4 rounded-xl border-2 border-[#c5d5f0] focus:border-[#4A6FE3] focus:outline-none text-sm transition-colors"
             />
           )}
 
@@ -464,7 +490,7 @@ export default function CreationSASUPage() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder={question.placeholder}
               rows={4}
-              className="w-full mt-4 px-5 py-4 rounded-xl border-2 border-[#c5d5f0] focus:border-[#4A6FE3] focus:outline-none text-sm resize-none transition-colors"
+              className="w-full mt-3 md:mt-4 px-4 md:px-5 py-3.5 md:py-4 rounded-xl border-2 border-[#c5d5f0] focus:border-[#4A6FE3] focus:outline-none text-sm resize-none transition-colors"
             />
           )}
 
@@ -476,7 +502,7 @@ export default function CreationSASUPage() {
           {/* ── Aide IA button ── */}
           {question.optional && (
             <div className="flex justify-end mt-3">
-              <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[#4A6FE3] text-[#4A6FE3] text-sm font-semibold hover:bg-[#f0f5ff] transition-colors">
+              <button className="flex items-center gap-2 px-4 md:px-5 py-2.5 rounded-full border-2 border-[#4A6FE3] text-[#4A6FE3] text-sm font-semibold hover:bg-[#f0f5ff] active:bg-[#e0e8ff] transition-colors">
                 <HelpCircle className="w-4 h-4" /> Aide IA
               </button>
             </div>
@@ -488,24 +514,24 @@ export default function CreationSASUPage() {
           )}
 
           {/* ── Navigation ── */}
-          <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-100">
+          <div className="flex justify-between items-center mt-8 md:mt-10 pt-5 md:pt-6 border-t border-gray-100">
             <button
               onClick={goPrev}
               className={cn(
-                "flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors",
+                "flex items-center gap-1.5 md:gap-2 text-sm font-medium text-gray-400 hover:text-gray-600 active:text-gray-700 transition-colors",
                 currentQ === 0 && "invisible"
               )}
             >
-              <ArrowLeft className="w-4 h-4" /> Précédent
+              <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Précédent</span>
             </button>
 
             <button
               onClick={goNext}
               disabled={!canGoNext}
               className={cn(
-                "flex items-center gap-2 px-7 py-3 rounded-xl text-sm font-semibold transition-all",
+                "flex items-center gap-2 px-6 md:px-7 py-3 rounded-xl text-sm font-semibold transition-all",
                 canGoNext
-                  ? "bg-[#4A6FE3] text-white hover:bg-[#3b5cc5]"
+                  ? "bg-[#4A6FE3] text-white hover:bg-[#3b5cc5] active:bg-[#2f4da8]"
                   : "bg-gray-200 text-gray-400 cursor-not-allowed"
               )}
             >

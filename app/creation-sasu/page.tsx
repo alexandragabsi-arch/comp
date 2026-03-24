@@ -1,0 +1,1119 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp,
+  User, Building2, CreditCard, FolderOpen, CheckCircle2,
+  FileUp, PenTool, HelpCircle, Lightbulb
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+/*
+ * Color palette (LegalCorners):
+ *   Primary:      #2563EB
+ *   Inactive:     #9CA3AF
+ *   Active text:  #1E293B
+ *   Selected bg:  #EFF6FF
+ *   Borders:      #2563EB (selected) / #D1D5DB (default)
+ *   No #000 anywhere
+ */
+
+/* ───────── Types ───────── */
+
+type QuestionType = "choice" | "input" | "textarea";
+
+interface Choice { value: string; label: string; subtitle?: string }
+
+interface Question {
+  id: string;
+  title: string;
+  description?: string;
+  type: QuestionType;
+  choices?: Choice[];
+  placeholder?: string;
+  optional?: boolean;
+  info?: { title: string; content: React.ReactNode };
+  hint?: string;
+}
+
+/* ───────── Questions ───────── */
+
+const QUESTIONS: Question[] = [
+  /* ── Step 1: Informations utilisateur ── */
+  {
+    id: "qui_realise",
+    title: "Qui réalise cette formalité ?",
+    type: "choice",
+    choices: [
+      { value: "associe", label: "Un des associés fondateurs" },
+      { value: "ami", label: "Un ami / famille" },
+      { value: "professionnel", label: "Un professionnel mandataire" },
+    ],
+  },
+  /* ── Step 2: Société (infos de base) ── */
+  {
+    id: "nom_societe",
+    title: "Quel sera le nom de la société ?",
+    type: "input",
+    placeholder: "Ex : Ma Société",
+  },
+  {
+    id: "proteger_nom",
+    title: "Souhaitez-vous protéger votre nom par une marque ?",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Je veux protéger mon nom" },
+      { value: "non", label: "Je n'ai pas besoin de protéger mon nom" },
+      { value: "ne_sais_pas", label: "Je ne sais pas encore" },
+    ],
+    info: {
+      title: "Le saviez-vous ?",
+      content: (
+        <p>
+          En déposant votre marque ou votre logo auprès de l&apos;<strong>INPI</strong> (Institut National de la Propriété Intellectuelle),
+          vous en devenez officiellement le propriétaire. Cela signifie que vous êtes le seul à pouvoir l&apos;utiliser et vous pouvez
+          empêcher tout concurrent de s&apos;en servir sans votre accord.{" "}
+          <em>La protection est valable 10 ans et peut être renouvelée indéfiniment.</em>{" "}
+          Vous avez aussi la possibilité d&apos;étendre votre protection à l&apos;Europe (EUIPO) ou à l&apos;international.
+        </p>
+      ),
+    },
+  },
+  {
+    id: "capital_social",
+    title: "Quel est le montant du capital social de votre SASU ?",
+    description:
+      "Choisissez le montant qui correspond à vos moyens et à votre projet : il n'y a pas de minimum obligatoire en SASU (à partir de 1 €), mais mieux vaut prévoir un capital qui couvre vos premiers frais et inspire confiance à vos partenaires.",
+    type: "input",
+    placeholder: "Ex : 1 000",
+    info: {
+      title: "Le saviez-vous ?",
+      content: (
+        <>
+          <p>En <strong>SASU</strong>, il n&apos;existe aucun minimum obligatoire : vous pouvez créer votre société avec seulement <strong>1 €</strong>.</p>
+          <ul className="list-disc list-inside mt-2 space-y-1">
+            <li><strong>Crédibilité :</strong> un capital trop faible peut donner une image fragile.</li>
+            <li><strong>Praticité :</strong> un capital plus élevé permet de couvrir vos premiers frais.</li>
+            <li><strong>Souplesse :</strong> vous restez libre d&apos;augmenter le capital plus tard.</li>
+          </ul>
+          <p className="mt-3 font-semibold text-[#2563EB]">Conseil pratique : fixez un capital cohérent avec votre activité.</p>
+        </>
+      ),
+    },
+  },
+  {
+    id: "statut_micro",
+    title: "Êtes-vous actuellement micro-entrepreneur (auto-entrepreneur / entreprise individuelle) ?",
+    description:
+      "Vous êtes micro-entrepreneur si vous possédez un SIRET qui vous permet d'exercer une activité en votre nom personnel",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Oui, je suis micro-entrepreneur (auto-entrepreneur / EI)" },
+      { value: "non", label: "Non, je ne suis pas micro-entrepreneur" },
+    ],
+  },
+  {
+    id: "action_micro",
+    title: "Que souhaitez-vous faire de votre activité actuelle ?",
+    type: "choice",
+    choices: [
+      { value: "transformer", label: "Transformer ma micro-entreprise en SASU", subtitle: "Vous conservez vos clients, votre nom commercial et vos contrats actuels. Votre micro sera fermée après la création de SASU." },
+      { value: "garder", label: "Garder ma micro + créer la SASU à côté", subtitle: "Deux structures séparées, selon vos besoins." },
+      { value: "arreter", label: "Arrêter la micro et repartir via la SASU", subtitle: "Nouveau départ, simple et propre." },
+    ],
+  },
+  {
+    id: "fermeture_micro",
+    title: "Souhaitez-vous que nous nous occupions de la fermeture ou du transfert de votre micro-entreprise ?",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Oui (frais supplémentaires +89 € HT)" },
+      { value: "non", label: "Non, je ferai la démarche moi-même" },
+    ],
+  },
+  {
+    id: "demarrage",
+    title: "Quand souhaitez-vous démarrer votre projet ?",
+    type: "choice",
+    choices: [
+      { value: "asap", label: "Dès que possible (un de nos experts vous accompagne)" },
+      { value: "semaine", label: "Dans la semaine" },
+      { value: "mois", label: "Dans le mois" },
+      { value: "ne_sais_pas", label: "Je ne sais pas encore" },
+    ],
+  },
+  {
+    id: "activite_artisanale",
+    title: "Votre activité est-elle artisanale ? (Coiffeur, boulanger, plombier, etc...)",
+    description:
+      "Une activité artisanale est une activité manuelle (ex. : coiffure, pâtisserie, couture sur mesure, mécanique, plomberie, etc.). De même, si vous fabriquez ou réparez quelque chose et que vous le vendez ensuite, votre activité est considérée comme partiellement artisanale.",
+    type: "choice",
+    optional: true,
+    choices: [
+      { value: "oui", label: "Oui" },
+      { value: "non", label: "Non" },
+    ],
+    hint: "En cas de doute, utilisez le bouton Aide IA pour choisir la bonne réponse.",
+    info: {
+      title: "Le saviez-vous ?",
+      content: (
+        <>
+          <p><strong>Toute activité artisanale doit être immatriculée au Répertoire des Métiers (RM)</strong>, tenu par la <strong>Chambre de Métiers et de l&apos;Artisanat (CMA)</strong>. Il s&apos;agit d&apos;une <strong>obligation légale distincte</strong> de l&apos;immatriculation au <strong>Registre du Commerce et des Sociétés (RCS)</strong>.</p>
+          <p className="mt-2 italic text-[#2563EB]">
+            Si vous souhaitez que nous réalisions cette démarche pour vous, un supplément de 79 € HT sera appliqué, auquel s&apos;ajoutent les frais légaux obligatoires (frais CMA et frais de greffe), dont le montant exact sera précisé au moment du paiement.
+          </p>
+        </>
+      ),
+    },
+  },
+  {
+    id: "objet_social",
+    title: "Quel est l'objet social de votre SASU ?",
+    description:
+      "Décrivez précisément l'activité principale de votre société.",
+    type: "textarea",
+    placeholder: "Ex : Conseil en stratégie digitale, développement de sites web...",
+    info: {
+      title: "Conseil pratique",
+      content: (
+        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em>.</p>
+      ),
+    },
+  },
+  /* ── Step 3: Paiement ── */
+  {
+    id: "regime_fiscal",
+    title: "Quel régime fiscal souhaitez-vous ?",
+    type: "choice",
+    choices: [
+      { value: "is", label: "Impôt sur les sociétés (IS) — recommandé" },
+      { value: "ir", label: "Impôt sur le revenu (IR) — option temporaire, 5 ans max" },
+    ],
+    info: {
+      title: "Le saviez-vous ?",
+      content: (
+        <p>L&apos;<strong>IS</strong> est le régime par défaut. Taux réduit de <strong>15 %</strong> sur les 42 500 premiers euros, puis <strong>25 %</strong>.</p>
+      ),
+    },
+  },
+  /* ── Step 4: Dossier juridique ── */
+  {
+    id: "adresse_siege",
+    title: "Quelle est l'adresse du siège social ?",
+    type: "input",
+    placeholder: "Ex : 12 rue de la Paix, 75001 Paris",
+    info: {
+      title: "Le saviez-vous ?",
+      content: (
+        <p>Vous pouvez domicilier votre SASU à votre adresse personnelle (max 5 ans), dans une société de domiciliation, ou un local commercial.</p>
+      ),
+    },
+  },
+  {
+    id: "president_remunere",
+    title: "Le président sera-t-il rémunéré ?",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Oui — rémunération prévue" },
+      { value: "non", label: "Non — pas de rémunération au démarrage" },
+    ],
+    info: {
+      title: "Le saviez-vous ?",
+      content: (
+        <p>Le président de SASU est <strong>assimilé salarié</strong>. S&apos;il n&apos;est pas rémunéré, aucune cotisation sociale n&apos;est due.</p>
+      ),
+    },
+  },
+];
+
+/* ───────── Pages: each page = array of question indices shown together ───────── */
+
+interface PageDef {
+  questions: number[];
+  sidebarStep: number;
+  special?: "brand_protection" | "micro_page" | "micro_search" | "pricing";
+}
+
+const STATIC_PAGES: PageDef[] = [
+  { questions: [0],        sidebarStep: 1 },  // qui_realise
+  { questions: [1, 2],    sidebarStep: 2 },  // nom_societe + proteger_nom (together)
+  { questions: [],         sidebarStep: 2, special: "brand_protection" }, // conditional
+  { questions: [3],        sidebarStep: 2 },  // capital_social
+  { questions: [4, 5, 6], sidebarStep: 2, special: "micro_page" },      // micro: statut + action + fermeture (all on 1 page)
+  { questions: [],         sidebarStep: 2, special: "micro_search" },    // micro search (if oui)
+  { questions: [7],        sidebarStep: 2 },  // demarrage
+  { questions: [8],        sidebarStep: 2 },  // activite_artisanale
+  { questions: [],         sidebarStep: 3, special: "pricing" },         // 3 formules
+  { questions: [10],       sidebarStep: 4 },  // regime_fiscal
+  { questions: [9],        sidebarStep: 4 },  // objet_social
+  { questions: [11],       sidebarStep: 4 },  // adresse_siege
+  { questions: [12],       sidebarStep: 4 },  // president_remunere
+];
+
+/* ───────── Sidebar steps (7 like LegalCorners) ───────── */
+
+const STEPS = [
+  { id: 1, label: "Informations utilisateur", icon: User },
+  { id: 2, label: "Société (infos de base)", icon: Building2 },
+  { id: 3, label: "Paiement", icon: CreditCard },
+  { id: 4, label: "Dossier juridique", icon: FolderOpen },
+  { id: 5, label: "Récapitulatif & Validation", icon: CheckCircle2 },
+  { id: 6, label: "Pièces justificatives", icon: FileUp },
+  { id: 7, label: "Signature", icon: PenTool },
+];
+
+/* ───────── Components ───────── */
+
+function ChoiceCard({ label, subtitle, selected, onClick }: { label: string; subtitle?: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full text-left px-6 py-4 rounded-lg border transition-all",
+        selected
+          ? "border-[#2563EB] border-2 bg-[#EFF6FF]"
+          : "border-[#D1D5DB] bg-transparent hover:border-[#2563EB] hover:bg-[#EFF6FF]"
+      )}
+    >
+      <span className="text-[15px] font-medium text-[#2563EB]">{label}</span>
+      {subtitle && <p className="text-sm text-[#6B7280] mt-1 font-normal">{subtitle}</p>}
+    </button>
+  );
+}
+
+function InfoAccordion({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="mt-6 border border-[#D1D5DB] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-sm font-semibold text-[#1E293B]"
+      >
+        <span className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-yellow-500" />
+          Plus d&apos;informations
+        </span>
+        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+      {open && (
+        <div className="px-5 py-4 bg-white border-t border-[#D1D5DB]">
+          <p className="text-sm font-bold text-[#2563EB] mb-2">{title}</p>
+          <div className="text-sm text-[#6B7280] leading-relaxed">{children}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Brand Protection Plans ───────── */
+
+const BRAND_PLANS = [
+  {
+    id: "france",
+    flag: "🇫🇷",
+    label: "France",
+    badge: "1 classe incluse",
+    price: 269,
+    details: ["Frais INPI : 190 €", "Service LegalCorners : 79 €", "Classe supplémentaire : +40 €"],
+    zone: "Marque nationale (INPI)",
+    baseFees: 190,
+    serviceFees: 79,
+    extraClassPrice: 40,
+  },
+  {
+    id: "eu",
+    flag: "🇪🇺",
+    label: "Union européenne",
+    badge: "1 classe incluse",
+    price: 950,
+    details: ["Frais EUIPO : 850 €", "Service LegalCorners : 100 €", "Classe supplémentaire : +60 €"],
+    zone: "Marque européenne (EUIPO)",
+    baseFees: 850,
+    serviceFees: 100,
+    extraClassPrice: 60,
+  },
+  {
+    id: "international",
+    flag: "🌍",
+    label: "International",
+    badge: "Base + pays choisis",
+    price: 1150,
+    details: ["Frais OMPI (base) : 1 000 €", "Service LegalCorners : 150 €", "+ Frais par pays sélectionné (variable)"],
+    zone: "Marque internationale (OMPI)",
+    baseFees: 1000,
+    serviceFees: 150,
+    extraClassPrice: 0,
+  },
+];
+
+function BrandProtectionSection() {
+  const [selectedPlan, setSelectedPlan] = useState("france");
+  const [selectedClasses, setSelectedClasses] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const plan = BRAND_PLANS.find((p) => p.id === selectedPlan)!;
+  const extraCost = selectedClasses > 1 ? (selectedClasses - 1) * plan.extraClassPrice : 0;
+  const total = plan.price + extraCost;
+
+  return (
+    <div className="mb-10">
+      {/* Section title */}
+      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] text-center mb-2">
+        Protégez votre nom / logo
+      </h2>
+      <p className="text-sm text-[#6B7280] text-center mb-6">
+        Choisissez la zone de protection. Le tarif indiqué comprend <strong className="text-[#1E293B]">1 classe incluse</strong>.
+      </p>
+
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {BRAND_PLANS.map((p) => (
+          <button
+            key={p.id}
+            onClick={() => setSelectedPlan(p.id)}
+            className={cn(
+              "text-left rounded-xl border-2 p-5 transition-all",
+              selectedPlan === p.id
+                ? "border-[#2563EB] bg-[#EFF6FF]"
+                : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+            )}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="flex items-center gap-2 font-semibold text-[#1E293B]">
+                <span className="text-lg">{p.flag}</span> {p.label}
+              </span>
+              <span className="text-xs font-medium text-[#6B7280] bg-[#F3F4F6] px-2 py-0.5 rounded-full">
+                {p.badge}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-[#1E293B] mb-3">
+              {p.price} € <span className="text-sm font-normal text-[#9CA3AF]">TTC</span>
+            </p>
+            <ul className="space-y-1">
+              {p.details.map((d, i) => (
+                <li key={i} className="text-xs text-[#6B7280]">• {d}</li>
+              ))}
+            </ul>
+          </button>
+        ))}
+      </div>
+
+      {/* Bottom: Paramètres + Récapitulatif */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Paramètres */}
+        <div className="border border-[#D1D5DB] rounded-xl p-5">
+          <h3 className="font-bold text-[#1E293B] mb-1">Paramètres</h3>
+          <p className="text-sm text-[#6B7280] mb-3">Choisir vos classes</p>
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className={cn(
+                "w-full flex items-center justify-between px-4 py-3 rounded-lg border text-sm bg-white transition-colors",
+                dropdownOpen ? "border-[#2563EB]" : "border-[#D1D5DB]",
+                selectedClasses > 0 ? "text-[#1E293B]" : "text-[#9CA3AF]"
+              )}
+            >
+              {selectedClasses > 0
+                ? `${selectedClasses} classe${selectedClasses > 1 ? "s" : ""}`
+                : "Choisir la classe"}
+              <ChevronDown className={cn("w-4 h-4 text-[#9CA3AF] transition-transform", dropdownOpen && "rotate-180")} />
+            </button>
+            {dropdownOpen && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-[#D1D5DB] rounded-lg shadow-lg overflow-hidden">
+                {Array.from({ length: 45 }, (_, i) => i + 1).map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => { setSelectedClasses(n); setDropdownOpen(false); }}
+                    className={cn(
+                      "w-full text-left px-4 py-2.5 text-sm transition-colors",
+                      selectedClasses === n
+                        ? "bg-[#EFF6FF] text-[#2563EB] font-medium"
+                        : "text-[#1E293B] hover:bg-[#F9FAFB]"
+                    )}
+                  >
+                    {n} classe{n > 1 ? "s" : ""}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {plan.extraClassPrice > 0 && (
+            <p className="text-xs text-[#6B7280] mt-3">
+              Chaque classe au-delà de la 1ʳᵉ ajoute {plan.extraClassPrice} €.
+            </p>
+          )}
+          <p className="text-xs text-[#6B7280] mt-2">
+            <strong className="text-[#1E293B]">Qu&apos;est-ce qu&apos;une classe ?</strong> Une classe est une catégorie de produits/services
+            (classification de Nice). Ajoutez des classes si vous exercez dans plusieurs domaines.
+          </p>
+        </div>
+
+        {/* Récapitulatif */}
+        <div className="border border-[#D1D5DB] rounded-xl p-5">
+          <h3 className="font-bold text-[#2563EB] mb-4">Récapitulatif</h3>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Zone sélectionnée</span>
+              <span className="text-[#1E293B] font-medium">{plan.zone}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Nombre de classes</span>
+              <span className="text-[#1E293B] font-medium">{selectedClasses}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Frais officiels</span>
+              <span className="text-[#1E293B] font-medium">{plan.baseFees} €</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Service LegalCorners</span>
+              <span className="text-[#1E293B] font-medium">{plan.serviceFees} €</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-[#6B7280]">Supplément classes</span>
+              <span className="text-[#1E293B] font-medium">{extraCost > 0 ? `${extraCost} €` : "—"}</span>
+            </div>
+          </div>
+          <div className="border-t border-[#D1D5DB] mt-4 pt-4 flex justify-between items-center">
+            <span className="font-bold text-[#1E293B]">Total indicatif</span>
+            <span className="text-lg font-bold text-[#2563EB]">{total} € TTC</span>
+          </div>
+          <button className="w-full mt-4 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] transition-colors">
+            Choisir cette formule
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Single Question Block ───────── */
+
+function QuestionBlock({
+  question,
+  answer,
+  onAnswer,
+}: {
+  question: Question;
+  answer: string;
+  onAnswer: (val: string) => void;
+}) {
+  return (
+    <div className="mb-10">
+      <h2 className="text-[16px] md:text-[18px] font-bold text-[#1E293B] mb-2 leading-snug">
+        {question.title}
+      </h2>
+
+      {question.description && (
+        <p className="text-sm text-[#6B7280] leading-relaxed mb-4">{question.description}</p>
+      )}
+
+      {question.optional && (
+        <span className="inline-block mb-4 px-3 py-1 text-xs font-semibold text-white bg-green-500 rounded-full">
+          optionnel
+        </span>
+      )}
+
+      {/* Choice cards */}
+      {question.type === "choice" && question.choices && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+          {question.choices.map((c) => (
+            <ChoiceCard
+              key={c.value}
+              label={c.label}
+              subtitle={c.subtitle}
+              selected={answer === c.value}
+              onClick={() => onAnswer(c.value)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Text input */}
+      {question.type === "input" && (
+        <input
+          type="text"
+          value={answer}
+          onChange={(e) => onAnswer(e.target.value)}
+          placeholder={question.placeholder}
+          className="w-full mt-3 px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] bg-white transition-colors"
+        />
+      )}
+
+      {/* Textarea */}
+      {question.type === "textarea" && (
+        <textarea
+          value={answer}
+          onChange={(e) => onAnswer(e.target.value)}
+          placeholder={question.placeholder}
+          rows={4}
+          className="w-full mt-3 px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] resize-none bg-white transition-colors"
+        />
+      )}
+
+      {question.hint && (
+        <p className="text-sm text-[#2563EB] italic mt-3">{question.hint}</p>
+      )}
+
+      {question.optional && (
+        <div className="flex justify-end mt-3">
+          <button className="flex items-center gap-2 px-5 py-2.5 rounded-full border-2 border-[#2563EB] text-[#2563EB] text-sm font-semibold hover:bg-[#EFF6FF] transition-colors">
+            <HelpCircle className="w-4 h-4" /> Aide IA
+          </button>
+        </div>
+      )}
+
+      {question.info && (
+        <InfoAccordion title={question.info.title}>
+          {question.info.content}
+        </InfoAccordion>
+      )}
+
+    </div>
+  );
+}
+
+/* ───────── Sidebar Step ───────── */
+
+function SidebarStep({
+  step,
+  isActive,
+  isDone,
+  isLast,
+}: {
+  step: (typeof STEPS)[number];
+  isActive: boolean;
+  isDone: boolean;
+  isLast: boolean;
+}) {
+  const Icon = step.icon;
+  const highlighted = isDone || isActive;
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center">
+        <div
+          className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0",
+            highlighted
+              ? "bg-[#2563EB] text-white"
+              : "bg-[#E5E7EB] text-[#9CA3AF]"
+          )}
+        >
+          {isDone ? <Check className="w-4 h-4" /> : step.id}
+        </div>
+        <Icon
+          className={cn(
+            "w-5 h-5 shrink-0 ml-3",
+            highlighted ? "text-[#2563EB]" : "text-[#9CA3AF]"
+          )}
+        />
+        <span
+          className={cn(
+            "text-[13px] font-semibold leading-[1.3] ml-2",
+            highlighted ? "text-[#1E293B]" : "text-[#9CA3AF]"
+          )}
+        >
+          {step.label}
+        </span>
+      </div>
+      {!isLast && (
+        <div className="ml-[15px] my-0">
+          <div
+            className={cn(
+              "border-l-[2px] border-dotted",
+              isDone ? "border-[#2563EB]" : "border-[#D1D5DB]"
+            )}
+            style={{ height: 48 }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Pricing Plans (Step 3: Paiement) ───────── */
+
+const PRICING_PLANS = [
+  {
+    id: "essentielle",
+    name: "Essentielle",
+    subtitle: "Pour débuter sereinement",
+    price: 139,
+    popular: false,
+    highlighted: false,
+    features: [
+      "Téléchargement des statuts à la fin",
+      "Préparation du dossier complet",
+      "Envoi au greffe",
+      "Accompagnement par mail",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    subtitle: "Le plus populaire",
+    price: 199,
+    popular: true,
+    highlighted: false,
+    features: [
+      "Téléchargement des statuts à la fin",
+      "Préparation du dossier complet",
+      "Envoi au greffe",
+      "Garantie anti-rejet du greffe",
+      "Accompagnement téléphonique et par mail",
+      "Réponses par un juriste dédié jusqu'à l'immatriculation",
+      "Vérification par un juriste sous 24h ouvrées",
+    ],
+  },
+  {
+    id: "avocat",
+    name: "Rédaction par un avocat",
+    subtitle: "",
+    price: 850,
+    popular: false,
+    highlighted: true,
+    features: [
+      "Version personnalisée des statuts",
+      "Préparation du dossier complet par l'avocat",
+      "Envoi au greffe",
+      "Garantie anti-rejet du greffe",
+      "Accompagnement téléphonique, mail et rendez-vous possible",
+      "Réponses par un avocat dédié jusqu'à l'immatriculation",
+      "Vérification par l'avocat sous 24h ouvrées",
+    ],
+  },
+];
+
+const TARIF_DETAILS = [
+  { title: "Essentielle" },
+  { title: "Premium" },
+  { title: "Rédaction par un avocat" },
+];
+
+const FRAIS_ANNEXES = [
+  { title: "Frais de greffe" },
+  { title: "Publication d'annonce légale" },
+  { title: "Déclaration des bénéficiaires effectifs (RBE)" },
+];
+
+function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
+  const [openTarif, setOpenTarif] = useState<string | null>(null);
+  const [openFrais, setOpenFrais] = useState<string | null>(null);
+
+  return (
+    <div className="mb-10">
+      <h2 className="text-[20px] md:text-[22px] font-bold text-[#1E293B] mb-2">
+        Choisissez votre formule
+      </h2>
+      <p className="text-sm text-[#6B7280] mb-6">
+        Sélectionnez l&apos;accompagnement qui correspond à vos besoins.
+      </p>
+
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        {PRICING_PLANS.map((plan) => (
+          <button
+            key={plan.id}
+            onClick={() => onSelect(plan.id)}
+            className={cn(
+              "relative text-left rounded-xl border-2 p-6 transition-all flex flex-col",
+              selected === plan.id
+                ? "border-[#2563EB] bg-[#EFF6FF]"
+                : plan.highlighted
+                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                  : "border-[#D1D5DB] bg-white hover:border-[#93B4F6]"
+            )}
+          >
+            {plan.popular && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2563EB] text-white text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap">
+                Plus populaire ⭐
+              </span>
+            )}
+            <h3 className={cn(
+              "text-lg font-bold mb-1",
+              plan.highlighted ? "text-[#2563EB]" : "text-[#1E293B]"
+            )}>
+              {plan.name}
+            </h3>
+            {plan.subtitle && (
+              <p className="text-sm text-[#6B7280] mb-4">{plan.subtitle}</p>
+            )}
+            <p className="text-4xl font-bold text-[#1E293B] mb-1">
+              {plan.price}€
+            </p>
+            <p className="text-xs text-[#6B7280] mb-5">+ frais annexes obligatoires</p>
+            <ul className="space-y-2.5 mt-auto">
+              {plan.features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
+                  <span className="text-green-500 mt-0.5 shrink-0">●</span>
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </button>
+        ))}
+      </div>
+
+      {/* On vous explique les tarifs */}
+      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les tarifs :</h3>
+      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden mb-8">
+        {TARIF_DETAILS.map((t) => (
+          <button
+            key={t.title}
+            onClick={() => setOpenTarif(openTarif === t.title ? null : t.title)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
+          >
+            <span className="font-semibold text-[#1E293B]">{t.title}</span>
+            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openTarif === t.title && "rotate-180")} />
+          </button>
+        ))}
+      </div>
+
+      {/* Frais annexes */}
+      <h3 className="text-[18px] font-bold text-[#1E293B] mb-4">On vous explique les frais annexes a la creation d&apos;une societe :</h3>
+      <div className="space-y-0 border border-[#D1D5DB] rounded-xl overflow-hidden">
+        {FRAIS_ANNEXES.map((f) => (
+          <button
+            key={f.title}
+            onClick={() => setOpenFrais(openFrais === f.title ? null : f.title)}
+            className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#D1D5DB] last:border-b-0 hover:bg-[#F9FAFB] transition-colors"
+          >
+            <span className="font-semibold text-[#1E293B]">{f.title}</span>
+            <ChevronDown className={cn("w-5 h-5 text-[#9CA3AF] transition-transform", openFrais === f.title && "rotate-180")} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── Micro-entrepreneur Search ───────── */
+
+interface SearchResult {
+  siren: string;
+  nom: string;
+  ville?: string;
+}
+
+function MicroSearchSection({ onCompanyFound }: { onCompanyFound: (data: { denomination: string; siren: string; adresse: string }) => void }) {
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [found, setFound] = useState<{ denomination: string; siren: string; adresse: string } | null>(null);
+
+  const handleSearch = async () => {
+    if (search.length < 2) return;
+    setLoading(true);
+    setError(null);
+    setResults([]);
+    setShowResults(false);
+    try {
+      const clean = search.replace(/\s/g, "");
+      const isSiren = /^\d{9}$/.test(clean);
+      if (isSiren) {
+        const res = await fetch(`/api/siren?siren=${clean}`);
+        if (res.ok) {
+          const data = await res.json();
+          const company = {
+            denomination: data.denominationSociale || "",
+            siren: clean,
+            adresse: [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "),
+          };
+          setFound(company);
+          onCompanyFound(company);
+        } else {
+          setError("SIREN non trouvé");
+        }
+      } else {
+        const res = await fetch(`/api/siren?nom=${encodeURIComponent(search)}&list=true`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.resultats?.length > 0) {
+            setResults(data.resultats);
+            setShowResults(true);
+          } else {
+            setError("Aucune entreprise trouvée");
+          }
+        } else {
+          setError("Aucune entreprise trouvée avec ce nom");
+        }
+      }
+    } catch {
+      setError("Erreur lors de la recherche");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectResult = async (result: SearchResult) => {
+    setLoading(true);
+    setShowResults(false);
+    try {
+      const res = await fetch(`/api/siren?siren=${result.siren}`);
+      if (res.ok) {
+        const data = await res.json();
+        const company = {
+          denomination: data.denominationSociale || result.nom,
+          siren: result.siren,
+          adresse: [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "),
+        };
+        setFound(company);
+        onCompanyFound(company);
+        setSearch(result.nom);
+      }
+    } catch {
+      const company = { denomination: result.nom, siren: result.siren, adresse: result.ville || "" };
+      setFound(company);
+      onCompanyFound(company);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-10">
+      <h2 className="text-[16px] md:text-[18px] font-bold text-[#1E293B] mb-2 leading-snug">
+        Recherchez votre micro-entreprise
+      </h2>
+      <p className="text-sm text-[#6B7280] leading-relaxed mb-4">
+        Entrez le SIREN (9 chiffres) ou le nom commercial / dénomination de votre micro-entreprise
+      </p>
+
+      <div className="flex gap-3">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            placeholder="SIREN (9 chiffres) ou nom commercial de la micro-entreprise"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setShowResults(false); setResults([]); }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+            className="w-full px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] bg-white transition-colors"
+          />
+
+          {/* Dropdown results */}
+          {showResults && results.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-[#D1D5DB] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {results.map((r, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => selectResult(r)}
+                  className="w-full px-4 py-3 text-left hover:bg-[#EFF6FF] border-b border-gray-100 last:border-b-0 flex justify-between items-center"
+                >
+                  <div>
+                    <div className="font-medium text-[#1E293B]">{r.nom}</div>
+                    {r.ville && <div className="text-xs text-[#6B7280]">{r.ville}</div>}
+                  </div>
+                  <div className="text-sm text-[#2563EB] font-mono">{r.siren}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleSearch}
+          disabled={search.length < 2 || loading}
+          className="px-6 py-4 rounded-lg bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] disabled:bg-[#9CA3AF] transition-colors"
+        >
+          {loading ? "Recherche..." : "Rechercher"}
+        </button>
+      </div>
+
+      {error && (
+        <p className="text-amber-600 text-sm mt-2">{error}</p>
+      )}
+
+      <p className="text-xs text-[#6B7280] mt-2">
+        Recherchez par SIREN (9 chiffres) ou par nom commercial (ex: MON ENTREPRISE)
+      </p>
+
+      {/* Company found card */}
+      {found && (
+        <div className="mt-4 p-5 rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF]">
+          <div className="flex items-start gap-3">
+            <Building2 className="w-5 h-5 text-[#2563EB] mt-0.5" />
+            <div>
+              <p className="font-bold text-[#1E293B]">{found.denomination}</p>
+              <p className="text-sm text-[#6B7280] mt-1">SIREN : <span className="font-mono text-[#2563EB]">{found.siren}</span></p>
+              {found.adresse && <p className="text-sm text-[#6B7280]">{found.adresse}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Main page ───────── */
+
+export default function CreationSASUPage() {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  // Build active pages: skip conditional pages based on answers
+  const pages = STATIC_PAGES.filter((p) => {
+    if (p.special === "brand_protection") return answers.proteger_nom === "oui";
+    if (p.special === "micro_search") return answers.statut_micro === "oui";
+    return true;
+  });
+
+  const page = pages[currentPage] ?? pages[pages.length - 1];
+  const activeStep = page.sidebarStep;
+  const pageQuestions = page.questions.map((i) => QUESTIONS[i]);
+
+  const setAnswer = (id: string, val: string) =>
+    setAnswers((prev) => ({ ...prev, [id]: val }));
+
+  const goNext = () => {
+    if (currentPage < pages.length - 1) {
+      setCurrentPage((p) => p + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+  const goPrev = () => {
+    if (currentPage > 0) {
+      setCurrentPage((p) => p - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white font-sans">
+      {/* ── Header ── */}
+      <header className="border-b border-gray-100 px-4 md:px-8 py-4 flex items-center justify-between max-w-[1400px] mx-auto">
+        <Link href="/" className="block h-9 w-auto">
+          <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={140} height={36} className="h-full w-auto object-contain" priority />
+        </Link>
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#6B7280]">
+          <span className="cursor-pointer hover:text-[#1E293B] transition-colors flex items-center gap-1">
+            Nos services <ChevronDown className="w-4 h-4" />
+          </span>
+        </nav>
+        <Link href="/login" className="flex items-center gap-1.5 text-sm font-medium text-[#6B7280] hover:text-[#1E293B] transition-colors">
+          <User className="w-4 h-4" /> Connexion
+        </Link>
+      </header>
+
+      {/* ── Mobile stepper ── */}
+      <div className="md:hidden flex items-center justify-center gap-1.5 py-3 px-4 border-b border-gray-100">
+        {STEPS.map((s, i) => (
+          <div key={s.id} className="flex items-center">
+            <div className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
+              activeStep > s.id ? "bg-[#2563EB] text-white"
+                : activeStep === s.id ? "bg-[#2563EB] text-white"
+                : "bg-[#E5E7EB] text-[#9CA3AF]"
+            )}>
+              {activeStep > s.id ? <Check className="w-3 h-3" /> : s.id}
+            </div>
+            {i < STEPS.length - 1 && <div className={cn("w-3 h-[2px] mx-0.5", activeStep > s.id ? "bg-[#2563EB]" : "bg-[#E5E7EB]")} />}
+          </div>
+        ))}
+      </div>
+
+      <div className="flex max-w-[1400px] mx-auto min-h-[calc(100vh-65px)]">
+        {/* ═══════ Sidebar (desktop) — fixed 240px ═══════ */}
+        <aside className="hidden md:block w-[240px] min-w-[240px] border-r border-[#E5E7EB] pt-10 pb-8 pl-5 pr-3 overflow-y-auto">
+          {STEPS.map((s, i) => (
+            <SidebarStep
+              key={s.id}
+              step={s}
+              isActive={activeStep === s.id}
+              isDone={activeStep > s.id}
+              isLast={i === STEPS.length - 1}
+            />
+          ))}
+        </aside>
+
+        {/* ═══════ Main content ═══════ */}
+        <main className="flex-1 px-5 sm:px-8 md:px-14 py-6 md:py-10 max-w-[900px]">
+          {/* Title */}
+          <h1 className="text-[28px] font-bold text-[#2563EB] mb-8 leading-tight">
+            Création d&apos;une SASU
+          </h1>
+
+          {/* Brand protection special page */}
+          {page.special === "brand_protection" && <BrandProtectionSection />}
+          {page.special === "micro_search" && (
+            <MicroSearchSection
+              onCompanyFound={(data) => {
+                setAnswers((prev) => ({
+                  ...prev,
+                  micro_denomination: data.denomination,
+                  micro_siren: data.siren,
+                  micro_adresse: data.adresse,
+                }));
+              }}
+            />
+          )}
+          {page.special === "pricing" && (
+            <PricingSection
+              selected={answers.formule || ""}
+              onSelect={(val) => setAnswer("formule", val)}
+            />
+          )}
+
+          {/* Micro page: show sub-questions conditionally */}
+          {page.special === "micro_page" ? (
+            <>
+              <QuestionBlock
+                question={QUESTIONS[4]}
+                answer={answers.statut_micro || ""}
+                onAnswer={(val) => setAnswer("statut_micro", val)}
+              />
+              {answers.statut_micro === "oui" && (
+                <>
+                  <QuestionBlock
+                    question={QUESTIONS[5]}
+                    answer={answers.action_micro || ""}
+                    onAnswer={(val) => setAnswer("action_micro", val)}
+                  />
+                  <QuestionBlock
+                    question={QUESTIONS[6]}
+                    answer={answers.fermeture_micro || ""}
+                    onAnswer={(val) => setAnswer("fermeture_micro", val)}
+                  />
+                </>
+              )}
+            </>
+          ) : (
+            /* Questions for this page */
+            pageQuestions.map((q) => (
+              <QuestionBlock
+                key={q.id}
+                question={q}
+                answer={answers[q.id] || ""}
+                onAnswer={(val) => setAnswer(q.id, val)}
+              />
+            ))
+          )}
+
+          {/* ── Navigation ── */}
+          <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#E5E7EB]">
+            <button
+              onClick={goPrev}
+              className={cn(
+                "flex items-center gap-2 text-sm font-medium text-[#9CA3AF] hover:text-[#6B7280] transition-colors",
+                currentPage === 0 && "invisible"
+              )}
+            >
+              <ArrowLeft className="w-4 h-4" /> Précédent
+            </button>
+
+            <button
+              onClick={goNext}
+              className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:bg-[#1E40AF]"
+            >
+              Suivant <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}

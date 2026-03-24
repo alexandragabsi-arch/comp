@@ -1159,6 +1159,7 @@ export default function CreationSASUPage() {
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
+    { id: "nomination_dg" },        // nomination DG / DGD (optionnel, PP ou PM)
     { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_fiscal" },        // IS / IR
     { id: "adresse_siege" },        // adresse
@@ -3311,6 +3312,392 @@ export default function CreationSASUPage() {
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {/* ── Nomination DG / DGD ── */}
+                {POST_PAGES[postPage]?.id === "nomination_dg" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>Sélectionnez une personne</p>
+                      </div>
+                    </AccordionItem>
+
+                    {/* Info DG / DGD */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-2">
+                      <p className="text-sm text-gray-700">
+                        <strong>Pour information</strong> : le premier dirigeant nommé occupera la fonction de <strong>Directeur Général (DG)</strong>.
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        Si un second dirigeant est désigné, il sera <strong>Directeur Général Délégué (DGD)</strong>.
+                      </p>
+                    </div>
+
+                    {/* Option 1 */}
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold text-[#1E3A8A]">Option 1 : Choisissez une personne associée</h3>
+                    </div>
+
+                    {/* Option 2 */}
+                    <div className="space-y-1">
+                      <h3 className="text-base font-bold text-[#2563EB]">Option 2 : Ajoutez une personne non associé</h3>
+                    </div>
+
+                    {/* Bouton ajouter dirigeant non associé */}
+                    <button
+                      onClick={() => {
+                        const current = answers.dg_list ? JSON.parse(answers.dg_list) : [];
+                        if (current.length >= 2) return; // max 2 (DG + DGD)
+                        const newDg = { id: Date.now().toString(), type: "", option: "distinct" };
+                        setAnswer("dg_list", JSON.stringify([...current, newDg]));
+                        setAnswer("dg_editing", newDg.id);
+                        setAnswer("dg_current_type", "");
+                      }}
+                      className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                    >
+                      Ajoutez un dirigeant non associé <span className="text-lg">+</span>
+                    </button>
+
+                    {/* Liste des dirigeants ajoutés */}
+                    {(() => {
+                      const dgList: { id: string; type: string; option: string; nom?: string; prenom?: string; pm_nom?: string }[] = answers.dg_list ? JSON.parse(answers.dg_list) : [];
+                      return dgList.map((dg, idx) => (
+                        <div key={dg.id} className="space-y-4">
+                          {/* Carte résumé */}
+                          <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF]">
+                            {dg.type === "morale" ? (
+                              <Building2 className="w-6 h-6 text-[#2563EB]" />
+                            ) : (
+                              <User className="w-6 h-6 text-[#2563EB]" />
+                            )}
+                            <div className="flex-1">
+                              <p className="font-bold text-[#1E3A8A]">
+                                {dg.type === "morale"
+                                  ? (dg.pm_nom || "Société")
+                                  : [dg.prenom, dg.nom].filter(Boolean).join(" ") || "Nouveau dirigeant"}
+                                {" "}
+                                <span className="text-xs font-normal text-gray-500">
+                                  ({idx === 0 ? "Le Directeur Général" : "Le Directeur Général Délégué"})
+                                </span>
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const updated = dgList.filter((d) => d.id !== dg.id);
+                                setAnswer("dg_list", JSON.stringify(updated));
+                                if (answers.dg_editing === dg.id) setAnswer("dg_editing", "");
+                              }}
+                              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <X className="w-5 h-5 text-red-400" />
+                            </button>
+                          </div>
+
+                          {/* Formulaire si en édition */}
+                          {answers.dg_editing === dg.id && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="border-2 border-gray-200 rounded-xl p-5 space-y-5"
+                            >
+                              <p className="text-sm font-bold text-[#1E3A8A]">Type de profil :</p>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <button
+                                  onClick={() => {
+                                    const updated = dgList.map((d) => d.id === dg.id ? { ...d, type: "physique" } : d);
+                                    setAnswer("dg_list", JSON.stringify(updated));
+                                    setAnswer("dg_current_type", "physique");
+                                  }}
+                                  className={cn(
+                                    "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
+                                    dg.type === "physique" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                                  )}
+                                >
+                                  <User className="w-10 h-10 text-[#2563EB]" />
+                                  <span className="text-sm font-medium text-[#2563EB]">Particulier (personne physique)</span>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const updated = dgList.map((d) => d.id === dg.id ? { ...d, type: "morale" } : d);
+                                    setAnswer("dg_list", JSON.stringify(updated));
+                                    setAnswer("dg_current_type", "morale");
+                                  }}
+                                  className={cn(
+                                    "flex flex-col items-center gap-3 p-6 rounded-xl border-2 transition-all",
+                                    dg.type === "morale" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                                  )}
+                                >
+                                  <Building2 className="w-10 h-10 text-[#2563EB]" />
+                                  <span className="text-sm font-medium text-[#2563EB]">Société (personne morale)</span>
+                                </button>
+                              </div>
+
+                              {/* ── DG PP ── */}
+                              {dg.type === "physique" && (
+                                <div className="space-y-4 border-t border-gray-200 pt-5">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                                      <select value={answers[`dg_${dg.id}_civilite`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_civilite`, e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                        <option value="">Choisir</option>
+                                        <option value="M.">M.</option>
+                                        <option value="Mme">Mme</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                      <input type="text" value={answers[`dg_${dg.id}_nom`] || ""} onChange={(e) => { setAnswer(`dg_${dg.id}_nom`, e.target.value); const updated = dgList.map((d) => d.id === dg.id ? { ...d, nom: e.target.value } : d); setAnswer("dg_list", JSON.stringify(updated)); }} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                      <input type="text" value={answers[`dg_${dg.id}_prenom`] || ""} onChange={(e) => { setAnswer(`dg_${dg.id}_prenom`, e.target.value); const updated = dgList.map((d) => d.id === dg.id ? { ...d, prenom: e.target.value } : d); setAnswer("dg_list", JSON.stringify(updated)); }} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                      <input type="date" value={answers[`dg_${dg.id}_date_naissance`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_date_naissance`, e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
+                                      <input type="text" value={answers[`dg_${dg.id}_lieu_naissance`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_lieu_naissance`, e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                      <input type="text" value={answers[`dg_${dg.id}_nationalite`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_nationalite`, e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                                    <input type="text" value={answers[`dg_${dg.id}_adresse`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_adresse`, e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                  </div>
+
+                                  {/* Filiation */}
+                                  <p className="text-sm font-bold text-[#1E3A8A] pt-2">Filiation</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du père</label>
+                                      <input type="text" value={answers[`dg_${dg.id}_pere_nom`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pere_nom`, e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
+                                      <input type="text" value={answers[`dg_${dg.id}_mere_nom`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_mere_nom`, e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+
+                                  {/* Non-condamnation */}
+                                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                      <input type="checkbox" checked={answers[`dg_${dg.id}_non_condamnation`] === "true"} onChange={(e) => setAnswer(`dg_${dg.id}_non_condamnation`, e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                      <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                    </label>
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                      <input type="checkbox" checked={answers[`dg_${dg.id}_non_interdiction`] === "true"} onChange={(e) => setAnswer(`dg_${dg.id}_non_interdiction`, e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                      <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                    </label>
+                                  </div>
+
+                                  {/* Valider */}
+                                  <button
+                                    onClick={() => setAnswer("dg_editing", "")}
+                                    className="w-full py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                                  >
+                                    Valider ce dirigeant
+                                  </button>
+                                </div>
+                              )}
+
+                              {/* ── DG PM ── */}
+                              {dg.type === "morale" && (
+                                <div className="space-y-4 border-t border-gray-200 pt-5">
+                                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                                    <p className="text-sm text-gray-700">Pour nommer un dirigeant personne morale, indiquez directement le numéro RCS de la société.</p>
+                                    <p className="text-sm text-gray-700">Vous trouverez ce numéro sur votre extrait Kbis.</p>
+                                    <p className="text-sm text-gray-700">Si vous ne le trouvez pas, vous pouvez remplir les informations manuellement.</p>
+                                    <div className="flex justify-end">
+                                      <button onClick={() => setAnswer(`dg_${dg.id}_pm_mode`, "manuel")} className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity">Remplir manuellement</button>
+                                    </div>
+                                  </div>
+
+                                  {/* SIREN */}
+                                  <div>
+                                    <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
+                                    <div className="flex gap-3">
+                                      <input type="text" value={answers[`dg_${dg.id}_pm_siren`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_siren`, e.target.value)} placeholder="Ex : 824330799" className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                      <button
+                                        onClick={async () => {
+                                          const siren = (answers[`dg_${dg.id}_pm_siren`] || "").replace(/\s/g, "");
+                                          if (siren.length !== 9) return;
+                                          try {
+                                            const res = await fetch(`/api/siren?siren=${siren}`);
+                                            if (res.ok) {
+                                              const data = await res.json();
+                                              setAnswer(`dg_${dg.id}_pm_nom`, data.denominationSociale || "");
+                                              setAnswer(`dg_${dg.id}_pm_forme`, data.formeJuridique || "");
+                                              setAnswer(`dg_${dg.id}_pm_capital`, data.capitalSocial || "");
+                                              setAnswer(`dg_${dg.id}_pm_representant`, data.representant || "");
+                                              setAnswer(`dg_${dg.id}_pm_adresse`, [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "));
+                                              setAnswer(`dg_${dg.id}_pm_ville_rcs`, data.ville || "");
+                                              setAnswer(`dg_${dg.id}_pm_code_postal`, data.codePostal || "");
+                                              setAnswer(`dg_${dg.id}_pm_mode`, "siren");
+                                              const updated = dgList.map((d) => d.id === dg.id ? { ...d, pm_nom: data.denominationSociale || "" } : d);
+                                              setAnswer("dg_list", JSON.stringify(updated));
+                                            }
+                                          } catch { /* ignore */ }
+                                        }}
+                                        disabled={!answers[`dg_${dg.id}_pm_siren`] || (answers[`dg_${dg.id}_pm_siren`] || "").replace(/\s/g, "").length !== 9}
+                                        className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] disabled:bg-[#9CA3AF] transition-colors"
+                                      >Confirmer mon Numéro</button>
+                                    </div>
+                                  </div>
+
+                                  {/* Infos entreprise */}
+                                  {(answers[`dg_${dg.id}_pm_mode`] === "siren" || answers[`dg_${dg.id}_pm_mode`] === "manuel") && (
+                                    <div className="space-y-4 border-t border-gray-200 pt-4">
+                                      <p className="text-sm font-bold text-[#2563EB]">Informations entreprise</p>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la société</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_nom`] || ""} onChange={(e) => { setAnswer(`dg_${dg.id}_pm_nom`, e.target.value); const updated = dgList.map((d) => d.id === dg.id ? { ...d, pm_nom: e.target.value } : d); setAnswer("dg_list", JSON.stringify(updated)); }} placeholder="Ex : LAW AND CO" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Type de société</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_forme`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_forme`, e.target.value)} placeholder="Ex : SASU" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Capital social</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_capital`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_capital`, e.target.value)} placeholder="Ex : 100" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom et prénom du représentant</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_representant`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_representant`, e.target.value)} placeholder="Ex : Nora Gabsi" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_adresse`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_adresse`, e.target.value)} placeholder="Ex : 7 RUE MEYERBEER" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Complément d&apos;adresse</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_adresse_complement`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_adresse_complement`, e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Ville RCS</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_ville_rcs`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_ville_rcs`, e.target.value)} placeholder="Ex : PARIS" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                        <div>
+                                          <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Code postal</label>
+                                          <input type="text" value={answers[`dg_${dg.id}_pm_code_postal`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_pm_code_postal`, e.target.value)} placeholder="Ex : 75009" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                        </div>
+                                      </div>
+
+                                      {/* Représentant permanent + filiation + non-condamnation */}
+                                      <div className="border border-gray-200 rounded-xl p-5 space-y-4">
+                                        <h4 className="text-base font-bold text-[#1E3A8A]">Représentant permanent de la société dirigeante</h4>
+                                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                          <p className="text-sm text-gray-700">Lorsqu&apos;une société est nommée dirigeante, elle doit désigner une <strong>personne physique</strong> chargée de la représenter. Ce <em className="font-semibold text-[#2563EB]">représentant permanent</em> exerce les droits de la société dirigeante.</p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                                            <select value={answers[`dg_${dg.id}_rp_civilite`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_civilite`, e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                              <option value="">Choisir</option>
+                                              <option value="M.">M.</option>
+                                              <option value="Mme">Mme</option>
+                                            </select>
+                                          </div>
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                            <input type="text" value={answers[`dg_${dg.id}_rp_nom`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_nom`, e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                          </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                            <input type="text" value={answers[`dg_${dg.id}_rp_prenom`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_prenom`, e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                          </div>
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Fonction dans la société</label>
+                                            <select value={answers[`dg_${dg.id}_rp_fonction`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_fonction`, e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                              <option value="">Choisir</option>
+                                              <option value="president">Président</option>
+                                              <option value="dg">Directeur Général</option>
+                                              <option value="gerant">Gérant</option>
+                                              <option value="autre">Autre</option>
+                                            </select>
+                                          </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                                            <input type="text" value={answers[`dg_${dg.id}_rp_adresse`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_adresse`, e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                          </div>
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                            <input type="text" value={answers[`dg_${dg.id}_rp_nationalite`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_nationalite`, e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                          </div>
+                                        </div>
+
+                                        {/* Filiation RP */}
+                                        <p className="text-sm font-bold text-[#1E3A8A] pt-2">Filiation du représentant permanent</p>
+                                        <div className="grid grid-cols-2 gap-4">
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom du père</label>
+                                            <input type="text" value={answers[`dg_${dg.id}_rp_pere_nom`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_pere_nom`, e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                          </div>
+                                          <div>
+                                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
+                                            <input type="text" value={answers[`dg_${dg.id}_rp_mere_nom`] || ""} onChange={(e) => setAnswer(`dg_${dg.id}_rp_mere_nom`, e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all" />
+                                          </div>
+                                        </div>
+
+                                        {/* Non-condamnation RP */}
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                                          <label className="flex items-start gap-3 cursor-pointer">
+                                            <input type="checkbox" checked={answers[`dg_${dg.id}_rp_non_condamnation`] === "true"} onChange={(e) => setAnswer(`dg_${dg.id}_rp_non_condamnation`, e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                            <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                          </label>
+                                          <label className="flex items-start gap-3 cursor-pointer">
+                                            <input type="checkbox" checked={answers[`dg_${dg.id}_rp_non_interdiction`] === "true"} onChange={(e) => setAnswer(`dg_${dg.id}_rp_non_interdiction`, e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                            <span className="text-sm text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                          </label>
+                                        </div>
+                                      </div>
+
+                                      {/* Valider */}
+                                      <button
+                                        onClick={() => setAnswer("dg_editing", "")}
+                                        className="w-full py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
+                                      >
+                                        Valider ce dirigeant
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </div>
+                      ));
+                    })()}
+
+                    {/* Message si pas encore de DG */}
+                    {(!answers.dg_list || JSON.parse(answers.dg_list).length === 0) && (
+                      <p className="text-sm text-gray-400 italic text-center">Vous pouvez passer cette étape si vous ne souhaitez pas nommer de DG/DGD.</p>
+                    )}
                   </div>
                 )}
 

@@ -1925,7 +1925,7 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
-                {/* ── Page: Services comptables ── */}
+                {/* ── Page: Commissaire aux comptes ── */}
                 {POST_PAGES[postPage]?.id === "services_comptables" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
@@ -1933,53 +1933,189 @@ export default function CreationSASUPage() {
                     </div>
 
                     <AccordionItem title="Plus d'informations">
-                      <div className="text-sm text-gray-600">
-                        <p>Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                      <div className="text-sm text-gray-600 space-y-3">
+                        <p>Le commissaire aux comptes est un contrôleur indépendant qui vérifie la régularité des comptes de la société.</p>
+                        <p>À la création, sa nomination n&apos;est pas obligatoire, sauf cas particuliers. Elle le devient seulement si la société dépasse deux des trois seuils suivants :</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Chiffre d&apos;affaires &gt; 8 M&euro;</li>
+                          <li>Total du bilan &gt; 4 M&euro;</li>
+                          <li>Effectif moyen &gt; 50 salariés</li>
+                        </ul>
+                        <p>Si votre projet prévoit une forte croissance ou un groupe de sociétés, vous pouvez choisir d&apos;en nommer un dès la création pour anticiper ces obligations.</p>
                       </div>
                     </AccordionItem>
 
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                      <p className="text-sm text-gray-700">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous néanmoins bénéficier de services comptables ?</p>
-                      <p className="text-sm text-gray-500">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un commissaire aux Comptes ?</p>
 
                       <button
-                        onClick={() => { setAnswer("services_comptables", "logiciel"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        onClick={() => setAnswer("cac_choice", "oui")}
                         className={cn(
-                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all",
-                          answers.services_comptables === "logiciel"
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                          answers.cac_choice === "oui"
                             ? "border-[#2563EB] bg-[#EFF6FF]"
                             : "border-gray-200 bg-white hover:border-[#2563EB]/50"
                         )}
                       >
-                        <span className="text-sm font-medium text-[#2563EB]">Oui, je suis intéressé(e) par un logiciel de comptabilité en ligne.</span>
+                        <p className="text-sm font-semibold text-[#2563EB]">Oui</p>
+                        <p className="text-xs text-gray-500">Vous nommez dès maintenant un commissaire aux comptes.</p>
                       </button>
                       <button
-                        onClick={() => { setAnswer("services_comptables", "expert_comptable"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        onClick={() => { setAnswer("cac_choice", "non"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
                         className={cn(
-                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all",
-                          answers.services_comptables === "expert_comptable"
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                          answers.cac_choice === "non"
                             ? "border-[#2563EB] bg-[#EFF6FF]"
                             : "border-gray-200 bg-white hover:border-[#2563EB]/50"
                         )}
                       >
-                        <span className="text-sm font-medium text-[#2563EB]">Oui, je souhaite être mis(e) en relation avec un expert-comptable dans mon secteur.</span>
+                        <p className="text-sm font-semibold text-[#2563EB]">Non</p>
+                        <p className="text-xs text-gray-500">Vous ne prévoyez pas de CAC (pas obligatoire tant que vous êtes en dessous des seuils).</p>
                       </button>
                       <button
-                        onClick={() => { setAnswer("services_comptables", "non"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
+                        onClick={() => { setAnswer("cac_choice", "plus_tard"); setTimeout(() => { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }, 300); }}
                         className={cn(
-                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all",
-                          answers.services_comptables === "non"
+                          "w-full text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                          answers.cac_choice === "plus_tard"
                             ? "border-[#2563EB] bg-[#EFF6FF]"
                             : "border-gray-200 bg-white hover:border-[#2563EB]/50"
                         )}
                       >
-                        <span className="text-sm font-medium text-gray-700">Non merci</span>
+                        <p className="text-sm font-semibold text-[#2563EB]">Je déciderai plus tard</p>
+                        <p className="text-xs text-gray-500">Vous gardez la possibilité de nommer un CAC ultérieurement, sans l&apos;inscrire dans les statuts dès la création.</p>
                       </button>
                     </div>
+
+                    {/* Formulaire CAC si Oui */}
+                    {answers.cac_choice === "oui" && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-5 border-t border-gray-200 pt-5"
+                      >
+                        <p className="text-base font-bold text-[#1E3A8A]">Informations sur le Commissaire aux comptes</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom / dénomination du commissaire aux comptes</label>
+                            <input
+                              type="text"
+                              value={answers.cac_nom || ""}
+                              onChange={(e) => setAnswer("cac_nom", e.target.value)}
+                              placeholder=""
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro d&apos;inscription à la CNCC</label>
+                            <input
+                              type="text"
+                              value={answers.cac_cncc || ""}
+                              onChange={(e) => setAnswer("cac_cncc", e.target.value)}
+                              placeholder="Compagnie Nationale des Commissaires aux Comptes"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse professionnelle</label>
+                            <input
+                              type="text"
+                              value={answers.cac_adresse || ""}
+                              onChange={(e) => setAnswer("cac_adresse", e.target.value)}
+                              placeholder=""
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Date de nomination</label>
+                            <input
+                              type="date"
+                              value={answers.cac_date_nomination || ""}
+                              onChange={(e) => setAnswer("cac_date_nomination", e.target.value)}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Suppléant */}
+                        <div className="space-y-3 border-t border-gray-200 pt-5">
+                          <p className="text-base font-bold text-[#1E3A8A]">Faut-il nommer un suppléant pour votre commissaire aux comptes ?</p>
+                          <p className="text-sm text-gray-500">Un suppléant est en principe obligatoire. Il remplace le titulaire en cas d&apos;empêchement, sauf si votre commissaire aux comptes est une société d&apos;audit disposant de plusieurs associés habilités (loi PACTE du 22 mai 2019).</p>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("cac_suppleant", "oui")}
+                              className={cn(
+                                "text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                                answers.cac_suppleant === "oui"
+                                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                                  : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              <p className="text-sm font-semibold text-[#2563EB]">Oui</p>
+                            </button>
+                            <button
+                              onClick={() => setAnswer("cac_suppleant", "non")}
+                              className={cn(
+                                "text-left px-5 py-4 rounded-xl border-2 transition-all space-y-1",
+                                answers.cac_suppleant === "non"
+                                  ? "border-[#2563EB] bg-[#EFF6FF]"
+                                  : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              <p className="text-sm font-semibold text-[#2563EB]">Non</p>
+                              <p className="text-xs text-gray-500">Mon commissaire aux comptes titulaire est une société d&apos;audit avec plusieurs associés habilités — la désignation d&apos;un suppléant n&apos;est pas requise (loi PACTE du 22 mai 2019)</p>
+                            </button>
+                          </div>
+
+                          {/* Formulaire suppléant */}
+                          {answers.cac_suppleant === "oui" && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="space-y-4 pt-3"
+                            >
+                              <p className="text-sm font-bold text-[#1E3A8A]">Informations sur le suppléant</p>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom / dénomination du suppléant</label>
+                                  <input
+                                    type="text"
+                                    value={answers.cac_suppleant_nom || ""}
+                                    onChange={(e) => setAnswer("cac_suppleant_nom", e.target.value)}
+                                    placeholder=""
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Numéro d&apos;inscription à la CNCC</label>
+                                  <input
+                                    type="text"
+                                    value={answers.cac_suppleant_cncc || ""}
+                                    onChange={(e) => setAnswer("cac_suppleant_cncc", e.target.value)}
+                                    placeholder=""
+                                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Adresse professionnelle du suppléant</label>
+                                <input
+                                  type="text"
+                                  value={answers.cac_suppleant_adresse || ""}
+                                  onChange={(e) => setAnswer("cac_suppleant_adresse", e.target.value)}
+                                  placeholder=""
+                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                                />
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 )}
 

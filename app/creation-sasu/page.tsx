@@ -2291,30 +2291,38 @@ export default function CreationSASUPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-4 border-t border-gray-200 pt-5"
                       >
-                        <p className="text-sm font-bold text-[#1E3A8A]">À quels héritiers la transmission est-elle libre ?</p>
-                        <div className="space-y-2">
+                        <p className="text-sm text-gray-600">Les personnes que vous sélectionnez ci-dessous pourront recevoir librement des actions, sans autorisation préalable des autres associés. Toute autre cession à un tiers extérieur sera soumise à la procédure d&apos;agrément prévue par les statuts.</p>
+
+                        <p className="text-base font-bold text-[#1E3A8A]">À quelles personnes souhaitez-vous autoriser la transmission libre des titres ?</p>
+                        <p className="text-sm text-gray-500">(Pour toutes les autres personnes, une procédure d&apos;agrément sera requise.)</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {[
-                            { value: "conjoint", label: "Conjoint survivant" },
-                            { value: "descendants", label: "Descendants (enfants, petits-enfants)" },
-                            { value: "ascendants", label: "Ascendants (parents, grands-parents)" },
+                            { value: "conjoint", label: "Conjoint / Partenaire" },
+                            { value: "descendants", label: "Aux descendants (enfants, petits-enfants)" },
+                            { value: "ascendants", label: "Aux ascendants (parents)" },
+                            { value: "heritiers_reservataires", label: "Aux héritiers réservataires" },
                           ].map((opt) => {
                             const currentList: string[] = answers.heritiers_liste ? JSON.parse(answers.heritiers_liste) : [];
                             const isChecked = currentList.includes(opt.value);
                             return (
-                              <label key={opt.value} className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-[#2563EB]/50 cursor-pointer transition-all">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => {
-                                    const updated = isChecked
-                                      ? currentList.filter((v) => v !== opt.value)
-                                      : [...currentList, opt.value];
-                                    setAnswer("heritiers_liste", JSON.stringify(updated));
-                                  }}
-                                  className="h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]"
-                                />
-                                <span className="text-sm text-gray-700">{opt.label}</span>
-                              </label>
+                              <button
+                                key={opt.value}
+                                onClick={() => {
+                                  const updated = isChecked
+                                    ? currentList.filter((v) => v !== opt.value)
+                                    : [...currentList, opt.value];
+                                  setAnswer("heritiers_liste", JSON.stringify(updated));
+                                }}
+                                className={cn(
+                                  "text-left px-5 py-4 rounded-xl border-2 transition-all",
+                                  isChecked
+                                    ? "border-[#2563EB] bg-[#EFF6FF]"
+                                    : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                <span className="text-sm font-medium text-[#2563EB]">{opt.label}</span>
+                              </button>
                             );
                           })}
                         </div>

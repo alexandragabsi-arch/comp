@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -1162,6 +1162,9 @@ export default function CreationSASUPage() {
     { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_fiscal" },        // IS / IR
     { id: "adresse_siege" },        // adresse
+    { id: "date_lieu" },            // date et lieu de signature des statuts
+    { id: "recapitulatif" },         // récapitulatif de toutes les informations
+    { id: "justificatifs" },         // pièces justificatives à fournir
   ];
 
   // Determine sidebar step from phase
@@ -1170,6 +1173,8 @@ export default function CreationSASUPage() {
     phase === "questions" ? (question && ["qui_realise"].includes(question.id) ? 1 : 2) :
     phase === "brand_protection" || phase === "micro_search" ? 2 :
     phase === "pricing" || phase === "avocat_confirmation" ? 3 :
+    phase === "post_payment" && POST_PAGES[postPage]?.id === "recapitulatif" ? 5 :
+    phase === "post_payment" && POST_PAGES[postPage]?.id === "justificatifs" ? 6 :
     4;
 
   function goNextQuestion(freshAnswers?: Record<string, string>) {
@@ -3479,6 +3484,335 @@ export default function CreationSASUPage() {
                       placeholder={QUESTIONS[11].placeholder}
                       className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
                     />
+                  </div>
+                )}
+
+                {/* ── Page: Date et lieu de signature des statuts ── */}
+                {POST_PAGES[postPage]?.id === "date_lieu" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Date et lieu de signature des statuts</p>
+                    </div>
+
+                    <AccordionItem title="Le saviez-vous ?">
+                      <div className="text-sm text-gray-600">
+                        <p>
+                          La <strong>date de signature des statuts</strong> marque officiellement la constitution de votre société.
+                          Le <strong>lieu</strong> correspond généralement à l&apos;adresse du siège social, mais peut être différent
+                          (par exemple le cabinet de votre avocat ou expert-comptable).
+                        </p>
+                      </div>
+                    </AccordionItem>
+
+                    {/* Date de signature */}
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[#1E3A8A]">
+                        <Calendar className="w-4 h-4" />
+                        Date de signature des statuts
+                      </label>
+                      <input
+                        type="date"
+                        value={answers.date_signature || ""}
+                        onChange={(e) => setAnswer("date_signature", e.target.value)}
+                        className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
+                      />
+                    </div>
+
+                    {/* Lieu de signature */}
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-semibold text-[#1E3A8A]">
+                        <MapPin className="w-4 h-4" />
+                        Lieu de signature des statuts
+                      </label>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setAnswer("lieu_signature_type", "siege")}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.lieu_signature_type === "siege"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Building2 className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">Au siège social</p>
+                            <p className="text-xs text-gray-500 mt-0.5">{answers.adresse_siege || "Adresse du siège social"}</p>
+                          </div>
+                          {answers.lieu_signature_type === "siege" && (
+                            <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => setAnswer("lieu_signature_type", "autre")}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.lieu_signature_type === "autre"
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <MapPin className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">Autre adresse</p>
+                            <p className="text-xs text-gray-500 mt-0.5">Précisez une adresse différente</p>
+                          </div>
+                          {answers.lieu_signature_type === "autre" && (
+                            <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          )}
+                        </button>
+                      </div>
+                      {answers.lieu_signature_type === "autre" && (
+                        <input
+                          type="text"
+                          value={answers.lieu_signature_autre || ""}
+                          onChange={(e) => setAnswer("lieu_signature_autre", e.target.value)}
+                          placeholder="Ex : 12 rue de la Paix, 75002 Paris"
+                          className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base mt-2"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Récapitulatif ── */}
+                {POST_PAGES[postPage]?.id === "recapitulatif" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Récapitulatif de votre dossier</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                      <Eye className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-[#1E3A8A]">
+                        Vérifiez attentivement les informations ci-dessous avant de continuer. Vous pourrez revenir modifier chaque section en cliquant sur &quot;Modifier&quot;.
+                      </p>
+                    </div>
+
+                    {/* Dénomination */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Dénomination</h3>
+                        <button onClick={() => setPostPage(0)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 space-y-1 text-sm">
+                        <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.nom_societe || "—"}</span></p>
+                        {answers.sigle && <p><span className="text-gray-500">Sigle :</span> <span className="text-gray-800 font-medium">{answers.sigle}</span></p>}
+                        {answers.nom_commercial && <p><span className="text-gray-500">Nom commercial :</span> <span className="text-gray-800 font-medium">{answers.nom_commercial}</span></p>}
+                        {answers.enseigne && <p><span className="text-gray-500">Enseigne :</span> <span className="text-gray-800 font-medium">{answers.enseigne}</span></p>}
+                      </div>
+                    </div>
+
+                    {/* Objet social */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Objet social</h3>
+                        <button onClick={() => setPostPage(2)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p className="text-gray-800">{answers.objet_social || "—"}</p>
+                      </div>
+                    </div>
+
+                    {/* Associé unique */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Associé unique</h3>
+                        <button onClick={() => setPostPage(5)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 space-y-1 text-sm">
+                        <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_associe === "physique" ? "Personne physique" : answers.type_associe === "morale" ? "Personne morale" : "—"}</span></p>
+                        {answers.type_associe === "physique" && (
+                          <>
+                            {answers.assoc_nom && <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.assoc_prenom} {answers.assoc_nom}</span></p>}
+                            {answers.assoc_date_naissance && <p><span className="text-gray-500">Né(e) le :</span> <span className="text-gray-800 font-medium">{answers.assoc_date_naissance}</span></p>}
+                          </>
+                        )}
+                        {answers.type_associe === "morale" && (
+                          <>
+                            {answers.assoc_pm_denomination && <p><span className="text-gray-500">Dénomination :</span> <span className="text-gray-800 font-medium">{answers.assoc_pm_denomination}</span></p>}
+                            {answers.assoc_pm_siren && <p><span className="text-gray-500">SIREN :</span> <span className="text-gray-800 font-medium">{answers.assoc_pm_siren}</span></p>}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Capital social */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Capital social</h3>
+                        <button onClick={() => setPostPage(6)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 space-y-1 text-sm">
+                        <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_capital === "fixe" ? "Capital fixe" : answers.type_capital === "variable" ? "Capital variable" : "—"}</span></p>
+                        <p><span className="text-gray-500">Montant :</span> <span className="text-gray-800 font-medium">{answers.capital_social ? `${answers.capital_social} €` : "—"}</span></p>
+                      </div>
+                    </div>
+
+                    {/* Président */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Président</h3>
+                        <button onClick={() => setPostPage(9)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 space-y-1 text-sm">
+                        <p><span className="text-gray-500">Président :</span> <span className="text-gray-800 font-medium">
+                          {answers.president_type === "associe" ? "L'associé unique" : answers.president_type === "tiers_physique" ? "Un tiers (personne physique)" : answers.president_type === "tiers_morale" ? "Un tiers (personne morale)" : "—"}
+                        </span></p>
+                        {answers.mandat_duree_type && <p><span className="text-gray-500">Durée du mandat :</span> <span className="text-gray-800 font-medium">{answers.mandat_duree_type === "indeterminee" ? "Indéterminée" : `${answers.mandat_duree_annees || "—"} ans`}</span></p>}
+                      </div>
+                    </div>
+
+                    {/* Dépôt du capital */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Dépôt du capital</h3>
+                        <button onClick={() => setPostPage(11)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 space-y-1 text-sm">
+                        <p><span className="text-gray-500">Établissement :</span> <span className="text-gray-800 font-medium">{answers.banque_nom || "—"}</span></p>
+                        {answers.depot_date && <p><span className="text-gray-500">Date de dépôt :</span> <span className="text-gray-800 font-medium">{answers.depot_date}</span></p>}
+                      </div>
+                    </div>
+
+                    {/* Régime fiscal */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime fiscal</h3>
+                        <button onClick={() => setPostPage(12)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p><span className="text-gray-500">Régime :</span> <span className="text-gray-800 font-medium">{answers.regime_fiscal === "is" ? "Impôt sur les sociétés (IS)" : answers.regime_fiscal === "ir" ? "Impôt sur le revenu (IR)" : "—"}</span></p>
+                      </div>
+                    </div>
+
+                    {/* Adresse du siège */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Siège social</h3>
+                        <button onClick={() => setPostPage(13)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p className="text-gray-800 font-medium">{answers.adresse_siege || "—"}</p>
+                      </div>
+                    </div>
+
+                    {/* Date et lieu */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Date et lieu de signature</h3>
+                        <button onClick={() => setPostPage(14)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 space-y-1 text-sm">
+                        <p><span className="text-gray-500">Date :</span> <span className="text-gray-800 font-medium">{answers.date_signature || "—"}</span></p>
+                        <p><span className="text-gray-500">Lieu :</span> <span className="text-gray-800 font-medium">
+                          {answers.lieu_signature_type === "siege" ? answers.adresse_siege || "Au siège social" : answers.lieu_signature_autre || "—"}
+                        </span></p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Justificatifs ── */}
+                {POST_PAGES[postPage]?.id === "justificatifs" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Pièces justificatives à fournir</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                      <FileUp className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-[#1E3A8A]">
+                        Veuillez fournir les documents ci-dessous pour constituer votre dossier. Les formats acceptés sont <strong>PDF, JPG, PNG</strong> (max 10 Mo par fichier).
+                      </p>
+                    </div>
+
+                    {/* Pièce d'identité */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <User className="w-5 h-5 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Pièce d&apos;identité du président</p>
+                          <p className="text-xs text-gray-500">Carte d&apos;identité ou passeport (recto-verso)</p>
+                        </div>
+                        {answers.justif_identite && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                      </div>
+                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        {answers.justif_identite ? "Remplacer le fichier" : "Importer le document"}
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_identite", e.target.files[0].name); }} />
+                      </label>
+                      {answers.justif_identite && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_identite}</p>}
+                    </div>
+
+                    {/* Justificatif de domicile */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="w-5 h-5 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif de domiciliation du siège</p>
+                          <p className="text-xs text-gray-500">Bail, contrat de domiciliation, ou attestation d&apos;hébergement</p>
+                        </div>
+                        {answers.justif_domicile && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                      </div>
+                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        {answers.justif_domicile ? "Remplacer le fichier" : "Importer le document"}
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_domicile", e.target.files[0].name); }} />
+                      </label>
+                      {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
+                    </div>
+
+                    {/* Attestation de dépôt du capital */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Coins className="w-5 h-5 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Attestation de dépôt du capital</p>
+                          <p className="text-xs text-gray-500">Délivrée par votre banque ou notaire</p>
+                        </div>
+                        {answers.justif_depot_capital && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                      </div>
+                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        {answers.justif_depot_capital ? "Remplacer le fichier" : "Importer le document"}
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_depot_capital", e.target.files[0].name); }} />
+                      </label>
+                      {answers.justif_depot_capital && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_depot_capital}</p>}
+                    </div>
+
+                    {/* Déclaration de non-condamnation */}
+                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                          <Shield className="w-5 h-5 text-[#2563EB]" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de non-condamnation</p>
+                          <p className="text-xs text-gray-500">Attestation sur l&apos;honneur du président</p>
+                        </div>
+                        {answers.justif_non_condamnation && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                      </div>
+                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        {answers.justif_non_condamnation ? "Remplacer le fichier" : "Importer le document"}
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_non_condamnation", e.target.files[0].name); }} />
+                      </label>
+                      {answers.justif_non_condamnation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_non_condamnation}</p>}
+                    </div>
                   </div>
                 )}
 

@@ -115,6 +115,31 @@ const QUESTIONS: Question[] = [
     ],
   },
   {
+    id: "fermeture_micro",
+    title: "Souhaitez-vous que nous nous occupions de la fermeture de votre micro-entreprise ?",
+    description:
+      "Nous pouvons gérer l'ensemble des démarches de cessation de votre micro-entreprise auprès de l'URSSAF et du guichet unique.",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Oui, je souhaite que vous fermiez ma micro-entreprise (+99 € HT)" },
+      { value: "non", label: "Non, je m'en occupe moi-même" },
+    ],
+    info: {
+      title: "Ce qui est inclus",
+      content: (
+        <>
+          <p>Notre service de fermeture de micro-entreprise comprend :</p>
+          <ul className="list-disc list-inside mt-2 space-y-1">
+            <li>Déclaration de cessation d&apos;activité auprès du guichet unique (INPI)</li>
+            <li>Radiation auprès de l&apos;URSSAF</li>
+            <li>Suivi complet du dossier jusqu&apos;à confirmation de la radiation</li>
+          </ul>
+          <p className="mt-3 font-semibold text-[#2563EB]">Tarif : 99 € HT (soit 118,80 € TTC)</p>
+        </>
+      ),
+    },
+  },
+  {
     id: "demarrage",
     title: "Quand souhaitez-vous démarrer votre projet ?",
     type: "choice",
@@ -214,7 +239,7 @@ const QUESTIONS: Question[] = [
 interface PageDef {
   questions: number[];
   sidebarStep: number;
-  special?: "brand_protection" | "micro_search";
+  special?: "brand_protection" | "micro_search" | "micro_fermeture";
 }
 
 const STATIC_PAGES: PageDef[] = [
@@ -223,13 +248,14 @@ const STATIC_PAGES: PageDef[] = [
   { questions: [],     sidebarStep: 2, special: "brand_protection" }, // conditional
   { questions: [3],    sidebarStep: 2 },  // capital_social
   { questions: [4],    sidebarStep: 2 },  // statut_micro
-  { questions: [5],    sidebarStep: 2 },  // demarrage
-  { questions: [6],    sidebarStep: 2 },  // activite_artisanale
-  { questions: [8],    sidebarStep: 3 },  // regime_fiscal
-  { questions: [],     sidebarStep: 4, special: "micro_search" },  // micro search (conditional)
-  { questions: [7],    sidebarStep: 4 },  // objet_social
-  { questions: [9],    sidebarStep: 4 },  // adresse_siege
-  { questions: [10],   sidebarStep: 4 },  // president_remunere
+  { questions: [],     sidebarStep: 2, special: "micro_search" },    // micro search (if oui)
+  { questions: [5],    sidebarStep: 2, special: "micro_fermeture" }, // fermeture micro (if oui)
+  { questions: [6],    sidebarStep: 2 },  // demarrage
+  { questions: [7],    sidebarStep: 2 },  // activite_artisanale
+  { questions: [9],    sidebarStep: 3 },  // regime_fiscal
+  { questions: [8],    sidebarStep: 4 },  // objet_social
+  { questions: [10],   sidebarStep: 4 },  // adresse_siege
+  { questions: [11],   sidebarStep: 4 },  // president_remunere
 ];
 
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */
@@ -702,14 +728,14 @@ function MicroSearchSection({ onCompanyFound }: { onCompanyFound: (data: { denom
         Recherchez votre micro-entreprise
       </h2>
       <p className="text-sm text-[#6B7280] leading-relaxed mb-4">
-        Entrez le SIREN (9 chiffres) ou le nom de votre micro-entreprise
+        Entrez le SIREN (9 chiffres) ou le nom commercial / dénomination de votre micro-entreprise
       </p>
 
       <div className="flex gap-3">
         <div className="flex-1 relative">
           <input
             type="text"
-            placeholder="SIREN (9 chiffres) ou nom de l'entreprise"
+            placeholder="SIREN (9 chiffres) ou nom commercial de la micro-entreprise"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setShowResults(false); setResults([]); }}
             onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
@@ -751,7 +777,7 @@ function MicroSearchSection({ onCompanyFound }: { onCompanyFound: (data: { denom
       )}
 
       <p className="text-xs text-[#6B7280] mt-2">
-        Recherchez par SIREN (9 chiffres) ou par nom (ex: MON ENTREPRISE)
+        Recherchez par SIREN (9 chiffres) ou par nom commercial (ex: MON ENTREPRISE)
       </p>
 
       {/* Company found card */}
@@ -781,6 +807,7 @@ export default function CreationSASUPage() {
   const pages = STATIC_PAGES.filter((p) => {
     if (p.special === "brand_protection") return answers.proteger_nom === "oui";
     if (p.special === "micro_search") return answers.statut_micro === "oui";
+    if (p.special === "micro_fermeture") return answers.statut_micro === "oui";
     return true;
   });
 

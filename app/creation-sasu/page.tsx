@@ -8,9 +8,73 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRef, useCallback } from "react";
+
+/* ───────── Address Autocomplete (adresse.data.gouv.fr) ───────── */
+function AddressAutocomplete({ value, onChange, placeholder, className }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [suggestions, setSuggestions] = useState<{ label: string; context: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchSuggestions = useCallback((query: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (query.length < 3) { setSuggestions([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (data.features || []).map((f: any) => ({
+              label: f.properties.label,
+              context: f.properties.context,
+            }))
+          );
+          setShowSuggestions(true);
+        }
+      } catch { /* ignore */ }
+    }, 300);
+  }, []);
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => { onChange(e.target.value); fetchSuggestions(e.target.value); }}
+        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        placeholder={placeholder || "Tapez une adresse..."}
+        className={className || "w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"}
+      />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { onChange(s.label); setShowSuggestions(false); setSuggestions([]); }}
+              className="w-full px-4 py-2.5 text-left hover:bg-blue-50 text-sm text-gray-800 border-b border-gray-100 last:border-b-0"
+            >
+              <span className="font-medium">{s.label}</span>
+              <span className="text-xs text-gray-400 ml-2">{s.context}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /*
  * Color palette (LegalCorners):
@@ -2321,12 +2385,10 @@ export default function CreationSASUPage() {
                         </div>
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse de résidence fiscale</label>
-                          <input
-                            type="text"
+                          <AddressAutocomplete
                             value={answers.associe_adresse || ""}
-                            onChange={(e) => setAnswer("associe_adresse", e.target.value)}
+                            onChange={(v) => setAnswer("associe_adresse", v)}
                             placeholder="Adresse complète"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
 
@@ -3497,7 +3559,7 @@ export default function CreationSASUPage() {
                             </div>
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                              <input type="text" value={answers.president_adresse || ""} onChange={(e) => setAnswer("president_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              <AddressAutocomplete value={answers.president_adresse || ""} onChange={(v) => setAnswer("president_adresse", v)} placeholder="Adresse complète" />
                             </div>
 
                             {/* Filiation */}
@@ -3676,7 +3738,7 @@ export default function CreationSASUPage() {
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                                      <input type="text" value={answers.president_rp_adresse || ""} onChange={(e) => setAnswer("president_rp_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      <AddressAutocomplete value={answers.president_rp_adresse || ""} onChange={(v) => setAnswer("president_rp_adresse", v)} placeholder="Adresse complète" />
                                     </div>
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
@@ -3781,7 +3843,7 @@ export default function CreationSASUPage() {
                           </div>
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                            <input type="text" value={answers.dg_adresse || ""} onChange={(e) => setAnswer("dg_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            <AddressAutocomplete value={answers.dg_adresse || ""} onChange={(v) => setAnswer("dg_adresse", v)} placeholder="Adresse complète" />
                           </div>
                         </motion.div>
                       )}
@@ -4450,11 +4512,9 @@ export default function CreationSASUPage() {
                         <div className="text-base text-gray-600">{QUESTIONS[11].info.content}</div>
                       </AccordionItem>
                     )}
-                    <input
-                      type="text"
+                    <AddressAutocomplete
                       value={answers.adresse_siege || ""}
-                      onChange={(e) => setAnswer("adresse_siege", e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter" && answers.adresse_siege) { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); } }}
+                      onChange={(v) => setAnswer("adresse_siege", v)}
                       placeholder={QUESTIONS[11].placeholder}
                       className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
                     />
@@ -4648,7 +4708,13 @@ export default function CreationSASUPage() {
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Président :</span> <span className="text-gray-800 font-medium">
-                          {answers.president_type === "associe" ? "L'associé unique" : answers.president_type === "tiers_physique" ? "Un tiers (personne physique)" : answers.president_type === "tiers_morale" ? "Un tiers (personne morale)" : "—"}
+                          {answers.president_option === "associe"
+                            ? `L'associé unique${answers.type_associe !== "morale" ? ` (${answers.associe_prenom || ""} ${answers.associe_nom || ""})`.trim() : ` (${answers.associe_societe_nom || ""})`}`
+                            : answers.president_type === "physique"
+                            ? `${answers.president_prenom || ""} ${answers.president_nom || ""} (personne physique)`
+                            : answers.president_type === "morale"
+                            ? `${answers.president_pm_nom || ""} (personne morale)`
+                            : "—"}
                         </span></p>
                         {answers.mandat_duree_type && <p><span className="text-gray-500">Durée du mandat :</span> <span className="text-gray-800 font-medium">{answers.mandat_duree_type === "indeterminee" ? "Indéterminée" : `${answers.mandat_duree_annees || "—"} ans`}</span></p>}
                       </div>

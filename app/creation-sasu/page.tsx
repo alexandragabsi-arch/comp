@@ -252,7 +252,7 @@ const STATIC_PAGES: PageDef[] = [
   { questions: [5],    sidebarStep: 2, special: "micro_fermeture" }, // fermeture micro (if oui)
   { questions: [6],    sidebarStep: 2 },  // demarrage
   { questions: [7],    sidebarStep: 2 },  // activite_artisanale
-  { questions: [9],    sidebarStep: 3 },  // regime_fiscal
+  { questions: [9],    sidebarStep: 4 },  // regime_fiscal
   { questions: [8],    sidebarStep: 4 },  // objet_social
   { questions: [10],   sidebarStep: 4 },  // adresse_siege
   { questions: [11],   sidebarStep: 4 },  // president_remunere

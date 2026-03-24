@@ -1057,10 +1057,7 @@ function PostPaymentObjetPrincipal({
   return (
     <div className="space-y-6">
       <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold text-[#1E3A8A]">
-          Quel est l&apos;objet principal de votre SASU ?
-        </h2>
-        <p className="text-gray-500 text-sm">L&apos;objet principal est l&apos;activité de base de votre société</p>
+        <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
       </div>
 
       <AccordionItem title="Plus d'informations">
@@ -1731,10 +1728,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "denomination" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">
-                        Identité de votre société
-                      </h2>
-                      <p className="text-gray-500 text-sm">Dénomination, sigle, nom commercial et enseigne</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     <AccordionItem title="Plus d'informations">
@@ -1810,8 +1804,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "objet_social" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Objet social</h2>
-                      <p className="text-gray-500 text-sm">Définissez l&apos;objet social de votre société</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     {/* Option 1: Rédaction manuelle */}
@@ -1921,8 +1914,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "activite_description" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Description de vos activités</h2>
-                      <p className="text-gray-500 text-sm">Précisez votre activité principale et vos éventuelles activités secondaires</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     <AccordionItem title="Plus d'informations">
@@ -1992,8 +1984,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "activite_saisonniere" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Type d&apos;activité</h2>
-                      <p className="text-gray-500 text-sm">Est-ce qu&apos;une des activités est saisonnière ou ambulante ?</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     <div className="space-y-3">
@@ -2038,8 +2029,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "associe_unique" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">ASSOCIÉ UNIQUE</h2>
-                      <p className="text-gray-500 text-sm">Veuillez remplir les informations de l&apos;associé unique</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     {/* Info block */}
@@ -2367,8 +2357,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "actions_capital" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">ACTIONS ET CAPITAL SOCIAL</h2>
-                      <p className="text-gray-500 text-sm">Dans le parcours simplifié, la valeur d&apos;une action est fixée à 1 euro.</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -2424,8 +2413,7 @@ export default function CreationSASUPage() {
                   return (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Apport de l&apos;associé unique</h2>
-                      <p className="text-gray-500 text-sm">Cliquez sur l&apos;associé, remplissez sa fiche d&apos;apport, puis validez</p>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
                     <AccordionItem title="Plus d'informations">
@@ -3440,8 +3428,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "regime_fiscal" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[10].title}</h2>
-                      {QUESTIONS[10].description && <p className="text-gray-500 text-sm">{QUESTIONS[10].description}</p>}
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
                     {QUESTIONS[10].info && (
                       <AccordionItem title={QUESTIONS[10].info.title}>
@@ -3477,7 +3464,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "adresse_siege" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[11].title}</h2>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
                     {QUESTIONS[11].info && (
                       <AccordionItem title={QUESTIONS[11].info.title}>
@@ -3499,7 +3486,7 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "president_remunere" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
-                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[12].title}</h2>
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
                     {QUESTIONS[12].info && (
                       <AccordionItem title={QUESTIONS[12].info.title}>

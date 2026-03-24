@@ -2638,7 +2638,8 @@ export default function CreationSASUPage() {
                 {POST_PAGES[postPage]?.id === "apport_associe" && (() => {
                   const capitalTotal = Number(answers.capital_social) || 0;
                   const apportNum = Number(answers.apport_numeraire) || 0;
-                  const apportNature = Number(answers.apport_nature) || 0;
+                  const apportsNatureListe: { description: string; valeur: string; bien_type?: string }[] = answers.apports_nature_liste || [];
+                  const apportNature = apportsNatureListe.reduce((s: number, a) => s + (Number(a.valeur) || 0), 0) || Number(answers.apport_nature) || 0;
                   const totalApports = apportNum + apportNature;
                   const valeurAction = Number(answers.valeur_action) || 1;
                   const nbActions = capitalTotal > 0 ? capitalTotal / valeurAction : 0;
@@ -2722,6 +2723,7 @@ export default function CreationSASUPage() {
                             </tr>
                           </thead>
                           <tbody>
+                            {/* Apport en numéraire */}
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -2736,7 +2738,34 @@ export default function CreationSASUPage() {
                                 {apportNum.toLocaleString("fr-FR")} €
                               </td>
                             </motion.tr>
-                            {apportNature > 0 && (
+
+                            {/* Détail apports en nature (un par ligne) */}
+                            {apportsNatureListe.length > 0 ? (
+                              apportsNatureListe.map((apport, idx) => (
+                                <motion.tr
+                                  key={`nature-${idx}`}
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: 0.35 + idx * 0.05 }}
+                                  className="border-b border-gray-100"
+                                >
+                                  <td className="py-3">
+                                    <div className="flex items-center gap-2 text-gray-700">
+                                      <FolderOpen className="w-4 h-4 text-[#2563EB] flex-shrink-0" />
+                                      <div>
+                                        <span>Apport en nature N°{idx + 1}</span>
+                                        {apport.description && (
+                                          <p className="text-xs text-gray-400 truncate max-w-[200px]">{apport.description}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 text-right font-semibold text-[#1E3A8A]">
+                                    {(Number(apport.valeur) || 0).toLocaleString("fr-FR")} €
+                                  </td>
+                                </motion.tr>
+                              ))
+                            ) : apportNature > 0 ? (
                               <motion.tr
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -2751,12 +2780,14 @@ export default function CreationSASUPage() {
                                   {apportNature.toLocaleString("fr-FR")} €
                                 </td>
                               </motion.tr>
-                            )}
+                            ) : null}
+
+                            {/* Apport en industrie */}
                             {answers.apport_industrie === "oui" && (
                               <motion.tr
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.35 }}
+                                transition={{ delay: 0.35 + apportsNatureListe.length * 0.05 }}
                                 className="border-b border-gray-100"
                               >
                                 <td className="py-3 flex items-center gap-2 text-gray-700">
@@ -2768,10 +2799,35 @@ export default function CreationSASUPage() {
                                 </td>
                               </motion.tr>
                             )}
+
+                            {/* ── Total des apports (intégrés au capital) ── */}
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.4 }}
+                              transition={{ delay: 0.45 + apportsNatureListe.length * 0.05 }}
+                              className="border-t-2 border-[#1E3A8A]"
+                            >
+                              <td className="py-3 flex items-center gap-2 font-bold text-[#1E3A8A]">
+                                <Sparkles className="w-4 h-4 text-[#2563EB]" />
+                                Total des apports
+                              </td>
+                              <td className={cn(
+                                "py-3 text-right font-bold text-lg",
+                                totalApports === capitalTotal && capitalTotal > 0
+                                  ? "text-green-600"
+                                  : totalApports > 0
+                                    ? "text-yellow-600"
+                                    : "text-gray-400"
+                              )}>
+                                {totalApports.toLocaleString("fr-FR")} €
+                              </td>
+                            </motion.tr>
+
+                            {/* Détails actions */}
+                            <motion.tr
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.5 + apportsNatureListe.length * 0.05 }}
                               className="border-b border-gray-100"
                             >
                               <td className="py-3 flex items-center gap-2 text-gray-700">
@@ -2785,7 +2841,7 @@ export default function CreationSASUPage() {
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.5 }}
+                              transition={{ delay: 0.55 + apportsNatureListe.length * 0.05 }}
                               className="border-b border-gray-100"
                             >
                               <td className="py-3 flex items-center gap-2 text-gray-700">
@@ -2799,7 +2855,7 @@ export default function CreationSASUPage() {
                             <motion.tr
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: 0.6 }}
+                              transition={{ delay: 0.6 + apportsNatureListe.length * 0.05 }}
                             >
                               <td className="py-3 flex items-center gap-2 text-gray-700">
                                 <Percent className="w-4 h-4 text-[#2563EB]" />

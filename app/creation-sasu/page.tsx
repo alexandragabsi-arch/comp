@@ -250,10 +250,10 @@ function ChoiceCard({
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left px-5 py-4 rounded-xl border-2 text-sm font-medium transition-all",
+        "w-full text-left px-5 py-4 rounded-lg border text-sm font-medium transition-all",
         selected
-          ? "border-[#4A6FE3] bg-[#eef2ff] text-[#4A6FE3]"
-          : "border-[#e0e7ff] bg-white text-[#4A6FE3] hover:border-[#a5b4fc] hover:bg-[#f8f9ff]"
+          ? "border-[#4A6FE3] bg-[#EEF2FF] text-[#4A6FE3] shadow-sm"
+          : "border-[#D6E0F5] bg-[#F8FAFF] text-[#4A6FE3] hover:border-[#4A6FE3] hover:bg-[#EEF2FF]"
       )}
     >
       {label}
@@ -341,7 +341,7 @@ export default function CreationSASUPage() {
       </header>
 
       {/* ── Mobile stepper ── */}
-      <div className="md:hidden flex items-center justify-center gap-2 py-4 px-4 border-b border-gray-100 bg-[#fafbff]">
+      <div className="md:hidden flex items-center justify-center gap-2 py-4 px-4 border-b border-gray-100 bg-white">
         {STEPS.map((s, i) => (
           <div key={s.id} className="flex items-center">
             <div
@@ -350,8 +350,8 @@ export default function CreationSASUPage() {
                 sidebarStep > s.id
                   ? "bg-[#4A6FE3] text-white"
                   : sidebarStep === s.id
-                    ? "bg-[#1E3A8A] text-white ring-3 ring-[#4A6FE3]/20"
-                    : "bg-white text-gray-400 border-2 border-gray-200"
+                    ? "bg-[#4A6FE3] text-white"
+                    : "bg-white text-[#7B9AE6] border-2 border-[#A5B8F0]"
               )}
             >
               {sidebarStep > s.id ? <Check className="w-3.5 h-3.5" /> : s.id}
@@ -359,7 +359,7 @@ export default function CreationSASUPage() {
             {i < STEPS.length - 1 && (
               <div className={cn(
                 "w-4 h-0.5 mx-0.5",
-                sidebarStep > s.id ? "bg-[#4A6FE3]" : "bg-gray-200"
+                sidebarStep > s.id ? "bg-[#4A6FE3]" : "bg-[#C5D5F0]"
               )} />
             )}
           </div>
@@ -367,54 +367,53 @@ export default function CreationSASUPage() {
       </div>
 
       {/* ── Mobile step label ── */}
-      <div className="md:hidden text-center py-2 text-xs font-medium text-[#4A6FE3] bg-[#fafbff] border-b border-gray-100">
+      <div className="md:hidden text-center py-2 text-xs font-medium text-[#4A6FE3] bg-white border-b border-gray-100">
         {STEPS.find((s) => s.id === sidebarStep)?.label.replace("\n", " ")}
       </div>
 
       <div className="flex max-w-[1400px] mx-auto">
         {/* ── Sidebar stepper (desktop) ── */}
-        <aside className="hidden md:flex flex-col items-center w-[220px] min-w-[220px] border-r border-gray-100 py-10 px-4">
+        <aside className="hidden md:flex flex-col items-start w-[240px] min-w-[240px] border-r border-gray-200 py-10 pl-8 pr-4">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const done = sidebarStep > s.id;
             const active = sidebarStep === s.id;
             return (
-              <div key={s.id} className="flex flex-col items-center">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="relative flex items-center gap-3">
-                    <div
-                      className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all",
-                        done
-                          ? "bg-[#4A6FE3] text-white"
-                          : active
-                            ? "bg-[#1E3A8A] text-white ring-4 ring-[#4A6FE3]/20"
-                            : "bg-white text-gray-400 border-2 border-gray-200"
-                      )}
-                    >
-                      {done ? <Check className="w-4 h-4" /> : s.id}
-                    </div>
-                    <Icon
-                      className={cn(
-                        "w-5 h-5",
-                        active ? "text-[#1E3A8A]" : done ? "text-[#4A6FE3]" : "text-gray-300"
-                      )}
-                    />
-                  </div>
-                  <span
+              <div key={s.id} className="flex flex-col items-center w-full">
+                {/* Step row: number + icon */}
+                <div className="flex items-center gap-3 w-full justify-center">
+                  <div
                     className={cn(
-                      "text-xs font-medium text-center whitespace-pre-line leading-tight mt-1",
-                      active ? "text-[#1E3A8A]" : done ? "text-[#4A6FE3]" : "text-gray-400"
+                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-all",
+                      done || active
+                        ? "bg-[#4A6FE3] text-white"
+                        : "bg-white text-[#4A6FE3] border-2 border-[#A5B8F0]"
                     )}
                   >
-                    {s.label}
-                  </span>
+                    {done ? <Check className="w-4 h-4" /> : s.id}
+                  </div>
+                  <Icon
+                    className={cn(
+                      "w-5 h-5 shrink-0",
+                      done || active ? "text-[#4A6FE3]" : "text-[#A5B8F0]"
+                    )}
+                  />
                 </div>
+                {/* Step label */}
+                <span
+                  className={cn(
+                    "text-xs font-medium text-center whitespace-pre-line leading-tight mt-1.5",
+                    done || active ? "text-[#1E3A8A]" : "text-[#8B9DC3]"
+                  )}
+                >
+                  {s.label}
+                </span>
+                {/* Dotted connector */}
                 {i < STEPS.length - 1 && (
                   <div
                     className={cn(
-                      "w-0.5 h-10 my-2 border-l-2 border-dotted",
-                      sidebarStep > s.id + 1 ? "border-[#4A6FE3]" : "border-gray-200"
+                      "h-9 my-1.5 border-l-2 border-dashed",
+                      done ? "border-[#4A6FE3]" : "border-[#A5B8F0]"
                     )}
                   />
                 )}

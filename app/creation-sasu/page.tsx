@@ -2556,6 +2556,24 @@ export default function CreationSASUPage() {
 
                     <hr className="border-gray-200" />
 
+                    {/* Info formule simplifiée */}
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-3">
+                        <p>Le capital minimum légal pour une SASU est de 1 euro. Afin de faciliter vos démarches, nous vous proposons par défaut un ensemble de règles couramment utilisées dans les statuts afin de simplifier la création de votre SASU.</p>
+                        <p className="font-bold text-[#1E3A8A]">Voici la formule dite simplifiée :</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>L&apos;associé unique a apporté la totalité du capital en numéraire (argent déposé en banque).</li>
+                          <li>Cet apport est effectué à titre de biens propres de l&apos;associé unique (pas de biens communs ou indivis)</li>
+                          <li>Aucun apport en nature ni en industrie.</li>
+                          <li>Le capital est entièrement libéré (100 % déposé).</li>
+                          <li>Le capital est fixe.</li>
+                          <li>La valeur nominale d&apos;une action est de 1 €.</li>
+                          <li>Le montant du capital social correspond à celui que vous avez défini ci-dessous.</li>
+                        </ul>
+                        <p className="italic text-gray-500">Toutefois, il est possible de modifier ces règles si vous le souhaitez par exemple : introduire des apports en nature (biens, matériel, véhicule, etc.), des apports en industrie, ou opter pour un capital variable.</p>
+                      </div>
+                    </AccordionItem>
+
                     {/* Formule simplifiée / personnalisée */}
                     <div>
                       <p className="text-base font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>

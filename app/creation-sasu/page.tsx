@@ -104,6 +104,17 @@ const QUESTIONS: Question[] = [
     },
   },
   {
+    id: "statut_micro",
+    title: "Êtes-vous actuellement micro-entrepreneur ?",
+    description:
+      "Si vous êtes actuellement en micro-entreprise et souhaitez passer en SASU, nous aurons besoin des informations de votre entreprise actuelle.",
+    type: "choice",
+    choices: [
+      { value: "oui", label: "Oui, je suis micro-entrepreneur" },
+      { value: "non", label: "Non" },
+    ],
+  },
+  {
     id: "demarrage",
     title: "Quand souhaitez-vous démarrer votre projet ?",
     type: "choice",
@@ -203,7 +214,7 @@ const QUESTIONS: Question[] = [
 interface PageDef {
   questions: number[];
   sidebarStep: number;
-  special?: "brand_protection";
+  special?: "brand_protection" | "micro_search";
 }
 
 const STATIC_PAGES: PageDef[] = [
@@ -211,12 +222,14 @@ const STATIC_PAGES: PageDef[] = [
   { questions: [1, 2], sidebarStep: 2 },  // nom_societe + proteger_nom (together)
   { questions: [],     sidebarStep: 2, special: "brand_protection" }, // conditional
   { questions: [3],    sidebarStep: 2 },  // capital_social
-  { questions: [6],    sidebarStep: 2 },  // objet_social
-  { questions: [7],    sidebarStep: 3 },  // regime_fiscal
-  { questions: [4],    sidebarStep: 4 },  // demarrage
-  { questions: [5],    sidebarStep: 4 },  // activite_artisanale
-  { questions: [8],    sidebarStep: 4 },  // adresse_siege
-  { questions: [9],    sidebarStep: 4 },  // president_remunere
+  { questions: [4],    sidebarStep: 2 },  // statut_micro
+  { questions: [5],    sidebarStep: 2 },  // demarrage
+  { questions: [6],    sidebarStep: 2 },  // activite_artisanale
+  { questions: [8],    sidebarStep: 3 },  // regime_fiscal
+  { questions: [],     sidebarStep: 4, special: "micro_search" },  // micro search (conditional)
+  { questions: [7],    sidebarStep: 4 },  // objet_social
+  { questions: [9],    sidebarStep: 4 },  // adresse_siege
+  { questions: [10],   sidebarStep: 4 },  // president_remunere
 ];
 
 /* ───────── Sidebar steps (7 like LegalCorners) ───────── */
@@ -598,16 +611,178 @@ function SidebarStep({
   );
 }
 
+/* ───────── Micro-entrepreneur Search ───────── */
+
+interface SearchResult {
+  siren: string;
+  nom: string;
+  ville?: string;
+}
+
+function MicroSearchSection({ onCompanyFound }: { onCompanyFound: (data: { denomination: string; siren: string; adresse: string }) => void }) {
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [found, setFound] = useState<{ denomination: string; siren: string; adresse: string } | null>(null);
+
+  const handleSearch = async () => {
+    if (search.length < 2) return;
+    setLoading(true);
+    setError(null);
+    setResults([]);
+    setShowResults(false);
+    try {
+      const clean = search.replace(/\s/g, "");
+      const isSiren = /^\d{9}$/.test(clean);
+      if (isSiren) {
+        const res = await fetch(`/api/siren?siren=${clean}`);
+        if (res.ok) {
+          const data = await res.json();
+          const company = {
+            denomination: data.denominationSociale || "",
+            siren: clean,
+            adresse: [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "),
+          };
+          setFound(company);
+          onCompanyFound(company);
+        } else {
+          setError("SIREN non trouvé");
+        }
+      } else {
+        const res = await fetch(`/api/siren?nom=${encodeURIComponent(search)}&list=true`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.resultats?.length > 0) {
+            setResults(data.resultats);
+            setShowResults(true);
+          } else {
+            setError("Aucune entreprise trouvée");
+          }
+        } else {
+          setError("Aucune entreprise trouvée avec ce nom");
+        }
+      }
+    } catch {
+      setError("Erreur lors de la recherche");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectResult = async (result: SearchResult) => {
+    setLoading(true);
+    setShowResults(false);
+    try {
+      const res = await fetch(`/api/siren?siren=${result.siren}`);
+      if (res.ok) {
+        const data = await res.json();
+        const company = {
+          denomination: data.denominationSociale || result.nom,
+          siren: result.siren,
+          adresse: [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "),
+        };
+        setFound(company);
+        onCompanyFound(company);
+        setSearch(result.nom);
+      }
+    } catch {
+      const company = { denomination: result.nom, siren: result.siren, adresse: result.ville || "" };
+      setFound(company);
+      onCompanyFound(company);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mb-10">
+      <h2 className="text-[16px] md:text-[18px] font-bold text-[#1E293B] mb-2 leading-snug">
+        Recherchez votre micro-entreprise
+      </h2>
+      <p className="text-sm text-[#6B7280] leading-relaxed mb-4">
+        Entrez le SIREN (9 chiffres) ou le nom de votre micro-entreprise
+      </p>
+
+      <div className="flex gap-3">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            placeholder="SIREN (9 chiffres) ou nom de l'entreprise"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setShowResults(false); setResults([]); }}
+            onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
+            className="w-full px-5 py-4 rounded-lg border border-[#D1D5DB] focus:border-[#2563EB] focus:outline-none text-sm text-[#1E293B] bg-white transition-colors"
+          />
+
+          {/* Dropdown results */}
+          {showResults && results.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-[#D1D5DB] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {results.map((r, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => selectResult(r)}
+                  className="w-full px-4 py-3 text-left hover:bg-[#EFF6FF] border-b border-gray-100 last:border-b-0 flex justify-between items-center"
+                >
+                  <div>
+                    <div className="font-medium text-[#1E293B]">{r.nom}</div>
+                    {r.ville && <div className="text-xs text-[#6B7280]">{r.ville}</div>}
+                  </div>
+                  <div className="text-sm text-[#2563EB] font-mono">{r.siren}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={handleSearch}
+          disabled={search.length < 2 || loading}
+          className="px-6 py-4 rounded-lg bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] disabled:bg-[#9CA3AF] transition-colors"
+        >
+          {loading ? "Recherche..." : "Rechercher"}
+        </button>
+      </div>
+
+      {error && (
+        <p className="text-amber-600 text-sm mt-2">{error}</p>
+      )}
+
+      <p className="text-xs text-[#6B7280] mt-2">
+        Recherchez par SIREN (9 chiffres) ou par nom (ex: MON ENTREPRISE)
+      </p>
+
+      {/* Company found card */}
+      {found && (
+        <div className="mt-4 p-5 rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF]">
+          <div className="flex items-start gap-3">
+            <Building2 className="w-5 h-5 text-[#2563EB] mt-0.5" />
+            <div>
+              <p className="font-bold text-[#1E293B]">{found.denomination}</p>
+              <p className="text-sm text-[#6B7280] mt-1">SIREN : <span className="font-mono text-[#2563EB]">{found.siren}</span></p>
+              {found.adresse && <p className="text-sm text-[#6B7280]">{found.adresse}</p>}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ───────── Main page ───────── */
 
 export default function CreationSASUPage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  // Build active pages: skip brand_protection page if user didn't select "oui"
-  const pages = STATIC_PAGES.filter(
-    (p) => p.special !== "brand_protection" || answers.proteger_nom === "oui"
-  );
+  // Build active pages: skip conditional pages based on answers
+  const pages = STATIC_PAGES.filter((p) => {
+    if (p.special === "brand_protection") return answers.proteger_nom === "oui";
+    if (p.special === "micro_search") return answers.statut_micro === "oui";
+    return true;
+  });
 
   const page = pages[currentPage] ?? pages[pages.length - 1];
   const activeStep = page.sidebarStep;
@@ -686,6 +861,18 @@ export default function CreationSASUPage() {
 
           {/* Brand protection special page */}
           {page.special === "brand_protection" && <BrandProtectionSection />}
+          {page.special === "micro_search" && (
+            <MicroSearchSection
+              onCompanyFound={(data) => {
+                setAnswers((prev) => ({
+                  ...prev,
+                  micro_denomination: data.denomination,
+                  micro_siren: data.siren,
+                  micro_adresse: data.adresse,
+                }));
+              }}
+            />
+          )}
 
           {/* Questions for this page */}
           {pageQuestions.map((q) => (

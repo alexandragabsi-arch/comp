@@ -963,6 +963,162 @@ function MicroSearchSection({ onCompanyFound }: { onCompanyFound: (data: { denom
   );
 }
 
+/* ───────── Objet principal (catégories visuelles) ───────── */
+
+const ACTIVITE_CATEGORIES = [
+  {
+    id: "aide_personne",
+    label: "AIDE ET SERVICE\nÀ LA PERSONNE",
+    emoji: "🏠",
+    sousCategories: [
+      "Assistance à domicile non réglementée",
+      "Jardinage",
+      "Entretien du domicile / ménage",
+      "Soutien scolaire",
+      "Garde des enfants +3 ans",
+      "Garde tout public (y compris des personnes fragiles)",
+      "Conseils bien-être / coaching personnel",
+      "Coaching sportif",
+      "Sophrologue / naturopathe",
+      "Autre",
+    ],
+  },
+  {
+    id: "automobile",
+    label: "AUTOMOBILE /\nTRANSPORT",
+    emoji: "🚗",
+    sousCategories: ["Transport de personnes (VTC)", "Transport de marchandises", "Location de véhicules", "Réparation automobile", "Autre"],
+  },
+  {
+    id: "restauration",
+    label: "BAR /\nRESTAURATION",
+    emoji: "🍽️",
+    sousCategories: ["Restaurant", "Bar / café", "Restauration rapide", "Traiteur", "Food truck", "Autre"],
+  },
+  {
+    id: "batiment",
+    label: "MÉTIERS DU\nBÂTIMENT",
+    emoji: "🏗️",
+    sousCategories: ["Maçonnerie", "Plomberie", "Électricité", "Peinture", "Menuiserie", "Carrelage", "Autre"],
+  },
+  {
+    id: "coiffure",
+    label: "COIFFURE /\nBIEN-ÊTRE",
+    emoji: "✂️",
+    sousCategories: ["Coiffure", "Esthétique", "Spa / massage", "Tatouage / piercing", "Autre"],
+  },
+  {
+    id: "commerce",
+    label: "COMMERCES /\nVENTE",
+    emoji: "🏪",
+    sousCategories: ["E-commerce", "Commerce de détail", "Commerce de gros", "Vente ambulante", "Autre"],
+  },
+  {
+    id: "evenementiel",
+    label: "ÉVÉNEMENTIEL /\nCULTURE",
+    emoji: "🎪",
+    sousCategories: ["Organisation d'événements", "Production audiovisuelle", "Photographie", "Musique / spectacle", "Autre"],
+  },
+  {
+    id: "immobilier",
+    label: "LOCATION /\nIMMOBILIER",
+    emoji: "🔑",
+    sousCategories: ["Agence immobilière", "Gestion locative", "Location meublée (LMNP)", "Promotion immobilière", "SCI", "Autre"],
+  },
+  {
+    id: "conseil",
+    label: "SERVICES DE\nCONSEILS",
+    emoji: "💼",
+    sousCategories: ["Conseil en management", "Conseil en stratégie", "Conseil RH", "Conseil financier", "Coaching professionnel", "Autre"],
+  },
+  {
+    id: "informatique",
+    label: "SERVICES\nINFORMATIQUES / WEB",
+    emoji: "💻",
+    sousCategories: ["Développement web / mobile", "Infogérance / hébergement", "Conseil en IT", "Cybersécurité", "Data / IA", "Design UI/UX", "Autre"],
+  },
+  {
+    id: "autre",
+    label: "AUTRE",
+    emoji: "💬",
+    sousCategories: ["Autre activité"],
+  },
+];
+
+function PostPaymentObjetPrincipal({
+  selected, sousCategorie, onSelect, onSousCategorie,
+}: {
+  selected: string; sousCategorie: string;
+  onSelect: (val: string) => void; onSousCategorie: (val: string) => void;
+}) {
+  const activeCat = ACTIVITE_CATEGORIES.find((c) => c.id === selected);
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center space-y-1">
+        <h2 className="text-2xl font-bold text-[#1E3A8A]">
+          Quel est l&apos;objet principal de votre SASU ?
+        </h2>
+        <p className="text-gray-500 text-sm">L&apos;objet principal est l&apos;activité de base de votre société</p>
+      </div>
+
+      <AccordionItem title="Plus d'informations">
+        <div className="text-sm text-gray-600 space-y-2">
+          <p>Sélectionnez la catégorie qui correspond le mieux à votre activité. Nous définirons ensuite votre objet social en détail.</p>
+        </div>
+      </AccordionItem>
+
+      {/* Grille de catégories */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+        {ACTIVITE_CATEGORIES.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => { onSelect(cat.id); onSousCategorie(""); }}
+            className={cn(
+              "flex flex-col items-center gap-2 p-4 rounded-xl border-2 text-center transition-all",
+              selected === cat.id
+                ? "border-[#2563EB] bg-blue-50 shadow-sm"
+                : "border-gray-200 bg-white hover:border-[#2563EB]/50 hover:bg-blue-50/50"
+            )}
+          >
+            <span className="text-3xl">{cat.emoji}</span>
+            <span className={cn(
+              "text-[10px] font-bold leading-tight whitespace-pre-line",
+              selected === cat.id ? "text-[#1E3A8A]" : "text-gray-600"
+            )}>
+              {cat.label}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Sous-catégories */}
+      {activeCat && (
+        <div className="space-y-3">
+          <p className="text-sm text-[#2563EB] font-medium">Vous avez sélectionné une activité principale</p>
+          <p className="text-sm font-bold text-[#1E3A8A]">Sous catégorie : {activeCat.label.replace(/\n/g, " ")}</p>
+          <div className="flex flex-wrap gap-2">
+            {activeCat.sousCategories.map((sc) => (
+              <button
+                key={sc}
+                onClick={() => onSousCategorie(sc)}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-all",
+                  sousCategorie === sc
+                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                    : "border-gray-200 text-gray-600 hover:border-[#2563EB]/50"
+                )}
+              >
+                {sc}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ───────── Pre-payment questions (dissolution style) ───────── */
 
 // Flat list of pre-payment question indices (before pricing)
@@ -993,12 +1149,14 @@ export default function CreationSASUPage() {
   const currentQIndex = activeQuestions[currentQ]; // actual QUESTIONS index
   const question = QUESTIONS[currentQIndex];
 
-  // Post-payment pages (step 4: dossier juridique)
-  const POST_PAGES: PageDef[] = [
-    { questions: [10], sidebarStep: 4 }, // regime_fiscal
-    { questions: [9],  sidebarStep: 4 }, // objet_social
-    { questions: [11], sidebarStep: 4 }, // adresse_siege
-    { questions: [12], sidebarStep: 4 }, // president_remunere
+  // Post-payment pages (step 4: dossier juridique) — 6 pages
+  const POST_PAGES = [
+    { id: "denomination", sidebarStep: 4 },   // 0: dénomination + sigle + nom commercial + enseigne
+    { id: "objet_principal", sidebarStep: 4 }, // 1: catégories visuelles + sous-catégories
+    { id: "objet_social", sidebarStep: 4 },    // 2: texte libre
+    { id: "regime_fiscal", sidebarStep: 4 },   // 3: IS / IR
+    { id: "adresse_siege", sidebarStep: 4 },   // 4: adresse
+    { id: "president_remunere", sidebarStep: 4 }, // 5: rémunération
   ];
 
   // Determine sidebar step from phase
@@ -1137,14 +1295,13 @@ export default function CreationSASUPage() {
         "flex-1 flex justify-center min-h-screen",
         phase === "questions" || phase === "intro"
           ? "md:ml-72 p-6 md:p-10 items-center"
-          : phase === "pricing"
+          : phase === "pricing" || phase === "post_payment"
             ? "md:ml-72 p-6 md:p-10 items-start pt-10"
             : "md:ml-72 p-6 items-start"
       )}>
         <div className={cn(
           "w-full",
-          phase === "pricing" || phase === "brand_protection" ? "max-w-4xl" :
-          phase === "post_payment" ? "max-w-[900px]" :
+          phase === "pricing" || phase === "brand_protection" || phase === "post_payment" ? "max-w-4xl" :
           "max-w-2xl"
         )}>
           <AnimatePresence mode="wait">
@@ -1539,28 +1696,230 @@ export default function CreationSASUPage() {
               </motion.div>
             )}
 
-            {/* ══════ POST-PAYMENT (old style with QuestionBlock) ══════ */}
+            {/* ══════ POST-PAYMENT — Dissolution style ══════ */}
             {phase === "post_payment" && (
               <motion.div
                 key={`post-${postPage}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
+                className="space-y-6"
               >
-                <h1 className="text-[28px] font-bold text-[#2563EB] mb-8 leading-tight">
-                  Dossier juridique
-                </h1>
+                {/* Progress bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Étape {postPage + 1} sur {POST_PAGES.length}</span>
+                    <span>{Math.round((postPage / POST_PAGES.length) * 100)}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#2563EB] rounded-full transition-all duration-500"
+                      style={{ width: `${(postPage / POST_PAGES.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
 
-                {POST_PAGES[postPage]?.questions.map((qi) => (
-                  <QuestionBlock
-                    key={QUESTIONS[qi].id}
-                    question={QUESTIONS[qi]}
-                    answer={answers[QUESTIONS[qi].id] || ""}
-                    onAnswer={(val) => setAnswer(QUESTIONS[qi].id, val)}
+                {/* ── Page 0: Dénomination sociale ── */}
+                {postPage === 0 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">
+                        Identité de votre société
+                      </h2>
+                      <p className="text-gray-500 text-sm">Dénomination, sigle, nom commercial et enseigne</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>La <strong className="text-[#1E3A8A]">dénomination sociale</strong> est le <strong>nom juridique officiel</strong> de la société. Vous pouvez aussi ajouter <strong>un sigle, un nom commercial</strong> ou <strong>une enseigne</strong>.</p>
+                        <p>Ces informations seront reprises dans les statuts, les documents légaux et commerciaux.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Dénomination sociale (obligatoire)</label>
+                        <p className="text-xs text-gray-500 mb-2">Nom juridique de la société, tel qu&apos;il figure dans les statuts et sur l&apos;extrait Kbis.</p>
+                        <input
+                          type="text"
+                          value={answers.denomination_sociale || answers.nom_societe || ""}
+                          onChange={(e) => setAnswer("denomination_sociale", e.target.value)}
+                          placeholder="Ex : Altura Conseil"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Sigle (facultatif)</label>
+                        <p className="text-xs text-gray-500 mb-2">Abréviation du nom de la société. Utilisé à titre interne ou pour simplifier la communication.</p>
+                        <input
+                          type="text"
+                          value={answers.sigle || ""}
+                          onChange={(e) => setAnswer("sigle", e.target.value)}
+                          placeholder="AC (sigle d'Altura Conseil)"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Nom commercial (facultatif)</label>
+                        <p className="text-xs text-gray-500 mb-2">Nom utilisé dans le cadre de l&apos;activité commerciale. Il peut être différent de la dénomination sociale.</p>
+                        <input
+                          type="text"
+                          value={answers.nom_commercial || ""}
+                          onChange={(e) => setAnswer("nom_commercial", e.target.value)}
+                          placeholder="Altura & Co (pour Altura Conseil)"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-bold text-[#1E3A8A] mb-1">Enseigne (facultatif)</label>
+                        <p className="text-xs text-gray-500 mb-2">Nom apposé en façade du local d&apos;exploitation, s&apos;il y a lieu. Elle identifie visuellement l&apos;établissement.</p>
+                        <input
+                          type="text"
+                          value={answers.enseigne || ""}
+                          onChange={(e) => setAnswer("enseigne", e.target.value)}
+                          placeholder="Altura (enseigne visible en boutique)"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 1: Objet principal (catégories visuelles) ── */}
+                {postPage === 1 && (
+                  <PostPaymentObjetPrincipal
+                    selected={answers.objet_principal || ""}
+                    sousCategorie={answers.sous_categorie || ""}
+                    onSelect={(val) => setAnswer("objet_principal", val)}
+                    onSousCategorie={(val) => setAnswer("sous_categorie", val)}
                   />
-                ))}
+                )}
 
-                <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#E5E7EB]">
+                {/* ── Page 2: Objet social (texte libre) ── */}
+                {postPage === 2 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Objet social</h2>
+                      <p className="text-gray-500 text-sm">Définissez l&apos;objet social de votre société</p>
+                    </div>
+
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-2">
+                        <p>L&apos;objet social décrit <strong>précisément l&apos;activité</strong> de votre société. Il sera repris dans les statuts.</p>
+                        <p>Ajoutez toujours <em>&quot;et toutes opérations se rattachant directement ou indirectement à cet objet&quot;</em> pour plus de souplesse.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <textarea
+                      value={answers.objet_social || ""}
+                      onChange={(e) => setAnswer("objet_social", e.target.value)}
+                      placeholder="Ex : Conseil en stratégie digitale, développement de sites web et applications mobiles, et toutes opérations se rattachant directement ou indirectement à cet objet..."
+                      rows={6}
+                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base resize-none"
+                    />
+                  </div>
+                )}
+
+                {/* ── Page 3: Régime fiscal ── */}
+                {postPage === 3 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[10].title}</h2>
+                      {QUESTIONS[10].description && <p className="text-gray-500 text-sm">{QUESTIONS[10].description}</p>}
+                    </div>
+                    {QUESTIONS[10].info && (
+                      <AccordionItem title={QUESTIONS[10].info.title}>
+                        <div className="text-sm text-gray-600">{QUESTIONS[10].info.content}</div>
+                      </AccordionItem>
+                    )}
+                    <div className="space-y-3">
+                      {QUESTIONS[10].choices?.map((c) => (
+                        <button
+                          key={c.value}
+                          onClick={() => setAnswer("regime_fiscal", c.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.regime_fiscal === c.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page 4: Adresse siège social ── */}
+                {postPage === 4 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[11].title}</h2>
+                    </div>
+                    {QUESTIONS[11].info && (
+                      <AccordionItem title={QUESTIONS[11].info.title}>
+                        <div className="text-sm text-gray-600">{QUESTIONS[11].info.content}</div>
+                      </AccordionItem>
+                    )}
+                    <input
+                      type="text"
+                      value={answers.adresse_siege || ""}
+                      onChange={(e) => setAnswer("adresse_siege", e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && answers.adresse_siege) { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); } }}
+                      placeholder={QUESTIONS[11].placeholder}
+                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
+                    />
+                  </div>
+                )}
+
+                {/* ── Page 5: Président rémunéré ── */}
+                {postPage === 5 && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">{QUESTIONS[12].title}</h2>
+                    </div>
+                    {QUESTIONS[12].info && (
+                      <AccordionItem title={QUESTIONS[12].info.title}>
+                        <div className="text-sm text-gray-600">{QUESTIONS[12].info.content}</div>
+                      </AccordionItem>
+                    )}
+                    <div className="space-y-3">
+                      {QUESTIONS[12].choices?.map((c) => (
+                        <button
+                          key={c.value}
+                          onClick={() => setAnswer("president_remunere", c.value)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-5 rounded-xl border-2 bg-white text-left transition-all group",
+                            answers.president_remunere === c.value
+                              ? "border-[#2563EB] bg-blue-50"
+                              : "border-gray-200 hover:border-[#2563EB] hover:bg-blue-50"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-[#2563EB]/20 flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Sparkles className="w-6 h-6 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-bold text-[#1E3A8A]">{c.label}</p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-gray-300 group-hover:text-[#2563EB] flex-shrink-0 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Navigation */}
+                <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => {
                       if (postPage > 0) {
@@ -1570,9 +1929,9 @@ export default function CreationSASUPage() {
                         setPhase("pricing");
                       }
                     }}
-                    className="flex items-center gap-2 text-sm font-medium text-[#9CA3AF] hover:text-[#6B7280] transition-colors"
+                    className="flex-1 py-3 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50 transition-colors"
                   >
-                    <ArrowLeft className="w-4 h-4" /> Précédent
+                    Retour
                   </button>
                   <button
                     onClick={() => {
@@ -1581,9 +1940,9 @@ export default function CreationSASUPage() {
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }
                     }}
-                    className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-[15px] font-semibold transition-all bg-[#2563EB] text-white hover:bg-[#1D4ED8] active:bg-[#1E40AF]"
+                    className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                   >
-                    Suivant <ArrowRight className="w-4 h-4" />
+                    Continuer <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
               </motion.div>

@@ -179,9 +179,12 @@ interface V {
   cacDenomination: string;
   cacAdresse: string;
   cacNumeroCNCC: string;
+  cacDureeMandat: string;
 
   // Dépenses
   hasDepenses: boolean;
+  depensesListe: string;
+  depensesTotal: string;
 
   // Signature
   dateSignature: string;
@@ -341,8 +344,11 @@ function prep(a: Answers): V {
     nommerCAC: a.nommer_cac === "oui",
     cacDenomination: a.cac_denomination || "[DÉNOMINATION CAC]",
     cacAdresse: a.cac_adresse || "[ADRESSE CAC]",
-    cacNumeroCNCC: a.cac_numero_cncc || "[N° CNCC]",
+    cacNumeroCNCC: a.cac_numero_cncc || "",
+    cacDureeMandat: a.cac_duree_mandat || "6",
     hasDepenses: a.reprise_depenses === "oui",
+    depensesListe: a.depenses_liste || "",
+    depensesTotal: a.depenses_total || "0",
     dateSignature: fmtDate(a.date_signature),
     lieuSignature: a.lieu_signature_type === "autre" ? (a.lieu_signature_autre || siege) : siege,
     signatureAssocie,
@@ -1842,7 +1848,8 @@ export function buildTitre6(v: V): string {
     s.push("");
     s.push(`**${v.cacDenomination}**, dont le siège est situé à ${v.cacAdresse}.`);
     s.push("");
-    s.push("Le Commissaire aux comptes est nommé pour une durée de six (6) exercices, soit jusqu'à l'issue de la décision de l'Associé unique statuant sur les comptes du sixième exercice clos après sa nomination.");
+    const cacDuree = v.cacDureeMandat === "3" ? "trois (3)" : "six (6)";
+    s.push(`Le Commissaire aux comptes est nommé pour une durée de ${cacDuree} exercices, soit jusqu'à l'issue de la décision de l'Associé unique statuant sur les comptes du ${v.cacDureeMandat === "3" ? "troisième" : "sixième"} exercice clos après sa nomination.`);
   } else {
     s.push("Lors de la constitution de la Société, l'Associé unique n'a pas jugé nécessaire de nommer un Commissaire aux comptes, la Société ne dépassant pas les seuils légaux rendant cette nomination obligatoire.");
   }
@@ -2027,5 +2034,48 @@ export function buildStatutsComplets(answers: Answers): string {
     buildTitre6(v),
     buildTitre7(v),
     buildSignatures(v),
+    buildAnnexe(v),
   ].filter(Boolean).join("\n\n");
+}
+
+function buildAnnexe(v: V): string {
+  if (!v.hasDepenses) return "";
+
+  const lines: string[] = [];
+  lines.push("---");
+  lines.push("");
+  lines.push("## ANNEXE 1 — ÉTAT DES ACTES ACCOMPLIS POUR LE COMPTE DE LA SOCIÉTÉ EN FORMATION");
+  lines.push("");
+  lines.push(`Dénomination sociale : **${v.denomination}**`);
+  lines.push("");
+  lines.push("Forme juridique : Société par Actions Simplifiée Unipersonnelle (SASU)");
+  lines.push("");
+  lines.push(`Capital social : **${fmtNum(v.capital)} euros**`);
+  lines.push("");
+  lines.push(`Siège social : **${v.siege}**`);
+  lines.push("");
+  lines.push("**Récapitulatif des engagements souscrits :**");
+  lines.push("");
+
+  if (v.depensesListe) {
+    // Le texte libre des dépenses — chaque ligne devient un item
+    const depLines = v.depensesListe.split("\n").filter((l: string) => l.trim());
+    for (const dep of depLines) {
+      const clean = dep.replace(/^[-•*]\s*/, "").trim();
+      if (clean) lines.push(`- ${clean}`);
+    }
+    lines.push("");
+  }
+
+  lines.push(`**Montant total des engagements : ${fmtNum(Number(v.depensesTotal) || 0)} euros**`);
+  lines.push("");
+  lines.push(`Fait à ${v.lieuSignature}, le ${v.dateSignature}.`);
+  lines.push("");
+  lines.push("**L'Associé unique**");
+  lines.push("");
+  lines.push(v.signatureAssocie);
+  lines.push("");
+  lines.push("En application de l'article L. 210-6 du Code de commerce, le présent état récapitule l'ensemble des actes et engagements accomplis pour le compte de la Société en formation. La signature des statuts emporte reprise automatique de ces actes par la Société dès son immatriculation au Registre du Commerce et des Sociétés.");
+
+  return lines.join("\n");
 }

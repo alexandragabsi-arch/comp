@@ -208,13 +208,20 @@ Agissant en qualité de représentant permanent de la société ${answers.assoc_
     blocSignature = `La société dénommée ${answers.assoc_pm_denomination || "[DÉNOMINATION]"}`;
   }
 
+  // Filiation: adapt to gender
+  const filsFille = answers.assoc_genre === "F" ? "Fille" : "Fils";
+
+  // Ville de signature with fallback chain
+  const villeSignature = answers.ville_signature || answers.lieu_signature_autre || answers.adresse_siege || "[VILLE]";
+
   let text = TEMPLATE_NON_CONDAMNATION;
   text = text.replace("{BLOC_IDENTITE_DECLARANT}", blocIdentite);
+  text = text.replace("{FilsFille}", filsFille);
   text = text.replace("{PrenomPere}", answers.prenom_pere || "[PRÉNOM PÈRE]");
   text = text.replace("{NomPere}", answers.nom_pere || "[NOM PÈRE]");
   text = text.replace("{PrenomMere}", answers.prenom_mere || "[PRÉNOM MÈRE]");
   text = text.replace("{NomMere}", answers.nom_mere || "[NOM MÈRE]");
-  text = text.replace("{VilleSignature}", answers.ville_signature || "[VILLE]");
+  text = text.replace("{VilleSignature}", villeSignature);
   text = text.replace("{CurrentDateTime}", formatDate(answers.date_signature));
   text = text.replace("{BLOC_SIGNATURE_DECLARANT}", blocSignature);
 

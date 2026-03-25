@@ -20,6 +20,12 @@ const PRODUCTS = {
     description:
       "Statuts rédigés sur mesure par un avocat, accompagnement complet jusqu'à l'immatriculation",
   },
+  relecture_only: {
+    name: "LegalCorners — Relecture par un avocat",
+    amount: 23880, // 199€ HT × 1.20 = 238.80€ TTC
+    description:
+      "Relecture des statuts + remarques sous 24h + consultation 30 min",
+  },
 };
 
 // Frais obligatoires (toujours inclus dans le panier)
@@ -111,8 +117,10 @@ export async function POST(request: NextRequest) {
       },
     ];
 
-    // Ajouter les frais obligatoires (greffe, JAL, DBE)
-    for (const frais of FRAIS_OBLIGATOIRES) {
+    // Ajouter les frais obligatoires (greffe, JAL, DBE) — skip for relecture_only
+    if (formule === "relecture_only") {
+      // No frais obligatoires, no options — just the relecture line item
+    } else for (const frais of FRAIS_OBLIGATOIRES) {
       lineItems.push({
         price_data: {
           currency: "eur",
@@ -127,8 +135,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Ajouter les options sélectionnées par le client
-    const selectedOptions: string[] = Array.isArray(options) ? options : [];
+    // Ajouter les options sélectionnées par le client (skip for relecture_only)
+    const selectedOptions: string[] = formule !== "relecture_only" && Array.isArray(options) ? options : [];
     for (const optId of selectedOptions) {
       const opt = OPTIONS[optId];
       if (opt) {

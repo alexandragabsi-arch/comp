@@ -1227,6 +1227,10 @@ export default function CreationSASUPage() {
     { id: "activite_saisonniere" }, // saisonnière / ambulante
     { id: "associe_unique" },       // type d'associé + infos + situation matrimoniale
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
+    { id: "regles_statutaires" },  // règles statutaires par défaut ou personnalisées
+    { id: "regles_cac" },          // commissaire aux comptes (si personnaliser)
+    { id: "regles_duree" },        // durée de la société (si personnaliser)
+    { id: "regles_transmission" }, // règles transmission/cession (si personnaliser)
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
@@ -1239,6 +1243,14 @@ export default function CreationSASUPage() {
     { id: "recapitulatif" },         // récapitulatif de toutes les informations
     { id: "justificatifs" },         // pièces justificatives à fournir
   ];
+
+  // Skip conditional pages based on answers
+  function shouldSkipPage(pageId: string | undefined): boolean {
+    if (!pageId) return false;
+    const customPages = ["regles_cac", "regles_duree", "regles_transmission"];
+    if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
+    return false;
+  }
 
   // Determine sidebar step from phase
   const sidebarStep =
@@ -2806,6 +2818,259 @@ export default function CreationSASUPage() {
                         <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
                           {((Number(answers.capital_social) || 1) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Règles statutaires par défaut ── */}
+                {POST_PAGES[postPage]?.id === "regles_statutaires" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Règles statutaires</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-4 text-justify">
+                        <p className="font-bold text-[#1E3A8A] text-center text-base">Règles statutaires proposées par défaut – SASU</p>
+                        <p>Afin de simplifier la rédaction de vos statuts, nous vous proposons ci-dessous les règles les plus couramment adoptées dans les SASU.</p>
+
+                        <p className="font-bold text-[#1E3A8A] text-center">Résumé des règles par défaut proposées :</p>
+
+                        <p><strong className="text-[#1E3A8A]">Actions :</strong> Les actions sont librement cessibles et négociables.</p>
+                        <p><strong className="text-[#1E3A8A]">Commissaire aux comptes :</strong> Aucun commissaire aux comptes n&apos;est désigné dans les statuts.</p>
+                        <p><strong className="text-[#1E3A8A]">Durée de la société :</strong> La société est créée pour une durée de 99 ans, durée maximale autorisée par la loi.</p>
+                        <p><strong className="text-[#1E3A8A]">Déclaration de l&apos;associé unique :</strong> L&apos;associé unique déclare n&apos;avoir accompli aucun acte pour le compte de la société avant sa création.</p>
+
+                        <p className="font-bold text-[#1E3A8A]">Décisions de l&apos;associé unique et assemblées :</p>
+                        <p className="italic">Tant que la société ne comporte qu&apos;un seul associé, toutes les décisions sont prises par l&apos;associé unique et consignées par écrit dans un registre ou un document signé et daté (papier ou électronique).</p>
+                        <p className="italic">Si la société accueille ultérieurement de nouveaux associés, les assemblées seront convoquées par le Président, par tout moyen (courrier, e-mail, etc.).</p>
+                        <p className="italic">Chaque associé dispose d&apos;un nombre de voix proportionnel au nombre d&apos;actions qu&apos;il détient.</p>
+                        <p className="italic">En cas d&apos;égalité des voix, le Président dispose d&apos;une voix prépondérante.</p>
+                        <p className="italic">Les décisions sont prises à la majorité simple (plus de 50 % des voix) des associés présents ou représentés.</p>
+
+                        <p><strong className="text-red-600">Important :</strong> Ces clauses correspondent aux usages classiques des SASU. Toutefois, si vous avez des besoins spécifiques (contrôle des cessions d&apos;actions, limitation de pouvoirs, etc.), vous pouvez les adapter librement à l&apos;aide des options de personnalisation ci-dessous.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <button
+                      className="w-full sm:w-auto px-6 py-3 rounded-xl border-2 border-[#2563EB] bg-[#2563EB] text-white font-semibold text-base hover:bg-[#1d4ed8] transition-all"
+                    >
+                      Explication simple des règles par défaut
+                    </button>
+
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Que préférez-vous ?</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("regles_statutaires", "defaut")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.regles_statutaires === "defaut" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je choisis ces règles par défaut
+                        </button>
+                        <button
+                          onClick={() => setAnswer("regles_statutaires", "personnaliser")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.regles_statutaires === "personnaliser" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je souhaite modifier certaines règles
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Commissaire aux Comptes (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_cac" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Commissaire aux comptes</p>
+                    </div>
+
+                    <div className="rounded-xl border border-[#D1D5DB] bg-[#F8FAFF] p-5 space-y-3 text-sm text-gray-600">
+                      <p>Le commissaire aux comptes est un contrôleur indépendant qui vérifie la régularité des comptes de la société.</p>
+                      <p>À la création, sa nomination n&apos;est pas obligatoire, sauf cas particuliers. Elle le devient seulement si la société dépasse deux des trois seuils suivants :</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li><strong>Chiffre d&apos;affaires &gt; 8 M€</strong></li>
+                        <li><strong>Total du bilan &gt; 4 M€</strong></li>
+                        <li><strong>Effectif moyen &gt; 50 salariés</strong></li>
+                      </ul>
+                      <p>Si votre projet prévoit une forte croissance ou un groupe de sociétés, vous pouvez choisir d&apos;en nommer un dès la création pour anticiper ces obligations.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un commissaire aux Comptes ?</p>
+
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => { setAnswer("nommer_cac", "oui"); setAnswer("services_comptables", ""); }}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.nommer_cac === "oui" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Oui</span>
+                          <span className="block text-sm text-[#2563EB]">Vous nommez dès maintenant un commissaire aux comptes.</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("nommer_cac", "non")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.nommer_cac === "non" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Non</span>
+                          <span className="block text-sm text-[#2563EB]">Vous ne prévoyez pas de CAC (pas obligatoire tant que vous êtes en dessous des seuils).</span>
+                        </button>
+                        <button
+                          onClick={() => { setAnswer("nommer_cac", "plus_tard"); setAnswer("services_comptables", ""); }}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.nommer_cac === "plus_tard" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Je déciderai plus tard</span>
+                          <span className="block text-sm text-[#2563EB]">Vous gardez la possibilité de nommer un CAC ultérieurement, sans l&apos;inscrire dans les statuts dès la création.</span>
+                        </button>
+                      </div>
+
+                      {/* Sous-question si Non */}
+                      {answers.nommer_cac === "non" && (
+                        <div className="space-y-3 mt-4">
+                          <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous néanmoins bénéficier de services comptables ?</p>
+                          <button
+                            onClick={() => setAnswer("services_comptables", "logiciel")}
+                            className={cn(
+                              "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.services_comptables === "logiciel" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui, je suis intéressé(e) par un logiciel de comptabilité en ligne.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("services_comptables", "expert_comptable")}
+                            className={cn(
+                              "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.services_comptables === "expert_comptable" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui, je souhaite être mis(e) en relation avec un expert-comptable dans mon secteur.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("services_comptables", "non")}
+                            className={cn(
+                              "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.services_comptables === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non merci
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Durée de la société (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_duree" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Durée de la société</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-base font-bold text-[#1E3A8A]">Durée de la société</p>
+                        <p className="text-sm text-gray-500 mt-1 flex items-start gap-1"><span>⏳</span> La durée légale maximale d&apos;une société est de 99 ans. Elle peut être plus courte si vous le souhaitez.</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setAnswer("duree_societe", "99"); setAnswer("duree_societe_annees", "99"); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.duree_societe === "99" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Durée standard de 99 ans
+                        </button>
+                        <button
+                          onClick={() => setAnswer("duree_societe", "personnalisee")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.duree_societe === "personnalisee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je souhaite une durée déterminée
+                        </button>
+                      </div>
+
+                      {answers.duree_societe === "personnalisee" && (
+                        <div className="mt-3">
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre d&apos;années souhaitées</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="99"
+                            value={answers.duree_societe_annees || ""}
+                            onChange={(e) => setAnswer("duree_societe_annees", e.target.value)}
+                            placeholder="Ex : 50"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Règles de transmission/cession (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_transmission" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Transmission et cession des actions</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p>Par défaut dans une SASU, les actions sont <strong>librement cessibles</strong> : l&apos;associé unique peut vendre ou transmettre ses actions sans restriction.</p>
+                        <p>Cependant, il est possible d&apos;ajouter une <strong>clause d&apos;agrément</strong> dans les statuts pour encadrer les cessions futures, par exemple en cas de pluralité d&apos;associés.</p>
+                        <p>Une clause d&apos;agrément impose l&apos;accord préalable de l&apos;associé unique (ou des associés en cas de pluralité) avant toute cession d&apos;actions à un tiers.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Comment souhaitez-vous encadrer la cession des actions ?</p>
+
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setAnswer("cession_actions", "libre")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.cession_actions === "libre" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Cession libre (par défaut)</span>
+                          <span className="block text-sm text-gray-500 mt-1">Les actions peuvent être cédées librement, sans restriction ni accord préalable.</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("cession_actions", "agrement")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.cession_actions === "agrement" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Clause d&apos;agrément</span>
+                          <span className="block text-sm text-gray-500 mt-1">Toute cession à un tiers nécessite l&apos;accord préalable de l&apos;associé unique (ou de l&apos;assemblée en cas de pluralité d&apos;associés).</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -4396,71 +4661,152 @@ export default function CreationSASUPage() {
                       <p className="text-gray-500 text-sm">Date de clôture de l&apos;exercice comptable</p>
                     </div>
 
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-4 text-justify">
+                        <p className="font-bold text-[#1E3A8A]">Date de clôture de l&apos;exercice comptable, que choisir ?</p>
+
+                        <div>
+                          <p className="font-bold text-[#1E3A8A]">Clôture au 31 décembre (par défaut)</p>
+                          <p>L&apos;exercice se termine avec l&apos;année civile. Simple, courant et pratique pour la gestion.</p>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-[#1E3A8A]">Clôture spéciale la 1<sup>re</sup> année</p>
+                          <p>Le premier exercice comptable peut durer au maximum 24 mois à compter de la date d&apos;immatriculation.</p>
+                          <p><strong className="text-[#1E3A8A]">Exemple :</strong> Si votre société est créée le 15 avril 2025, vous pourrez fixer la fin de votre premier exercice jusqu&apos;au 15 avril 2027 au plus tard. Mais, vous pouvez aussi choisir une date fixe comme le 31 décembre 2026, pour être aligné sur l&apos;année civile.</p>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-[#1E3A8A]">Autre date permanente</p>
+                          <p>Vous pouvez fixer une autre date chaque année (ex. 30 septembre). Ce choix peut mieux correspondre à votre cycle d&apos;activité, mais demande un suivi régulier.</p>
+                        </div>
+                      </div>
+                    </AccordionItem>
+
                     <div className="space-y-4">
                       <p className="text-base font-bold text-[#1E3A8A]">Date de clôture de l&apos;exercice comptable</p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
-                          onClick={() => setAnswer("cloture_exercice", "31_dec")}
+                          onClick={() => { setAnswer("cloture_exercice", "31_dec"); setAnswer("cloture_1ere_annee_date", ""); setAnswer("cloture_suivantes_31dec", ""); setAnswer("cloture_date_permanente", ""); }}
                           className={cn(
                             "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
                             answers.cloture_exercice === "31_dec" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
                           )}
                         >
-                          31 décembre
-                          <span className="block text-sm font-normal text-gray-500 mt-1">Par défaut, le plus courant</span>
+                          Clôture au 31 décembre chaque année (recommandé)
                         </button>
                         <button
-                          onClick={() => setAnswer("cloture_exercice", "personnalisee")}
+                          onClick={() => { setAnswer("cloture_exercice", "differente_1ere"); setAnswer("cloture_date_permanente", ""); }}
                           className={cn(
                             "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
-                            answers.cloture_exercice === "personnalisee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            answers.cloture_exercice === "differente_1ere" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
                           )}
                         >
-                          Date personnalisée
-                          <span className="block text-sm font-normal text-gray-500 mt-1">Ex : 30/06</span>
+                          Je souhaite une clôture différente la 1re année
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setAnswer("cloture_exercice", "autre_permanente"); setAnswer("cloture_1ere_annee_date", ""); setAnswer("cloture_suivantes_31dec", ""); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.cloture_exercice === "autre_permanente" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je souhaite une autre date permanente
                         </button>
                       </div>
 
-                      {answers.cloture_exercice === "personnalisee" && (
-                        <div className="mt-3 ml-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Jour</label>
-                              <input type="text" value={answers.cloture_exercice_jour || ""} onChange={(e) => setAnswer("cloture_exercice_jour", e.target.value)} placeholder="Ex : 30" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
-                            </div>
-                            <div>
-                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Mois</label>
-                              <input type="text" value={answers.cloture_exercice_mois || ""} onChange={(e) => setAnswer("cloture_exercice_mois", e.target.value)} placeholder="Ex : 06" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                      {/* Sous-options: clôture différente la 1re année */}
+                      {answers.cloture_exercice === "differente_1ere" && (
+                        <div className="space-y-5 mt-2">
+                          <div>
+                            <p className="text-base font-bold text-[#1E3A8A] mb-1">Quelle date souhaitez-vous fixer pour la clôture du premier exercice ?</p>
+                            <p className="text-sm text-gray-500 mb-2">Le premier exercice comptable peut durer au maximum 24 mois à compter de la date d&apos;immatriculation.</p>
+                            <input
+                              type="date"
+                              value={answers.cloture_1ere_annee_date || ""}
+                              onChange={(e) => setAnswer("cloture_1ere_annee_date", e.target.value)}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous que les exercices suivants se clôturent au 31 décembre ?</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("cloture_suivantes_31dec", "oui")}
+                                className={cn(
+                                  "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                                  answers.cloture_suivantes_31dec === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui (recommandé)
+                              </button>
+                              <button
+                                onClick={() => setAnswer("cloture_suivantes_31dec", "non")}
+                                className={cn(
+                                  "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                                  answers.cloture_suivantes_31dec === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non, je fixerai une autre date permanente
+                              </button>
                             </div>
                           </div>
+
+                          {/* Si non, demander la date permanente */}
+                          {answers.cloture_suivantes_31dec === "non" && (
+                            <div>
+                              <p className="text-base font-bold text-[#1E3A8A] mb-1">Quelle est la date de clôture souhaitée chaque année ?</p>
+                              <select
+                                value={answers.cloture_date_permanente || ""}
+                                onChange={(e) => setAnswer("cloture_date_permanente", e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                              >
+                                <option value="">Sélectionnez une date</option>
+                                <option value="31_01">31 janvier</option>
+                                <option value="28_02">28/29 février</option>
+                                <option value="31_03">31 mars</option>
+                                <option value="30_04">30 avril</option>
+                                <option value="31_05">31 mai</option>
+                                <option value="30_06">30 juin</option>
+                                <option value="31_07">31 juillet</option>
+                                <option value="31_08">31 août</option>
+                                <option value="30_09">30 septembre</option>
+                                <option value="31_10">31 octobre</option>
+                                <option value="30_11">30 novembre</option>
+                              </select>
+                            </div>
+                          )}
                         </div>
                       )}
 
-                      <div className="border-t border-gray-200 pt-5 space-y-3">
-                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous prolonger le premier exercice jusqu&apos;à la clôture suivante ?</p>
-                        <p className="text-sm text-gray-500">Le premier exercice peut être prolongé (jusqu&apos;à 24 mois maximum) pour se terminer à la prochaine date de clôture choisie.</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <button
-                            onClick={() => setAnswer("cloture_prolongee", "oui")}
-                            className={cn(
-                              "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
-                              answers.cloture_prolongee === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
-                            )}
+                      {/* Sous-options: autre date permanente */}
+                      {answers.cloture_exercice === "autre_permanente" && (
+                        <div className="mt-2">
+                          <p className="text-base font-bold text-[#1E3A8A] mb-1">Quelle est la date de clôture souhaitée chaque année ?</p>
+                          <select
+                            value={answers.cloture_date_permanente || ""}
+                            onChange={(e) => setAnswer("cloture_date_permanente", e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           >
-                            Oui
-                          </button>
-                          <button
-                            onClick={() => setAnswer("cloture_prolongee", "non")}
-                            className={cn(
-                              "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
-                              answers.cloture_prolongee === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
-                            )}
-                          >
-                            Non
-                          </button>
+                            <option value="">Sélectionnez une date</option>
+                            <option value="31_01">31 janvier</option>
+                            <option value="28_02">28/29 février</option>
+                            <option value="31_03">31 mars</option>
+                            <option value="30_04">30 avril</option>
+                            <option value="31_05">31 mai</option>
+                            <option value="30_06">30 juin</option>
+                            <option value="31_07">31 juillet</option>
+                            <option value="31_08">31 août</option>
+                            <option value="30_09">30 septembre</option>
+                            <option value="31_10">31 octobre</option>
+                            <option value="30_11">30 novembre</option>
+                          </select>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -5309,7 +5655,12 @@ export default function CreationSASUPage() {
                   <button
                     onClick={() => {
                       if (postPage > 0) {
-                        setPostPage((p) => p - 1);
+                        // Skip conditional pages backwards
+                        let prev = postPage - 1;
+                        while (prev > 0 && shouldSkipPage(POST_PAGES[prev]?.id)) {
+                          prev--;
+                        }
+                        setPostPage(prev);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       } else {
                         setPhase("pricing");
@@ -5322,7 +5673,12 @@ export default function CreationSASUPage() {
                   <button
                     onClick={() => {
                       if (postPage < POST_PAGES.length - 1) {
-                        setPostPage((p) => p + 1);
+                        // Skip conditional pages forwards
+                        let next = postPage + 1;
+                        while (next < POST_PAGES.length - 1 && shouldSkipPage(POST_PAGES[next]?.id)) {
+                          next++;
+                        }
+                        setPostPage(next);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }
                     }}

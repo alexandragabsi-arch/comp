@@ -1318,6 +1318,8 @@ export default function CreationSASUPage() {
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
     // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
     if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
+    // Skip reprise_depenses if default rules (no reprise in default formula)
+    if (pageId === "reprise_depenses" && answers.regles_statutaires !== "personnaliser") return true;
     return false;
   }
 

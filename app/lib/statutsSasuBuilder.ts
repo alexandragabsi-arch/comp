@@ -15,8 +15,10 @@ function numberToWords(n: number): string {
   if (n < 100) {
     const t = Math.floor(n / 10);
     const u = n % 10;
-    if (t === 7 || t === 9) return tens[t] + "-" + units[10 + u];
+    if (t === 7) return "soixante-" + numberToWords(10 + u);
     if (t === 8 && u === 0) return "quatre-vingts";
+    if (t === 8) return "quatre-vingt-" + units[u];
+    if (t === 9) return "quatre-vingt-" + numberToWords(10 + u);
     return tens[t] + (u ? "-" + units[u] : "");
   }
   if (n < 1000) {

@@ -2381,16 +2381,17 @@ export default function CreationSASUPage() {
                       onChange={(e) => setAnswer("objet_social", e.target.value)}
                       placeholder="Ex : La prestation de services en matière de conseil en stratégie digitale, le développement de sites web et d'applications mobiles..."
                       rows={6}
-                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base resize-none"
+                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base resize-none text-justify"
                     />
+                    <p className="text-xs text-gray-500 italic">Vous pouvez modifier le texte ci-dessus librement avant de valider.</p>
 
                     {/* Phrase balai — aperçu (ajoutée automatiquement dans les statuts) */}
                     {answers.objet_social && (
                       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Aperçu dans les statuts :</p>
-                        <p className="text-sm text-gray-700 leading-relaxed">La Société a pour objet :</p>
-                        <p className="text-sm text-gray-800 leading-relaxed">{answers.objet_social}</p>
-                        <p className="text-sm text-gray-600 italic leading-relaxed">Et, plus généralement, toutes opérations économiques, juridiques, industrielles, commerciales, civiles, financières, mobilières ou immobilières se rapportant directement ou indirectement à l&apos;objet social ainsi défini, ou à tous objets similaires, connexes ou complémentaires, susceptibles d&apos;en favoriser l&apos;extension ou le développement, tant en France qu&apos;à l&apos;étranger, pour son compte ou pour le compte de tiers, seule ou en participation.</p>
+                        <p className="text-sm text-gray-700 leading-relaxed text-justify">La Société a pour objet :</p>
+                        <p className="text-sm text-gray-800 leading-relaxed text-justify">{answers.objet_social}</p>
+                        <p className="text-sm text-gray-600 italic leading-relaxed text-justify">Et, plus généralement, toutes opérations économiques, juridiques, industrielles, commerciales, civiles, financières, mobilières ou immobilières se rapportant directement ou indirectement à l&apos;objet social ainsi défini, ou à tous objets similaires, connexes ou complémentaires, susceptibles d&apos;en favoriser l&apos;extension ou le développement, tant en France qu&apos;à l&apos;étranger, pour son compte ou pour le compte de tiers, seule ou en participation.</p>
                       </div>
                     )}
                   </div>

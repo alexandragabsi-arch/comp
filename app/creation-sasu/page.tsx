@@ -1318,6 +1318,8 @@ export default function CreationSASUPage() {
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
     // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
     if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
+    // Skip depot_capital if no numéraire (only apport en nature)
+    if (pageId === "depot_capital" && answers.formule_capital === "personnalisee" && Number(answers.apport_numeraire || 0) === 0 && Number(answers.capital_social || 0) > 0) return true;
     // Skip reprise_depenses if default rules (no reprise in default formula)
     if (pageId === "reprise_depenses" && answers.regles_statutaires !== "personnaliser") return true;
     return false;
@@ -4609,6 +4611,16 @@ export default function CreationSASUPage() {
                               <p className="text-base text-gray-700">
                                 <Lightbulb className="inline w-4 h-4 mr-1 text-[#2563EB]" />
                                 <strong>Note :</strong> Une personne morale ne peut pas effectuer d&apos;apport en industrie. Seuls les apports en numéraire et en nature sont possibles.
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Alerte PP: industrie seul impossible */}
+                          {answers.type_associe !== "morale" && answers.apport_industrie === "oui" && Number(answers.apport_numeraire || 0) === 0 && apportNature === 0 && (
+                            <div className="bg-red-50 border border-red-300 rounded-xl p-4">
+                              <p className="text-base text-red-800">
+                                <AlertTriangle className="inline w-4 h-4 mr-1 text-red-600" />
+                                <strong>Attention :</strong> L&apos;apport en industrie ne concourt pas à la formation du capital social. Le capital minimum d&apos;une SASU est de <strong>1 €</strong>. Vous devez obligatoirement prévoir un apport en <strong>numéraire</strong> et/ou en <strong>nature</strong> pour constituer le capital.
                               </p>
                             </div>
                           )}

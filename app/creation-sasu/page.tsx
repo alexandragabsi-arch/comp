@@ -1203,7 +1203,13 @@ type Phase = "intro" | "questions" | "brand_protection" | "micro_search" | "pric
 
 export default function CreationSASUPage() {
   const [phase, setPhase] = useState<Phase>("intro");
-  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("payment") === "success";
+    }
+    return false;
+  });
   const [currentQ, setCurrentQ] = useState(0); // index into activeQuestions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [answers, setAnswers] = useState<Record<string, any>>({});

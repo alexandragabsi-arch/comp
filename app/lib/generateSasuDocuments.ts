@@ -131,12 +131,12 @@ export function buildDispenseCAA(answers: Answers): string {
 **Nationalité :** ${answers.assoc_nationalite || "Française"}
 **Adresse personnelle :** ${answers.assoc_adresse || "[ADRESSE]"}`;
   } else {
-    blocIdentite = `**Dénomination sociale :** ${answers.assoc_pm_denomination || "[DÉNOMINATION]"}
-**Forme juridique :** ${answers.assoc_pm_forme || "[FORME]"}
-**Capital social :** ${answers.assoc_pm_capital || "[CAPITAL]"} €
-**Siège social :** ${answers.assoc_pm_siege || "[ADRESSE]"}
-**RCS / Registre :** ${answers.assoc_pm_siren || "[SIREN]"}
-**Ville d'immatriculation :** ${answers.assoc_pm_ville_rcs || "[VILLE RCS]"}
+    blocIdentite = `**Dénomination sociale :** ${answers.assoc_pm_denomination || answers.associe_societe_nom || "[DÉNOMINATION]"}
+**Forme juridique :** ${answers.assoc_pm_forme || answers.associe_societe_forme || "[FORME]"}
+**Capital social :** ${answers.assoc_pm_capital || answers.associe_societe_capital || "[CAPITAL]"} €
+**Siège social :** ${answers.assoc_pm_siege || answers.associe_societe_adresse || "[ADRESSE]"}
+**RCS / Registre :** ${answers.assoc_pm_siren || answers.associe_societe_siren || "[SIREN]"}
+**Ville d'immatriculation :** ${answers.assoc_pm_ville_rcs || answers.associe_societe_ville_rcs || "[VILLE RCS]"}
 
 Représentée par :
 **Nom et prénom :** ${answers.assoc_pm_representant_civilite || ""} ${answers.assoc_pm_representant_prenom || "[PRÉNOM]"} ${answers.assoc_pm_representant_nom || "[NOM]"}

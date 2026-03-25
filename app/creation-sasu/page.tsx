@@ -1509,7 +1509,7 @@ export default function CreationSASUPage() {
       {/* ── Main content ── */}
       <main className={cn(
         "flex-1 flex justify-center min-h-screen",
-        phase === "questions" || phase === "intro" || phase === "brand_protection" || phase === "micro_search" || phase === "avocat_confirmation"
+        phase === "questions" || phase === "intro" || phase === "brand_protection" || phase === "micro_search" || phase === "avocat_confirmation" || phase === "payment_success" || phase === "payment_progress"
           ? "md:ml-72 p-4 sm:p-6 md:p-10 items-center"
           : phase === "pricing" || phase === "post_payment"
             ? "md:ml-72 p-4 sm:p-6 md:p-10 items-start pt-6 md:pt-10"
@@ -1558,12 +1558,32 @@ export default function CreationSASUPage() {
                     <p className="text-gray-500 mt-2">Votre paiement a été traité avec succès. Vous allez recevoir un email de confirmation sous peu.</p>
                   </div>
 
-                  {/* Total */}
-                  <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
-                    <span className="font-medium text-gray-700">Total :</span>
-                    <span className="text-lg font-bold text-[#1E3A8A]">
-                      {answers.stripe_paid_amount ? `${(Number(answers.stripe_paid_amount) / 100).toFixed(2)} €` : "—"}
-                    </span>
+                  {/* Récapitulatif tarifaire */}
+                  <div className="bg-gray-50 rounded-xl p-5 space-y-3 text-sm">
+                    <p className="font-bold text-[#1E3A8A]">Récapitulatif tarifaire :</p>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Formule {answers.formule === "avocat" ? "Avocat" : answers.formule === "premium" ? "Premium" : "Essentielle"}</span>
+                      <span className="font-semibold text-gray-800">{answers.formule === "avocat" ? "850,00" : answers.formule === "premium" ? "199,00" : "139,00"} € HT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Frais de greffe (RCS)</span>
+                      <span className="font-semibold text-gray-800">37,45 €</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Annonce légale (JAL)</span>
+                      <span className="font-semibold text-gray-800">138,00 € HT</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Bénéficiaires effectifs (DBE)</span>
+                      <span className="font-semibold text-gray-800">21,41 €</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-2 flex justify-between text-base">
+                      <span className="font-bold text-[#1E3A8A]">Total TTC</span>
+                      <span className="font-bold text-[#2563EB]">
+                        {answers.stripe_paid_amount ? `${(Number(answers.stripe_paid_amount) / 100).toFixed(2)} €` : "—"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">+ TVA applicable et options éventuelles</p>
                   </div>
 
                   {/* Buttons */}
@@ -1610,13 +1630,13 @@ export default function CreationSASUPage() {
                 {/* Steps */}
                 <div className="flex items-start justify-between max-w-2xl mx-auto">
                   {[
-                    { id: 1, label: "Informations personnelles", desc: "Création de votre compte et vérification de vos données" },
-                    { id: 2, label: "Informations sur l'entreprise", desc: "Définition des éléments essentiels de votre société" },
-                    { id: 3, label: "Paiement", desc: "Validation et règlement de votre commande" },
-                    { id: 4, label: "Dossier juridique", desc: "Constitution du dossier avec l'aide de nos experts" },
-                    { id: 5, label: "Validation", desc: "Vérification finale et envoi de votre dossier" },
-                    { id: 6, label: "Justificatifs", desc: "Téléversement et vérification de vos documents requis" },
-                    { id: 7, label: "Signature", desc: "Signature électronique de vos documents" },
+                    { id: 1, label: "Informations utilisateur", desc: "Création de votre compte" },
+                    { id: 2, label: "Société (infos de base)", desc: "Éléments essentiels de votre société" },
+                    { id: 3, label: "Paiement", desc: "Validation et règlement" },
+                    { id: 4, label: "Dossier juridique", desc: "Constitution du dossier" },
+                    { id: 5, label: "Récapitulatif & Validation", desc: "Vérification finale" },
+                    { id: 6, label: "Pièces justificatives", desc: "Téléversement de vos documents" },
+                    { id: 7, label: "Signature", desc: "Signature électronique" },
                   ].map((s, i, arr) => (
                     <div key={s.id} className="flex flex-col items-center text-center" style={{ width: `${100 / arr.length}%` }}>
                       <div className="relative">

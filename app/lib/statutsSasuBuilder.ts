@@ -1970,7 +1970,6 @@ export function buildTitre7(v: V): string {
   s.push("");
   s.push("L'Associé unique donne expressément mandat à la société LegalCorners, Société par Actions Simplifiée, immatriculée au Registre du Commerce et des Sociétés de Paris sous le numéro 988 485 405, dont le siège social est situé 78 avenue des Champs-Élysées, Bureau 326, 75008 Paris, à l'effet d'accomplir, au nom et pour le compte de la Société en formation, toutes les formalités nécessaires à la constitution de la Société, et notamment :");
   s.push("");
-  s.push("- le dépôt des fonds constituant les apports en numéraire auprès d'un établissement habilité ;");
   s.push("- la publication d'un avis de constitution dans un journal d'annonces légales ;");
   s.push("- le dépôt du dossier d'immatriculation auprès du guichet unique compétent ;");
   s.push("- l'accomplissement de toute démarche administrative nécessaire à l'immatriculation de la Société au Registre du Commerce et des Sociétés.");

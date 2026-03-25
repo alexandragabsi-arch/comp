@@ -2332,11 +2332,15 @@ export default function CreationSASUPage() {
                                   type_structure: answers.type_structure || "classique",
                                 }),
                               });
-                              if (res.ok) {
-                                const data = await res.json();
+                              const data = await res.json();
+                              if (res.ok && data.objet_social) {
                                 setAnswer("objet_social", data.objet_social);
+                              } else {
+                                setAnswer("objet_social_error", data.error || "Erreur lors de la rédaction. Veuillez réessayer.");
                               }
-                            } catch { /* ignore */ }
+                            } catch {
+                              setAnswer("objet_social_error", "Erreur de connexion. Veuillez réessayer.");
+                            }
                             setAnswer("objet_social_loading", "");
                           }}
                           disabled={(!answers.activite_principale_desc && !answers.sous_categorie) || answers.objet_social_loading === "true"}
@@ -2345,9 +2349,12 @@ export default function CreationSASUPage() {
                           {answers.objet_social_loading === "true" ? (
                             <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Rédaction en cours…</>
                           ) : (
-                            <><Sparkles className="w-4 h-4" /> Rédiger mon objet social (IA avocat)</>
+                            <><Sparkles className="w-4 h-4" /> Rédiger mon objet social</>
                           )}
                         </button>
+                        {answers.objet_social_error && (
+                          <p className="text-sm text-red-500">{answers.objet_social_error}</p>
+                        )}
                       </div>
                     </div>
 

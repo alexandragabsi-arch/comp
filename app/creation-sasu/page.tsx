@@ -1224,21 +1224,23 @@ export default function CreationSASUPage() {
         .then((r) => r.json())
         .then((data) => {
           if (data.paid) {
-            // Restore state from sessionStorage
+            // Restore state from sessionStorage + force URL formule
+            let restored: Record<string, unknown> = {};
             if (stateKey) {
               try {
                 const saved = sessionStorage.getItem(stateKey);
                 if (saved) {
-                  const s = JSON.parse(saved);
-                  // Restore all answers
-                  Object.entries(s).forEach(([k, v]) => setAnswer(k, v));
+                  restored = JSON.parse(saved);
                   sessionStorage.removeItem(stateKey);
                 }
               } catch { /* ignore */ }
             }
-            if (formule) setAnswer("formule", formule);
-            setAnswer("stripe_session_id", sessionId);
-            setAnswer("stripe_paid_amount", String(data.amount_total || ""));
+            // URL formule ALWAYS wins over sessionStorage
+            if (formule) restored.formule = formule;
+            restored.stripe_session_id = sessionId;
+            restored.stripe_paid_amount = String(data.amount_total || "");
+            // Apply all at once to avoid race conditions
+            setAnswers(prev => ({ ...prev, ...restored }));
             setVerifyingPayment(false);
             setPhase("payment_success");
             // Save dossier to Supabase

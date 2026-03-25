@@ -1687,7 +1687,15 @@ export default function CreationSASUPage() {
                 {/* Continue */}
                 <div className="flex justify-center">
                   <button
-                    onClick={() => { setPhase("post_payment"); setPostPage(0); }}
+                    onClick={() => {
+                      setPhase("post_payment");
+                      // Find first non-skipped page
+                      let startPage = 0;
+                      while (startPage < POST_PAGES.length && shouldSkipPage(POST_PAGES[startPage]?.id)) {
+                        startPage++;
+                      }
+                      setPostPage(startPage);
+                    }}
                     className="px-8 py-3.5 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity flex items-center gap-2"
                   >
                     Continuer <ArrowRight className="w-4 h-4" />

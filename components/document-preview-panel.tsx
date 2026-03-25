@@ -655,8 +655,13 @@ export function DocumentPreviewPanel({
               {/* ── Cover Page ── */}
               <div className="relative w-full" style={{ maxWidth: "794px" }}>
                 <div className="bg-white shadow-xl rounded-sm w-full" style={{ minHeight: "1123px", padding: "60px 72px 50px 72px", position: "relative" }}>
+                  {/* Logo */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <img src="/images/logo-legal-corners.svg" alt="Legal Corners" style={{ height: "40px" }} />
+                  </div>
+
                   {/* Top empty space */}
-                  <div style={{ height: "30%" }} />
+                  <div style={{ height: "22%" }} />
 
                   {/* Thin navy line */}
                   <div style={{ borderTop: "1px solid #0D2459", marginBottom: "24px" }} />

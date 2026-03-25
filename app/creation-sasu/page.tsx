@@ -5025,6 +5025,36 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+
+                          {/* Filiation du DG */}
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Filiation du Directeur Général</p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>
+                                <input type="text" value={answers.dg_pere_nom || ""} onChange={(e) => setAnswer("dg_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom de la mère</label>
+                                <input type="text" value={answers.dg_mere_nom || ""} onChange={(e) => setAnswer("dg_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Non-condamnation du DG */}
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Déclaration de non-condamnation du Directeur Général</p>
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                              <label className="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked={answers.dg_non_condamnation === "true"} onChange={(e) => setAnswer("dg_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                <span className="text-base text-gray-700">Je soussigné(e), en qualité de Directeur Général désigné, atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                              </label>
+                              <label className="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked={answers.dg_non_interdiction === "true"} onChange={(e) => setAnswer("dg_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                <span className="text-base text-gray-700">Je soussigné(e), en qualité de Directeur Général désigné, atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                              </label>
+                            </div>
+                          </div>
                         </motion.div>
                       )}
                     </div>

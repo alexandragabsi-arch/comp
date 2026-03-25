@@ -538,6 +538,18 @@ export function DocumentPreviewPanel({
     ? normalizeMarkdown(text)
     : normalizeMarkdown(stripCoverBlock(text));
 
+  // ── Statuts cover data ──
+  const denomMatch = bodyText.match(/Dénomination sociale\s*:\s*\*\*(.+?)\*\*/);
+  const capitalMatch = bodyText.match(/Capital social\s*:\s*\*\*(.+?)\*\*/);
+  const siegeMatch = bodyText.match(/Siège social\s*:\s*\*\*(.+?)\*\*/);
+  const denomination = denomMatch ? denomMatch[1] : "SASU";
+  const capital = capitalMatch ? capitalMatch[1] : "";
+  const siege = siegeMatch ? siegeMatch[1] : "";
+
+  // Remove everything before ## SOMMAIRE (the cover block)
+  const sommaireIdx = bodyText.indexOf("## SOMMAIRE");
+  const contentBody = sommaireIdx >= 0 ? bodyText.substring(sommaireIdx) : bodyText;
+
   const handleDownloadPdf = async () => {
     try {
       const { generateReactPDF } = await import("@/app/lib/generatePdfReact");
@@ -639,60 +651,121 @@ export function DocumentPreviewPanel({
 
           {/* ══ PAGES DE CONTENU ══ */}
           {isStatuts ? (
-            /* For statuts: continuous scroll without A4 page simulation */
-            <div className="relative w-full" style={{ maxWidth: "794px" }}>
-              <div className="bg-white shadow-xl rounded-sm w-full" style={{ padding: "60px 72px 50px 72px" }}>
-                <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459", paddingTop: "20px" }}>
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      h1: ({ children }) => (
-                        <h1 style={{ fontSize: "26px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px", marginTop: "8px", paddingBottom: "12px", borderBottom: "2px solid #0D2459" }}>
-                          {children}
-                        </h1>
-                      ),
-                      h2: ({ children }) => (
-                        <h2 style={{ fontSize: "16px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginTop: "36px", marginBottom: "16px", paddingBottom: "8px", borderBottom: "2.5px solid #0D2459" }}>
-                          {children}
-                        </h2>
-                      ),
-                      h3: ({ children }) => (
-                        <h3 style={{ fontSize: "14px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "8px 12px" }}>
-                          {children}
-                        </h3>
-                      ),
-                      h4: ({ children }) => (
-                        <h4 style={{ fontSize: "11px", fontWeight: "bold", fontStyle: "italic", color: "#0D2459", marginTop: "18px", marginBottom: "8px" }}>
-                          {children}
-                        </h4>
-                      ),
-                      p: ({ children }) => (
-                        <p style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify" }}>
-                          {children}
-                        </p>
-                      ),
-                      strong: ({ children }) => (
-                        <strong style={{ fontWeight: "bold", color: "#0D2459" }}>{children}</strong>
-                      ),
-                      ul: ({ children }) => (
-                        <ul style={{ paddingLeft: "0", marginBottom: "14px", listStyle: "none" }}>{children}</ul>
-                      ),
-                      li: ({ children }) => (
-                        <li style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "8px", fontStyle: "italic", textAlign: "justify" }}>{children}</li>
-                      ),
-                      hr: () => <div style={{ borderTop: "1px solid #d1d5db", margin: "16px 0" }} />,
-                      blockquote: ({ children }) => (
-                        <blockquote style={{ borderLeft: "3px solid #5B8DEF", paddingLeft: "12px", margin: "12px 0", color: "#64748b", fontStyle: "italic", fontSize: "10.5px" }}>
-                          {children}
-                        </blockquote>
-                      ),
-                    }}
-                  >
-                    {bodyText}
-                  </ReactMarkdown>
-                </article>
+            <>
+              {/* ── Cover Page ── */}
+              <div className="relative w-full" style={{ maxWidth: "794px" }}>
+                <div className="bg-white shadow-xl rounded-sm w-full" style={{ minHeight: "1123px", padding: "60px 72px 50px 72px", position: "relative" }}>
+                  {/* Top empty space */}
+                  <div style={{ height: "30%" }} />
+
+                  {/* Thin navy line */}
+                  <div style={{ borderTop: "1px solid #0D2459", marginBottom: "24px" }} />
+
+                  {/* Title */}
+                  <h1 style={{ textAlign: "center", fontWeight: "bold", fontSize: "28px", textTransform: "uppercase", color: "#0D2459", fontFamily: "Georgia, serif", margin: "0 0 8px 0" }}>
+                    STATUTS CONSTITUTIFS
+                  </h1>
+
+                  {/* Subtitle */}
+                  <p style={{ textAlign: "center", fontStyle: "italic", fontSize: "16px", color: "#0D2459", fontFamily: "Georgia, serif", margin: "0 0 24px 0" }}>
+                    Société par Actions Simplifiée Unipersonnelle
+                  </p>
+
+                  {/* Thin navy line */}
+                  <div style={{ borderTop: "1px solid #0D2459", marginBottom: "40px" }} />
+
+                  {/* Empty space */}
+                  <div style={{ height: "40px" }} />
+
+                  {/* Three centered info lines */}
+                  <div style={{ textAlign: "center" }}>
+                    <p style={{ fontSize: "14px", color: "#0D2459", fontFamily: "Georgia, serif", marginBottom: "10px" }}>
+                      Dénomination sociale : <strong>{denomination}</strong>
+                    </p>
+                    <p style={{ fontSize: "14px", color: "#0D2459", fontFamily: "Georgia, serif", marginBottom: "10px" }}>
+                      Capital social : <strong>{capital}</strong>
+                    </p>
+                    <p style={{ fontSize: "14px", color: "#0D2459", fontFamily: "Georgia, serif", marginBottom: "10px" }}>
+                      Siège social : <strong>{siege}</strong>
+                    </p>
+                  </div>
+
+                  {/* Bottom footer */}
+                  <div style={{ position: "absolute", bottom: "50px", left: "72px", right: "72px" }}>
+                    <div style={{ borderTop: "1px solid #d1d5db", paddingTop: "8px", textAlign: "center" }}>
+                      <span style={{ fontSize: "9px", color: "#999", fontStyle: "italic" }}>Confidentiel</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+
+              {/* ── Content Pages ── */}
+              <div className="relative w-full" style={{ maxWidth: "794px" }}>
+                <div className="bg-white shadow-xl rounded-sm w-full" style={{ padding: "60px 72px 50px 72px", position: "relative" }}>
+                  {/* Header */}
+                  <div style={{ borderBottom: "2px solid #0D2459", paddingBottom: 8, marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "10px", color: "#0D2459", fontWeight: "bold" }}>{denomination}</span>
+                    <span style={{ fontSize: "10px", color: "#999" }}>Statuts constitutifs — SASU</span>
+                  </div>
+
+                  {/* Body */}
+                  <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459" }}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({ children }) => (
+                          <h1 style={{ fontSize: "26px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px", marginTop: "8px", paddingBottom: "12px", borderBottom: "2px solid #0D2459" }}>
+                            {children}
+                          </h1>
+                        ),
+                        h2: ({ children }) => (
+                          <h2 style={{ fontSize: "16px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginTop: "36px", marginBottom: "16px", paddingBottom: "8px", borderBottom: "2.5px solid #0D2459" }}>
+                            {children}
+                          </h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3 style={{ fontSize: "14px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "8px 12px" }}>
+                            {children}
+                          </h3>
+                        ),
+                        h4: ({ children }) => (
+                          <h4 style={{ fontSize: "11px", fontWeight: "bold", fontStyle: "italic", color: "#0D2459", marginTop: "18px", marginBottom: "8px" }}>
+                            {children}
+                          </h4>
+                        ),
+                        p: ({ children }) => (
+                          <p style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify" }}>
+                            {children}
+                          </p>
+                        ),
+                        strong: ({ children }) => (
+                          <strong style={{ fontWeight: "bold", color: "#0D2459" }}>{children}</strong>
+                        ),
+                        ul: ({ children }) => (
+                          <ul style={{ paddingLeft: "0", marginBottom: "14px", listStyle: "none" }}>{children}</ul>
+                        ),
+                        li: ({ children }) => (
+                          <li style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "8px", fontStyle: "italic", textAlign: "justify" }}>{children}</li>
+                        ),
+                        hr: () => <div style={{ borderTop: "1px solid #d1d5db", margin: "16px 0" }} />,
+                        blockquote: ({ children }) => (
+                          <blockquote style={{ borderLeft: "3px solid #5B8DEF", paddingLeft: "12px", margin: "12px 0", color: "#64748b", fontStyle: "italic", fontSize: "10.5px" }}>
+                            {children}
+                          </blockquote>
+                        ),
+                      }}
+                    >
+                      {contentBody}
+                    </ReactMarkdown>
+                  </article>
+
+                  {/* Footer */}
+                  <div style={{ borderTop: "1px solid #d1d5db", marginTop: 24, paddingTop: 8, textAlign: "center" }}>
+                    <span style={{ fontSize: "9px", color: "#999", fontStyle: "italic" }}>Confidentiel</span>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
           <A4Page pageNumber={(isDeclaration) ? 1 : 2}>
             <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459", paddingTop: isDeclaration ? "40px" : "0" }}>

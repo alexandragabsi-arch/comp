@@ -1488,7 +1488,7 @@ export default function CreationSASUPage() {
       {/* ── Main content ── */}
       <main className={cn(
         "flex-1 flex justify-center min-h-screen",
-        phase === "questions" || phase === "intro"
+        phase === "questions" || phase === "intro" || phase === "brand_protection" || phase === "micro_search" || phase === "avocat_confirmation"
           ? "md:ml-72 p-4 sm:p-6 md:p-10 items-center"
           : phase === "pricing" || phase === "post_payment"
             ? "md:ml-72 p-4 sm:p-6 md:p-10 items-start pt-6 md:pt-10"

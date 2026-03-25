@@ -18,6 +18,35 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+/* ───────── Date Select Component ───────── */
+function DateSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const parts = (value || "").split("-");
+  const year = parts[0] || "";
+  const month = parts[1] || "";
+  const day = parts[2] || "";
+  const update = (y: string, m: string, d: string) => {
+    if (y && m && d) onChange(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+    else onChange("");
+  };
+  const currentYear = new Date().getFullYear();
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      <select value={day} onChange={(e) => update(year, month, e.target.value)} className="px-3 py-3.5 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none text-sm text-gray-800 bg-white">
+        <option value="">Jour</option>
+        {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (<option key={d} value={String(d).padStart(2, "0")}>{d}</option>))}
+      </select>
+      <select value={month} onChange={(e) => update(year, e.target.value, day)} className="px-3 py-3.5 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none text-sm text-gray-800 bg-white">
+        <option value="">Mois</option>
+        {["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"].map((m, i) => (<option key={i} value={String(i + 1).padStart(2, "0")}>{m}</option>))}
+      </select>
+      <select value={year} onChange={(e) => update(e.target.value, month, day)} className="px-3 py-3.5 rounded-xl border border-gray-200 focus:border-blue-400 focus:outline-none text-sm text-gray-800 bg-white">
+        <option value="">Année</option>
+        {Array.from({ length: 10 }, (_, i) => currentYear - i).map((y) => (<option key={y} value={String(y)}>{y}</option>))}
+      </select>
+    </div>
+  );
+}
+
 /* ───────── Constants ───────── */
 const TOTAL_STEPS = 11;
 const NAVY = "#0d1f4e";
@@ -280,21 +309,11 @@ export default function DepotComptesPage() {
       <div className="space-y-5">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">Date de d&eacute;but</label>
-          <input
-            type="date"
-            value={data.date_debut || ""}
-            onChange={(e) => updateData("date_debut", e.target.value)}
-            className={inputClass}
-          />
+          <DateSelect value={data.date_debut || ""} onChange={(v) => updateData("date_debut", v)} />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">Date de cl&ocirc;ture</label>
-          <input
-            type="date"
-            value={data.date_cloture || ""}
-            onChange={(e) => updateData("date_cloture", e.target.value)}
-            className={inputClass}
-          />
+          <DateSelect value={data.date_cloture || ""} onChange={(v) => updateData("date_cloture", v)} />
         </div>
 
         {/* Premier exercice toggle */}
@@ -784,12 +803,7 @@ export default function DepotComptesPage() {
       <div className="space-y-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-gray-700">Date de l&apos;AG</label>
-          <input
-            type="date"
-            value={data.date_ag || ""}
-            onChange={(e) => updateData("date_ag", e.target.value)}
-            className={inputClass}
-          />
+          <DateSelect value={data.date_ag || ""} onChange={(v) => updateData("date_ag", v)} />
         </div>
 
         <div className="grid grid-cols-2 gap-4">

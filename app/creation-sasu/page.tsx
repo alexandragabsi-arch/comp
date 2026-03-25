@@ -6955,17 +6955,6 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
-                    {/* Adresse du siège */}
-                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
-                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Siège social</h3>
-                        <button onClick={() => setPostPage(pageIndex("adresse_siege"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
-                      </div>
-                      <div className="px-5 py-3 text-sm">
-                        <p className="text-gray-800 font-medium">{answers.adresse_siege || "—"}</p>
-                      </div>
-                    </div>
-
                     {/* Date et lieu */}
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
@@ -6977,6 +6966,65 @@ export default function CreationSASUPage() {
                         <p><span className="text-gray-500">Lieu :</span> <span className="text-gray-800 font-medium">
                           {answers.lieu_signature_type === "siege" ? answers.adresse_siege || "Au siège social" : answers.lieu_signature_autre || "—"}
                         </span></p>
+                      </div>
+                    </div>
+
+                    {/* Options souscrites */}
+                    {(answers.fermeture_micro === "oui" || answers.activite_artisanale === "oui" || answers.proteger_nom === "oui") && (
+                      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="px-5 py-3 bg-gray-50 border-b border-gray-200">
+                          <h3 className="font-semibold text-[#1E3A8A] text-sm">Options souscrites</h3>
+                        </div>
+                        <div className="px-5 py-3 space-y-2 text-sm">
+                          {answers.fermeture_micro === "oui" && (
+                            <div className="flex items-center gap-2">
+                              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span className="text-gray-800">Fermeture micro-entreprise{answers.micro_siren ? ` (SIREN ${answers.micro_siren})` : ""}</span>
+                            </div>
+                          )}
+                          {answers.activite_artisanale === "oui" && (
+                            <div className="flex items-center gap-2">
+                              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span className="text-gray-800">Immatriculation CMA (activité artisanale)</span>
+                            </div>
+                          )}
+                          {answers.proteger_nom === "oui" && (
+                            <div className="flex items-center gap-2">
+                              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span className="text-gray-800">Protection de marque — {answers.brand_plan === "france" ? "France (INPI)" : answers.brand_plan === "eu" ? "Union européenne (EUIPO)" : answers.brand_plan === "international" ? "International (OMPI)" : "à définir"}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Exercice comptable */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Exercice comptable</h3>
+                        <button onClick={() => setPostPage(pageIndex("exercice_comptable"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 text-sm">
+                        <p><span className="text-gray-500">Clôture :</span> <span className="text-gray-800 font-medium">{answers.cloture_exercice === "31_dec" ? "31 décembre" : answers.cloture_date_permanente || "—"}</span></p>
+                      </div>
+                    </div>
+
+                    {/* Siège social - type domiciliation */}
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
+                        <h3 className="font-semibold text-[#1E3A8A] text-sm">Siège social</h3>
+                        <button onClick={() => setPostPage(pageIndex("adresse_siege"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                      </div>
+                      <div className="px-5 py-3 space-y-1 text-sm">
+                        <p><span className="text-gray-500">Adresse :</span> <span className="text-gray-800 font-medium">{answers.adresse_siege || "—"}</span></p>
+                        <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{
+                          answers.type_domiciliation === "domicile_dirigeant" ? "Domicile du dirigeant" :
+                          answers.type_domiciliation === "local_commercial_bail" ? "Local commercial (bail)" :
+                          answers.type_domiciliation === "local_commercial_proprio" ? "Local commercial (propriétaire)" :
+                          answers.type_domiciliation === "societe_domiciliation" ? `Société de domiciliation${answers.nom_domiciliataire ? ` (${answers.nom_domiciliataire})` : ""}` :
+                          answers.type_domiciliation === "pepiniere" ? "Pépinière / incubateur / coworking" :
+                          "—"
+                        }</span></p>
                       </div>
                     </div>
 

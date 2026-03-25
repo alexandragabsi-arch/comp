@@ -5059,6 +5059,21 @@ export default function CreationSASUPage() {
 
                       {answers.nommer_dg === "oui" && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#2563EB]/30 pl-4 ml-2">
+                          <div className="space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Type de Directeur Général</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <button onClick={() => setAnswer("dg_type", "physique")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", (answers.dg_type || "physique") === "physique" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>
+                                Personne physique
+                              </button>
+                              <button onClick={() => setAnswer("dg_type", "morale")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", answers.dg_type === "morale" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>
+                                Personne morale
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* ── DG Personne Physique ── */}
+                          {(answers.dg_type || "physique") === "physique" && (
+                          <div className="space-y-4">
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
@@ -5123,6 +5138,182 @@ export default function CreationSASUPage() {
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
                             <AddressAutocomplete value={answers.dg_adresse || ""} onChange={(v) => setAnswer("dg_adresse", v)} placeholder="Adresse complète" />
                           </div>
+                          </div>
+                          )}
+
+                          {/* ── DG Personne Morale ── */}
+                          {answers.dg_type === "morale" && (
+                            <div className="space-y-4 border-t border-gray-200 pt-5">
+                              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                                <p className="text-base text-gray-700">Pour nommer un Directeur Général personne morale, indiquez le numéro SIREN de la société. Nous pourrons ainsi pré-remplir ses informations.</p>
+                                <p className="text-base text-gray-700">Vous trouverez ce numéro sur votre extrait Kbis.</p>
+                                <p className="text-base text-gray-700">Si vous ne le trouvez pas, vous pouvez remplir les informations manuellement.</p>
+                                <div className="flex justify-end">
+                                  <button onClick={() => setAnswer("dg_pm_mode", "manuel")} className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity">Remplir manuellement</button>
+                                </div>
+                              </div>
+
+                              {/* SIREN search */}
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
+                                <div className="flex gap-3">
+                                  <input type="text" value={answers.dg_pm_siren || ""} onChange={(e) => setAnswer("dg_pm_siren", e.target.value)} placeholder="Ex : 824330799" className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  <button
+                                    onClick={async () => {
+                                      const siren = (answers.dg_pm_siren || "").replace(/\s/g, "");
+                                      if (siren.length !== 9) return;
+                                      try {
+                                        const res = await fetch(`/api/siren?siren=${siren}`);
+                                        if (res.ok) {
+                                          const data = await res.json();
+                                          setAnswer("dg_pm_nom", data.denominationSociale || "");
+                                          setAnswer("dg_pm_forme", data.formeJuridique || "");
+                                          setAnswer("dg_pm_capital", data.capitalSocial || "");
+                                          setAnswer("dg_pm_adresse", [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "));
+                                          setAnswer("dg_pm_ville_rcs", data.ville || "");
+                                          setAnswer("dg_pm_mode", "siren");
+                                        }
+                                      } catch { /* ignore */ }
+                                    }}
+                                    disabled={!answers.dg_pm_siren || answers.dg_pm_siren.replace(/\s/g, "").length !== 9}
+                                    className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] disabled:bg-[#9CA3AF] transition-colors"
+                                  >Confirmer mon Numéro</button>
+                                </div>
+                              </div>
+
+                              {/* Infos entreprise DG PM */}
+                              {(answers.dg_pm_mode === "siren" || answers.dg_pm_mode === "manuel") && (
+                                <div className="space-y-4 border-t border-gray-200 pt-4">
+                                  <p className="text-sm font-bold text-[#2563EB]">Informations entreprise</p>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination sociale</label>
+                                      <input type="text" value={answers.dg_pm_nom || ""} onChange={(e) => setAnswer("dg_pm_nom", e.target.value)} placeholder="Ex : LAW AND CO" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
+                                      <input type="text" value={answers.dg_pm_forme || ""} onChange={(e) => setAnswer("dg_pm_forme", e.target.value)} placeholder="Ex : SASU" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
+                                      <input type="text" value={answers.dg_pm_capital || ""} onChange={(e) => setAnswer("dg_pm_capital", e.target.value)} placeholder="Ex : 100" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Ville RCS</label>
+                                      <input type="text" value={answers.dg_pm_ville_rcs || ""} onChange={(e) => setAnswer("dg_pm_ville_rcs", e.target.value)} placeholder="Ex : PARIS" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège social</label>
+                                    <AddressAutocomplete value={answers.dg_pm_adresse || ""} onChange={(v) => setAnswer("dg_pm_adresse", v)} placeholder="Adresse complète" />
+                                  </div>
+
+                                  {/* Carte société nommée */}
+                                  {answers.dg_pm_nom && (
+                                    <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-[#2563EB] bg-[#EFF6FF]">
+                                      <Building2 className="w-6 h-6 text-[#2563EB]" />
+                                      <span className="font-bold text-[#1E3A8A]">{answers.dg_pm_nom}</span>
+                                    </div>
+                                  )}
+
+                                  {/* Représentant permanent du DG PM */}
+                                  <div className="border border-gray-200 rounded-xl p-5 space-y-4">
+                                    <h4 className="text-base font-bold text-[#1E3A8A]">Représentant permanent du Directeur Général</h4>
+
+                                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                                      <p className="text-base font-bold text-[#1E3A8A]">Représentant permanent</p>
+                                      <p className="text-base text-gray-700">
+                                        Lorsqu&apos;une société est nommée Directeur Général, elle doit désigner une <strong>personne physique</strong> chargée de la représenter. Ce <em className="font-semibold text-[#2563EB]">représentant permanent</em> exerce les droits de la société dirigeante (signature, vote en assemblée). Ces informations seront inscrites dans les statuts et déclarées au greffe.
+                                      </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                                        <select value={answers.dg_rp_civilite || ""} onChange={(e) => setAnswer("dg_rp_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                          <option value="">Choisir</option>
+                                          <option value="M.">M.</option>
+                                          <option value="Mme">Mme</option>
+                                        </select>
+                                      </div>
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                        <input type="text" value={answers.dg_rp_nom || ""} onChange={(e) => setAnswer("dg_rp_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                        <input type="text" value={answers.dg_rp_prenom || ""} onChange={(e) => setAnswer("dg_rp_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                        <input type="date" value={answers.dg_rp_date_naissance || ""} onChange={(e) => setAnswer("dg_rp_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                        {/* Age check RP DG */}
+                                        {(() => {
+                                          if (!answers.dg_rp_date_naissance) return null;
+                                          const birth = new Date(answers.dg_rp_date_naissance);
+                                          const today = new Date();
+                                          let age = today.getFullYear() - birth.getFullYear();
+                                          const m = today.getMonth() - birth.getMonth();
+                                          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                                          if (age < 18) return (
+                                            <div className="bg-red-50 border border-red-300 rounded-xl p-3 mt-2">
+                                              <p className="text-sm font-semibold text-red-800">Le représentant permanent doit être majeur (18 ans minimum).</p>
+                                            </div>
+                                          );
+                                          return null;
+                                        })()}
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
+                                        <input type="text" value={answers.dg_rp_lieu_naissance || ""} onChange={(e) => setAnswer("dg_rp_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                        <input type="text" value={answers.dg_rp_nationalite || ""} onChange={(e) => setAnswer("dg_rp_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                                      <AddressAutocomplete value={answers.dg_rp_adresse || ""} onChange={(v) => setAnswer("dg_rp_adresse", v)} placeholder="Adresse complète" />
+                                    </div>
+
+                                    {/* Filiation du RP DG */}
+                                    <p className="text-base font-bold text-[#1E3A8A] pt-2">Filiation du représentant permanent</p>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du père</label>
+                                        <input type="text" value={answers.dg_rp_pere_nom || ""} onChange={(e) => setAnswer("dg_rp_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      </div>
+                                      <div>
+                                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom de la mère</label>
+                                        <input type="text" value={answers.dg_rp_mere_nom || ""} onChange={(e) => setAnswer("dg_rp_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      </div>
+                                    </div>
+
+                                    {/* Non-condamnation du RP DG */}
+                                    <p className="text-base font-bold text-[#1E3A8A] pt-2">Déclaration de non-condamnation du représentant permanent</p>
+                                    <p className="text-sm text-gray-500">En tant que représentant permanent de la société Directeur Général, cette déclaration est faite en votre nom personnel.</p>
+                                    <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                                      <label className="flex items-start gap-3 cursor-pointer">
+                                        <input type="checkbox" checked={answers.dg_rp_non_condamnation === "true"} onChange={(e) => setAnswer("dg_rp_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                        <span className="text-base text-gray-700">Je soussigné(e), en qualité de représentant permanent de la société Directeur Général, atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                      </label>
+                                      <label className="flex items-start gap-3 cursor-pointer">
+                                        <input type="checkbox" checked={answers.dg_rp_non_interdiction === "true"} onChange={(e) => setAnswer("dg_rp_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                        <span className="text-base text-gray-700">Je soussigné(e), en qualité de représentant permanent de la société Directeur Général, atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                      </label>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           <div className="border-t border-gray-200 pt-4 space-y-3">
                             <p className="text-base font-bold text-[#1E3A8A]">Pouvoirs du Directeur Général</p>
@@ -5150,7 +5341,8 @@ export default function CreationSASUPage() {
                             </div>
                           </div>
 
-                          {/* Filiation du DG */}
+                          {/* Filiation du DG (PP only) */}
+                          {(answers.dg_type || "physique") === "physique" && (
                           <div className="border-t border-gray-200 pt-4 space-y-3">
                             <p className="text-base font-bold text-[#1E3A8A]">Filiation du Directeur Général</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -5164,8 +5356,10 @@ export default function CreationSASUPage() {
                               </div>
                             </div>
                           </div>
+                          )}
 
-                          {/* Non-condamnation du DG */}
+                          {/* Non-condamnation du DG (PP only) */}
+                          {(answers.dg_type || "physique") === "physique" && (
                           <div className="border-t border-gray-200 pt-4 space-y-3">
                             <p className="text-base font-bold text-[#1E3A8A]">Déclaration de non-condamnation du Directeur Général</p>
                             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
@@ -5179,6 +5373,7 @@ export default function CreationSASUPage() {
                               </label>
                             </div>
                           </div>
+                          )}
                         </motion.div>
                       )}
 

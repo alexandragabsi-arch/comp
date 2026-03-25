@@ -1418,7 +1418,7 @@ export default function CreationSASUPage() {
                   <div className="flex flex-col items-center">
                     <div className={cn(
                       "w-11 h-11 rounded-full flex items-center justify-center text-base font-semibold transition-all",
-                      isActive ? "bg-[#5B6ABF] text-white shadow-md" :
+                      isActive ? "bg-[#5B8DC9] text-white shadow-md" :
                       isCompleted ? "bg-green-500 text-white" :
                       "bg-gray-100 text-gray-400"
                     )}>
@@ -1434,15 +1434,15 @@ export default function CreationSASUPage() {
                   )}>
                     <Icon className={cn(
                       "w-4 h-4 flex-shrink-0",
-                      isActive ? "text-[#5B6ABF]" : isCompleted ? "text-green-500" : "text-gray-400"
+                      isActive ? "text-[#5B8DC9]" : isCompleted ? "text-green-500" : "text-gray-400"
                     )} />
                     <p className={cn(
                       "text-base font-medium flex-1",
-                      isActive ? "text-[#2D3A6E]" : "text-gray-400"
+                      isActive ? "text-[#1E3A6E]" : "text-gray-400"
                     )}>
                       {s.label}
                     </p>
-                    {isActive && <ChevronRight className="w-4 h-4 text-[#5B6ABF]" />}
+                    {isActive && <ChevronRight className="w-4 h-4 text-[#5B8DC9]" />}
                   </div>
                 </div>
               );

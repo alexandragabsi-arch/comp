@@ -6872,14 +6872,16 @@ export default function CreationSASUPage() {
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_associe === "physique" ? "Personne physique" : answers.type_associe === "morale" ? "Personne morale" : "—"}</span></p>
                         {answers.type_associe === "physique" && (
                           <>
-                            {answers.assoc_nom && <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.assoc_prenom} {answers.assoc_nom}</span></p>}
-                            {answers.associe_date_naissance && <p><span className="text-gray-500">Né(e) le :</span> <span className="text-gray-800 font-medium">{answers.associe_date_naissance}</span></p>}
+                            {answers.associe_nom && <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.associe_civilite === "Mme" ? "Mme" : "M."} {answers.associe_prenom} {answers.associe_nom}</span></p>}
+                            {answers.associe_date_naissance && <p><span className="text-gray-500">Né(e) le :</span> <span className="text-gray-800 font-medium">{answers.associe_date_naissance} à {answers.associe_lieu_naissance || ""}</span></p>}
+                            {answers.associe_adresse && <p><span className="text-gray-500">Adresse :</span> <span className="text-gray-800 font-medium">{answers.associe_adresse}</span></p>}
                           </>
                         )}
                         {answers.type_associe === "morale" && (
                           <>
-                            {answers.assoc_pm_denomination && <p><span className="text-gray-500">Dénomination :</span> <span className="text-gray-800 font-medium">{answers.assoc_pm_denomination}</span></p>}
-                            {answers.assoc_pm_siren && <p><span className="text-gray-500">SIREN :</span> <span className="text-gray-800 font-medium">{answers.assoc_pm_siren}</span></p>}
+                            {answers.associe_societe_nom && <p><span className="text-gray-500">Dénomination :</span> <span className="text-gray-800 font-medium">{answers.associe_societe_nom}</span></p>}
+                            {answers.associe_societe_siren && <p><span className="text-gray-500">SIREN :</span> <span className="text-gray-800 font-medium">{answers.associe_societe_siren}</span></p>}
+                            {answers.associe_societe_adresse && <p><span className="text-gray-500">Siège :</span> <span className="text-gray-800 font-medium">{answers.associe_societe_adresse}</span></p>}
                           </>
                         )}
                       </div>
@@ -6913,7 +6915,8 @@ export default function CreationSASUPage() {
                             ? `${answers.president_pm_nom || ""} (personne morale)`
                             : "—"}
                         </span></p>
-                        {answers.mandat_duree_type && <p><span className="text-gray-500">Durée du mandat :</span> <span className="text-gray-800 font-medium">{answers.mandat_duree_type === "indeterminee" ? "Indéterminée" : `${answers.mandat_duree_annees || "—"} ans`}</span></p>}
+                        <p><span className="text-gray-500">Durée du mandat :</span> <span className="text-gray-800 font-medium">{answers.duree_mandat === "indeterminee" ? "Indéterminée" : answers.duree_mandat === "determinee" ? `${answers.duree_mandat_annees || "—"} ans` : "—"}</span></p>
+                        <p><span className="text-gray-500">Rémunération :</span> <span className="text-gray-800 font-medium">{answers.president_remunere === "oui_office" ? "Oui (fixée)" : answers.president_remunere === "oui_ulterieur" ? "Oui (à définir)" : "Non rémunéré"}</span></p>
                       </div>
                     </div>
 
@@ -6924,8 +6927,8 @@ export default function CreationSASUPage() {
                         <button onClick={() => setPostPage(pageIndex("depot_capital"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
-                        <p><span className="text-gray-500">Établissement :</span> <span className="text-gray-800 font-medium">{answers.banque_nom || "—"}</span></p>
-                        {answers.depot_date && <p><span className="text-gray-500">Date de dépôt :</span> <span className="text-gray-800 font-medium">{answers.depot_date}</span></p>}
+                        <p><span className="text-gray-500">Établissement :</span> <span className="text-gray-800 font-medium">{answers.banque_depot || "—"}</span></p>
+                        {answers.date_depot && <p><span className="text-gray-500">Date de dépôt :</span> <span className="text-gray-800 font-medium">{answers.date_depot}</span></p>}
                       </div>
                     </div>
 

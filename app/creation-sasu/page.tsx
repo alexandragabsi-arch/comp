@@ -5375,6 +5375,30 @@ export default function CreationSASUPage() {
                             </div>
                           </div>
 
+                          {/* Durée du mandat DG */}
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Durée du mandat du DG</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button onClick={() => setAnswer("dg_duree_mandat", "indeterminee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.dg_duree_mandat || "indeterminee") === "indeterminee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Indéterminée</button>
+                              <button onClick={() => setAnswer("dg_duree_mandat", "determinee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.dg_duree_mandat === "determinee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Déterminée</button>
+                            </div>
+                            {answers.dg_duree_mandat === "determinee" && (
+                              <div>
+                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nombre d&apos;années</label>
+                                <input type="number" min="1" value={answers.dg_duree_mandat_annees ?? ""} onChange={(e) => setAnswer("dg_duree_mandat_annees", e.target.value)} placeholder="Ex : 3" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Rémunération DG */}
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Le DG sera-t-il rémunéré ?</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button onClick={() => setAnswer("dg_remunere", "non")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.dg_remunere || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
+                              <button onClick={() => setAnswer("dg_remunere", "oui")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.dg_remunere === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui (à définir ultérieurement)</button>
+                            </div>
+                          </div>
+
                           {/* Filiation du DG (PP only) */}
                           {(answers.dg_type || "physique") === "physique" && (
                           <div className="border-t border-gray-200 pt-4 space-y-3">
@@ -5494,7 +5518,27 @@ export default function CreationSASUPage() {
                                 <AddressAutocomplete value={answers.dgd_adresse || ""} onChange={(v) => setAnswer("dgd_adresse", v)} placeholder="Adresse complète" />
                               </div>
                               <div className="border-t border-gray-200 pt-4 space-y-3">
-                                <p className="text-base font-bold text-[#1E3A8A]">Filiation du DGD</p>
+                                {/* Durée du mandat DGD */}
+                                <p className="text-base font-bold text-[#1E3A8A]">Durée du mandat du DGD</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  <button onClick={() => setAnswer("dgd_duree_mandat", "indeterminee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.dgd_duree_mandat || "indeterminee") === "indeterminee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Indéterminée</button>
+                                  <button onClick={() => setAnswer("dgd_duree_mandat", "determinee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.dgd_duree_mandat === "determinee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Déterminée</button>
+                                </div>
+                                {answers.dgd_duree_mandat === "determinee" && (
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nombre d&apos;années</label>
+                                    <input type="number" min="1" value={answers.dgd_duree_mandat_annees ?? ""} onChange={(e) => setAnswer("dgd_duree_mandat_annees", e.target.value)} placeholder="Ex : 3" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  </div>
+                                )}
+
+                                {/* Rémunération DGD */}
+                                <p className="text-base font-bold text-[#1E3A8A] pt-3">Le DGD sera-t-il rémunéré ?</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  <button onClick={() => setAnswer("dgd_remunere", "non")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.dgd_remunere || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
+                                  <button onClick={() => setAnswer("dgd_remunere", "oui")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.dgd_remunere === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui (à définir ultérieurement)</button>
+                                </div>
+
+                                <p className="text-base font-bold text-[#1E3A8A] pt-3">Filiation du DGD</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>

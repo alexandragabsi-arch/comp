@@ -11,6 +11,7 @@ import {
   Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus, AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DocumentPreviewPanel } from "@/components/document-preview-panel";
 import { useRef, useCallback } from "react";
 
 /* ───────── Address Autocomplete (adresse.data.gouv.fr) ───────── */
@@ -6817,8 +6818,17 @@ export default function CreationSASUPage() {
                         <button
                           onClick={async () => {
                             const { buildStatutsComplets } = await import("@/app/lib/statutsSasuBuilder");
+                            const { generateStatutsSasuDocx } = await import("@/app/lib/generateDocx");
                             const text = buildStatutsComplets(answers);
+                            const denomination = answers.nom_societe || answers.denomination_sociale || "SASU";
+                            const blob = await generateStatutsSasuDocx(text, {
+                              denomination,
+                              capital: String(answers.capital_social || "1"),
+                              siege: answers.adresse_siege || "[ADRESSE]",
+                            });
+                            const url = URL.createObjectURL(blob);
                             setAnswer("statuts_preview", text);
+                            setAnswer("statuts_docx_url", url);
                           }}
                           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-[#1E3A8A] font-semibold text-sm hover:bg-blue-50 transition-colors"
                         >
@@ -6851,43 +6861,16 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
-                    {/* Modal Aperçu des statuts */}
-                    {answers.statuts_preview && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[85vh] flex flex-col">
-                          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-lg font-bold text-[#1E3A8A] flex items-center gap-2"><FileText className="w-5 h-5" /> Aperçu des statuts</h3>
-                            <button onClick={() => setAnswer("statuts_preview", "")} className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
-                          </div>
-                          <div className="flex-1 overflow-y-auto px-6 py-4">
-                            <pre className="whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">{answers.statuts_preview}</pre>
-                          </div>
-                          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
-                            <button onClick={() => setAnswer("statuts_preview", "")} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50">Fermer</button>
-                            <button
-                              onClick={async () => {
-                                const { generateStatutsSasuDocx } = await import("@/app/lib/generateDocx");
-                                const denomination = answers.nom_societe || answers.denomination_sociale || "SASU";
-                                const blob = await generateStatutsSasuDocx(answers.statuts_preview || "", {
-                                  denomination,
-                                  capital: String(answers.capital_social || "1"),
-                                  siege: answers.adresse_siege || "[ADRESSE]",
-                                });
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement("a");
-                                a.href = url;
-                                a.download = `statuts-${denomination.toLowerCase().replace(/\s+/g, "-")}.docx`;
-                                a.click();
-                                URL.revokeObjectURL(url);
-                              }}
-                              className="px-5 py-2.5 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] flex items-center gap-2"
-                            >
-                              <Download className="w-4 h-4" />
-                              Télécharger
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                    {/* Aperçu pleine page des statuts (style cession) */}
+                    {answers.statuts_preview && answers.statuts_docx_url && (
+                      <DocumentPreviewPanel
+                        title={`Statuts constitutifs — ${answers.nom_societe || answers.denomination_sociale || "SASU"}`}
+                        text={answers.statuts_preview}
+                        docxBlobUrl={answers.statuts_docx_url}
+                        docxFileName={`statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`}
+                        pdfFileName={`statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.pdf`}
+                        onClose={() => { setAnswer("statuts_preview", ""); setAnswer("statuts_docx_url", ""); }}
+                      />
                     )}
                   </div>
                 )}

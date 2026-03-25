@@ -712,9 +712,9 @@ const PRICING_PLANS: Plan[] = [
 ];
 
 const FRAIS_ANNEXES = [
-  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", description: "Frais légaux versés au Greffe du Tribunal de Commerce pour inscrire votre SASU au Registre du Commerce et des Sociétés (RCS). Ce montant est fixé par arrêté et identique partout en France métropolitaine. C'est cette inscription qui donne naissance juridiquement à votre société." },
-  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT", description: "La loi impose de publier un avis de constitution dans un Journal d'Annonces Légales (JAL) habilité dans le département du siège social. Depuis la réforme de 2021, le tarif est un forfait national fixe de 138 € HT pour les SAS/SASU (environ 165 € HT pour Mayotte et La Réunion). Nous nous chargeons de la publication pour vous." },
-  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", description: "Obligation légale anti-blanchiment : vous devez déclarer l'identité des personnes physiques qui contrôlent votre société (plus de 25 % du capital ou des droits de vote). Déposée en même temps que l'immatriculation, le tarif est de 21,41 €. Si déposée séparément, le coût passe à environ 43,35 €." },
+  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", tva: false, description: "Taxe fixe versée au Greffe du Tribunal de Commerce pour inscrire votre SASU au RCS. Montant fixé par arrêté, identique partout en France métropolitaine. Non soumis à TVA." },
+  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT (165,60 € TTC)", tva: true, description: "Forfait national fixe de 138 € HT (+ TVA 20 % = 165,60 € TTC) pour les SAS/SASU. Publication obligatoire dans un Journal d'Annonces Légales habilité dans le département du siège social." },
+  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", tva: false, description: "Obligation légale anti-blanchiment : déclaration des personnes physiques contrôlant la société (> 25 % du capital). Non soumis à TVA. Si déposée séparément : ~43,35 €." },
 ];
 
 function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
@@ -728,7 +728,7 @@ function PricingSection({ selected, onSelect }: { selected: string; onSelect: (v
           Choisissez la formule qui vous correspond le mieux
         </h2>
         <p className="text-gray-400 text-sm">
-          + frais annexes obligatoires (~196,86 € HT)
+          + frais annexes obligatoires (~224,46 € TTC)
         </p>
       </div>
 
@@ -1821,8 +1821,8 @@ export default function CreationSASUPage() {
                           <span className="font-bold text-[#1E3A8A]">{(totalHT * 1.2).toFixed(2)} €</span>
                         </div>
                         <div className="flex justify-between text-gray-500 text-xs pt-1">
-                          <span>+ Frais obligatoires (greffe, JAL, DBE)</span>
-                          <span>~{fraisObligatoires.toFixed(2)} € HT</span>
+                          <span>+ Frais obligatoires (greffe 37,45 € + JAL 165,60 € TTC + DBE 21,41 €)</span>
+                          <span>~224,46 € TTC</span>
                         </div>
                       </div>
                     </div>

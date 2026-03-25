@@ -3223,7 +3223,7 @@ export default function CreationSASUPage() {
                           <input
                             type="number"
                             min="1"
-                            value={answers.valeur_action || "1"}
+                            value={answers.valeur_action ?? ""}
                             onChange={(e) => setAnswer("valeur_action", e.target.value)}
                             placeholder="1"
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
@@ -3232,7 +3232,7 @@ export default function CreationSASUPage() {
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
                           <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
-                            {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                            {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 0 })}
                           </div>
                         </div>
                       </div>
@@ -3270,7 +3270,7 @@ export default function CreationSASUPage() {
                         <input
                           type="number"
                           min="1"
-                          value={answers.valeur_action || "1"}
+                          value={answers.valeur_action ?? ""}
                           onChange={(e) => setAnswer("valeur_action", e.target.value)}
                           className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
@@ -3279,7 +3279,7 @@ export default function CreationSASUPage() {
                       <div>
                         <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
                         <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
-                          {((Number(answers.capital_social) || 1) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                          {((Number(answers.capital_social) || 1) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 0 })}
                         </div>
                       </div>
                     </div>

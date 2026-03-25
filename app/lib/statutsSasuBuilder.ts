@@ -278,7 +278,7 @@ function prep(a: Answers): V {
     isCapitalVariable: a.type_capital === "variable",
     isVersementPartiel: a.etat_versement === "partiel" || a.versement_capital === "partiel",
     isVersementTotal: a.etat_versement !== "partiel" && a.versement_capital !== "partiel",
-    hasApportNature: a.apport_nature === "oui",
+    hasApportNature: a.apport_nature === "oui" || (a.apports_nature_liste?.length > 0),
     hasApportIndustrie: a.apport_industrie === "oui",
     apportIndustrieDesc: a.apport_industrie_description || "",
     hasDG,
@@ -2075,13 +2075,13 @@ function buildAnnexe(v: V): string {
   lines.push("");
   lines.push("## ANNEXE 1 — ÉTAT DES ACTES ACCOMPLIS POUR LE COMPTE DE LA SOCIÉTÉ EN FORMATION");
   lines.push("");
-  lines.push(`Dénomination sociale : **${v.denomination}**`);
+  lines.push(`**Dénomination sociale** : ${v.denomination}`);
   lines.push("");
-  lines.push("Forme juridique : Société par Actions Simplifiée Unipersonnelle (SASU)");
+  lines.push("**Forme juridique** : Société par Actions Simplifiée Unipersonnelle (SASU)");
   lines.push("");
-  lines.push(`Capital social : **${fmtNum(v.capital)} euros**`);
+  lines.push(`**Capital social** : ${fmtNum(v.capital)} euros`);
   lines.push("");
-  lines.push(`Siège social : **${v.siege}**`);
+  lines.push(`**Siège social** : ${v.siege}`);
   lines.push("");
   lines.push("**Récapitulatif des engagements souscrits :**");
   lines.push("");

@@ -1819,8 +1819,17 @@ export default function CreationSASUPage() {
                   if (answers.proteger_nom === "oui" && answers.brand_plan === "france") optionsList.push({ id: "brand_france", label: "Protection marque France (INPI)", ht: 269 });
                   if (answers.proteger_nom === "oui" && answers.brand_plan === "eu") optionsList.push({ id: "brand_eu", label: "Protection marque UE (EUIPO)", ht: 950 });
                   if (answers.proteger_nom === "oui" && answers.brand_plan === "international") optionsList.push({ id: "brand_international", label: "Protection marque International (OMPI)", ht: 1150 });
-                  const totalHT = plan.priceHT + optionsList.reduce((s, o) => s + o.ht, 0);
-                  const fraisObligatoires = 196.86;
+                  // Frais obligatoires (toujours inclus)
+                  const fraisGreffe = 37.45; // exonéré TVA
+                  const fraisJAL_HT = 138.00;
+                  const fraisDBE = 21.41; // exonéré TVA
+
+                  const totalOptionsHT = optionsList.reduce((s, o) => s + o.ht, 0);
+                  const totalServicesHT = plan.priceHT + totalOptionsHT + fraisJAL_HT;
+                  const totalServicesTVA = totalServicesHT * 0.2;
+                  const totalServicesTTC = totalServicesHT * 1.2;
+                  const totalFraisExoTVA = fraisGreffe + fraisDBE;
+                  const totalTTC = totalServicesTTC + totalFraisExoTVA;
 
                   return (
                     <div className="bg-white border-2 border-[#2563EB] rounded-2xl p-5 space-y-3">
@@ -1836,21 +1845,28 @@ export default function CreationSASUPage() {
                             <span className="font-semibold text-gray-800">{opt.ht.toFixed(2)} € HT</span>
                           </div>
                         ))}
-                        <div className="border-t border-gray-200 pt-2 flex justify-between">
-                          <span className="text-gray-700">Sous-total HT</span>
-                          <span className="font-semibold text-gray-800">{totalHT.toFixed(2)} € HT</span>
+                        <div className="border-t border-gray-200 pt-2 mt-1">
+                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Frais obligatoires</p>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-gray-600">Frais de greffe (RCS)</span>
+                          <span className="font-semibold text-gray-700">{fraisGreffe.toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Annonce légale (JAL)</span>
+                          <span className="font-semibold text-gray-700">{fraisJAL_HT.toFixed(2)} € HT</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Bénéficiaires effectifs (DBE)</span>
+                          <span className="font-semibold text-gray-700">{fraisDBE.toFixed(2)} €</span>
+                        </div>
+                        <div className="border-t border-gray-200 pt-2 flex justify-between">
                           <span className="text-gray-700">TVA (20%)</span>
-                          <span className="font-semibold text-gray-800">{(totalHT * 0.2).toFixed(2)} €</span>
+                          <span className="font-semibold text-gray-800">{totalServicesTVA.toFixed(2)} €</span>
                         </div>
-                        <div className="border-t border-gray-200 pt-2 flex justify-between text-base">
-                          <span className="font-bold text-[#1E3A8A]">Total TTC</span>
-                          <span className="font-bold text-[#1E3A8A]">{(totalHT * 1.2).toFixed(2)} €</span>
-                        </div>
-                        <div className="flex justify-between text-gray-500 text-xs pt-1">
-                          <span>+ Frais obligatoires (greffe 37,45 € + JAL 165,60 € TTC + DBE 21,41 €)</span>
-                          <span>~224,46 € TTC</span>
+                        <div className="border-t-2 border-[#1E3A8A] pt-2 flex justify-between text-base">
+                          <span className="font-bold text-[#1E3A8A]">Total à payer TTC</span>
+                          <span className="font-bold text-[#1E3A8A]">{totalTTC.toFixed(2)} €</span>
                         </div>
                       </div>
                     </div>

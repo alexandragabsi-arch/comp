@@ -22,6 +22,25 @@ const PRODUCTS = {
   },
 };
 
+// Frais obligatoires (toujours inclus dans le panier)
+const FRAIS_OBLIGATOIRES = [
+  {
+    name: "Frais de greffe — Immatriculation RCS",
+    amount: 3745, // 37,45€ (exonéré TVA)
+    description: "Taxe fixe versée au Greffe du Tribunal de Commerce",
+  },
+  {
+    name: "Publication d'annonce légale (JAL)",
+    amount: 16560, // 138€ HT × 1.20 = 165,60€ TTC
+    description: "Forfait national fixe pour SAS/SASU (TVA 20%)",
+  },
+  {
+    name: "Déclaration des bénéficiaires effectifs (DBE)",
+    amount: 2141, // 21,41€ (exonéré TVA)
+    description: "Obligation légale anti-blanchiment",
+  },
+];
+
 // Options supplémentaires (montants TTC en centimes)
 const OPTIONS: Record<string, { name: string; amount: number; description: string }> = {
   fermeture_micro: {
@@ -86,6 +105,22 @@ export async function POST(request: NextRequest) {
         quantity: 1,
       },
     ];
+
+    // Ajouter les frais obligatoires (greffe, JAL, DBE)
+    for (const frais of FRAIS_OBLIGATOIRES) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: frais.name,
+            description: frais.description,
+          },
+          unit_amount: frais.amount,
+          tax_behavior: "inclusive",
+        },
+        quantity: 1,
+      });
+    }
 
     // Ajouter les options sélectionnées par le client
     const selectedOptions: string[] = Array.isArray(options) ? options : [];

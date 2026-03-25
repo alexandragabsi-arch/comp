@@ -646,7 +646,7 @@ function AccordionItem({ title, children }: { title: string; children: React.Rea
         {open ? <ChevronUp className="w-5 h-5 text-[#2563EB] flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
       </button>
       {open && (
-        <div className="px-5 py-4 bg-[#F8FAFF] border-t border-[#D1D5DB] text-base text-gray-700 leading-relaxed text-justify">
+        <div className="px-5 py-4 bg-[#F8FAFF] border-t border-[#D1D5DB] text-base text-gray-700 leading-relaxed text-justify [&_strong]:text-[#1E3A8A] [&_strong]:font-semibold">
           {children}
         </div>
       )}

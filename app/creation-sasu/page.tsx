@@ -1238,6 +1238,7 @@ export default function CreationSASUPage() {
     { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_fiscal" },        // IS / IR (adapté holdings)
     { id: "exercice_comptable" },   // date clôture exercice comptable
+    { id: "services_comptables" }, // services comptables (si pas de CAC nommé)
     { id: "regime_tva" },           // régime de TVA
     { id: "adresse_siege" },        // adresse
     { id: "date_lieu" },            // date et lieu de signature des statuts
@@ -1250,6 +1251,8 @@ export default function CreationSASUPage() {
     if (!pageId) return false;
     const customPages = ["regles_cac", "regles_duree", "regles_transmission", "regles_nantissement"];
     if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
+    // Skip services_comptables if CAC is explicitly "oui"
+    if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
     return false;
   }
 
@@ -4985,6 +4988,63 @@ export default function CreationSASUPage() {
                           </select>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Services comptables ── */}
+                {POST_PAGES[postPage]?.id === "services_comptables" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Services comptables</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p>Même sans commissaire aux comptes, vous devez tenir une comptabilité rigoureuse. Un expert-comptable ou un logiciel de comptabilité peut vous accompagner dans la gestion de vos obligations (déclarations fiscales, bilan annuel, TVA, etc.).</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="rounded-xl border border-[#D1D5DB] bg-[#F8FAFF] p-4">
+                      <p className="text-sm text-gray-600">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous néanmoins bénéficier de services comptables ?</p>
+                        <p className="text-sm text-gray-500 mb-3">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setAnswer("services_comptables", "logiciel")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.services_comptables === "logiciel" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui, je suis intéressé(e) par un logiciel de comptabilité en ligne.
+                        </button>
+                        <button
+                          onClick={() => setAnswer("services_comptables", "expert_comptable")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.services_comptables === "expert_comptable" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui, je souhaite être mis(e) en relation avec un expert-comptable dans mon secteur.
+                        </button>
+                        <button
+                          onClick={() => setAnswer("services_comptables", "non")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.services_comptables === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non merci
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

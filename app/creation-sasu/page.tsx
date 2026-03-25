@@ -3039,39 +3039,90 @@ export default function CreationSASUPage() {
                       <p className="text-gray-500 text-sm">Transmission et cession des actions</p>
                     </div>
 
-                    <AccordionItem title="Plus d&apos;informations">
-                      <div className="text-sm text-gray-600 space-y-3 text-justify">
-                        <p>Par défaut dans une SASU, les actions sont <strong>librement cessibles</strong> : l&apos;associé unique peut vendre ou transmettre ses actions sans restriction.</p>
-                        <p>Cependant, il est possible d&apos;ajouter une <strong>clause d&apos;agrément</strong> dans les statuts pour encadrer les cessions futures, par exemple en cas de pluralité d&apos;associés.</p>
-                        <p>Une clause d&apos;agrément impose l&apos;accord préalable de l&apos;associé unique (ou des associés en cas de pluralité) avant toute cession d&apos;actions à un tiers.</p>
-                      </div>
-                    </AccordionItem>
-
                     <div className="space-y-4">
-                      <p className="text-base font-bold text-[#1E3A8A]">Comment souhaitez-vous encadrer la cession des actions ?</p>
+                      <p className="text-lg font-bold text-[#2563EB]">Comment souhaitez-vous encadrer les modalités de cession ou transmission de vos actions ?</p>
+                      <p className="text-sm text-gray-600">
+                        En SASU, l&apos;associé unique reste libre de décider seul de toute cession ou transmission de ses actions. Les options ci-dessous n&apos;ont <strong>aucun effet tant que la société demeure unipersonnelle</strong>. Elles permettent uniquement <strong>d&apos;anticiper les règles applicables le jour où de nouveaux associés entreraient au capital</strong> (cession, donation, succession).
+                      </p>
 
                       <div className="space-y-3">
                         <button
-                          onClick={() => setAnswer("cession_actions", "libre")}
+                          onClick={() => { setAnswer("cession_actions", "libre"); setAnswer("transmission_heritiers", ""); }}
                           className={cn(
                             "w-full p-4 rounded-xl border-2 text-left transition-all",
                             answers.cession_actions === "libre" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
                           )}
                         >
-                          <span className="block text-base font-semibold text-[#2563EB]">Cession libre (par défaut)</span>
-                          <span className="block text-sm text-gray-500 mt-1">Les actions peuvent être cédées librement, sans restriction ni accord préalable.</span>
+                          <span className="block text-base font-semibold text-[#2563EB]">Cession et transmission libres (par défaut)</span>
+                          <span className="block text-sm text-[#2563EB]">Je ne souhaite pas imposer de restrictions</span>
                         </button>
                         <button
-                          onClick={() => setAnswer("cession_actions", "agrement")}
+                          onClick={() => { setAnswer("cession_actions", "agrement"); setAnswer("transmission_heritiers", ""); }}
                           className={cn(
                             "w-full p-4 rounded-xl border-2 text-left transition-all",
                             answers.cession_actions === "agrement" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
                           )}
                         >
                           <span className="block text-base font-semibold text-[#2563EB]">Clause d&apos;agrément</span>
-                          <span className="block text-sm text-gray-500 mt-1">Toute cession à un tiers nécessite l&apos;accord préalable de l&apos;associé unique (ou de l&apos;assemblée en cas de pluralité d&apos;associés).</span>
+                          <span className="block text-sm text-[#2563EB]">Je souhaite prévoir une clause d&apos;agrément</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("cession_actions", "heritiers")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.cession_actions === "heritiers" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Transmission libre uniquement à certains héritiers</span>
+                          <span className="block text-sm text-[#2563EB]">Je souhaite que mes actions soient transmises librement uniquement à certaines personnes</span>
                         </button>
                       </div>
+
+                      {/* Sous-options héritiers */}
+                      {answers.cession_actions === "heritiers" && (
+                        <div className="space-y-4 mt-2">
+                          <p className="text-sm text-gray-600">Les personnes que vous sélectionnez ci-dessous pourront recevoir librement des actions, sans autorisation préalable des autres associés. Toute autre cession à un tiers extérieur sera soumise à la procédure d&apos;agrément prévue par les statuts.</p>
+
+                          <div>
+                            <p className="text-base font-bold text-[#1E3A8A]">À quelles personnes souhaitez-vous autoriser la transmission libre des titres ?</p>
+                            <p className="text-sm text-gray-500 mb-3">(Pour toutes les autres personnes, une procédure d&apos;agrément sera requise.)</p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {[
+                                { value: "conjoint", label: "Conjoint / Partenaire" },
+                                { value: "descendants", label: "Aux descendants (enfants, petits-enfants)" },
+                                { value: "ascendants", label: "Aux ascendants (parents)" },
+                                { value: "heritiers_reservataires", label: "Aux héritiers réservataires" },
+                              ].map((opt) => {
+                                const selected = (answers.transmission_heritiers || "").split(",").filter(Boolean);
+                                const isSelected = selected.includes(opt.value);
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                      const newSelected = isSelected
+                                        ? selected.filter((v: string) => v !== opt.value)
+                                        : [...selected, opt.value];
+                                      setAnswer("transmission_heritiers", newSelected.join(","));
+                                    }}
+                                    className={cn(
+                                      "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                                      isSelected ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                    )}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="text-sm text-gray-500 italic mt-4">Cliquez pour des explications si besoin</p>
+                      <button className="px-6 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity">
+                        Explications clause agrément
+                      </button>
                     </div>
                   </div>
                 )}

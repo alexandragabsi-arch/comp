@@ -1931,6 +1931,23 @@ export default function CreationSASUPage() {
                       <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-5 space-y-4">
                         <p className="text-sm font-semibold text-[#1E3A8A]">Options holding animatrice</p>
 
+                        <AccordionItem title="Comprendre ces options en langage simple">
+                          <div className="text-sm text-gray-600 space-y-4 text-justify">
+                            <div>
+                              <p className="font-bold text-[#1E3A8A]">Convention de management fees</p>
+                              <p>Votre holding facture des prestations à ses filiales (stratégie, comptabilité, RH, etc.). Cela permet de <strong>remonter du chiffre d&apos;affaires</strong> dans la holding et de <strong>déduire ces frais</strong> dans les filiales. En résumé : c&apos;est un moyen légal d&apos;organiser les flux financiers au sein du groupe.</p>
+                            </div>
+                            <div>
+                              <p className="font-bold text-[#1E3A8A]">Convention de trésorerie (cash pooling)</p>
+                              <p>La holding centralise la trésorerie de tout le groupe. Elle peut <strong>prêter de l&apos;argent à ses filiales</strong> ou inversement. C&apos;est comme une &quot;banque interne&quot; qui évite d&apos;avoir recours à un emprunt bancaire pour les besoins de trésorerie entre sociétés du groupe.</p>
+                            </div>
+                            <div>
+                              <p className="font-bold text-[#1E3A8A]">Pacte Dutreil</p>
+                              <p>Si vous envisagez de <strong>transmettre vos parts</strong> à vos enfants ou héritiers, le Pacte Dutreil permet une <strong>exonération de 75 % des droits de donation/succession</strong>. En échange, vous vous engagez à conserver les parts pendant au moins 2 ans (engagement collectif) puis 4 ans (engagement individuel).</p>
+                            </div>
+                          </div>
+                        </AccordionItem>
+
                         <div className="space-y-3">
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de management fees</label>

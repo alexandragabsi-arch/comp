@@ -532,15 +532,16 @@ export function DocumentPreviewPanel({
   const pagesRef = useRef<HTMLDivElement>(null);
 
   const isDeclaration = /^#\s+DÉCLARATION/i.test(text.trimStart());
+  const isStatuts = /^#\s+STATUTS/i.test(text.trimStart());
   const cover = parseCoverData(text);
-  const bodyText = isDeclaration
+  const bodyText = (isDeclaration || isStatuts)
     ? normalizeMarkdown(text)
     : normalizeMarkdown(stripCoverBlock(text));
 
   const handleDownloadPdf = async () => {
     try {
       const { generateReactPDF } = await import("@/app/lib/generatePdfReact");
-      await generateReactPDF(cover, bodyText, isDeclaration, pdfFileName);
+      await generateReactPDF(cover, bodyText, isDeclaration || isStatuts, pdfFileName);
     } catch (err) {
       console.error("Erreur génération PDF:", err);
       alert("Erreur PDF : " + (err instanceof Error ? err.message : String(err)));
@@ -574,7 +575,7 @@ export function DocumentPreviewPanel({
         <div ref={pagesRef} className="flex flex-col items-center gap-8 max-w-[900px] mx-auto">
 
           {/* ══ PAGE DE GARDE ══ */}
-          {!isDeclaration && (
+          {!isDeclaration && !isStatuts && (
             <A4Page pageNumber={1}>
               <div className="h-full flex flex-col">
                 {/* Logo */}
@@ -637,25 +638,37 @@ export function DocumentPreviewPanel({
           )}
 
           {/* ══ PAGES DE CONTENU ══ */}
-          <A4Page pageNumber={isDeclaration ? 1 : 2}>
-            <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459", paddingTop: isDeclaration ? "40px" : "0" }}>
+          <A4Page pageNumber={(isDeclaration || isStatuts) ? 1 : 2}>
+            <article style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0D2459", paddingTop: (isDeclaration || isStatuts) ? "40px" : "0" }}>
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
                   h1: ({ children }) => (
-                    <h1 style={{ fontSize: "15px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: isDeclaration ? "48px" : "20px", marginTop: "8px", paddingBottom: "12px", borderBottom: "2px solid #0D2459" }}>
+                    <h1 style={{ fontSize: isStatuts ? "22px" : "15px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: isStatuts ? "8px" : (isDeclaration ? "48px" : "20px"), marginTop: "8px", paddingBottom: "12px", borderBottom: "2px solid #0D2459" }}>
                       {children}
                     </h1>
                   ),
                   h2: ({ children }) => (
-                    <h2 style={{ fontSize: "12px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "28px", marginBottom: "10px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "4px" }}>
-                      {children}
-                    </h2>
+                    isStatuts ? (
+                      <h2 style={{ fontSize: "13px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginTop: "36px", marginBottom: "16px", paddingBottom: "8px", borderBottom: "2.5px solid #0D2459" }}>
+                        {children}
+                      </h2>
+                    ) : (
+                      <h2 style={{ fontSize: "12px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "28px", marginBottom: "10px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "4px" }}>
+                        {children}
+                      </h2>
+                    )
                   ),
                   h3: ({ children }) => (
-                    <h3 style={{ fontSize: "11px", fontWeight: "bold", color: "#0D2459", marginTop: "18px", marginBottom: "8px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "3px" }}>
-                      {children}
-                    </h3>
+                    isStatuts ? (
+                      <h3 style={{ fontSize: "11.5px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", paddingLeft: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "6px 10px" }}>
+                        {children}
+                      </h3>
+                    ) : (
+                      <h3 style={{ fontSize: "11px", fontWeight: "bold", color: "#0D2459", marginTop: "18px", marginBottom: "8px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "3px" }}>
+                        {children}
+                      </h3>
+                    )
                   ),
                   p: ({ children }) => (
                     <p style={{ fontSize: "11.5px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify", hyphens: "auto" } as React.CSSProperties}>
@@ -694,7 +707,9 @@ export function DocumentPreviewPanel({
                       {children}
                     </td>
                   ),
-                  hr: () => null,
+                  hr: () => isStatuts
+                    ? <div style={{ borderTop: "1px solid #d1d5db", margin: "16px 0" }} />
+                    : null,
                   blockquote: ({ children }) => (
                     <blockquote style={{ borderLeft: "3px solid #5B8DEF", paddingLeft: "12px", margin: "12px 0", color: "#64748b", fontStyle: "italic", fontSize: "10.5px" }}>
                       {children}

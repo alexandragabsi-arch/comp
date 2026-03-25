@@ -1297,6 +1297,8 @@ export default function CreationSASUPage() {
     { id: "regles_duree" },        // durée de la société (si personnaliser)
     { id: "regles_transmission" }, // règles transmission/cession (si personnaliser)
     { id: "regles_nantissement" }, // nantissement + location actions (si personnaliser)
+    { id: "regles_non_concurrence" },  // clause de non-concurrence (si personnaliser)
+    { id: "regles_comptes_courants" }, // conditions comptes courants (si personnaliser)
     { id: "regime_fiscal" },        // impôts sur les bénéfices (IS / IR)
     { id: "regime_tva" },           // régime de TVA
     { id: "reprise_depenses" },    // reprise des dépenses engagées pour la société en formation
@@ -1308,7 +1310,7 @@ export default function CreationSASUPage() {
   // Skip conditional pages based on answers
   function shouldSkipPage(pageId: string | undefined): boolean {
     if (!pageId) return false;
-    const customPages = ["regles_cac", "regles_duree", "regles_transmission", "regles_nantissement"];
+    const customPages = ["regles_cac", "regles_duree", "regles_transmission", "regles_nantissement", "regles_non_concurrence", "regles_comptes_courants"];
     if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
     // Skip services_comptables if CAC is explicitly "oui"
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
@@ -2543,6 +2545,33 @@ export default function CreationSASUPage() {
                     {/* Formulaire associé physique */}
                     {answers.type_associe === "physique" && (
                       <div className="space-y-4 border-t border-gray-200 pt-5">
+                        <div className="space-y-2">
+                          <label className="block text-base font-bold text-[#1E3A8A]">Civilité</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("associe_civilite", "M.")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.associe_civilite === "M."
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Monsieur
+                            </button>
+                            <button
+                              onClick={() => setAnswer("associe_civilite", "Mme")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.associe_civilite === "Mme"
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Madame
+                            </button>
+                          </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
@@ -2640,6 +2669,47 @@ export default function CreationSASUPage() {
                           />
                         </div>
 
+                        {/* Résidence fiscale */}
+                        <div className="border-t border-gray-200 pt-4 space-y-3">
+                          <label className="block text-base font-bold text-[#1E3A8A]">Résidence fiscale</label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("resident_fiscal", "oui")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                (answers.resident_fiscal || "oui") === "oui"
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Résident(e) fiscal(e) français(e)
+                            </button>
+                            <button
+                              onClick={() => setAnswer("resident_fiscal", "non")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.resident_fiscal === "non"
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Non-résident(e) fiscal(e)
+                            </button>
+                          </div>
+                          {answers.resident_fiscal === "non" && (
+                            <div>
+                              <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Pays de résidence fiscale</label>
+                              <input
+                                type="text"
+                                value={answers.pays_residence_fiscale || ""}
+                                onChange={(e) => setAnswer("pays_residence_fiscale", e.target.value)}
+                                placeholder="Ex : Suisse, Luxembourg..."
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                              />
+                            </div>
+                          )}
+                        </div>
+
                         {/* Situation matrimoniale */}
                         <div className="border-t border-gray-200 pt-4 space-y-3">
                           <label className="flex items-center gap-2 text-base font-bold text-[#1E3A8A]">
@@ -2672,15 +2742,56 @@ export default function CreationSASUPage() {
                           {/* Si marié : régime matrimonial */}
                           {answers.situation_matrimoniale === "marie" && (
                             <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
-                              <div>
-                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du conjoint</label>
-                                <input
-                                  type="text"
-                                  value={answers.conjoint_nom || ""}
-                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
-                                  placeholder="Prénom et nom du conjoint"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                                />
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Civilité du conjoint</label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "M.")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "M."
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Monsieur
+                                    </button>
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "Mme")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "Mme"
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Madame
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Prénom du conjoint</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_prenom || ""}
+                                      onChange={(e) => setAnswer("conjoint_prenom", e.target.value)}
+                                      placeholder="Prénom"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du conjoint</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_nom || ""}
+                                      onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                      placeholder="Nom de famille"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                               <div>
                                 <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Régime matrimonial</label>
@@ -2712,15 +2823,56 @@ export default function CreationSASUPage() {
                           {/* Si pacsé : nom du partenaire */}
                           {answers.situation_matrimoniale === "pacse" && (
                             <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
-                              <div>
-                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du partenaire de PACS</label>
-                                <input
-                                  type="text"
-                                  value={answers.conjoint_nom || ""}
-                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
-                                  placeholder="Prénom et nom du partenaire"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                                />
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Civilité du partenaire</label>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "M.")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "M."
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Monsieur
+                                    </button>
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "Mme")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "Mme"
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Madame
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Prénom du partenaire</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_prenom || ""}
+                                      onChange={(e) => setAnswer("conjoint_prenom", e.target.value)}
+                                      placeholder="Prénom"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du partenaire</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_nom || ""}
+                                      onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                      placeholder="Nom de famille"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -3141,6 +3293,43 @@ export default function CreationSASUPage() {
                         </button>
                       </div>
 
+                      {/* Coordonnées du CAC si oui */}
+                      {answers.nommer_cac === "oui" && (
+                        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-xl mt-4">
+                          <p className="text-base font-bold text-[#1E3A8A]">Coordonnées du commissaire aux comptes</p>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Dénomination / Nom du cabinet</label>
+                            <input
+                              type="text"
+                              value={answers.cac_denomination || ""}
+                              onChange={(e) => setAnswer("cac_denomination", e.target.value)}
+                              placeholder="Ex : Cabinet Durand & Associés"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Adresse</label>
+                            <input
+                              type="text"
+                              value={answers.cac_adresse || ""}
+                              onChange={(e) => setAnswer("cac_adresse", e.target.value)}
+                              placeholder="Adresse complète du cabinet"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Numéro d&apos;inscription CNCC</label>
+                            <input
+                              type="text"
+                              value={answers.cac_numero_cncc || ""}
+                              onChange={(e) => setAnswer("cac_numero_cncc", e.target.value)}
+                              placeholder="N° CNCC"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+                      )}
+
                       {/* Sous-question si Non */}
                       {answers.nommer_cac === "non" && (
                         <div className="space-y-3 mt-4">
@@ -3277,6 +3466,30 @@ export default function CreationSASUPage() {
                           <span className="block text-sm text-[#2563EB]">Je souhaite que mes actions soient transmises librement uniquement à certaines personnes</span>
                         </button>
                       </div>
+
+                      {/* Majorité agrément */}
+                      {(answers.cession_actions === "agrement" || answers.cession_actions === "heritiers") && (
+                        <div className="space-y-3 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                          <label className="block text-base font-bold text-[#1E3A8A]">Majorité requise pour l&apos;agrément</label>
+                          <p className="text-sm text-gray-600">Quel pourcentage des droits de vote sera nécessaire pour approuver l&apos;entrée d&apos;un nouvel associé ?</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {["50", "66", "75"].map((pct) => (
+                              <button
+                                key={pct}
+                                onClick={() => setAnswer("majorite_agrement_pct", pct)}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  (answers.majorite_agrement_pct || "50") === pct
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                {pct} %
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Sous-options héritiers */}
                       {answers.cession_actions === "heritiers" && (
@@ -3432,6 +3645,220 @@ export default function CreationSASUPage() {
                           </button>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Non-concurrence (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_non_concurrence" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Clause de non-concurrence des dirigeants</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <p className="text-sm text-gray-700">La clause de non-concurrence interdit au président (et au DG le cas échéant) d&apos;exercer une activité concurrente pendant et après la fin de son mandat. Elle est <strong>facultative</strong>.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous inclure une clause de non-concurrence dans les statuts ?</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("non_concurrence", "oui")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.non_concurrence === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui
+                        </button>
+                        <button
+                          onClick={() => setAnswer("non_concurrence", "non")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            (answers.non_concurrence || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non (par défaut)
+                        </button>
+                      </div>
+
+                      {answers.non_concurrence === "oui" && (
+                        <div className="space-y-4 p-4 border-l-2 border-[#2563EB]/30 ml-2">
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Durée de la clause (en années après cessation)</label>
+                            <div className="grid grid-cols-3 gap-2">
+                              {["1", "2", "3"].map((y) => (
+                                <button
+                                  key={y}
+                                  onClick={() => setAnswer("duree_non_concurrence", y)}
+                                  className={cn(
+                                    "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                    (answers.duree_non_concurrence || "1") === y
+                                      ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                      : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                  )}
+                                >
+                                  {y} an{Number(y) > 1 ? "s" : ""}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Périmètre géographique</label>
+                            <input
+                              type="text"
+                              value={answers.perimetre_non_concurrence || ""}
+                              onChange={(e) => setAnswer("perimetre_non_concurrence", e.target.value)}
+                              placeholder="Ex : France métropolitaine, Union européenne..."
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Contrepartie financière ?</label>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={() => setAnswer("indemnite_non_concurrence", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.indemnite_non_concurrence === "oui"
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui, avec indemnité
+                              </button>
+                              <button
+                                onClick={() => setAnswer("indemnite_non_concurrence", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  (answers.indemnite_non_concurrence || "non") === "non"
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non, intégrée à la rémunération
+                              </button>
+                            </div>
+                          </div>
+                          {answers.indemnite_non_concurrence === "oui" && (
+                            <div>
+                              <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Montant mensuel de l&apos;indemnité (€ bruts)</label>
+                              <input
+                                type="number"
+                                value={answers.montant_indemnite_non_concurrence || ""}
+                                onChange={(e) => setAnswer("montant_indemnite_non_concurrence", e.target.value)}
+                                placeholder="Ex : 500"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Comptes courants d'associés (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_comptes_courants" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Conditions des comptes courants d&apos;associés</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <p className="text-sm text-gray-700">L&apos;associé unique peut prêter de l&apos;argent à la société via un <strong>compte courant d&apos;associé</strong>. Les statuts définissent les conditions de rémunération et de remboursement de ces avances.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Taux d&apos;intérêt des avances en compte courant</p>
+                        <div className="grid grid-cols-1 gap-2">
+                          <button
+                            onClick={() => setAnswer("taux_compte_courant", "legal")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left transition-all",
+                              (answers.taux_compte_courant || "legal") === "legal" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <span className="block text-base font-semibold text-[#2563EB]">Taux légal en vigueur (recommandé)</span>
+                            <span className="block text-sm text-gray-600">Les avances sont rémunérées au taux d&apos;intérêt légal</span>
+                          </button>
+                          <button
+                            onClick={() => setAnswer("taux_compte_courant", "fixe")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left transition-all",
+                              answers.taux_compte_courant === "fixe" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <span className="block text-base font-semibold text-[#2563EB]">Taux fixe personnalisé</span>
+                            <span className="block text-sm text-gray-600">Définir un taux d&apos;intérêt fixe annuel</span>
+                          </button>
+                          <button
+                            onClick={() => setAnswer("taux_compte_courant", "gratuit")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left transition-all",
+                              answers.taux_compte_courant === "gratuit" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <span className="block text-base font-semibold text-[#2563EB]">Avances gratuites (taux 0%)</span>
+                            <span className="block text-sm text-gray-600">Les avances en compte courant ne portent pas intérêt</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {answers.taux_compte_courant === "fixe" && (
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Taux d&apos;intérêt annuel (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={answers.taux_cc_valeur || ""}
+                            onChange={(e) => setAnswer("taux_cc_valeur", e.target.value)}
+                            placeholder="Ex : 2.5"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Plafond des avances en compte courant ?</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("plafond_compte_courant", "non")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              (answers.plafond_compte_courant || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non, pas de plafond
+                          </button>
+                          <button
+                            onClick={() => setAnswer("plafond_compte_courant", "oui")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.plafond_compte_courant === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui, limiter le montant
+                          </button>
+                        </div>
+                      </div>
+
+                      {answers.plafond_compte_courant === "oui" && (
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Montant maximum des avances (€)</label>
+                          <input
+                            type="number"
+                            value={answers.montant_plafond_cc || ""}
+                            onChange={(e) => setAnswer("montant_plafond_cc", e.target.value)}
+                            placeholder="Ex : 50000"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

@@ -78,6 +78,7 @@ interface V {
 
   // Associé physique
   civAssocie: string;
+  isFeminin: boolean;
   prenomAssocie: string;
   nomAssocie: string;
   adresseAssocie: string;
@@ -206,14 +207,24 @@ function prep(a: Answers): V {
   const siege = a.adresse_siege || "[ADRESSE DU SIÈGE]";
   const duree = a.duree_societe === "personnalisee" ? (a.duree_societe_annees || "99") : "99";
 
+  // Genre helpers
+  const fem = a.associe_civilite === "Mme";
+  const ne = fem ? "née" : "né";
+  const domicilie = fem ? "domiciliée" : "domicilié";
+  const nomme = fem ? "nommée" : "nommé";
+  const denomme = fem ? "dénommée" : "dénommé";
+  const soussigne = fem ? "soussignée" : "soussigné";
+  const associeLabel = fem ? "Associée" : "Associé";
+  const presidentLabel = fem ? "Présidente" : "Président";
+
   // Président nomination text
   let presidentNomination = "";
   if (isPresidentAssocie && isPhysique) {
-    presidentNomination = `${a.associe_civilite === "Mme" ? "Madame" : "Monsieur"} ${a.associe_prenom || "[PRÉNOM]"} ${a.associe_nom || "[NOM]"}, né(e) le ${fmtDate(a.associe_date_naissance)} à ${a.associe_lieu_naissance || "[LIEU]"}, domicilié(e) à ${a.associe_adresse || "[ADRESSE]"}.`;
+    presidentNomination = `${a.associe_civilite === "Mme" ? "Madame" : "Monsieur"} ${a.associe_prenom || "[PRÉNOM]"} ${a.associe_nom || "[NOM]"}, ${ne} le ${fmtDate(a.associe_date_naissance)} à ${a.associe_lieu_naissance || "[LIEU]"}, ${domicilie} à ${a.associe_adresse || "[ADRESSE]"}.`;
   } else if (isPresidentAssocie && !isPhysique) {
     presidentNomination = `La société ${a.associe_societe_nom || "[DÉNOMINATION]"}, immatriculée au RCS sous le n° ${a.associe_societe_siren || "[SIREN]"}, représentée par son représentant permanent ${a.associe_societe_representant || "[REPRÉSENTANT]"}.`;
   } else if (a.president_type === "physique") {
-    presidentNomination = `${a.president_civilite === "Mme" ? "Madame" : "Monsieur"} ${a.president_prenom || "[PRÉNOM]"} ${a.president_nom || "[NOM]"}, né(e) le ${fmtDate(a.president_date_naissance)} à ${a.president_lieu_naissance || "[LIEU]"}, domicilié(e) à ${a.president_adresse || "[ADRESSE]"}.`;
+    presidentNomination = `${a.president_civilite === "Mme" ? "Madame" : "Monsieur"} ${a.president_prenom || "[PRÉNOM]"} ${a.president_nom || "[NOM]"}, ${a.president_civilite === "Mme" ? "née" : "né"} le ${fmtDate(a.president_date_naissance)} à ${a.president_lieu_naissance || "[LIEU]"}, ${a.president_civilite === "Mme" ? "domiciliée" : "domicilié"} à ${a.president_adresse || "[ADRESSE]"}.`;
   } else {
     presidentNomination = `La société ${a.president_pm_nom || "[DÉNOMINATION]"}, immatriculée au RCS sous le n° ${a.president_pm_siren || "[SIREN]"}, représentée par son représentant permanent ${a.president_rp_civilite === "Mme" ? "Madame" : "Monsieur"} ${a.president_rp_prenom || "[PRÉNOM]"} ${a.president_rp_nom || "[NOM]"}.`;
   }
@@ -221,7 +232,7 @@ function prep(a: Answers): V {
   // DG nomination
   let dgNomination = "";
   if (hasDG) {
-    dgNomination = `${a.dg_civilite === "Mme" ? "Madame" : "Monsieur"} ${a.dg_prenom || "[PRÉNOM]"} ${a.dg_nom || "[NOM]"}, né(e) le ${fmtDate(a.dg_date_naissance)}, domicilié(e) à ${a.dg_adresse || "[ADRESSE]"}.`;
+    dgNomination = `${a.dg_civilite === "Mme" ? "Madame" : "Monsieur"} ${a.dg_prenom || "[PRÉNOM]"} ${a.dg_nom || "[NOM]"}, ${a.dg_civilite === "Mme" ? "née" : "né"} le ${fmtDate(a.dg_date_naissance)}, ${a.dg_civilite === "Mme" ? "domiciliée" : "domicilié"} à ${a.dg_adresse || "[ADRESSE]"}.`;
   }
 
   // Régime matrimonial label
@@ -247,8 +258,8 @@ function prep(a: Answers): V {
 
   // Signature
   const signatureAssocie = isPhysique
-    ? `${a.associe_prenom || "[PRÉNOM]"} ${a.associe_nom || "[NOM]"} — Associé(e) unique${isPresidentAssocie ? " et Président(e)" : ""}`
-    : `${a.associe_societe_nom || "[DÉNOMINATION]"} — Associé(e) unique${isPresidentAssocie ? " et Président(e)" : ""}`;
+    ? `${a.associe_prenom || "[PRÉNOM]"} ${a.associe_nom || "[NOM]"} — ${associeLabel} unique${isPresidentAssocie ? ` et ${presidentLabel}` : ""}`
+    : `${a.associe_societe_nom || "[DÉNOMINATION]"} — ${associeLabel} unique${isPresidentAssocie ? ` et ${presidentLabel}` : ""}`;
 
   return {
     denomination: a.nom_societe || a.denomination_sociale || "[DÉNOMINATION]",
@@ -274,6 +285,7 @@ function prep(a: Answers): V {
     isPresidentAssocie,
     isSimplifiee,
     civAssocie: a.associe_civilite === "Mme" ? "Madame" : "Monsieur",
+    isFeminin: a.associe_civilite === "Mme",
     prenomAssocie: a.associe_prenom || "[PRÉNOM]",
     nomAssocie: a.associe_nom || "[NOM]",
     adresseAssocie: a.associe_adresse || "[ADRESSE]",
@@ -492,7 +504,7 @@ export function buildDeclarations(v: V): string {
     sections.push(
       `${v.civAssocie} ${v.prenomAssocie} ${v.nomAssocie},`,
       `demeurant à ${v.adresseAssocie},`,
-      `né(e) le ${v.dateNaissAssocie} à ${v.lieuNaissAssocie},`,
+      `${v.isFeminin ? "née" : "né"} le ${v.dateNaissAssocie} à ${v.lieuNaissAssocie},`,
       `de nationalité ${v.natAssocie},`,
     );
   } else {
@@ -500,12 +512,12 @@ export function buildDeclarations(v: V): string {
       `La société **${v.denomAssociePM}**, ${v.formeAssociePM} au capital de ${v.capitalAssociePM} euros,`,
       `dont le siège social est situé à ${v.adresseAssociePM},`,
       `immatriculée au Registre du Commerce et des Sociétés de ${v.villeRCSAssociePM} sous le numéro SIREN ${v.sirenAssociePM},`,
-      `représentée par ${v.representantAssociePM}, dûment habilité(e) aux fins des présentes,`,
+      `représentée par ${v.representantAssociePM}, dûment habilité aux fins des présentes,`,
     );
   }
 
   sections.push("");
-  sections.push("ci-après dénommé(e) l'« **Associé unique** »,");
+  sections.push(`ci-après ${v.isFeminin ? "dénommée" : "dénommé"} l'« **${v.isFeminin ? "Associée" : "Associé"} unique** »,`);
   sections.push("");
   sections.push("a établi ainsi qu'il suit les statuts de la Société par Actions Simplifiée Unipersonnelle devant régir la société.");
 
@@ -521,16 +533,16 @@ export function buildDeclarations(v: V): string {
         break;
       case "marie":
         sections.push(
-          `L'Associé unique déclare être marié(e) avec ${v.conjointCivilite} ${v.conjointPrenom} ${v.conjointNom} sous le régime de ${v.regimeMatrimonial}.`,
+          `L'${v.isFeminin ? "Associée" : "Associé"} unique déclare être ${v.isFeminin ? "mariée" : "marié"} avec ${v.conjointCivilite} ${v.conjointPrenom} ${v.conjointNom} sous le régime de ${v.regimeMatrimonial}.`,
         );
         break;
       case "pacse":
         sections.push(
-          `L'Associé unique déclare être lié(e) par un pacte civil de solidarité avec ${v.conjointCivilite} ${v.conjointPrenom} ${v.conjointNom}.`,
+          `L'${v.isFeminin ? "Associée" : "Associé"} unique déclare être ${v.isFeminin ? "liée" : "lié"} par un pacte civil de solidarité avec ${v.conjointCivilite} ${v.conjointPrenom} ${v.conjointNom}.`,
         );
         break;
       case "divorce":
-        sections.push("L'Associé unique déclare être divorcé(e).");
+        sections.push(`L'${v.isFeminin ? "Associée" : "Associé"} unique déclare être ${v.isFeminin ? "divorcée" : "divorcé"}.`);
         break;
       case "veuf":
         sections.push("L'Associé unique déclare être veuf(ve).");
@@ -1285,7 +1297,7 @@ export function buildTitre4(v: V): string {
   );
   lines.push("");
   lines.push(
-    `Est nommé(e) en qualité de premier Président de la Société, pour une durée ${v.dureeMandat}, ${v.mandatRenouvelable} :`
+    `Est ${v.isFeminin ? "nommée" : "nommé"} en qualité de ${v.isFeminin ? "première Présidente" : "premier Président"} de la Société, pour une durée ${v.dureeMandat}, ${v.mandatRenouvelable} :`
   );
   lines.push("");
   lines.push(v.presidentNomination);
@@ -1303,7 +1315,7 @@ export function buildTitre4(v: V): string {
     );
     lines.push("");
     lines.push(
-      "Est nommé(e) en qualité de premier Directeur Général de la Société :"
+      "Est nommé en qualité de premier Directeur Général de la Société :"
     );
     lines.push("");
     lines.push(v.dgNomination);
@@ -1987,32 +1999,49 @@ export function buildTitre7(v: V): string {
 }
 export function buildSignatures(v: V): string {
   const s: string[] = [];
+  const e = v.isFeminin ? "e" : "";
 
   s.push("---");
   s.push("");
   s.push(`Fait à ${v.lieuSignature}, le ${v.dateSignature}.`);
   s.push("");
-  s.push("**Signature de l'Associé unique**");
+  s.push(`En un exemplaire original.`);
+  s.push("");
+  s.push("");
+  s.push(`**Signature de l'Associé${e} unique${v.isPresidentAssocie ? ` et Président${e}` : ""}**`);
+  s.push("");
+  s.push(`_Lu et approuvé${e}_`);
+  s.push("");
+  s.push("");
   s.push("");
   s.push("_______________________________");
-  s.push(v.signatureAssocie);
+  s.push(`${v.prenomAssocie} ${v.nomAssocie}`);
+  s.push("");
 
   if (!v.isPresidentAssocie) {
     s.push("");
-    s.push("**Signature du Président**");
-    s.push("_Bon pour acceptation des fonctions de Président(e)_");
+    s.push(`**Signature du${v.isFeminin ? " la" : ""} Président${e}**`);
+    s.push("");
+    s.push(`_Bon pour acceptation des fonctions de Président${e}_`);
+    s.push("");
+    s.push("");
     s.push("");
     s.push("_______________________________");
     s.push(v.presidentNomination);
+    s.push("");
   }
 
   if (v.hasDG) {
     s.push("");
     s.push("**Signature du Directeur Général**");
+    s.push("");
     s.push("_Bon pour acceptation des fonctions de Directeur Général_");
+    s.push("");
+    s.push("");
     s.push("");
     s.push("_______________________________");
     s.push(v.dgNomination);
+    s.push("");
   }
 
   return s.join("\n");

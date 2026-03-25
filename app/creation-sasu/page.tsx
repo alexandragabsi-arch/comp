@@ -1417,15 +1417,15 @@ export default function CreationSASUPage() {
                 <div key={s.id} className="flex items-start gap-3">
                   <div className="flex flex-col items-center">
                     <div className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all",
-                      isActive ? "bg-[#2563EB] text-white" :
+                      "w-11 h-11 rounded-full flex items-center justify-center text-base font-semibold transition-all",
+                      isActive ? "bg-[#5B6ABF] text-white shadow-md" :
                       isCompleted ? "bg-green-500 text-white" :
                       "bg-gray-100 text-gray-400"
                     )}>
                       {isCompleted ? <Check className="w-5 h-5" /> : s.id}
                     </div>
                     {index < STEPS.length - 1 && (
-                      <div className={cn("w-0.5 h-8 mt-1", isCompleted ? "bg-green-500" : "bg-gray-200")} />
+                      <div className={cn("w-0.5 h-10 mt-1", isCompleted ? "bg-green-500" : "bg-gray-200")} />
                     )}
                   </div>
                   <div className={cn(
@@ -1434,15 +1434,15 @@ export default function CreationSASUPage() {
                   )}>
                     <Icon className={cn(
                       "w-4 h-4 flex-shrink-0",
-                      isActive ? "text-[#2563EB]" : isCompleted ? "text-green-500" : "text-gray-400"
+                      isActive ? "text-[#5B6ABF]" : isCompleted ? "text-green-500" : "text-gray-400"
                     )} />
                     <p className={cn(
-                      "text-sm font-medium flex-1",
-                      isActive ? "text-[#1E3A8A]" : "text-gray-400"
+                      "text-base font-medium flex-1",
+                      isActive ? "text-[#2D3A6E]" : "text-gray-400"
                     )}>
                       {s.label}
                     </p>
-                    {isActive && <ChevronRight className="w-4 h-4 text-[#2563EB]" />}
+                    {isActive && <ChevronRight className="w-4 h-4 text-[#5B6ABF]" />}
                   </div>
                 </div>
               );

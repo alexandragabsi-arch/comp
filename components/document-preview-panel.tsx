@@ -647,17 +647,17 @@ export function DocumentPreviewPanel({
                     remarkPlugins={[remarkGfm]}
                     components={{
                       h1: ({ children }) => (
-                        <h1 style={{ fontSize: "22px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px", marginTop: "8px", paddingBottom: "12px", borderBottom: "2px solid #0D2459" }}>
+                        <h1 style={{ fontSize: "26px", fontWeight: "bold", textAlign: "center", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px", marginTop: "8px", paddingBottom: "12px", borderBottom: "2px solid #0D2459" }}>
                           {children}
                         </h1>
                       ),
                       h2: ({ children }) => (
-                        <h2 style={{ fontSize: "13px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginTop: "36px", marginBottom: "16px", paddingBottom: "8px", borderBottom: "2.5px solid #0D2459" }}>
+                        <h2 style={{ fontSize: "16px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginTop: "36px", marginBottom: "16px", paddingBottom: "8px", borderBottom: "2.5px solid #0D2459" }}>
                           {children}
                         </h2>
                       ),
                       h3: ({ children }) => (
-                        <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "6px 10px" }}>
+                        <h3 style={{ fontSize: "14px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "8px 12px" }}>
                           {children}
                         </h3>
                       ),
@@ -667,7 +667,7 @@ export function DocumentPreviewPanel({
                         </h4>
                       ),
                       p: ({ children }) => (
-                        <p style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify" }}>
+                        <p style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify" }}>
                           {children}
                         </p>
                       ),
@@ -675,10 +675,10 @@ export function DocumentPreviewPanel({
                         <strong style={{ fontWeight: "bold", color: "#0D2459" }}>{children}</strong>
                       ),
                       ul: ({ children }) => (
-                        <ul style={{ paddingLeft: "18px", marginBottom: "14px" }}>{children}</ul>
+                        <ul style={{ paddingLeft: "0", marginBottom: "14px", listStyle: "none" }}>{children}</ul>
                       ),
                       li: ({ children }) => (
-                        <li style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
+                        <li style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "8px", fontStyle: "italic", textAlign: "justify" }}>{children}</li>
                       ),
                       hr: () => <div style={{ borderTop: "1px solid #d1d5db", margin: "16px 0" }} />,
                       blockquote: ({ children }) => (
@@ -706,11 +706,11 @@ export function DocumentPreviewPanel({
                   ),
                   h2: ({ children }) => (
                     isStatuts ? (
-                      <h2 style={{ fontSize: "13px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginTop: "36px", marginBottom: "16px", paddingBottom: "8px", borderBottom: "2.5px solid #0D2459" }}>
+                      <h2 style={{ fontSize: "16px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.08em", textAlign: "center", marginTop: "36px", marginBottom: "16px", paddingBottom: "8px", borderBottom: "2.5px solid #0D2459" }}>
                         {children}
                       </h2>
                     ) : (
-                      <h2 style={{ fontSize: "12px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "28px", marginBottom: "10px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "4px" }}>
+                      <h2 style={{ fontSize: "15px", fontWeight: "bold", color: "#0D2459", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "28px", marginBottom: "10px", textDecoration: "underline", textDecorationColor: "#0D2459", textUnderlineOffset: "4px" }}>
                         {children}
                       </h2>
                     )
@@ -727,7 +727,7 @@ export function DocumentPreviewPanel({
                     )
                   ),
                   p: ({ children }) => (
-                    <p style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify", hyphens: "auto" } as React.CSSProperties}>
+                    <p style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify", hyphens: "auto" } as React.CSSProperties}>
                       {children}
                     </p>
                   ),
@@ -741,7 +741,7 @@ export function DocumentPreviewPanel({
                     <ol style={{ paddingLeft: "18px", marginBottom: "14px" }}>{children}</ol>
                   ),
                   li: ({ children }) => (
-                    <li style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
+                    <li style={{ fontSize: "14px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
                   ),
                   table: ({ children }) => (
                     <table style={{ width: "100%", borderCollapse: "collapse", margin: "16px 0", fontSize: "11px" }}>

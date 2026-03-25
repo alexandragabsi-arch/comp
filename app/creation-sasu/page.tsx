@@ -2249,29 +2249,120 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
-                    {/* Code NAF suggestion */}
+                    {/* Bouton analyse IA */}
                     {answers.activite_principale_desc && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <p className="text-base text-[#1E3A8A]">
-                          <strong>Suggestion du code NAF :</strong> Le code NAF attribué officiellement sera celui correspondant à l&apos;activité principale, telle que déterminée par l&apos;INSEE.
-                        </p>
+                      <div className="space-y-4">
+                        <button
+                          onClick={async () => {
+                            setAnswer("analyse_activite_loading", "oui");
+                            setAnswer("analyse_activite_error", "");
+                            try {
+                              const res = await fetch("/api/analyse-activite", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  activite_principale: answers.activite_principale_desc,
+                                  activites_secondaires: answers.activites_secondaires,
+                                }),
+                              });
+                              if (!res.ok) throw new Error("Erreur API");
+                              const data = await res.json();
+                              setAnswer("code_naf", data.code_naf || "");
+                              setAnswer("libelle_naf", data.libelle_naf || "");
+                              setAnswer("est_reglementee", data.est_reglementee ? "oui" : "non");
+                              if (data.reglementation && data.est_reglementee) {
+                                setAnswer("reglementation_description", data.reglementation.description || "");
+                                setAnswer("reglementation_conditions", JSON.stringify(data.reglementation.conditions || []));
+                                setAnswer("reglementation_justificatifs", JSON.stringify(data.reglementation.justificatifs || []));
+                                setAnswer("reglementation_autorite", data.reglementation.autorite_competente || "");
+                              } else {
+                                setAnswer("reglementation_description", "");
+                                setAnswer("reglementation_conditions", "");
+                                setAnswer("reglementation_justificatifs", "");
+                                setAnswer("reglementation_autorite", "");
+                              }
+                            } catch {
+                              setAnswer("analyse_activite_error", "Erreur lors de l'analyse. Réessayez.");
+                            } finally {
+                              setAnswer("analyse_activite_loading", "");
+                            }
+                          }}
+                          disabled={answers.analyse_activite_loading === "oui"}
+                          className="w-full py-3 rounded-xl bg-[#7C3AED] text-white font-semibold text-base hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          {answers.analyse_activite_loading === "oui" ? "Analyse en cours..." : "Analyser mon activité (code NAF + réglementation)"}
+                        </button>
+
+                        {answers.analyse_activite_error && (
+                          <p className="text-sm text-red-500">{answers.analyse_activite_error}</p>
+                        )}
+
+                        {/* Résultat code NAF */}
+                        {answers.code_naf && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                            <p className="text-base font-bold text-[#1E3A8A] flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-[#7C3AED]" /> Code NAF suggéré
+                            </p>
+                            <p className="text-base text-[#1E3A8A]">
+                              <strong>{answers.code_naf}</strong> — {answers.libelle_naf}
+                            </p>
+                            <p className="text-xs text-gray-500 italic">Le code NAF définitif sera attribué par l&apos;INSEE lors de l&apos;immatriculation.</p>
+                          </div>
+                        )}
+
+                        {/* Résultat activité réglementée */}
+                        {answers.est_reglementee === "oui" && (
+                          <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-3">
+                            <p className="text-base font-bold text-amber-800 flex items-center gap-2">
+                              ⚠️ Activité réglementée détectée
+                            </p>
+                            {answers.reglementation_description && (
+                              <p className="text-sm text-amber-700">{answers.reglementation_description}</p>
+                            )}
+                            {answers.reglementation_conditions && (() => {
+                              try {
+                                const conditions = JSON.parse(answers.reglementation_conditions);
+                                if (conditions.length > 0) return (
+                                  <div>
+                                    <p className="text-sm font-bold text-amber-800">Conditions requises :</p>
+                                    <ul className="list-disc pl-5 text-sm text-amber-700 space-y-1">
+                                      {conditions.map((c: string, i: number) => <li key={i}>{c}</li>)}
+                                    </ul>
+                                  </div>
+                                );
+                              } catch { /* ignore parse errors */ }
+                              return null;
+                            })()}
+                            {answers.reglementation_justificatifs && (() => {
+                              try {
+                                const justifs = JSON.parse(answers.reglementation_justificatifs);
+                                if (justifs.length > 0) return (
+                                  <div>
+                                    <p className="text-sm font-bold text-amber-800">Justificatifs à fournir :</p>
+                                    <ul className="list-disc pl-5 text-sm text-amber-700 space-y-1">
+                                      {justifs.map((j: string, i: number) => <li key={i}>{j}</li>)}
+                                    </ul>
+                                  </div>
+                                );
+                              } catch { /* ignore parse errors */ }
+                              return null;
+                            })()}
+                            {answers.reglementation_autorite && (
+                              <p className="text-sm text-amber-700"><strong>Autorité compétente :</strong> {answers.reglementation_autorite}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {answers.est_reglementee === "non" && (
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                            <p className="text-sm text-green-800 flex items-center gap-2">
+                              <Check className="w-4 h-4" /> <strong>Activité non réglementée</strong> — Aucune condition particulière requise pour cette activité.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
-
-                    {/* Analyse réglementaire */}
-                    <div className="space-y-3">
-                      <h3 className="text-base font-bold text-[#1E3A8A]">Analyse réglementaire de votre activité</h3>
-                      <p className="text-base text-gray-600">
-                        À partir des activités que vous avez décrites, nous vérifions si certaines obligations réglementaires ou justificatifs sont requis afin d&apos;éviter tout refus lors de l&apos;immatriculation auprès de l&apos;INPI.
-                      </p>
-                      {answers.activite_principale_desc && (
-                        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                          <p className="text-sm text-green-800">
-                            <strong>Analyse :</strong> Nous vérifierons la conformité réglementaire de votre activité lors de la constitution du dossier.
-                          </p>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
 

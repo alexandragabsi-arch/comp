@@ -1227,6 +1227,7 @@ export default function CreationSASUPage() {
     { id: "activite_saisonniere" }, // saisonnière / ambulante
     { id: "associe_unique" },       // type d'associé + infos + situation matrimoniale
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
+    { id: "depot_capital" },        // établissement bancaire + date dépôt + versement
     { id: "regles_statutaires" },  // règles statutaires par défaut ou personnalisées
     { id: "exercice_comptable" },   // date clôture exercice comptable
     { id: "services_comptables" }, // services comptables (si pas de CAC nommé)
@@ -1238,7 +1239,6 @@ export default function CreationSASUPage() {
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
-    { id: "depot_capital" },        // établissement bancaire + date dépôt
     { id: "regime_tva" },           // régime de TVA
     { id: "adresse_siege" },        // adresse
     { id: "date_lieu" },            // date et lieu de signature des statuts
@@ -4571,7 +4571,16 @@ export default function CreationSASUPage() {
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Dépôt du capital</p>
                     </div>
+
+                    {/* Message formule par défaut */}
+                    {answers.formule_capital !== "personnalisee" && (
+                      <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-1">
+                        <p className="text-sm text-green-800 font-semibold">Formule simplifiée</p>
+                        <p className="text-sm text-green-700">Votre capital est constitué uniquement d&apos;apports en numéraire (argent), intégralement libéré (100 % déposé).</p>
+                      </div>
+                    )}
 
                     <div className="space-y-5">
                       <div>
@@ -4589,6 +4598,19 @@ export default function CreationSASUPage() {
 
                       <div>
                         <label className="block text-base font-bold text-[#1E3A8A] mb-1">
+                          Adresse de l&apos;établissement bancaire
+                        </label>
+                        <input
+                          type="text"
+                          value={answers.banque_adresse || ""}
+                          onChange={(e) => setAnswer("banque_adresse", e.target.value)}
+                          placeholder="Adresse de la banque"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                           À quelle date le dépôt a-t-il été effectué ?
                         </label>
                         <input
@@ -4599,7 +4621,7 @@ export default function CreationSASUPage() {
                         />
                       </div>
 
-                      {/* État du versement — formule personnalisée */}
+                      {/* État du versement — formule personnalisée uniquement */}
                       {answers.formule_capital === "personnalisee" && (
                         <div className="space-y-3">
                           <div>

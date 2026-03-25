@@ -8,9 +8,10 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus, AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DocumentPreviewPanel } from "@/components/document-preview-panel";
 import { useRef, useCallback } from "react";
 
 /* ───────── Address Autocomplete (adresse.data.gouv.fr) ───────── */
@@ -400,7 +401,7 @@ const BRAND_PLANS = [
   },
 ];
 
-function BrandProtectionSection() {
+function BrandProtectionSection({ onPlanChange }: { onPlanChange?: (planId: string) => void }) {
   const [selectedPlan, setSelectedPlan] = useState("france");
   const [selectedClasses, setSelectedClasses] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -424,7 +425,7 @@ function BrandProtectionSection() {
         {BRAND_PLANS.map((p) => (
           <button
             key={p.id}
-            onClick={() => setSelectedPlan(p.id)}
+            onClick={() => { setSelectedPlan(p.id); onPlanChange?.(p.id); }}
             className={cn(
               "text-left rounded-xl border-2 p-5 transition-all",
               selectedPlan === p.id
@@ -712,9 +713,9 @@ const PRICING_PLANS: Plan[] = [
 ];
 
 const FRAIS_ANNEXES = [
-  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", description: "Frais légaux versés au Greffe du Tribunal de Commerce pour inscrire votre SASU au Registre du Commerce et des Sociétés (RCS). Ce montant est fixé par arrêté et identique partout en France métropolitaine. C'est cette inscription qui donne naissance juridiquement à votre société." },
-  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT", description: "La loi impose de publier un avis de constitution dans un Journal d'Annonces Légales (JAL) habilité dans le département du siège social. Depuis la réforme de 2021, le tarif est un forfait national fixe de 138 € HT pour les SAS/SASU (environ 165 € HT pour Mayotte et La Réunion). Nous nous chargeons de la publication pour vous." },
-  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", description: "Obligation légale anti-blanchiment : vous devez déclarer l'identité des personnes physiques qui contrôlent votre société (plus de 25 % du capital ou des droits de vote). Déposée en même temps que l'immatriculation, le tarif est de 21,41 €. Si déposée séparément, le coût passe à environ 43,35 €." },
+  { title: "Frais de greffe (immatriculation RCS)", amount: "37,45 €", tva: false, description: "Taxe fixe versée au Greffe du Tribunal de Commerce pour inscrire votre SASU au RCS. Montant fixé par arrêté, identique partout en France métropolitaine. Non soumis à TVA." },
+  { title: "Publication d'annonce légale (JAL)", amount: "138,00 € HT (165,60 € TTC)", tva: true, description: "Forfait national fixe de 138 € HT (+ TVA 20 % = 165,60 € TTC) pour les SAS/SASU. Publication obligatoire dans un Journal d'Annonces Légales habilité dans le département du siège social." },
+  { title: "Déclaration des bénéficiaires effectifs (DBE)", amount: "21,41 €", tva: false, description: "Obligation légale anti-blanchiment : déclaration des personnes physiques contrôlant la société (> 25 % du capital). Non soumis à TVA. Si déposée séparément : ~43,35 €." },
 ];
 
 function PricingSection({ selected, onSelect }: { selected: string; onSelect: (val: string) => void }) {
@@ -728,7 +729,7 @@ function PricingSection({ selected, onSelect }: { selected: string; onSelect: (v
           Choisissez la formule qui vous correspond le mieux
         </h2>
         <p className="text-gray-400 text-sm">
-          + frais annexes obligatoires (~196,86 € HT)
+          + frais annexes obligatoires (~224,46 € TTC)
         </p>
       </div>
 
@@ -1210,12 +1211,59 @@ export default function CreationSASUPage() {
   // Handle Stripe return
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("payment") === "success") {
-      setPhase("post_payment");
-      setPostPage(0);
-      // Clean URL
-      window.history.replaceState({}, "", window.location.pathname);
+    const payment = params.get("payment");
+    const sessionId = params.get("session_id");
+    const formule = params.get("formule");
+    const stateKey = params.get("state");
+
+    if (payment === "success" && sessionId) {
+      // Verify payment server-side
+      fetch(`/api/stripe/verify?session_id=${sessionId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.paid) {
+            // Restore state from sessionStorage
+            if (stateKey) {
+              try {
+                const saved = sessionStorage.getItem(stateKey);
+                if (saved) {
+                  const s = JSON.parse(saved);
+                  // Restore all answers
+                  Object.entries(s).forEach(([k, v]) => setAnswer(k, v));
+                  sessionStorage.removeItem(stateKey);
+                }
+              } catch { /* ignore */ }
+            }
+            if (formule) setAnswer("formule", formule);
+            setPhase("post_payment");
+            setPostPage(0);
+            // Save dossier to Supabase
+            fetch("/api/dossiers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: data.email,
+                company_name: answers.nom_societe || "Création SASU",
+                siren: "",
+                forme_juridique: "SASU",
+                type: "creation-sasu",
+                status: "en_cours",
+                stripe_session_id: sessionId,
+                stripe_paid: true,
+                data: { formule, ...answers },
+              }),
+            }).catch(() => {});
+            // Clean URL
+            window.history.replaceState({}, "", "/creation-sasu");
+          }
+        })
+        .catch(() => {});
+    } else if (payment === "cancel") {
+      if (formule) setAnswer("formule", formule);
+      setPhase("pricing");
+      window.history.replaceState({}, "", "/creation-sasu");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1242,6 +1290,7 @@ export default function CreationSASUPage() {
     { id: "apport_associe" },      // apport de l'associé unique (si personnalisée)
     { id: "nomination_president" },  // nomination du président
     { id: "mandat_president" },     // règles du président (durée, révocation, rémunération, pouvoirs)
+    { id: "beneficiaire_effectif" }, // déclaration des bénéficiaires effectifs (INPI/DBE)
     { id: "adresse_siege" },        // détermination siège social
     { id: "regles_statutaires" },  // règles organisation société (CAC etc) — modifier ou pas
     { id: "exercice_comptable" },   // date clôture exercice comptable
@@ -1250,6 +1299,8 @@ export default function CreationSASUPage() {
     { id: "regles_duree" },        // durée de la société (si personnaliser)
     { id: "regles_transmission" }, // règles transmission/cession (si personnaliser)
     { id: "regles_nantissement" }, // nantissement + location actions (si personnaliser)
+    { id: "regles_non_concurrence" },  // clause de non-concurrence (si personnaliser)
+    { id: "regles_comptes_courants" }, // conditions comptes courants (si personnaliser)
     { id: "regime_fiscal" },        // impôts sur les bénéfices (IS / IR)
     { id: "regime_tva" },           // régime de TVA
     { id: "reprise_depenses" },    // reprise des dépenses engagées pour la société en formation
@@ -1261,7 +1312,7 @@ export default function CreationSASUPage() {
   // Skip conditional pages based on answers
   function shouldSkipPage(pageId: string | undefined): boolean {
     if (!pageId) return false;
-    const customPages = ["regles_cac", "regles_duree", "regles_transmission", "regles_nantissement"];
+    const customPages = ["regles_cac", "regles_duree", "regles_transmission", "regles_nantissement", "regles_non_concurrence", "regles_comptes_courants"];
     if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
     // Skip services_comptables if CAC is explicitly "oui"
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
@@ -1408,14 +1459,40 @@ export default function CreationSASUPage() {
         </div>
       </aside>
 
+      {/* ── Mobile progress bar (visible only on mobile) ── */}
+      <div className="md:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-[#1E3A8A]">Création SASU</p>
+          <p className="text-xs text-gray-500">
+            {phase === "intro" ? "Bienvenue" :
+             phase === "questions" ? `Question ${currentQ + 1}/${totalQ}` :
+             phase === "pricing" ? "Tarifs" :
+             phase === "post_payment" ? `Étape ${postPage + 1}/${POST_PAGES.length}` :
+             ""}
+          </p>
+        </div>
+        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#2563EB] to-[#7C3AED] rounded-full transition-all duration-300"
+            style={{
+              width: phase === "intro" ? "2%" :
+                     phase === "questions" ? `${Math.max(5, ((currentQ + 1) / totalQ) * 30)}%` :
+                     phase === "pricing" ? "35%" :
+                     phase === "post_payment" ? `${35 + ((postPage + 1) / POST_PAGES.length) * 65}%` :
+                     "50%"
+            }}
+          />
+        </div>
+      </div>
+
       {/* ── Main content ── */}
       <main className={cn(
         "flex-1 flex justify-center min-h-screen",
         phase === "questions" || phase === "intro"
-          ? "md:ml-72 p-6 md:p-10 items-center"
+          ? "md:ml-72 p-4 sm:p-6 md:p-10 items-center"
           : phase === "pricing" || phase === "post_payment"
-            ? "md:ml-72 p-6 md:p-10 items-start pt-10"
-            : "md:ml-72 p-6 items-start"
+            ? "md:ml-72 p-4 sm:p-6 md:p-10 items-start pt-6 md:pt-10"
+            : "md:ml-72 p-4 sm:p-6 items-start"
       )}>
         <div className={cn(
           "w-full",
@@ -1448,7 +1525,7 @@ export default function CreationSASUPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                   <div className="space-y-3 flex flex-col items-center">
                     <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
                       <Clock className="w-7 h-7 text-white" />
@@ -1645,7 +1722,7 @@ export default function CreationSASUPage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-6"
               >
-                <BrandProtectionSection />
+                <BrandProtectionSection onPlanChange={(planId) => setAnswer("brand_plan", planId)} />
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
@@ -1731,6 +1808,71 @@ export default function CreationSASUPage() {
                   selected={answers.formule || ""}
                   onSelect={(val) => setAnswer("formule", val)}
                 />
+
+                {/* ── Récapitulatif des frais avant paiement ── */}
+                {answers.formule && (() => {
+                  const plan = PRICING_PLANS.find(p => p.id === answers.formule);
+                  if (!plan) return null;
+                  const optionsList: { id: string; label: string; ht: number }[] = [];
+                  if (answers.fermeture_micro === "oui") optionsList.push({ id: "fermeture_micro", label: "Fermeture micro-entreprise", ht: 89 });
+                  if (answers.activite_artisanale === "oui") optionsList.push({ id: "activite_artisanale", label: "Immatriculation CMA (artisanal)", ht: 79 });
+                  if (answers.proteger_nom === "oui" && answers.brand_plan === "france") optionsList.push({ id: "brand_france", label: "Protection marque France (INPI)", ht: 269 });
+                  if (answers.proteger_nom === "oui" && answers.brand_plan === "eu") optionsList.push({ id: "brand_eu", label: "Protection marque UE (EUIPO)", ht: 950 });
+                  if (answers.proteger_nom === "oui" && answers.brand_plan === "international") optionsList.push({ id: "brand_international", label: "Protection marque International (OMPI)", ht: 1150 });
+                  // Frais obligatoires (toujours inclus)
+                  const fraisGreffe = 37.45; // exonéré TVA
+                  const fraisJAL_HT = 138.00;
+                  const fraisDBE = 21.41; // exonéré TVA
+
+                  const totalOptionsHT = optionsList.reduce((s, o) => s + o.ht, 0);
+                  const totalServicesHT = plan.priceHT + totalOptionsHT + fraisJAL_HT;
+                  const totalServicesTVA = totalServicesHT * 0.2;
+                  const totalServicesTTC = totalServicesHT * 1.2;
+                  const totalFraisExoTVA = fraisGreffe + fraisDBE;
+                  const totalTTC = totalServicesTTC + totalFraisExoTVA;
+
+                  return (
+                    <div className="bg-white border-2 border-[#2563EB] rounded-2xl p-5 space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Récapitulatif de votre commande</p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-700">Formule {plan.name}</span>
+                          <span className="font-semibold text-gray-800">{plan.priceHT.toFixed(2)} € HT</span>
+                        </div>
+                        {optionsList.map((opt) => (
+                          <div key={opt.id} className="flex justify-between">
+                            <span className="text-gray-700">{opt.label}</span>
+                            <span className="font-semibold text-gray-800">{opt.ht.toFixed(2)} € HT</span>
+                          </div>
+                        ))}
+                        <div className="border-t border-gray-200 pt-2 mt-1">
+                          <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Frais obligatoires</p>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Frais de greffe (RCS)</span>
+                          <span className="font-semibold text-gray-700">{fraisGreffe.toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Annonce légale (JAL)</span>
+                          <span className="font-semibold text-gray-700">{fraisJAL_HT.toFixed(2)} € HT</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Bénéficiaires effectifs (DBE)</span>
+                          <span className="font-semibold text-gray-700">{fraisDBE.toFixed(2)} €</span>
+                        </div>
+                        <div className="border-t border-gray-200 pt-2 flex justify-between">
+                          <span className="text-gray-700">TVA (20%)</span>
+                          <span className="font-semibold text-gray-800">{totalServicesTVA.toFixed(2)} €</span>
+                        </div>
+                        <div className="border-t-2 border-[#1E3A8A] pt-2 flex justify-between text-base">
+                          <span className="font-bold text-[#1E3A8A]">Total à payer TTC</span>
+                          <span className="font-bold text-[#1E3A8A]">{totalTTC.toFixed(2)} €</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
@@ -1748,13 +1890,23 @@ export default function CreationSASUPage() {
                         setPhase("avocat_confirmation");
                         return;
                       }
+                      // Collect selected options
+                      const opts: string[] = [];
+                      if (answers.fermeture_micro === "oui") opts.push("fermeture_micro");
+                      if (answers.activite_artisanale === "oui") opts.push("activite_artisanale");
+                      if (answers.proteger_nom === "oui" && answers.brand_plan === "france") opts.push("brand_france");
+                      if (answers.proteger_nom === "oui" && answers.brand_plan === "eu") opts.push("brand_eu");
+                      if (answers.proteger_nom === "oui" && answers.brand_plan === "international") opts.push("brand_international");
+                      // Save state to sessionStorage before Stripe redirect
+                      const stateKey = `lc_sasu_${Date.now()}`;
+                      sessionStorage.setItem(stateKey, JSON.stringify(answers));
                       // Redirect to Stripe checkout
                       setAnswer("stripe_loading", "oui");
                       try {
                         const res = await fetch("/api/stripe/checkout-creation-sasu", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ formule: answers.formule }),
+                          body: JSON.stringify({ formule: answers.formule, stateKey, options: opts }),
                         });
                         const data = await res.json();
                         if (data.url) {
@@ -1993,7 +2145,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de management fees</label>
                             <p className="text-sm text-gray-500 mb-2">Facturation de prestations de direction aux filiales</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("management_fees", "oui")}
                                 className={cn(
@@ -2024,7 +2176,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de trésorerie (cash pooling)</label>
                             <p className="text-sm text-gray-500 mb-2">Centralisation de la trésorerie du groupe</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("cash_pooling", "oui")}
                                 className={cn(
@@ -2063,7 +2215,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pacte Dutreil (transmission)</label>
                             <p className="text-sm text-gray-500 mb-2">Prévoir un engagement de conservation pour bénéficier de l&apos;exonération Dutreil (art. 787 B CGI)</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("pacte_dutreil", "oui")}
                                 className={cn(
@@ -2227,10 +2379,20 @@ export default function CreationSASUPage() {
                     <textarea
                       value={answers.objet_social || ""}
                       onChange={(e) => setAnswer("objet_social", e.target.value)}
-                      placeholder="Ex : Conseil en stratégie digitale, développement de sites web et applications mobiles, et toutes opérations se rattachant directement ou indirectement à cet objet..."
+                      placeholder="Ex : La prestation de services en matière de conseil en stratégie digitale, le développement de sites web et d'applications mobiles..."
                       rows={6}
                       className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base resize-none"
                     />
+
+                    {/* Phrase balai — aperçu (ajoutée automatiquement dans les statuts) */}
+                    {answers.objet_social && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Aperçu dans les statuts :</p>
+                        <p className="text-sm text-gray-700 leading-relaxed">La Société a pour objet :</p>
+                        <p className="text-sm text-gray-800 leading-relaxed">{answers.objet_social}</p>
+                        <p className="text-sm text-gray-600 italic leading-relaxed">Et, plus généralement, toutes opérations économiques, juridiques, industrielles, commerciales, civiles, financières, mobilières ou immobilières se rapportant directement ou indirectement à l&apos;objet social ainsi défini, ou à tous objets similaires, connexes ou complémentaires, susceptibles d&apos;en favoriser l&apos;extension ou le développement, tant en France qu&apos;à l&apos;étranger, pour son compte ou pour le compte de tiers, seule ou en participation.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2462,7 +2624,7 @@ export default function CreationSASUPage() {
                     {/* Type d'associé */}
                     <div className="space-y-3">
                       <p className="text-base font-bold text-[#1E3A8A]">Type d&apos;associé :</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => setAnswer("type_associe", "physique")}
                           className={cn(
@@ -2493,7 +2655,34 @@ export default function CreationSASUPage() {
                     {/* Formulaire associé physique */}
                     {answers.type_associe === "physique" && (
                       <div className="space-y-4 border-t border-gray-200 pt-5">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="block text-base font-bold text-[#1E3A8A]">Civilité</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("associe_civilite", "M.")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.associe_civilite === "M."
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Monsieur
+                            </button>
+                            <button
+                              onClick={() => setAnswer("associe_civilite", "Mme")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.associe_civilite === "Mme"
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Madame
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
                             <input
@@ -2590,13 +2779,54 @@ export default function CreationSASUPage() {
                           />
                         </div>
 
+                        {/* Résidence fiscale */}
+                        <div className="border-t border-gray-200 pt-4 space-y-3">
+                          <label className="block text-base font-bold text-[#1E3A8A]">Résidence fiscale</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                              onClick={() => setAnswer("resident_fiscal", "oui")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                (answers.resident_fiscal || "oui") === "oui"
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Résident(e) fiscal(e) français(e)
+                            </button>
+                            <button
+                              onClick={() => setAnswer("resident_fiscal", "non")}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                answers.resident_fiscal === "non"
+                                  ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              Non-résident(e) fiscal(e)
+                            </button>
+                          </div>
+                          {answers.resident_fiscal === "non" && (
+                            <div>
+                              <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Pays de résidence fiscale</label>
+                              <input
+                                type="text"
+                                value={answers.pays_residence_fiscale || ""}
+                                onChange={(e) => setAnswer("pays_residence_fiscale", e.target.value)}
+                                placeholder="Ex : Suisse, Luxembourg..."
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                              />
+                            </div>
+                          )}
+                        </div>
+
                         {/* Situation matrimoniale */}
                         <div className="border-t border-gray-200 pt-4 space-y-3">
                           <label className="flex items-center gap-2 text-base font-bold text-[#1E3A8A]">
                             <Heart className="w-4 h-4" />
                             Situation matrimoniale
                           </label>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
                               { value: "celibataire", label: "Célibataire" },
                               { value: "marie", label: "Marié(e)" },
@@ -2622,15 +2852,56 @@ export default function CreationSASUPage() {
                           {/* Si marié : régime matrimonial */}
                           {answers.situation_matrimoniale === "marie" && (
                             <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
-                              <div>
-                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du conjoint</label>
-                                <input
-                                  type="text"
-                                  value={answers.conjoint_nom || ""}
-                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
-                                  placeholder="Prénom et nom du conjoint"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                                />
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Civilité du conjoint</label>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "M.")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "M."
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Monsieur
+                                    </button>
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "Mme")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "Mme"
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Madame
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Prénom du conjoint</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_prenom || ""}
+                                      onChange={(e) => setAnswer("conjoint_prenom", e.target.value)}
+                                      placeholder="Prénom"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du conjoint</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_nom || ""}
+                                      onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                      placeholder="Nom de famille"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                               <div>
                                 <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Régime matrimonial</label>
@@ -2662,15 +2933,56 @@ export default function CreationSASUPage() {
                           {/* Si pacsé : nom du partenaire */}
                           {answers.situation_matrimoniale === "pacse" && (
                             <div className="space-y-3 pl-2 border-l-2 border-[#2563EB]/30 ml-2">
-                              <div>
-                                <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du partenaire de PACS</label>
-                                <input
-                                  type="text"
-                                  value={answers.conjoint_nom || ""}
-                                  onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
-                                  placeholder="Prénom et nom du partenaire"
-                                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                                />
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Civilité du partenaire</label>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "M.")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "M."
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Monsieur
+                                    </button>
+                                    <button
+                                      onClick={() => setAnswer("conjoint_civilite", "Mme")}
+                                      className={cn(
+                                        "p-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                        answers.conjoint_civilite === "Mme"
+                                          ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                          : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                      )}
+                                    >
+                                      Madame
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Prénom du partenaire</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_prenom || ""}
+                                      onChange={(e) => setAnswer("conjoint_prenom", e.target.value)}
+                                      placeholder="Prénom"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom du partenaire</label>
+                                    <input
+                                      type="text"
+                                      value={answers.conjoint_nom || ""}
+                                      onChange={(e) => setAnswer("conjoint_nom", e.target.value)}
+                                      placeholder="Nom de famille"
+                                      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           )}
@@ -2722,7 +3034,7 @@ export default function CreationSASUPage() {
                         {(answers.associe_societe_mode === "siren" || answers.associe_societe_mode === "manuel") && (
                           <div className="space-y-4 border-t border-gray-200 pt-4">
                             <p className="text-sm font-bold text-[#2563EB]">Informations de la société associée</p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination de la société</label>
                                 <input type="text" value={answers.associe_societe_nom || ""} onChange={(e) => setAnswer("associe_societe_nom", e.target.value)} placeholder="Nom de la société" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -2732,7 +3044,7 @@ export default function CreationSASUPage() {
                                 <input type="text" value={answers.associe_societe_forme || ""} onChange={(e) => setAnswer("associe_societe_forme", e.target.value)} placeholder="Ex : SAS, SARL, SA..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
                                 <input type="text" value={answers.associe_societe_capital || ""} onChange={(e) => setAnswer("associe_societe_capital", e.target.value)} placeholder="Ex : 1000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -2744,7 +3056,7 @@ export default function CreationSASUPage() {
                             </div>
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège</label>
-                              <input type="text" value={answers.associe_societe_adresse || ""} onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              <AddressAutocomplete value={answers.associe_societe_adresse || ""} onChange={(v) => setAnswer("associe_societe_adresse", v)} placeholder="Adresse complète" />
                             </div>
                           </div>
                         )}
@@ -2763,7 +3075,7 @@ export default function CreationSASUPage() {
                     {/* Capital fixe / variable choice */}
                     <div className="space-y-3">
                       <p className="text-base font-bold text-[#1E3A8A]">Souhaitez vous prévoir un capital fixe ou variable ?</p>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button
                           onClick={() => setAnswer("type_capital", "fixe")}
                           className={cn(
@@ -2793,7 +3105,7 @@ export default function CreationSASUPage() {
 
                     {/* Capital variable: montant min/max */}
                     {answers.type_capital === "variable" && (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant minimum</label>
                           <input
@@ -2864,7 +3176,7 @@ export default function CreationSASUPage() {
                     {/* Formule simplifiée / personnalisée */}
                     <div>
                       <p className="text-base font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => { setAnswer("formule_capital", "simplifiee"); setAnswer("valeur_action", "1"); }}
                           className={cn(
@@ -3091,6 +3403,54 @@ export default function CreationSASUPage() {
                         </button>
                       </div>
 
+                      {/* Coordonnées du CAC si oui */}
+                      {answers.nommer_cac === "oui" && (
+                        <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-xl mt-4">
+                          <p className="text-base font-bold text-[#1E3A8A]">Coordonnées du commissaire aux comptes</p>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Dénomination / Nom du cabinet</label>
+                            <input
+                              type="text"
+                              value={answers.cac_denomination || ""}
+                              onChange={(e) => setAnswer("cac_denomination", e.target.value)}
+                              placeholder="Ex : Cabinet Durand & Associés"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Adresse</label>
+                            <AddressAutocomplete
+                              value={answers.cac_adresse || ""}
+                              onChange={(v) => setAnswer("cac_adresse", v)}
+                              placeholder="Adresse complète du cabinet"
+                            />
+                          </div>
+
+                          {/* CAC suppléant */}
+                          <div className="border-t border-blue-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un commissaire aux comptes suppléant ?</p>
+                            <p className="text-sm text-gray-600">Le suppléant remplace le titulaire en cas d&apos;empêchement. C&apos;est facultatif depuis la loi PACTE (2019).</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button onClick={() => setAnswer("nommer_cac_suppleant", "oui")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.nommer_cac_suppleant === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui</button>
+                              <button onClick={() => setAnswer("nommer_cac_suppleant", "non")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.nommer_cac_suppleant || "non") === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
+                            </div>
+
+                            {answers.nommer_cac_suppleant === "oui" && (
+                              <div className="space-y-3 border-l-2 border-[#2563EB]/30 pl-4 ml-2">
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Dénomination / Nom du suppléant</label>
+                                  <input type="text" value={answers.cac_suppleant_denomination || ""} onChange={(e) => setAnswer("cac_suppleant_denomination", e.target.value)} placeholder="Ex : Cabinet Martin" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Adresse</label>
+                                  <AddressAutocomplete value={answers.cac_suppleant_adresse || ""} onChange={(v) => setAnswer("cac_suppleant_adresse", v)} placeholder="Adresse complète" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Sous-question si Non */}
                       {answers.nommer_cac === "non" && (
                         <div className="space-y-3 mt-4">
@@ -3227,6 +3587,30 @@ export default function CreationSASUPage() {
                           <span className="block text-sm text-[#2563EB]">Je souhaite que mes actions soient transmises librement uniquement à certaines personnes</span>
                         </button>
                       </div>
+
+                      {/* Majorité agrément */}
+                      {(answers.cession_actions === "agrement" || answers.cession_actions === "heritiers") && (
+                        <div className="space-y-3 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                          <label className="block text-base font-bold text-[#1E3A8A]">Majorité requise pour l&apos;agrément</label>
+                          <p className="text-sm text-gray-600">Quel pourcentage des droits de vote sera nécessaire pour approuver l&apos;entrée d&apos;un nouvel associé ?</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {["50", "66", "75"].map((pct) => (
+                              <button
+                                key={pct}
+                                onClick={() => setAnswer("majorite_agrement_pct", pct)}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                  (answers.majorite_agrement_pct || "50") === pct
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                {pct} %
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Sous-options héritiers */}
                       {answers.cession_actions === "heritiers" && (
@@ -3382,6 +3766,220 @@ export default function CreationSASUPage() {
                           </button>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Non-concurrence (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_non_concurrence" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Clause de non-concurrence des dirigeants</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <p className="text-sm text-gray-700">La clause de non-concurrence interdit au président (et au DG le cas échéant) d&apos;exercer une activité concurrente pendant et après la fin de son mandat. Elle est <strong>facultative</strong>.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous inclure une clause de non-concurrence dans les statuts ?</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("non_concurrence", "oui")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.non_concurrence === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui
+                        </button>
+                        <button
+                          onClick={() => setAnswer("non_concurrence", "non")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            (answers.non_concurrence || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non (par défaut)
+                        </button>
+                      </div>
+
+                      {answers.non_concurrence === "oui" && (
+                        <div className="space-y-4 p-4 border-l-2 border-[#2563EB]/30 ml-2">
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Durée de la clause (en années après cessation)</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              {["1", "2", "3"].map((y) => (
+                                <button
+                                  key={y}
+                                  onClick={() => setAnswer("duree_non_concurrence", y)}
+                                  className={cn(
+                                    "p-3 rounded-xl border-2 text-base font-medium transition-all",
+                                    (answers.duree_non_concurrence || "1") === y
+                                      ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                      : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                  )}
+                                >
+                                  {y} an{Number(y) > 1 ? "s" : ""}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Périmètre géographique</label>
+                            <input
+                              type="text"
+                              value={answers.perimetre_non_concurrence || ""}
+                              onChange={(e) => setAnswer("perimetre_non_concurrence", e.target.value)}
+                              placeholder="Ex : France métropolitaine, Union européenne..."
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Contrepartie financière ?</label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button
+                                onClick={() => setAnswer("indemnite_non_concurrence", "oui")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  answers.indemnite_non_concurrence === "oui"
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui, avec indemnité
+                              </button>
+                              <button
+                                onClick={() => setAnswer("indemnite_non_concurrence", "non")}
+                                className={cn(
+                                  "p-3 rounded-xl border-2 text-sm font-medium transition-all",
+                                  (answers.indemnite_non_concurrence || "non") === "non"
+                                    ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]"
+                                    : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non, intégrée à la rémunération
+                              </button>
+                            </div>
+                          </div>
+                          {answers.indemnite_non_concurrence === "oui" && (
+                            <div>
+                              <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Montant mensuel de l&apos;indemnité (€ bruts)</label>
+                              <input
+                                type="number"
+                                value={answers.montant_indemnite_non_concurrence || ""}
+                                onChange={(e) => setAnswer("montant_indemnite_non_concurrence", e.target.value)}
+                                placeholder="Ex : 500"
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Comptes courants d'associés (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_comptes_courants" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Conditions des comptes courants d&apos;associés</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <p className="text-sm text-gray-700">L&apos;associé unique peut prêter de l&apos;argent à la société via un <strong>compte courant d&apos;associé</strong>. Les statuts définissent les conditions de rémunération et de remboursement de ces avances.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Taux d&apos;intérêt des avances en compte courant</p>
+                        <div className="grid grid-cols-1 gap-2">
+                          <button
+                            onClick={() => setAnswer("taux_compte_courant", "legal")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left transition-all",
+                              (answers.taux_compte_courant || "legal") === "legal" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <span className="block text-base font-semibold text-[#2563EB]">Taux légal en vigueur (recommandé)</span>
+                            <span className="block text-sm text-gray-600">Les avances sont rémunérées au taux d&apos;intérêt légal</span>
+                          </button>
+                          <button
+                            onClick={() => setAnswer("taux_compte_courant", "fixe")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left transition-all",
+                              answers.taux_compte_courant === "fixe" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <span className="block text-base font-semibold text-[#2563EB]">Taux fixe personnalisé</span>
+                            <span className="block text-sm text-gray-600">Définir un taux d&apos;intérêt fixe annuel</span>
+                          </button>
+                          <button
+                            onClick={() => setAnswer("taux_compte_courant", "gratuit")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left transition-all",
+                              answers.taux_compte_courant === "gratuit" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            <span className="block text-base font-semibold text-[#2563EB]">Avances gratuites (taux 0%)</span>
+                            <span className="block text-sm text-gray-600">Les avances en compte courant ne portent pas intérêt</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {answers.taux_compte_courant === "fixe" && (
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Taux d&apos;intérêt annuel (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={answers.taux_cc_valeur || ""}
+                            onChange={(e) => setAnswer("taux_cc_valeur", e.target.value)}
+                            placeholder="Ex : 2.5"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Plafond des avances en compte courant ?</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("plafond_compte_courant", "non")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              (answers.plafond_compte_courant || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non, pas de plafond
+                          </button>
+                          <button
+                            onClick={() => setAnswer("plafond_compte_courant", "oui")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.plafond_compte_courant === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui, limiter le montant
+                          </button>
+                        </div>
+                      </div>
+
+                      {answers.plafond_compte_courant === "oui" && (
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Montant maximum des avances (€)</label>
+                          <input
+                            type="number"
+                            value={answers.montant_plafond_cc || ""}
+                            onChange={(e) => setAnswer("montant_plafond_cc", e.target.value)}
+                            placeholder="Ex : 50000"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -3748,7 +4346,7 @@ export default function CreationSASUPage() {
                                 ) && (
                                   <div>
                                     <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Ce bien est :</label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                       <button
                                         onClick={() => {
                                           const list = [...(answers.apports_nature_liste || [])];
@@ -3845,7 +4443,7 @@ export default function CreationSASUPage() {
                               <p className="text-sm text-gray-500 mb-2">
                                 Mise à disposition de connaissances techniques, de travail ou de services. <strong>Attention :</strong> l&apos;apport en industrie ne concourt pas à la formation du capital social, mais donne droit à des actions.
                               </p>
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <button
                                   onClick={() => setAnswer("apport_industrie", "oui")}
                                   className={cn(
@@ -3905,7 +4503,7 @@ export default function CreationSASUPage() {
 
                               <div>
                                 <label className="block text-sm font-semibold text-yellow-800 mb-2">Souhaitez-vous faire une déclaration de remploi (bien propre) ?</label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <button
                                     onClick={() => setAnswer("declaration_remploi", "oui")}
                                     className={cn(
@@ -4100,7 +4698,7 @@ export default function CreationSASUPage() {
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <button
                             onClick={() => setAnswer("president_type", "physique")}
                             className={cn(
@@ -4130,7 +4728,7 @@ export default function CreationSASUPage() {
                         {/* ── Président PP : identité + filiation + non-condamnation ── */}
                         {answers.president_type === "physique" && (
                           <div className="space-y-4 border-t border-gray-200 pt-5">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                                 <select
@@ -4148,7 +4746,7 @@ export default function CreationSASUPage() {
                                 <input type="text" value={answers.president_nom || ""} onChange={(e) => setAnswer("president_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                                 <input type="text" value={answers.president_prenom || ""} onChange={(e) => setAnswer("president_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4156,9 +4754,35 @@ export default function CreationSASUPage() {
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
                                 <input type="date" value={answers.president_date_naissance || ""} onChange={(e) => setAnswer("president_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                {/* Age check président */}
+                                {(() => {
+                                  if (!answers.president_date_naissance) return null;
+                                  const birth = new Date(answers.president_date_naissance);
+                                  const today = new Date();
+                                  let age = today.getFullYear() - birth.getFullYear();
+                                  const m = today.getMonth() - birth.getMonth();
+                                  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                                  if (age >= 18) return null;
+                                  if (age < 16) return (
+                                    <div className="bg-red-50 border border-red-300 rounded-xl p-3 mt-2">
+                                      <p className="text-sm font-semibold text-red-800">Un mineur de moins de 16 ans ne peut pas être président d&apos;une SASU, même émancipé.</p>
+                                    </div>
+                                  );
+                                  return (
+                                    <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mt-2 space-y-2">
+                                      <p className="text-sm font-semibold text-amber-800">Le président a entre 16 et 17 ans. Il doit être mineur émancipé pour diriger une SASU.</p>
+                                      <div className="flex gap-3">
+                                        <button onClick={() => setAnswer("president_emancipe", "oui")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold transition-all", answers.president_emancipe === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600")}>Oui, mineur émancipé</button>
+                                        <button onClick={() => setAnswer("president_emancipe", "non")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold transition-all", answers.president_emancipe === "non" ? "border-red-500 bg-red-50 text-red-700" : "border-gray-200 bg-white text-gray-600")}>Non</button>
+                                      </div>
+                                      {answers.president_emancipe === "non" && <p className="text-sm text-red-600">Un mineur non émancipé ne peut pas être président.</p>}
+                                      {answers.president_emancipe === "oui" && <p className="text-sm text-green-700">Un justificatif d&apos;émancipation (jugement du tribunal) sera demandé dans les pièces justificatives.</p>}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
                                 <input type="text" value={answers.president_lieu_naissance || ""} onChange={(e) => setAnswer("president_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4175,7 +4799,7 @@ export default function CreationSASUPage() {
 
                             {/* Filiation */}
                             <p className="text-base font-bold text-[#1E3A8A] pt-2">Filiation</p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du père</label>
                                 <input type="text" value={answers.president_pere_nom || ""} onChange={(e) => setAnswer("president_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4246,7 +4870,7 @@ export default function CreationSASUPage() {
                             {(answers.president_pm_mode === "siren" || answers.president_pm_mode === "manuel") && (
                               <div className="space-y-4 border-t border-gray-200 pt-4">
                                 <p className="text-sm font-bold text-[#2563EB]">Informations entreprise</p>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom de la société</label>
                                     <input type="text" value={answers.president_pm_nom || ""} onChange={(e) => setAnswer("president_pm_nom", e.target.value)} placeholder="Ex : LAW AND CO" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4256,7 +4880,7 @@ export default function CreationSASUPage() {
                                     <input type="text" value={answers.president_pm_forme || ""} onChange={(e) => setAnswer("president_pm_forme", e.target.value)} placeholder="Ex : SASU" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
                                     <input type="text" value={answers.president_pm_capital || ""} onChange={(e) => setAnswer("president_pm_capital", e.target.value)} placeholder="Ex : 100" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4266,17 +4890,17 @@ export default function CreationSASUPage() {
                                     <input type="text" value={answers.president_pm_representant || ""} onChange={(e) => setAnswer("president_pm_representant", e.target.value)} placeholder="Ex : Nora Gabsi" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse</label>
-                                    <input type="text" value={answers.president_pm_adresse || ""} onChange={(e) => setAnswer("president_pm_adresse", e.target.value)} placeholder="Ex : 7 RUE MEYERBEER" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    <AddressAutocomplete value={answers.president_pm_adresse || ""} onChange={(v) => setAnswer("president_pm_adresse", v)} placeholder="Adresse complète" />
                                   </div>
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Complément d&apos;adresse</label>
                                     <input type="text" value={answers.president_pm_adresse_complement || ""} onChange={(e) => setAnswer("president_pm_adresse_complement", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Ville RCS</label>
                                     <input type="text" value={answers.president_pm_ville_rcs || ""} onChange={(e) => setAnswer("president_pm_ville_rcs", e.target.value)} placeholder="Ex : PARIS" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4306,7 +4930,7 @@ export default function CreationSASUPage() {
                                     </p>
                                   </div>
 
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                                       <select value={answers.president_rp_civilite || ""} onChange={(e) => setAnswer("president_rp_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
@@ -4320,7 +4944,7 @@ export default function CreationSASUPage() {
                                       <input type="text" value={answers.president_rp_nom || ""} onChange={(e) => setAnswer("president_rp_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                                       <input type="text" value={answers.president_rp_prenom || ""} onChange={(e) => setAnswer("president_rp_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4336,17 +4960,32 @@ export default function CreationSASUPage() {
                                       </select>
                                     </div>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
                                       <input type="date" value={answers.president_rp_date_naissance || ""} onChange={(e) => setAnswer("president_rp_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      {/* Age check RP */}
+                                      {(() => {
+                                        if (!answers.president_rp_date_naissance) return null;
+                                        const birth = new Date(answers.president_rp_date_naissance);
+                                        const today = new Date();
+                                        let age = today.getFullYear() - birth.getFullYear();
+                                        const m = today.getMonth() - birth.getMonth();
+                                        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                                        if (age < 18) return (
+                                          <div className="bg-red-50 border border-red-300 rounded-xl p-3 mt-2">
+                                            <p className="text-sm font-semibold text-red-800">Le représentant permanent doit être majeur (18 ans minimum).</p>
+                                          </div>
+                                        );
+                                        return null;
+                                      })()}
                                     </div>
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
                                       <input type="text" value={answers.president_rp_lieu_naissance || ""} onChange={(e) => setAnswer("president_rp_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
                                       <AddressAutocomplete value={answers.president_rp_adresse || ""} onChange={(v) => setAnswer("president_rp_adresse", v)} placeholder="Adresse complète" />
@@ -4359,7 +4998,7 @@ export default function CreationSASUPage() {
 
                                   {/* Filiation du RP */}
                                   <p className="text-base font-bold text-[#1E3A8A] pt-2">Filiation du représentant permanent</p>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du père</label>
                                       <input type="text" value={answers.president_rp_pere_nom || ""} onChange={(e) => setAnswer("president_rp_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4395,7 +5034,7 @@ export default function CreationSASUPage() {
                     <div className="border-t border-gray-200 pt-5 space-y-3">
                       <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un Directeur Général ?</p>
                       <p className="text-sm text-gray-500">Le DG dispose des mêmes pouvoirs que le Président vis-à-vis des tiers. C&apos;est facultatif en SASU.</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => setAnswer("nommer_dg", "oui")}
                           className={cn(
@@ -4418,7 +5057,7 @@ export default function CreationSASUPage() {
 
                       {answers.nommer_dg === "oui" && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#2563EB]/30 pl-4 ml-2">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                               <select value={answers.dg_civilite || ""} onChange={(e) => setAnswer("dg_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
@@ -4432,7 +5071,7 @@ export default function CreationSASUPage() {
                               <input type="text" value={answers.dg_nom || ""} onChange={(e) => setAnswer("dg_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                               <input type="text" value={answers.dg_prenom || ""} onChange={(e) => setAnswer("dg_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4440,9 +5079,35 @@ export default function CreationSASUPage() {
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
                               <input type="date" value={answers.dg_date_naissance || ""} onChange={(e) => setAnswer("dg_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              {/* Age check DG */}
+                              {(() => {
+                                if (!answers.dg_date_naissance) return null;
+                                const birth = new Date(answers.dg_date_naissance);
+                                const today = new Date();
+                                let age = today.getFullYear() - birth.getFullYear();
+                                const m = today.getMonth() - birth.getMonth();
+                                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                                if (age >= 18) return null;
+                                if (age < 16) return (
+                                  <div className="bg-red-50 border border-red-300 rounded-xl p-3 mt-2">
+                                    <p className="text-sm font-semibold text-red-800">Un mineur de moins de 16 ans ne peut pas être Directeur Général.</p>
+                                  </div>
+                                );
+                                return (
+                                  <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mt-2 space-y-2">
+                                    <p className="text-sm font-semibold text-amber-800">Le DG a entre 16 et 17 ans. Il doit être mineur émancipé.</p>
+                                    <div className="flex gap-3">
+                                      <button onClick={() => setAnswer("dg_emancipe", "oui")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold transition-all", answers.dg_emancipe === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600")}>Oui, mineur émancipé</button>
+                                      <button onClick={() => setAnswer("dg_emancipe", "non")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold transition-all", answers.dg_emancipe === "non" ? "border-red-500 bg-red-50 text-red-700" : "border-gray-200 bg-white text-gray-600")}>Non</button>
+                                    </div>
+                                    {answers.dg_emancipe === "non" && <p className="text-sm text-red-600">Un mineur non émancipé ne peut pas être DG.</p>}
+                                    {answers.dg_emancipe === "oui" && <p className="text-sm text-green-700">Un justificatif d&apos;émancipation sera demandé dans les pièces justificatives.</p>}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
                               <input type="text" value={answers.dg_lieu_naissance || ""} onChange={(e) => setAnswer("dg_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4482,11 +5147,442 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+
+                          {/* Filiation du DG */}
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Filiation du Directeur Général</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>
+                                <input type="text" value={answers.dg_pere_nom || ""} onChange={(e) => setAnswer("dg_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom de la mère</label>
+                                <input type="text" value={answers.dg_mere_nom || ""} onChange={(e) => setAnswer("dg_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Non-condamnation du DG */}
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Déclaration de non-condamnation du Directeur Général</p>
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                              <label className="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked={answers.dg_non_condamnation === "true"} onChange={(e) => setAnswer("dg_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                <span className="text-base text-gray-700">Je soussigné(e), en qualité de Directeur Général désigné, atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                              </label>
+                              <label className="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked={answers.dg_non_interdiction === "true"} onChange={(e) => setAnswer("dg_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                <span className="text-base text-gray-700">Je soussigné(e), en qualité de Directeur Général désigné, atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                              </label>
+                            </div>
+                          </div>
                         </motion.div>
+                      )}
+
+                      {/* ── Question DGD : souhaitez-vous nommer un DGD ? (si DG nommé) ── */}
+                      {answers.nommer_dg === "oui" && (
+                        <div className="border-t border-gray-200 pt-5 space-y-3 mt-4">
+                          <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un Directeur Général Délégué (DGD) ?</p>
+                          <p className="text-sm text-gray-500">Le DGD assiste le DG ou le Président dans la direction, avec des pouvoirs délégués. C&apos;est facultatif et rare en SASU.</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onClick={() => setAnswer("nommer_dgd", "oui")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", answers.nommer_dgd === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui</button>
+                            <button onClick={() => setAnswer("nommer_dgd", "non")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", (answers.nommer_dgd || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
+                          </div>
+
+                          {answers.nommer_dgd === "oui" && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#7C3AED]/30 pl-4 ml-2">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                                  <select value={answers.dgd_civilite || ""} onChange={(e) => setAnswer("dgd_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                    <option value="">Choisir</option>
+                                    <option value="M.">M.</option>
+                                    <option value="Mme">Mme</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                  <input type="text" value={answers.dgd_nom || ""} onChange={(e) => setAnswer("dgd_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                  <input type="text" value={answers.dgd_prenom || ""} onChange={(e) => setAnswer("dgd_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                  <input type="date" value={answers.dgd_date_naissance || ""} onChange={(e) => setAnswer("dgd_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  {(() => {
+                                    if (!answers.dgd_date_naissance) return null;
+                                    const birth = new Date(answers.dgd_date_naissance);
+                                    const today = new Date();
+                                    let age = today.getFullYear() - birth.getFullYear();
+                                    const m = today.getMonth() - birth.getMonth();
+                                    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                                    if (age >= 18) return null;
+                                    if (age < 16) return (<div className="bg-red-50 border border-red-300 rounded-xl p-3 mt-2"><p className="text-sm font-semibold text-red-800">Un mineur de moins de 16 ans ne peut pas être DGD.</p></div>);
+                                    return (
+                                      <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mt-2 space-y-2">
+                                        <p className="text-sm font-semibold text-amber-800">Le DGD a entre 16 et 17 ans. Il doit être mineur émancipé.</p>
+                                        <div className="flex gap-3">
+                                          <button onClick={() => setAnswer("dgd_emancipe", "oui")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold", answers.dgd_emancipe === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600")}>Oui, émancipé</button>
+                                          <button onClick={() => setAnswer("dgd_emancipe", "non")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold", answers.dgd_emancipe === "non" ? "border-red-500 bg-red-50 text-red-700" : "border-gray-200 bg-white text-gray-600")}>Non</button>
+                                        </div>
+                                        {answers.dgd_emancipe === "non" && <p className="text-sm text-red-600">Impossible.</p>}
+                                        {answers.dgd_emancipe === "oui" && <p className="text-sm text-green-700">Justificatif requis.</p>}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                                  <input type="text" value={answers.dgd_lieu_naissance || ""} onChange={(e) => setAnswer("dgd_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                  <input type="text" value={answers.dgd_nationalite || ""} onChange={(e) => setAnswer("dgd_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                                <AddressAutocomplete value={answers.dgd_adresse || ""} onChange={(v) => setAnswer("dgd_adresse", v)} placeholder="Adresse complète" />
+                              </div>
+                              <div className="border-t border-gray-200 pt-4 space-y-3">
+                                <p className="text-base font-bold text-[#1E3A8A]">Filiation du DGD</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>
+                                    <input type="text" value={answers.dgd_pere_nom || ""} onChange={(e) => setAnswer("dgd_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom de la mère</label>
+                                    <input type="text" value={answers.dgd_mere_nom || ""} onChange={(e) => setAnswer("dgd_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="border-t border-gray-200 pt-4 space-y-3">
+                                <p className="text-base font-bold text-[#1E3A8A]">Déclaration de non-condamnation du DGD</p>
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                                  <label className="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" checked={answers.dgd_non_condamnation === "true"} onChange={(e) => setAnswer("dgd_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">Je soussigné(e) atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation ou sanction de nature à m&apos;interdire de gérer une personne morale.</span>
+                                  </label>
+                                  <label className="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" checked={answers.dgd_non_interdiction === "true"} onChange={(e) => setAnswer("dgd_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">Je soussigné(e) atteste ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer (art. L. 653-8 C. com.).</span>
+                                  </label>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
                 )}
+
+                {/* ── Bénéficiaire effectif (DBE) ── */}
+                {POST_PAGES[postPage]?.id === "beneficiaire_effectif" && (() => {
+                  // Auto-populate first beneficial owner from associate data
+                  if (!answers.beneficiaires_effectifs?.length) {
+                    const isPhysique = answers.type_associe !== "morale";
+                    const firstBE = {
+                      nom: isPhysique ? (answers.associe_nom || "") : "",
+                      prenom: isPhysique ? (answers.associe_prenom || "") : "",
+                      date_naissance: isPhysique ? (answers.associe_date_naissance || "") : "",
+                      lieu_naissance: isPhysique ? (answers.associe_lieu_naissance || "") : "",
+                      code_postal_naissance: "",
+                      pays_naissance: "France",
+                      nationalite: isPhysique ? (answers.associe_nationalite || "Française") : "Française",
+                      adresse: isPhysique ? (answers.associe_adresse || "") : "",
+                      code_postal: "",
+                      ville: "",
+                      pays_residence: "France",
+                      nature_controle: ["detention_capital", "detention_votes"],
+                      modalite_controle: "directe",
+                      pct_capital: "100",
+                      pct_votes: "100",
+                      auto_detected: true,
+                    };
+                    setTimeout(() => setAnswer("beneficiaires_effectifs", [firstBE]), 0);
+                  }
+
+                  const beneficiaires: any[] = answers.beneficiaires_effectifs || [];
+
+                  const updateBeneficiaire = (index: number, field: string, value: any) => {
+                    const updated = [...beneficiaires];
+                    updated[index] = { ...updated[index], [field]: value };
+                    setAnswer("beneficiaires_effectifs", updated);
+                  };
+
+                  const toggleNatureControle = (index: number, key: string) => {
+                    const updated = [...beneficiaires];
+                    const current: string[] = updated[index].nature_controle || [];
+                    if (current.includes(key)) {
+                      updated[index] = { ...updated[index], nature_controle: current.filter((k: string) => k !== key) };
+                    } else {
+                      updated[index] = { ...updated[index], nature_controle: [...current, key] };
+                    }
+                    setAnswer("beneficiaires_effectifs", updated);
+                  };
+
+                  const addBeneficiaire = () => {
+                    setAnswer("beneficiaires_effectifs", [...beneficiaires, {
+                      nom: "", prenom: "", date_naissance: "", lieu_naissance: "",
+                      code_postal_naissance: "", pays_naissance: "France",
+                      nationalite: "Française", adresse: "", code_postal: "", ville: "",
+                      pays_residence: "France",
+                      nature_controle: [], modalite_controle: "directe",
+                      pct_capital: "", pct_votes: "", auto_detected: false,
+                    }]);
+                  };
+
+                  const removeBeneficiaire = (index: number) => {
+                    setAnswer("beneficiaires_effectifs", beneficiaires.filter((_: any, i: number) => i !== index));
+                  };
+
+                  const NATURE_OPTIONS = [
+                    { key: "detention_capital", label: "Détention de plus de 25% du capital social" },
+                    { key: "detention_votes", label: "Détention de plus de 25% des droits de vote" },
+                    { key: "controle_direction", label: "Exercice d\u2019un pouvoir de contrôle sur les organes de direction" },
+                    { key: "autre_moyen", label: "Autre moyen de contrôle" },
+                  ];
+
+                  const MODALITE_OPTIONS = [
+                    { key: "directe", label: "Directe (en son nom propre)" },
+                    { key: "indirecte", label: "Indirecte (via une ou plusieurs entités)" },
+                    { key: "conjointe", label: "Conjointe (avec d\u2019autres personnes)" },
+                  ];
+
+                  return (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-base text-gray-500">Déclaration des bénéficiaires effectifs (DBE)</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-base text-gray-600 space-y-2">
+                        <p>Obligation légale depuis janvier 2017. Toute société doit déclarer les personnes physiques qui la contrôlent. Sont concernés :</p>
+                        <ul className="list-disc ml-5 space-y-1">
+                          <li>Toute personne physique détenant directement ou indirectement plus de 25% du capital ou des droits de vote</li>
+                          <li>Toute personne physique exerçant un pouvoir de contrôle sur les organes de gestion, d&apos;administration ou de direction (le Président)</li>
+                        </ul>
+                      </div>
+                    </AccordionItem>
+
+                    {/* Auto-detected beneficial owner */}
+                    {answers.type_associe !== "morale" ? (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-green-600" />
+                          <p className="text-base font-bold text-green-800">Bénéficiaire effectif détecté automatiquement</p>
+                        </div>
+                        <p className="text-sm text-green-700">L&apos;associé unique détient 100% du capital et des droits de vote.</p>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 border border-amber-300 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5 text-amber-600" />
+                          <p className="text-base font-bold text-amber-800">Associé unique = personne morale</p>
+                        </div>
+                        <p className="text-sm text-amber-700">
+                          L&apos;associé unique est une société (<strong>{answers.associe_societe_nom || "PM"}</strong>). Le bénéficiaire effectif doit être une <strong>personne physique</strong>. Vous devez identifier la ou les personnes physiques qui contrôlent cette société :
+                        </p>
+                        <ul className="text-sm text-amber-700 list-disc ml-5 space-y-1">
+                          <li>Un associé de la société mère détenant plus de 25% du capital</li>
+                          <li>Ou le représentant légal exerçant le contrôle effectif de la direction</li>
+                        </ul>
+                        <p className="text-sm text-amber-700 font-semibold">L&apos;INPI exige au minimum 1 personne physique identifiée.</p>
+                      </div>
+                    )}
+
+                    {/* Beneficial owner cards */}
+                    {beneficiaires.map((be: any, idx: number) => {
+                      const expandedKey = `be_expanded_${idx}`;
+                      const isExpanded = answers[expandedKey] !== false;
+                      return (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: idx * 0.1 }}
+                        className="border-2 border-gray-200 rounded-2xl overflow-hidden"
+                      >
+                        {/* Card header */}
+                        <button
+                          type="button"
+                          onClick={() => setAnswer(expandedKey, !isExpanded)}
+                          className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 flex items-center justify-center">
+                              <User className="w-5 h-5 text-[#2563EB]" />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-base font-semibold text-[#1E3A8A]">
+                                {be.prenom || be.nom ? `${be.prenom} ${be.nom}`.trim() : `Bénéficiaire ${idx + 1}`}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {be.pct_capital ? `${be.pct_capital}% capital` : ""}{be.pct_capital && be.pct_votes ? " · " : ""}{be.pct_votes ? `${be.pct_votes}% droits de vote` : ""}
+                              </p>
+                            </div>
+                            {be.auto_detected && (
+                              <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">Auto-détecté</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {!be.auto_detected && (
+                              <span
+                                role="button"
+                                onClick={(e) => { e.stopPropagation(); removeBeneficiaire(idx); }}
+                                className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </span>
+                            )}
+                            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                          </div>
+                        </button>
+
+                        {/* Card body */}
+                        {isExpanded && (
+                          <div className="p-5 space-y-5 border-t border-gray-100">
+                            {/* Identity */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Identité</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Nom</label>
+                                  <input type="text" value={be.nom || ""} onChange={(e) => updateBeneficiaire(idx, "nom", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Nom" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Prénom</label>
+                                  <input type="text" value={be.prenom || ""} onChange={(e) => updateBeneficiaire(idx, "prenom", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Prénom" />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Birth */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Naissance</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Date de naissance</label>
+                                  <input type="date" value={be.date_naissance || ""} onChange={(e) => updateBeneficiaire(idx, "date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Lieu de naissance</label>
+                                  <input type="text" value={be.lieu_naissance || ""} onChange={(e) => updateBeneficiaire(idx, "lieu_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Ville de naissance" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Code postal de naissance</label>
+                                  <input type="text" value={be.code_postal_naissance || ""} onChange={(e) => updateBeneficiaire(idx, "code_postal_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Code postal" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Pays de naissance</label>
+                                  <input type="text" value={be.pays_naissance || "France"} onChange={(e) => updateBeneficiaire(idx, "pays_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="France" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Nationalité</label>
+                                  <input type="text" value={be.nationalite || "Française"} onChange={(e) => updateBeneficiaire(idx, "nationalite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Française" />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Address */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Adresse de résidence</p>
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Adresse</label>
+                                  <AddressAutocomplete value={be.adresse || ""} onChange={(v) => updateBeneficiaire(idx, "adresse", v)} placeholder="Adresse complète" />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Code postal</label>
+                                    <input type="text" value={be.code_postal || ""} onChange={(e) => updateBeneficiaire(idx, "code_postal", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Code postal" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Ville</label>
+                                    <input type="text" value={be.ville || ""} onChange={(e) => updateBeneficiaire(idx, "ville", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Ville" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Pays de résidence</label>
+                                    <input type="text" value={be.pays_residence || "France"} onChange={(e) => updateBeneficiaire(idx, "pays_residence", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="France" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Nature du contrôle */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Nature du contrôle</p>
+                              <div className="space-y-2">
+                                {NATURE_OPTIONS.map((opt) => (
+                                  <label key={opt.key} className="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" checked={(be.nature_controle || []).includes(opt.key)} onChange={() => toggleNatureControle(idx, opt.key)} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">{opt.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Modalités du contrôle */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Modalités du contrôle</p>
+                              <div className="space-y-2">
+                                {MODALITE_OPTIONS.map((opt) => (
+                                  <label key={opt.key} className="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name={`modalite_${idx}`} checked={be.modalite_controle === opt.key} onChange={() => updateBeneficiaire(idx, "modalite_controle", opt.key)} className="h-4 w-4 border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">{opt.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Pourcentages */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Pourcentages détenus</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">% du capital social</label>
+                                  <div className="relative">
+                                    <input type="number" min="0" max="100" value={be.pct_capital || ""} onChange={(e) => updateBeneficiaire(idx, "pct_capital", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all pr-10" placeholder="100" />
+                                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">% des droits de vote</label>
+                                  <div className="relative">
+                                    <input type="number" min="0" max="100" value={be.pct_votes || ""} onChange={(e) => updateBeneficiaire(idx, "pct_votes", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all pr-10" placeholder="100" />
+                                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                      );
+                    })}
+
+                    {/* Add another beneficial owner */}
+                    <button
+                      type="button"
+                      onClick={addBeneficiaire}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#2563EB] hover:bg-blue-50 text-gray-500 hover:text-[#2563EB] transition-all text-base font-medium"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Ajouter un bénéficiaire effectif
+                    </button>
+                  </div>
+                  );
+                })()}
 
                 {/* ── Mandat du Président ── */}
                 {POST_PAGES[postPage]?.id === "mandat_president" && (
@@ -4923,7 +6019,7 @@ export default function CreationSASUPage() {
                         <div>
                           <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Régime mère-fille</label>
                           <p className="text-sm text-gray-500 mb-2">Exonération de 95 % des dividendes reçus des filiales (détention ≥ 5 % depuis 2 ans)</p>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button
                               onClick={() => setAnswer("regime_mere_fille", "oui")}
                               className={cn(
@@ -4949,7 +6045,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Intégration fiscale</label>
                             <p className="text-sm text-gray-500 mb-2">Consolider les résultats des filiales détenues à 95 % ou plus</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("integration_fiscale", "oui")}
                                 className={cn(
@@ -5380,18 +6476,165 @@ export default function CreationSASUPage() {
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Siège social</p>
                     </div>
-                    {QUESTIONS[11].info && (
-                      <AccordionItem title={QUESTIONS[11].info.title}>
-                        <div className="text-base text-gray-600">{QUESTIONS[11].info.content}</div>
-                      </AccordionItem>
+
+                    {/* Step 1: Type de domiciliation */}
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Où sera domicilié le siège social de votre SASU ?</p>
+
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setAnswer("type_domiciliation", "domicile_dirigeant");
+                            // Pré-remplir avec l'adresse du dirigeant
+                            const adresseDirigeant = answers.president_option === "associe"
+                              ? (answers.associe_adresse || "")
+                              : (answers.president_adresse || answers.president_rp_adresse || "");
+                            if (adresseDirigeant) setAnswer("adresse_siege", adresseDirigeant);
+                          }}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "domicile_dirigeant" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <MapPin className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "domicile_dirigeant" ? "text-[#1E3A8A]" : "text-gray-700")}>Au domicile du dirigeant (président)</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Vous utilisez votre adresse personnelle comme siège social</p>
+                          </div>
+                          {answers.type_domiciliation === "domicile_dirigeant" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "local_commercial_bail")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "local_commercial_bail" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Building2 className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "local_commercial_bail" ? "text-[#1E3A8A]" : "text-gray-700")}>Dans un local commercial (locataire)</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Vous disposez d&apos;un bail commercial ou professionnel</p>
+                          </div>
+                          {answers.type_domiciliation === "local_commercial_bail" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "local_commercial_proprio")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "local_commercial_proprio" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Building2 className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "local_commercial_proprio" ? "text-[#1E3A8A]" : "text-gray-700")}>Dans un local commercial (propriétaire)</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Vous êtes propriétaire du local</p>
+                          </div>
+                          {answers.type_domiciliation === "local_commercial_proprio" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "societe_domiciliation")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "societe_domiciliation" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Landmark className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "societe_domiciliation" ? "text-[#1E3A8A]" : "text-gray-700")}>Auprès d&apos;une société de domiciliation</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Entreprise spécialisée (ex : SeDomicilier, LegalPlace...)</p>
+                          </div>
+                          {answers.type_domiciliation === "societe_domiciliation" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "pepiniere")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "pepiniere" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Users className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "pepiniere" ? "text-[#1E3A8A]" : "text-gray-700")}>Pépinière d&apos;entreprises / incubateur / coworking</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Espace partagé avec convention d&apos;hébergement</p>
+                          </div>
+                          {answers.type_domiciliation === "pepiniere" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Adresse */}
+                    {answers.type_domiciliation && (
+                      <div className="space-y-2">
+                        <label className="block text-base font-bold text-[#1E3A8A]">Adresse du siège social</label>
+                        <AddressAutocomplete
+                          value={answers.adresse_siege || ""}
+                          onChange={(v) => setAnswer("adresse_siege", v)}
+                          placeholder={QUESTIONS[11].placeholder}
+                          className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
+                        />
+                      </div>
                     )}
-                    <AddressAutocomplete
-                      value={answers.adresse_siege || ""}
-                      onChange={(v) => setAnswer("adresse_siege", v)}
-                      placeholder={QUESTIONS[11].placeholder}
-                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
-                    />
+
+                    {/* Step 3: Conditional fields based on type */}
+                    {answers.type_domiciliation === "domicile_dirigeant" && (
+                      <div className="border-l-2 border-[#2563EB]/30 pl-4 ml-2 space-y-4">
+                        <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-[#1E3A8A]">
+                            La domiciliation au domicile du dirigeant est autorisée pour une durée de 5 ans maximum (sauf si le bail ou le règlement de copropriété l&apos;interdit). Passé ce délai, vous devrez transférer le siège social.
+                          </p>
+                        </div>
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={answers.domicile_bail_autorise === "oui"}
+                            onChange={(e) => setAnswer("domicile_bail_autorise", e.target.checked ? "oui" : "")}
+                            className="mt-1 w-4 h-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]"
+                          />
+                          <span className="text-sm text-gray-700">Je confirme que mon bail ou règlement de copropriété n&apos;interdit pas l&apos;exercice d&apos;une activité professionnelle à cette adresse</span>
+                        </label>
+                      </div>
+                    )}
+
+                    {answers.type_domiciliation === "societe_domiciliation" && (
+                      <div className="border-l-2 border-[#2563EB]/30 pl-4 ml-2 space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom de la société de domiciliation</label>
+                          <input
+                            type="text"
+                            value={answers.nom_domiciliataire || ""}
+                            onChange={(e) => setAnswer("nom_domiciliataire", e.target.value)}
+                            placeholder="Ex : SeDomicilier, LegalPlace..."
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">SIREN de la société de domiciliation</label>
+                          <input
+                            type="text"
+                            value={answers.siren_domiciliataire || ""}
+                            onChange={(e) => setAnswer("siren_domiciliataire", e.target.value)}
+                            placeholder="Ex : 123 456 789"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Info accordion */}
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p>L&apos;INPI exige un <strong>justificatif de jouissance du local</strong> (bail, titre de propriété, contrat de domiciliation...) pour valider l&apos;adresse du siège social.</p>
+                        <p>Au domicile du dirigeant : un <strong>justificatif de domicile de moins de 3 mois</strong> est obligatoire (facture EDF, eau, internet ou avis d&apos;imposition).</p>
+                        <p>Le justificatif correspondant à votre situation vous sera demandé dans la page <strong>&quot;Pièces justificatives&quot;</strong>.</p>
+                      </div>
+                    </AccordionItem>
                   </div>
                 )}
 
@@ -5748,9 +6991,18 @@ export default function CreationSASUPage() {
                       <div className="flex gap-3">
                         <button
                           onClick={async () => {
-                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
-                            const text = buildStatutsSASU(answers);
+                            const { buildStatutsComplets } = await import("@/app/lib/statutsSasuBuilder");
+                            const { generateStatutsSasuDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildStatutsComplets(answers);
+                            const denomination = answers.nom_societe || answers.denomination_sociale || "SASU";
+                            const blob = await generateStatutsSasuDocx(text, {
+                              denomination,
+                              capital: String(answers.capital_social || "1"),
+                              siege: answers.adresse_siege || "[ADRESSE]",
+                            });
+                            const url = URL.createObjectURL(blob);
                             setAnswer("statuts_preview", text);
+                            setAnswer("statuts_docx_url", url);
                           }}
                           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-[#1E3A8A] font-semibold text-sm hover:bg-blue-50 transition-colors"
                         >
@@ -5759,14 +7011,19 @@ export default function CreationSASUPage() {
                         </button>
                         <button
                           onClick={async () => {
-                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
-                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
-                            const text = buildStatutsSASU(answers);
-                            const blob = await generateSasuDocumentDocx(text);
+                            const { buildStatutsComplets } = await import("@/app/lib/statutsSasuBuilder");
+                            const { generateStatutsSasuDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildStatutsComplets(answers);
+                            const denomination = answers.nom_societe || answers.denomination_sociale || "SASU";
+                            const blob = await generateStatutsSasuDocx(text, {
+                              denomination,
+                              capital: String(answers.capital_social || "1"),
+                              siege: answers.adresse_siege || "[ADRESSE]",
+                            });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement("a");
                             a.href = url;
-                            a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
+                            a.download = `statuts-${denomination.toLowerCase().replace(/\s+/g, "-")}.docx`;
                             a.click();
                             URL.revokeObjectURL(url);
                           }}
@@ -5778,38 +7035,16 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
-                    {/* Modal Aperçu des statuts */}
-                    {answers.statuts_preview && (
-                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[85vh] flex flex-col">
-                          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-                            <h3 className="text-lg font-bold text-[#1E3A8A] flex items-center gap-2"><FileText className="w-5 h-5" /> Aperçu des statuts</h3>
-                            <button onClick={() => setAnswer("statuts_preview", "")} className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
-                          </div>
-                          <div className="flex-1 overflow-y-auto px-6 py-4">
-                            <pre className="whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">{answers.statuts_preview}</pre>
-                          </div>
-                          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
-                            <button onClick={() => setAnswer("statuts_preview", "")} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50">Fermer</button>
-                            <button
-                              onClick={async () => {
-                                const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
-                                const blob = await generateSasuDocumentDocx(answers.statuts_preview || "");
-                                const url = URL.createObjectURL(blob);
-                                const a = document.createElement("a");
-                                a.href = url;
-                                a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
-                                a.click();
-                                URL.revokeObjectURL(url);
-                              }}
-                              className="px-5 py-2.5 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] flex items-center gap-2"
-                            >
-                              <Download className="w-4 h-4" />
-                              Télécharger
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                    {/* Aperçu pleine page des statuts (style cession) */}
+                    {answers.statuts_preview && answers.statuts_docx_url && (
+                      <DocumentPreviewPanel
+                        title={`Statuts constitutifs — ${answers.nom_societe || answers.denomination_sociale || "SASU"}`}
+                        text={answers.statuts_preview}
+                        docxBlobUrl={answers.statuts_docx_url}
+                        docxFileName={`statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`}
+                        pdfFileName={`statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.pdf`}
+                        onClose={() => { setAnswer("statuts_preview", ""); setAnswer("statuts_docx_url", ""); }}
+                      />
                     )}
                   </div>
                 )}
@@ -5873,6 +7108,50 @@ export default function CreationSASUPage() {
                       </div>
                     )}
 
+                    {/* Justificatif d'émancipation président — si mineur émancipé */}
+                    {answers.president_emancipe === "oui" && (
+                      <div className="bg-white border border-amber-300 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                            <Shield className="w-5 h-5 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif d&apos;émancipation du Président</p>
+                            <p className="text-xs text-gray-500">Jugement du tribunal judiciaire prononçant l&apos;émancipation</p>
+                          </div>
+                          {answers.justif_emancipation_president && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-amber-400 text-amber-700 text-sm font-medium cursor-pointer hover:bg-amber-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_emancipation_president ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_emancipation_president", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_emancipation_president && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_emancipation_president}</p>}
+                      </div>
+                    )}
+
+                    {/* Justificatif d'émancipation DG — si mineur émancipé */}
+                    {answers.dg_emancipe === "oui" && (
+                      <div className="bg-white border border-amber-300 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                            <Shield className="w-5 h-5 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif d&apos;émancipation du Directeur Général</p>
+                            <p className="text-xs text-gray-500">Jugement du tribunal judiciaire prononçant l&apos;émancipation</p>
+                          </div>
+                          {answers.justif_emancipation_dg && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-amber-400 text-amber-700 text-sm font-medium cursor-pointer hover:bg-amber-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_emancipation_dg ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_emancipation_dg", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_emancipation_dg && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_emancipation_dg}</p>}
+                      </div>
+                    )}
+
                     {/* Extrait Kbis de la société dirigeante — si président PM */}
                     {answers.president_type === "morale" && (
                       <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
@@ -5895,25 +7174,132 @@ export default function CreationSASUPage() {
                       </div>
                     )}
 
-                    {/* Justificatif de domicile */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-5 h-5 text-[#2563EB]" />
+                    {/* Justificatifs siège social — conditionnels selon type_domiciliation */}
+
+                    {/* Domicile du dirigeant */}
+                    {answers.type_domiciliation === "domicile_dirigeant" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <MapPin className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif de domicile du dirigeant</p>
+                            <p className="text-xs text-gray-500">Facture EDF, eau, internet ou avis d&apos;imposition de moins de 3 mois</p>
+                          </div>
+                          {answers.justif_domicile && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
                         </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif de domiciliation du siège</p>
-                          <p className="text-xs text-gray-500">Bail, contrat de domiciliation, ou attestation d&apos;hébergement</p>
-                        </div>
-                        {answers.justif_domicile && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_domicile ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_domicile", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
                       </div>
-                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        {answers.justif_domicile ? "Remplacer le fichier" : "Importer le document"}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_domicile", e.target.files[0].name); }} />
-                      </label>
-                      {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
-                    </div>
+                    )}
+
+                    {/* Local commercial — bail */}
+                    {answers.type_domiciliation === "local_commercial_bail" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Copie du bail commercial ou professionnel</p>
+                            <p className="text-xs text-gray-500">Bail en cours de validité</p>
+                          </div>
+                          {answers.justif_bail && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_bail ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_bail", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_bail && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_bail}</p>}
+                      </div>
+                    )}
+
+                    {/* Local commercial — propriétaire */}
+                    {answers.type_domiciliation === "local_commercial_proprio" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Titre de propriété ou taxe foncière</p>
+                            <p className="text-xs text-gray-500">Document attestant que vous êtes propriétaire du local</p>
+                          </div>
+                          {answers.justif_propriete && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_propriete ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_propriete", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_propriete && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_propriete}</p>}
+                      </div>
+                    )}
+
+                    {/* Société de domiciliation */}
+                    {answers.type_domiciliation === "societe_domiciliation" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Landmark className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Contrat de domiciliation</p>
+                            <p className="text-xs text-gray-500">Contrat signé avec la société de domiciliation</p>
+                          </div>
+                          {answers.justif_contrat_domiciliation && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_contrat_domiciliation ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_contrat_domiciliation", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_contrat_domiciliation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_contrat_domiciliation}</p>}
+                      </div>
+                    )}
+
+                    {/* Pépinière / incubateur / coworking */}
+                    {answers.type_domiciliation === "pepiniere" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Convention d&apos;hébergement</p>
+                            <p className="text-xs text-gray-500">Convention signée avec la pépinière, l&apos;incubateur ou le coworking</p>
+                          </div>
+                          {answers.justif_convention_hebergement && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_convention_hebergement ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_convention_hebergement", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_convention_hebergement && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_convention_hebergement}</p>}
+                      </div>
+                    )}
+
+                    {/* Fallback — aucun type sélectionné */}
+                    {!answers.type_domiciliation && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif de domiciliation du siège</p>
+                            <p className="text-xs text-gray-500">Sélectionnez un type de domiciliation dans la page &quot;Siège social&quot; pour voir le justificatif requis</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Justificatifs activité réglementée — si détectée */}
                     {answers.est_reglementee === "oui" && answers.reglementation_justificatifs && (() => {

@@ -56,18 +56,16 @@ ${activites_secondaires ? `ACTIVITÉS SECONDAIRES : ${activites_secondaires}` : 
 ${contextStructure}
 
 RÈGLES STRICTES DE RÉDACTION :
-1. Commence par "La Société a pour objet" (JAMAIS "La société a pour objet :")
-2. Décris l'activité principale de façon DÉTAILLÉE et JURIDIQUEMENT PRÉCISE (pas juste un mot, développe les prestations concrètes)
-3. Inclus les activités secondaires comme des branches distinctes de l'objet
+1. Commence DIRECTEMENT par la description de l'activité (ex: "La prestation de services en matière de...")
+2. Sois CONCIS et JURIDIQUEMENT PRÉCIS — un paragraphe principal suffit, deux maximum
+3. Inclus les activités secondaires dans le même flux
 4. Utilise le vocabulaire juridique approprié (prestations de services, négoce, conseil, intermédiation, etc.)
-5. Couvre tous les aspects de l'activité : B2B, B2C, en ligne, physique selon le contexte
-6. Termine TOUJOURS par la clause omnibus : "Et, plus généralement, toutes opérations économiques, juridiques, industrielles, commerciales, civiles, financières, mobilières ou immobilières se rapportant directement ou indirectement à l'objet social ainsi défini, ou à tous objets similaires, connexes ou complémentaires, susceptibles d'en favoriser l'extension ou le développement, tant en France qu'à l'étranger, pour son compte ou pour le compte de tiers, seule ou en participation."
-7. NE METS PAS de tirets, bullets, ou numéros — rédige en PROSE CONTINUE (paragraphes)
-8. Fais 2 à 4 paragraphes maximum
-9. N'ajoute AUCUN commentaire, AUCUNE explication — retourne UNIQUEMENT le texte de l'objet social
-10. Le texte doit être prêt à être inséré tel quel dans des statuts constitutifs de SASU
+5. NE TERMINE PAS par la clause omnibus "Et plus généralement..." — elle sera ajoutée automatiquement par les statuts
+6. NE METS PAS de tirets, bullets, ou numéros — rédige en PROSE CONTINUE
+7. N'ajoute AUCUN commentaire, AUCUNE explication — retourne UNIQUEMENT le texte de l'objet social
+8. Style avocat : concis, précis, pas de bavardage. Maximum 8 lignes.
 
-IMPORTANT : Le résultat doit être d'un niveau professionnel comparable à ce qu'un cabinet d'avocats facturerait 500€.`;
+IMPORTANT : Le résultat doit être d'un niveau professionnel de cabinet d'avocats — concis et juridiquement solide, pas verbeux.`;
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-20250514",

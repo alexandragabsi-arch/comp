@@ -434,3 +434,521 @@ export async function generateSasuDocumentDocx(text: string): Promise<Blob> {
 
   return Packer.toBlob(doc);
 }
+
+// ── SASU Statuts ─────────────────────────────────────────────────────────────
+
+const SASU_NAVY = "1A2744";
+const SASU_GRAY = "999999";
+const SASU_LIGHT_BG = "F5F6FA";
+
+const SASU_PAGE_MARGINS = {
+  top: convertInchesToTwip(1),
+  bottom: convertInchesToTwip(1),
+  left: convertInchesToTwip(1.18),
+  right: convertInchesToTwip(1),
+};
+
+function sasuRun(
+  text: string,
+  opts: {
+    bold?: boolean;
+    italics?: boolean;
+    size?: number;
+    color?: string;
+    font?: string;
+  } = {},
+): TextRun {
+  return new TextRun({
+    text,
+    bold: opts.bold ?? false,
+    italics: opts.italics ?? false,
+    size: opts.size ?? 22,
+    color: opts.color ?? SASU_NAVY,
+    font: opts.font ?? "Cambria",
+  });
+}
+
+/** Parse inline **bold** and __underline-as-bold__ for SASU statuts */
+function sasuParseInline(
+  text: string,
+  baseSize = 22,
+  baseColor = SASU_NAVY,
+): TextRun[] {
+  // Split on **bold** and __bold__ patterns
+  const parts = text.split(/(\*\*[^*]+\*\*|__[^_]+__)/);
+  return parts.flatMap((part) => {
+    if (!part) return [];
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return [sasuRun(part.slice(2, -2), { bold: true, size: baseSize, color: baseColor })];
+    }
+    if (part.startsWith("__") && part.endsWith("__")) {
+      return [sasuRun(part.slice(2, -2), { bold: true, size: baseSize, color: baseColor })];
+    }
+    return [sasuRun(part, { size: baseSize, color: baseColor })];
+  });
+}
+
+function sasuEmptyLine(spaceAfter = 0): Paragraph {
+  return new Paragraph({ text: "", spacing: { after: spaceAfter } });
+}
+
+function buildSasuCoverPage(meta: {
+  denomination: string;
+  capital: string;
+  siege: string;
+}): Paragraph[] {
+  const children: Paragraph[] = [];
+
+  // ~30% empty space at top
+  for (let i = 0; i < 8; i++) {
+    children.push(sasuEmptyLine(100));
+  }
+
+  // Thin navy horizontal line
+  children.push(
+    new Paragraph({
+      text: "",
+      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: SASU_NAVY } },
+      spacing: { after: 200 },
+    }),
+  );
+
+  // STATUTS CONSTITUTIFS
+  children.push(
+    new Paragraph({
+      children: [
+        sasuRun("STATUTS CONSTITUTIFS", { bold: true, size: 56, color: SASU_NAVY }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 120 },
+    }),
+  );
+
+  // Subtitle italic
+  children.push(
+    new Paragraph({
+      children: [
+        sasuRun("Société par Actions Simplifiée Unipersonnelle", {
+          italics: true,
+          size: 28,
+          color: SASU_NAVY,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+    }),
+  );
+
+  // Thin navy horizontal line
+  children.push(
+    new Paragraph({
+      text: "",
+      border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: SASU_NAVY } },
+      spacing: { after: 300 },
+    }),
+  );
+
+  // Empty space
+  for (let i = 0; i < 4; i++) {
+    children.push(sasuEmptyLine(100));
+  }
+
+  // Meta info lines
+  children.push(
+    new Paragraph({
+      children: [
+        sasuRun("Dénomination sociale : ", { size: 24, color: SASU_NAVY }),
+        sasuRun(meta.denomination, { bold: true, size: 24, color: SASU_NAVY }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 80 },
+    }),
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        sasuRun("Capital social : ", { size: 24, color: SASU_NAVY }),
+        sasuRun(`${meta.capital} euros`, { bold: true, size: 24, color: SASU_NAVY }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 80 },
+    }),
+  );
+
+  children.push(
+    new Paragraph({
+      children: [
+        sasuRun("Siège social : ", { size: 24, color: SASU_NAVY }),
+        sasuRun(meta.siege, { bold: true, size: 24, color: SASU_NAVY }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+    }),
+  );
+
+  // Empty space before bottom tag
+  for (let i = 0; i < 6; i++) {
+    children.push(sasuEmptyLine(100));
+  }
+
+  // Bottom tag
+  children.push(
+    new Paragraph({
+      children: [
+        sasuRun("LegalCorners — Statuts constitutifs", {
+          size: 16,
+          color: SASU_GRAY,
+        }),
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 200 },
+    }),
+  );
+
+  return children;
+}
+
+function buildSasuHeader(denomination: string): Header {
+  return new Header({
+    children: [
+      new Paragraph({
+        children: [
+          sasuRun(denomination, { bold: true, size: 16, color: SASU_NAVY }),
+          sasuRun(" | Statuts constitutifs — SASU", { size: 16, color: SASU_NAVY }),
+        ],
+        border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: SASU_NAVY } },
+        spacing: { after: 80 },
+      }),
+    ],
+  });
+}
+
+function buildSasuFooter(): Footer {
+  return new Footer({
+    children: [
+      new Paragraph({
+        children: [
+          new TextRun({ text: "Page ", size: 16, color: SASU_GRAY, font: "Cambria" }),
+          new TextRun({ children: [PageNumber.CURRENT], size: 16, color: SASU_GRAY, font: "Cambria" }),
+          new TextRun({ text: " sur ", size: 16, color: SASU_GRAY, font: "Cambria" }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, color: SASU_GRAY, font: "Cambria" }),
+        ],
+        alignment: AlignmentType.CENTER,
+        border: { top: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" } },
+        spacing: { before: 80 },
+      }),
+    ],
+  });
+}
+
+function parseSasuBody(text: string): Array<Paragraph | Table> {
+  const lines = text.split("\n");
+  const result: Array<Paragraph | Table> = [];
+  let i = 0;
+  let lastWasHeading = false;
+
+  while (i < lines.length) {
+    const raw = lines[i];
+    const t = raw.trim();
+
+    // ── Empty line ──
+    if (!t) {
+      result.push(sasuEmptyLine(60));
+      i++;
+      lastWasHeading = false;
+      continue;
+    }
+
+    // ── Separator: === → thick navy line ──
+    if (/^[═=]{3,}$/.test(t)) {
+      result.push(
+        new Paragraph({
+          text: "",
+          border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: SASU_NAVY } },
+          spacing: { after: 120 },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── Separator: --- → thin gray line ──
+    if (/^[-─]{3,}$/.test(t)) {
+      result.push(
+        new Paragraph({
+          text: "",
+          border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" } },
+          spacing: { after: 80 },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── Markdown table block ──
+    if (t.startsWith("|")) {
+      const tableLines: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      const tbl = buildMarkdownTable(tableLines);
+      if (tbl) {
+        result.push(tbl);
+        result.push(sasuEmptyLine(120));
+      }
+      lastWasHeading = false;
+      continue;
+    }
+
+    // Strip markdown heading prefix for detection
+    const mdH2 = /^#{2}\s+(.+)$/.exec(t);
+    const mdH3 = /^#{3}\s+(.+)$/.exec(t);
+    const mdH4 = /^#{4}\s+(.+)$/.exec(t);
+
+    // ── TITRE lines: ## TITRE X — ... or plain TITRE X — ... ──
+    const titreContent = mdH2
+      ? mdH2[1]
+      : /^TITRE\s/i.test(t)
+        ? t
+        : null;
+
+    if (titreContent && /TITRE\s/i.test(titreContent)) {
+      const clean = titreContent.replace(/\*\*/g, "");
+      result.push(
+        new Paragraph({
+          children: [
+            sasuRun(clean.toUpperCase(), { bold: true, size: 26, color: SASU_NAVY }),
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 400, after: 200 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: SASU_NAVY } },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── SOMMAIRE ──
+    if (/^(#{1,3}\s+)?SOMMAIRE\s*$/i.test(t)) {
+      result.push(
+        new Paragraph({
+          children: [sasuRun("SOMMAIRE", { bold: true, size: 28, color: SASU_NAVY })],
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 300, after: 200 },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── Article lines: ### Article X — ... or plain Article X ──
+    const articleContent = mdH3
+      ? mdH3[1]
+      : /^Article\s+\d+/i.test(t)
+        ? t
+        : null;
+
+    if (articleContent && /Article\s+\d+/i.test(articleContent)) {
+      const clean = articleContent.replace(/\*\*/g, "");
+      result.push(
+        new Paragraph({
+          children: [sasuRun(clean, { bold: true, size: 23, color: SASU_NAVY })],
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 280, after: 120 },
+          border: { left: { style: BorderStyle.THICK, size: 6, color: SASU_NAVY } },
+          shading: { type: ShadingType.SOLID, color: SASU_LIGHT_BG, fill: SASU_LIGHT_BG },
+          indent: { left: 200 },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── Sub-article: #### X.X — ... or lines starting with X.X ──
+    const subContent = mdH4
+      ? mdH4[1]
+      : /^\d+\.\d+\s/.test(t)
+        ? t
+        : null;
+
+    if (subContent && /\d+\.\d+/.test(subContent)) {
+      const clean = subContent.replace(/\*\*/g, "");
+      result.push(
+        new Paragraph({
+          children: [
+            sasuRun(clean, { bold: true, italics: true, size: 22, color: SASU_NAVY }),
+          ],
+          spacing: { before: 200, after: 80 },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── H2 that is not TITRE (DÉCLARATIONS PRÉLIMINAIRES, etc.) ──
+    if (mdH2) {
+      const clean = mdH2[1].replace(/\*\*/g, "");
+      result.push(
+        new Paragraph({
+          children: [sasuRun(clean, { bold: true, size: 24, color: SASU_NAVY })],
+          spacing: { before: 300, after: 120 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: SASU_NAVY } },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── Plain section headers (DÉCLARATIONS PRÉLIMINAIRES, etc.) ──
+    if (
+      /^(D[EÉ]CLARATIONS?\s+PR[EÉ]LIMINAIRES?|PRÉAMBULE|DISPOSITIONS?\s+G[EÉ]N[EÉ]RALES?)/i.test(
+        t.replace(/\*\*/g, ""),
+      )
+    ) {
+      const clean = t.replace(/\*\*/g, "").replace(/^#+\s*/, "");
+      result.push(
+        new Paragraph({
+          children: [sasuRun(clean, { bold: true, size: 24, color: SASU_NAVY })],
+          spacing: { before: 300, after: 120 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: SASU_NAVY } },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── Signature blocks ──
+    if (
+      /^(Fait\s+[àa]|Signature\s*:?|L[''']Associ[éeÉE]|LE PR[EÉ]SIDENT|L[''']ASSOCI[EÉ]\s+UNIQUE)/i.test(
+        t.replace(/\*\*/g, ""),
+      )
+    ) {
+      const clean = t.replace(/\*\*/g, "").replace(/^#+\s*/, "");
+      result.push(
+        new Paragraph({
+          children: [sasuRun(clean, { bold: true, size: 22, color: SASU_NAVY })],
+          spacing: { before: 300, after: 80 },
+        }),
+      );
+      i++;
+      lastWasHeading = false;
+      continue;
+    }
+
+    // ── H3 not matched as article ──
+    if (mdH3) {
+      const clean = mdH3[1].replace(/\*\*/g, "");
+      result.push(
+        new Paragraph({
+          children: [sasuRun(clean, { bold: true, size: 22, color: SASU_NAVY })],
+          spacing: { before: 200, after: 80 },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── H4 not matched as sub-article ──
+    if (mdH4) {
+      const clean = mdH4[1].replace(/\*\*/g, "");
+      result.push(
+        new Paragraph({
+          children: [
+            sasuRun(clean, { bold: true, italics: true, size: 22, color: SASU_NAVY }),
+          ],
+          spacing: { before: 180, after: 80 },
+        }),
+      );
+      i++;
+      lastWasHeading = true;
+      continue;
+    }
+
+    // ── Strip remaining heading markers ──
+    const cleanT = t.replace(/^#+\s*/, "");
+
+    // ── Bullet points ──
+    if (/^[•*]\s/.test(cleanT) || (/^-\s/.test(cleanT) && !cleanT.startsWith("---"))) {
+      const bulletText = cleanT.replace(/^[•*\-]\s+/, "");
+      result.push(
+        new Paragraph({
+          children: [
+            sasuRun("–  ", { size: 21 }),
+            ...sasuParseInline(bulletText, 21, SASU_NAVY),
+          ],
+          indent: { left: 400, hanging: 200 },
+          spacing: { after: 60 },
+          alignment: AlignmentType.JUSTIFIED,
+        }),
+      );
+      i++;
+      lastWasHeading = false;
+      continue;
+    }
+
+    // ── Default body paragraph ──
+    result.push(
+      new Paragraph({
+        children: sasuParseInline(cleanT, 22, SASU_NAVY),
+        spacing: { after: 80, line: 360 },
+        alignment: AlignmentType.JUSTIFIED,
+        indent: lastWasHeading ? undefined : { firstLine: 284 }, // 0.5cm = ~284 twips
+      }),
+    );
+    i++;
+    lastWasHeading = false;
+  }
+
+  return result;
+}
+
+export async function generateStatutsSasuDocx(
+  statutsText: string,
+  meta: { denomination: string; capital: string; siege: string },
+): Promise<Blob> {
+  const coverChildren = buildSasuCoverPage(meta);
+  const bodyChildren = parseSasuBody(statutsText);
+
+  const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: { font: "Cambria", size: 22, color: SASU_NAVY },
+          paragraph: { spacing: { line: 360 } },
+        },
+      },
+    },
+    sections: [
+      // Cover page section (no header, has footer)
+      {
+        properties: {
+          page: { margin: SASU_PAGE_MARGINS },
+        },
+        footers: { default: buildSasuFooter() },
+        children: coverChildren,
+      },
+      // Content section (header + footer)
+      {
+        properties: {
+          page: { margin: SASU_PAGE_MARGINS },
+        },
+        headers: { default: buildSasuHeader(meta.denomination) },
+        footers: { default: buildSasuFooter() },
+        children: bodyChildren,
+      },
+    ],
+  });
+
+  return Packer.toBlob(doc);
+}

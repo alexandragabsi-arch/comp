@@ -25,6 +25,8 @@ interface SignRequest {
   companyName: string;
   documents: SignDocument[];
   signers: Signer[];
+  /** "qualified" for statuts, "simple" for annexes */
+  signatureLevel?: "qualified" | "simple";
 }
 
 const DOC_LABELS: Record<string, string> = {
@@ -147,7 +149,9 @@ export async function POST(request: NextRequest) {
               phone_number: signer.phone || undefined,
               locale: "fr",
             },
-            signature_level: "electronic_signature",
+            signature_level: body.signatureLevel === "qualified"
+              ? "qualified_electronic_signature"
+              : "electronic_signature",
             signature_authentication_mode: signer.phone
               ? "otp_sms"
               : "otp_email",

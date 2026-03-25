@@ -6488,10 +6488,11 @@ export default function CreationSASUPage() {
                           onClick={() => {
                             setAnswer("type_domiciliation", "domicile_dirigeant");
                             // Pré-remplir avec l'adresse du dirigeant
-                            const adresseDirigeant = answers.president_option === "associe"
-                              ? (answers.associe_adresse || "")
-                              : (answers.president_adresse || answers.president_rp_adresse || "");
-                            if (adresseDirigeant) setAnswer("adresse_siege", adresseDirigeant);
+                            const addr = answers.associe_adresse
+                              || answers.president_adresse
+                              || answers.president_rp_adresse
+                              || "";
+                            if (addr) setAnswer("adresse_siege", addr);
                           }}
                           className={cn(
                             "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,9 +8,73 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRef, useCallback } from "react";
+
+/* ───────── Address Autocomplete (adresse.data.gouv.fr) ───────── */
+function AddressAutocomplete({ value, onChange, placeholder, className }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [suggestions, setSuggestions] = useState<{ label: string; context: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchSuggestions = useCallback((query: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (query.length < 3) { setSuggestions([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&limit=5`);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (data.features || []).map((f: any) => ({
+              label: f.properties.label,
+              context: f.properties.context,
+            }))
+          );
+          setShowSuggestions(true);
+        }
+      } catch { /* ignore */ }
+    }, 300);
+  }, []);
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => { onChange(e.target.value); fetchSuggestions(e.target.value); }}
+        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+        placeholder={placeholder || "Tapez une adresse..."}
+        className={className || "w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"}
+      />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+          {suggestions.map((s, i) => (
+            <button
+              key={i}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { onChange(s.label); setShowSuggestions(false); setSuggestions([]); }}
+              className="w-full px-4 py-2.5 text-left hover:bg-blue-50 text-sm text-gray-800 border-b border-gray-100 last:border-b-0"
+            >
+              <span className="font-medium">{s.label}</span>
+              <span className="text-xs text-gray-400 ml-2">{s.context}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /*
  * Color palette (LegalCorners):
@@ -277,18 +341,18 @@ function InfoAccordion({ title, children }: { title: string; children: React.Rea
     <div className="mt-6 border border-[#D1D5DB] rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-sm font-semibold text-[#1E293B]"
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-base font-bold text-[#1E293B]"
       >
         <span className="flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-yellow-500" />
           Plus d&apos;informations
         </span>
-        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {open ? <ChevronUp className="w-5 h-5 text-[#2563EB]" /> : <ChevronDown className="w-5 h-5 text-[#2563EB]" />}
       </button>
       {open && (
-        <div className="px-5 py-4 bg-white border-t border-[#D1D5DB]">
-          <p className="text-sm font-bold text-[#2563EB] mb-2">{title}</p>
-          <div className="text-sm text-[#6B7280] leading-relaxed">{children}</div>
+        <div className="px-5 py-4 bg-[#F8FAFF] border-t border-[#D1D5DB]">
+          <p className="text-base font-bold text-[#2563EB] mb-2">{title}</p>
+          <div className="text-base text-gray-700 leading-relaxed text-justify">{children}</div>
         </div>
       )}
     </div>
@@ -569,16 +633,19 @@ function QuestionBlock({
 function AccordionItem({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+    <div className="rounded-xl border border-[#D1D5DB] overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-3.5 text-left gap-3"
+        className="w-full flex items-center justify-between px-5 py-3.5 bg-[#EFF6FF] text-left gap-3"
       >
-        <span className="text-sm font-semibold text-[#1E3A8A]">{title}</span>
-        <ChevronRight className={cn("w-4 h-4 text-[#2563EB] flex-shrink-0 transition-transform", open && "rotate-90")} />
+        <span className="flex items-center gap-2 text-base font-bold text-[#1E3A8A]">
+          <Lightbulb className="w-4 h-4 text-yellow-500" />
+          {title}
+        </span>
+        {open ? <ChevronUp className="w-5 h-5 text-[#2563EB] flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
       </button>
       {open && (
-        <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+        <div className="px-5 py-4 bg-[#F8FAFF] border-t border-[#D1D5DB] text-base text-gray-700 leading-relaxed text-justify">
           {children}
         </div>
       )}
@@ -1140,6 +1207,17 @@ export default function CreationSASUPage() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [postPage, setPostPage] = useState(0); // for post-payment pages
 
+  // Handle Stripe return
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      setPhase("post_payment");
+      setPostPage(0);
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setAnswer = (id: string, val: any) =>
     setAnswers((prev) => ({ ...prev, [id]: val }));
@@ -1160,17 +1238,42 @@ export default function CreationSASUPage() {
     { id: "activite_saisonniere" }, // saisonnière / ambulante
     { id: "associe_unique" },       // type d'associé + infos + situation matrimoniale
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
-    { id: "apport_associe" },      // apport de l'associé unique
-    { id: "nomination_president" },  // nomination du président (1 seul)
-    { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
-    { id: "depot_capital" },        // établissement bancaire + date dépôt
-    { id: "regime_fiscal" },        // IS / IR (adapté holdings)
+    { id: "depot_capital" },        // établissement bancaire + date dépôt + versement
+    { id: "apport_associe" },      // apport de l'associé unique (si personnalisée)
+    { id: "nomination_president" },  // nomination du président
+    { id: "mandat_president" },     // règles du président (durée, révocation, rémunération, pouvoirs)
+    { id: "adresse_siege" },        // détermination siège social
+    { id: "regles_statutaires" },  // règles organisation société (CAC etc) — modifier ou pas
+    { id: "exercice_comptable" },   // date clôture exercice comptable
+    { id: "services_comptables" }, // services comptables (si pas de CAC nommé)
+    { id: "regles_cac" },          // commissaire aux comptes (si personnaliser)
+    { id: "regles_duree" },        // durée de la société (si personnaliser)
+    { id: "regles_transmission" }, // règles transmission/cession (si personnaliser)
+    { id: "regles_nantissement" }, // nantissement + location actions (si personnaliser)
+    { id: "regime_fiscal" },        // impôts sur les bénéfices (IS / IR)
     { id: "regime_tva" },           // régime de TVA
-    { id: "adresse_siege" },        // adresse
+    { id: "reprise_depenses" },    // reprise des dépenses engagées pour la société en formation
     { id: "date_lieu" },            // date et lieu de signature des statuts
     { id: "recapitulatif" },         // récapitulatif de toutes les informations
     { id: "justificatifs" },         // pièces justificatives à fournir
   ];
+
+  // Skip conditional pages based on answers
+  function shouldSkipPage(pageId: string | undefined): boolean {
+    if (!pageId) return false;
+    const customPages = ["regles_cac", "regles_duree", "regles_transmission", "regles_nantissement"];
+    if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
+    // Skip services_comptables if CAC is explicitly "oui"
+    if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
+    // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
+    if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
+    return false;
+  }
+
+  // Helper to find page index by id
+  function pageIndex(id: string): number {
+    return POST_PAGES.findIndex((p) => p.id === id);
+  }
 
   // Determine sidebar step from phase
   const sidebarStep =
@@ -1640,19 +1743,37 @@ export default function CreationSASUPage() {
                     Retour
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (answers.formule === "avocat") {
                         setPhase("avocat_confirmation");
-                      } else {
-                        setPhase("post_payment");
-                        setPostPage(0);
+                        return;
+                      }
+                      // Redirect to Stripe checkout
+                      setAnswer("stripe_loading", "oui");
+                      try {
+                        const res = await fetch("/api/stripe/checkout-creation-sasu", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ formule: answers.formule }),
+                        });
+                        const data = await res.json();
+                        if (data.url) {
+                          window.location.href = data.url;
+                        } else {
+                          setAnswer("stripe_error", data.error || "Erreur lors du paiement");
+                          setAnswer("stripe_loading", "");
+                        }
+                      } catch {
+                        setAnswer("stripe_error", "Erreur de connexion au service de paiement");
+                        setAnswer("stripe_loading", "");
                       }
                     }}
-                    disabled={!answers.formule}
+                    disabled={!answers.formule || answers.stripe_loading === "oui"}
                     className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 disabled:opacity-30 flex items-center justify-center gap-2"
                   >
-                    Continuer <ArrowRight className="w-4 h-4" />
+                    {answers.stripe_loading === "oui" ? "Redirection en cours..." : <>Payer et continuer <ArrowRight className="w-4 h-4" /></>}
                   </button>
+                  {answers.stripe_error && <p className="text-sm text-red-500 text-center">{answers.stripe_error}</p>}
                 </div>
               </motion.div>
             )}
@@ -1851,6 +1972,23 @@ export default function CreationSASUPage() {
                       <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-5 space-y-4">
                         <p className="text-sm font-semibold text-[#1E3A8A]">Options holding animatrice</p>
 
+                        <AccordionItem title="Comprendre ces options en langage simple">
+                          <div className="text-sm text-gray-600 space-y-4 text-justify">
+                            <div>
+                              <p className="font-bold text-[#1E3A8A]">Convention de management fees</p>
+                              <p>Votre holding facture des prestations à ses filiales (stratégie, comptabilité, RH, etc.). Cela permet de <strong>remonter du chiffre d&apos;affaires</strong> dans la holding et de <strong>déduire ces frais</strong> dans les filiales. En résumé : c&apos;est un moyen légal d&apos;organiser les flux financiers au sein du groupe.</p>
+                            </div>
+                            <div>
+                              <p className="font-bold text-[#1E3A8A]">Convention de trésorerie (cash pooling)</p>
+                              <p>La holding centralise la trésorerie de tout le groupe. Elle peut <strong>prêter de l&apos;argent à ses filiales</strong> ou inversement. C&apos;est comme une &quot;banque interne&quot; qui évite d&apos;avoir recours à un emprunt bancaire pour les besoins de trésorerie entre sociétés du groupe.</p>
+                            </div>
+                            <div>
+                              <p className="font-bold text-[#1E3A8A]">Pacte Dutreil</p>
+                              <p>Si vous envisagez de <strong>transmettre vos parts</strong> à vos enfants ou héritiers, le Pacte Dutreil permet une <strong>exonération de 75 % des droits de donation/succession</strong>. En échange, vous vous engagez à conserver les parts pendant au moins 2 ans (engagement collectif) puis 4 ans (engagement individuel).</p>
+                            </div>
+                          </div>
+                        </AccordionItem>
+
                         <div className="space-y-3">
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de management fees</label>
@@ -1876,6 +2014,12 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+                          {answers.management_fees === "oui" && (
+                            <div className="mt-3 ml-4">
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pourcentage des management fees (% du CA filiale)</label>
+                              <input type="text" value={answers.management_fees_pct || ""} onChange={(e) => setAnswer("management_fees_pct", e.target.value)} placeholder="Ex : 5" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          )}
 
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de trésorerie (cash pooling)</label>
@@ -1901,6 +2045,20 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+                          {answers.cash_pooling === "oui" && (
+                            <div className="mt-3 ml-4">
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Plafond par filiale et par exercice (€)</label>
+                                  <input type="text" value={answers.cash_pooling_plafond || ""} onChange={(e) => setAnswer("cash_pooling_plafond", e.target.value)} placeholder="Ex : 500000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Majoration du taux légal (points)</label>
+                                  <input type="text" value={answers.cash_pooling_taux || ""} onChange={(e) => setAnswer("cash_pooling_taux", e.target.value)} placeholder="Ex : 2" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                              </div>
+                            </div>
+                          )}
 
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pacte Dutreil (transmission)</label>
@@ -1926,6 +2084,12 @@ export default function CreationSASUPage() {
                               </button>
                             </div>
                           </div>
+                          {answers.pacte_dutreil === "oui" && (
+                            <div className="mt-3 ml-4">
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Durée de l&apos;engagement collectif de conservation (années)</label>
+                              <input type="text" value={answers.pacte_dutreil_duree || ""} onChange={(e) => setAnswer("pacte_dutreil_duree", e.target.value)} placeholder="Ex : 2" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1998,26 +2162,35 @@ export default function CreationSASUPage() {
 
                       <div className="flex items-center gap-3">
                         <button
-                          onClick={() => {
-                            // Popup placeholder — generates a draft objet social from activities
+                          onClick={async () => {
                             const principale = answers.activite_principale_desc || answers.sous_categorie || "";
-                            const secondaires = answers.activites_secondaires || "";
-                            if (principale) {
-                              const draft = `La société a pour objet : ${principale}${secondaires ? `, ${secondaires}` : ""}. Et plus généralement, toutes opérations industrielles, commerciales, financières, civiles, mobilières ou immobilières, pouvant se rattacher directement ou indirectement à l'objet social ou à tout objet similaire, connexe ou complémentaire.`;
-                              setAnswer("objet_social", draft);
-                            }
+                            if (!principale) return;
+                            setAnswer("objet_social_loading", "true");
+                            try {
+                              const res = await fetch("/api/generate-objet-social", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  activite_principale: principale,
+                                  activites_secondaires: answers.activites_secondaires || "",
+                                  type_structure: answers.type_structure || "classique",
+                                }),
+                              });
+                              if (res.ok) {
+                                const data = await res.json();
+                                setAnswer("objet_social", data.objet_social);
+                              }
+                            } catch { /* ignore */ }
+                            setAnswer("objet_social_loading", "");
                           }}
-                          disabled={!answers.activite_principale_desc && !answers.sous_categorie}
+                          disabled={(!answers.activite_principale_desc && !answers.sous_categorie) || answers.objet_social_loading === "true"}
                           className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] active:bg-[#1E40AF] disabled:bg-[#9CA3AF] transition-colors flex items-center gap-2"
                         >
-                          <Sparkles className="w-4 h-4" />
-                          Rédiger mon objet social
-                        </button>
-                        <button
-                          onClick={() => setAnswer("show_objet_popup", answers.show_objet_popup === "true" ? "" : "true")}
-                          className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] transition-colors"
-                        >
-                          Popup
+                          {answers.objet_social_loading === "true" ? (
+                            <><svg className="animate-spin w-4 h-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Rédaction en cours…</>
+                          ) : (
+                            <><Sparkles className="w-4 h-4" /> Rédiger mon objet social (IA avocat)</>
+                          )}
                         </button>
                       </div>
                     </div>
@@ -2105,29 +2278,121 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
-                    {/* Code NAF suggestion */}
+                    {/* Bouton analyse IA */}
                     {answers.activite_principale_desc && (
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                        <p className="text-base text-[#1E3A8A]">
-                          <strong>Suggestion du code NAF :</strong> Le code NAF attribué officiellement sera celui correspondant à l&apos;activité principale, telle que déterminée par l&apos;INSEE.
-                        </p>
+                      <div className="space-y-4">
+                        <button
+                          onClick={async () => {
+                            setAnswer("analyse_activite_loading", "oui");
+                            setAnswer("analyse_activite_error", "");
+                            try {
+                              const res = await fetch("/api/analyse-activite", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  activite_principale: answers.activite_principale_desc,
+                                  activites_secondaires: answers.activites_secondaires,
+                                }),
+                              });
+                              if (!res.ok) throw new Error("Erreur API");
+                              const data = await res.json();
+                              setAnswer("code_naf", data.code_naf || "");
+                              setAnswer("libelle_naf", data.libelle_naf || "");
+                              setAnswer("est_reglementee", data.est_reglementee ? "oui" : "non");
+                              if (data.reglementation && data.est_reglementee) {
+                                setAnswer("reglementation_description", data.reglementation.description || "");
+                                setAnswer("reglementation_conditions", JSON.stringify(data.reglementation.conditions || []));
+                                setAnswer("reglementation_justificatifs", JSON.stringify(data.reglementation.justificatifs || []));
+                                setAnswer("reglementation_autorite", data.reglementation.autorite_competente || "");
+                              } else {
+                                setAnswer("reglementation_description", "");
+                                setAnswer("reglementation_conditions", "");
+                                setAnswer("reglementation_justificatifs", "");
+                                setAnswer("reglementation_autorite", "");
+                              }
+                            } catch {
+                              setAnswer("analyse_activite_error", "Erreur lors de l'analyse. Réessayez.");
+                            } finally {
+                              setAnswer("analyse_activite_loading", "");
+                            }
+                          }}
+                          disabled={answers.analyse_activite_loading === "oui"}
+                          className="w-full py-3 rounded-xl bg-[#7C3AED] text-white font-semibold text-base hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          {answers.analyse_activite_loading === "oui" ? "Analyse en cours..." : "Analyser mon activité (code NAF + réglementation)"}
+                        </button>
+
+                        {answers.analyse_activite_error && (
+                          <p className="text-sm text-red-500">{answers.analyse_activite_error}</p>
+                        )}
+
+                        {/* Résultat code NAF */}
+                        {answers.code_naf && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                            <p className="text-base font-bold text-[#1E3A8A] flex items-center gap-2">
+                              <Sparkles className="w-4 h-4 text-[#7C3AED]" /> Code NAF suggéré
+                            </p>
+                            <p className="text-base text-[#1E3A8A]">
+                              <strong>{answers.code_naf}</strong> — {answers.libelle_naf}
+                            </p>
+                            <p className="text-xs text-gray-500 italic">Le code NAF définitif sera attribué par l&apos;INSEE lors de l&apos;immatriculation.</p>
+                          </div>
+                        )}
+
+                        {/* Résultat activité réglementée */}
+                        {answers.est_reglementee === "oui" && (
+                          <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-3">
+                            <p className="text-base font-bold text-amber-800 flex items-center gap-2">
+                              ⚠️ Activité réglementée détectée
+                            </p>
+                            <p className="text-xs text-amber-700 italic font-semibold">Les justificatifs ci-dessous vous seront demandés à l&apos;étape &quot;Pièces justificatives&quot;.</p>
+                            {answers.reglementation_description && (
+                              <p className="text-sm text-amber-700">{answers.reglementation_description}</p>
+                            )}
+                            {answers.reglementation_conditions && (() => {
+                              try {
+                                const conditions = JSON.parse(answers.reglementation_conditions);
+                                if (conditions.length > 0) return (
+                                  <div>
+                                    <p className="text-sm font-bold text-amber-800">Conditions requises :</p>
+                                    <ul className="list-disc pl-5 text-sm text-amber-700 space-y-1">
+                                      {conditions.map((c: string, i: number) => <li key={i}>{c}</li>)}
+                                    </ul>
+                                  </div>
+                                );
+                              } catch { /* ignore parse errors */ }
+                              return null;
+                            })()}
+                            {answers.reglementation_justificatifs && (() => {
+                              try {
+                                const justifs = JSON.parse(answers.reglementation_justificatifs);
+                                if (justifs.length > 0) return (
+                                  <div>
+                                    <p className="text-sm font-bold text-amber-800">Justificatifs à fournir :</p>
+                                    <ul className="list-disc pl-5 text-sm text-amber-700 space-y-1">
+                                      {justifs.map((j: string, i: number) => <li key={i}>{j}</li>)}
+                                    </ul>
+                                  </div>
+                                );
+                              } catch { /* ignore parse errors */ }
+                              return null;
+                            })()}
+                            {answers.reglementation_autorite && (
+                              <p className="text-sm text-amber-700"><strong>Autorité compétente :</strong> {answers.reglementation_autorite}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {answers.est_reglementee === "non" && (
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                            <p className="text-sm text-green-800 flex items-center gap-2">
+                              <Check className="w-4 h-4" /> <strong>Activité non réglementée</strong> — Aucune condition particulière requise pour cette activité.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
-
-                    {/* Analyse réglementaire */}
-                    <div className="space-y-3">
-                      <h3 className="text-base font-bold text-[#1E3A8A]">Analyse réglementaire de votre activité</h3>
-                      <p className="text-base text-gray-600">
-                        À partir des activités que vous avez décrites, nous vérifions si certaines obligations réglementaires ou justificatifs sont requis afin d&apos;éviter tout refus lors de l&apos;immatriculation auprès de l&apos;INPI.
-                      </p>
-                      {answers.activite_principale_desc && (
-                        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                          <p className="text-sm text-green-800">
-                            <strong>Analyse :</strong> Nous vérifierons la conformité réglementaire de votre activité lors de la constitution du dossier.
-                          </p>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
 
@@ -2259,6 +2524,43 @@ export default function CreationSASUPage() {
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
+
+                        {/* Mineur émancipé */}
+                        {(() => {
+                          if (!answers.associe_date_naissance) return null;
+                          const birth = new Date(answers.associe_date_naissance);
+                          const today = new Date();
+                          let age = today.getFullYear() - birth.getFullYear();
+                          const m = today.getMonth() - birth.getMonth();
+                          if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                          if (age >= 18) return null;
+                          return (
+                            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 space-y-3">
+                              <p className="text-sm font-semibold text-amber-800">L&apos;associé a moins de 18 ans. Un mineur ne peut créer une SASU que s&apos;il est émancipé.</p>
+                              <div className="flex gap-3">
+                                <button
+                                  onClick={() => setAnswer("associe_emancipe", "oui")}
+                                  className={cn("flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all", answers.associe_emancipe === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}
+                                >
+                                  Oui, mineur émancipé
+                                </button>
+                                <button
+                                  onClick={() => setAnswer("associe_emancipe", "non")}
+                                  className={cn("flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all", answers.associe_emancipe === "non" ? "border-red-500 bg-red-50 text-red-700" : "border-gray-200 bg-white text-gray-600 hover:border-red-300")}
+                                >
+                                  Non
+                                </button>
+                              </div>
+                              {answers.associe_emancipe === "non" && (
+                                <p className="text-sm text-red-600 font-medium">Un mineur non émancipé ne peut pas être associé unique d&apos;une SASU. Veuillez vérifier la date de naissance.</p>
+                              )}
+                              {answers.associe_emancipe === "oui" && (
+                                <p className="text-sm text-green-700">Un justificatif d&apos;émancipation (jugement du tribunal) vous sera demandé dans la section pièces justificatives.</p>
+                              )}
+                            </div>
+                          );
+                        })()}
+
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
                           <input
@@ -2281,12 +2583,10 @@ export default function CreationSASUPage() {
                         </div>
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse de résidence fiscale</label>
-                          <input
-                            type="text"
+                          <AddressAutocomplete
                             value={answers.associe_adresse || ""}
-                            onChange={(e) => setAnswer("associe_adresse", e.target.value)}
+                            onChange={(v) => setAnswer("associe_adresse", v)}
                             placeholder="Adresse complète"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                           />
                         </div>
 
@@ -2381,56 +2681,73 @@ export default function CreationSASUPage() {
                     {/* Formulaire associé morale */}
                     {answers.type_associe === "morale" && (
                       <div className="space-y-4 border-t border-gray-200 pt-5">
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination de la société associée</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_nom || ""}
-                            onChange={(e) => setAnswer("associe_societe_nom", e.target.value)}
-                            placeholder="Nom de la société"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                          <p className="text-base text-gray-700">Indiquez le numéro SIREN de la société associée pour retrouver automatiquement ses informations dans le registre officiel.</p>
+                          <p className="text-base text-gray-700">Vous trouverez ce numéro sur votre extrait Kbis.</p>
+                          <div className="flex justify-end">
+                            <button onClick={() => setAnswer("associe_societe_mode", "manuel")} className="px-4 py-2 rounded-xl bg-[#1E3A8A] text-white text-sm font-semibold hover:opacity-90 transition-opacity">Remplir manuellement</button>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_forme || ""}
-                            onChange={(e) => setAnswer("associe_societe_forme", e.target.value)}
-                            placeholder="Ex : SAS, SARL, SA..."
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
-                        </div>
+
+                        {/* SIREN search */}
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Numéro SIREN</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_siren || ""}
-                            onChange={(e) => setAnswer("associe_societe_siren", e.target.value)}
-                            placeholder="Ex : 123 456 789"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
+                          <div className="flex gap-3">
+                            <input type="text" value={answers.associe_societe_siren || ""} onChange={(e) => setAnswer("associe_societe_siren", e.target.value)} placeholder="Ex : 824330799" className="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            <button
+                              onClick={async () => {
+                                const siren = (answers.associe_societe_siren || "").replace(/\s/g, "");
+                                if (siren.length !== 9) return;
+                                try {
+                                  const res = await fetch(`/api/siren?siren=${siren}`);
+                                  if (res.ok) {
+                                    const data = await res.json();
+                                    setAnswer("associe_societe_nom", data.denominationSociale || "");
+                                    setAnswer("associe_societe_forme", data.formeJuridique || "");
+                                    setAnswer("associe_societe_capital", data.capitalSocial || "");
+                                    setAnswer("associe_societe_representant", data.representant || "");
+                                    setAnswer("associe_societe_adresse", [data.siegeSocial, data.codePostal, data.ville].filter(Boolean).join(", "));
+                                    setAnswer("associe_societe_ville_rcs", data.ville || "");
+                                    setAnswer("associe_societe_mode", "siren");
+                                  }
+                                } catch { /* ignore */ }
+                              }}
+                              disabled={!answers.associe_societe_siren || answers.associe_societe_siren.replace(/\s/g, "").length !== 9}
+                              className="px-6 py-3 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] disabled:bg-[#9CA3AF] transition-colors"
+                            >Confirmer mon Numéro</button>
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège de la société associée</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_adresse || ""}
-                            onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)}
-                            placeholder="Adresse complète"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
-                          <input
-                            type="text"
-                            value={answers.associe_societe_representant || ""}
-                            onChange={(e) => setAnswer("associe_societe_representant", e.target.value)}
-                            placeholder="Nom et prénom du représentant"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                          />
-                        </div>
+
+                        {/* Infos entreprise */}
+                        {(answers.associe_societe_mode === "siren" || answers.associe_societe_mode === "manuel") && (
+                          <div className="space-y-4 border-t border-gray-200 pt-4">
+                            <p className="text-sm font-bold text-[#2563EB]">Informations de la société associée</p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination de la société</label>
+                                <input type="text" value={answers.associe_societe_nom || ""} onChange={(e) => setAnswer("associe_societe_nom", e.target.value)} placeholder="Nom de la société" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Forme juridique</label>
+                                <input type="text" value={answers.associe_societe_forme || ""} onChange={(e) => setAnswer("associe_societe_forme", e.target.value)} placeholder="Ex : SAS, SARL, SA..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
+                                <input type="text" value={answers.associe_societe_capital || ""} onChange={(e) => setAnswer("associe_societe_capital", e.target.value)} placeholder="Ex : 1000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du représentant légal</label>
+                                <input type="text" value={answers.associe_societe_representant || ""} onChange={(e) => setAnswer("associe_societe_representant", e.target.value)} placeholder="Nom et prénom du représentant" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège</label>
+                              <input type="text" value={answers.associe_societe_adresse || ""} onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2510,58 +2827,46 @@ export default function CreationSASUPage() {
 
                     <hr className="border-gray-200" />
 
-                    {/* Montant du capital social section (actions_capital inline) */}
-                    <div className="space-y-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-gray-400">ACTIONS ET CAPITAL SOCIAL</p>
-
-                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Montant du capital</strong> : somme totale apportée par les associés.</p>
-                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Valeur unitaire d&apos;une action</strong> : prix de base d&apos;une action (souvent 1 € pour simplifier).</p>
-                        <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Nombre d&apos;actions</strong> : calcul automatique = Montant du capital ÷ Valeur d&apos;une action.</p>
-                        <p className="text-base text-gray-700"><strong>Exemple</strong> : Capital 5 000 € / Valeur 1 € = 5 000 actions.</p>
-                        <p className="text-sm text-[#2563EB] font-semibold">Veuillez remplir le montant de votre capital social et la valeur d&apos;une action souhaitée, le nombre d&apos;actions s&apos;ajustera automatiquement</p>
+                    {/* Info formule simplifiée */}
+                    <AccordionItem title="Plus d'informations">
+                      <div className="text-sm text-gray-600 space-y-3">
+                        <p>Le capital minimum légal pour une SASU est de 1 euro. Afin de faciliter vos démarches, nous vous proposons par défaut un ensemble de règles couramment utilisées dans les statuts afin de simplifier la création de votre SASU.</p>
+                        <p className="font-bold text-[#1E3A8A]">Voici la formule dite simplifiée :</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>L&apos;associé unique a apporté la totalité du capital en numéraire (argent déposé en banque).</li>
+                          <li>Cet apport est effectué à titre de biens propres de l&apos;associé unique (pas de biens communs ou indivis)</li>
+                          <li>Aucun apport en nature ni en industrie.</li>
+                          <li>Le capital est entièrement libéré (100 % déposé).</li>
+                          <li>Le capital est fixe.</li>
+                          <li>La valeur nominale d&apos;une action est de 1 €.</li>
+                          <li>Le montant du capital social correspond à celui que vous avez défini ci-dessous.</li>
+                        </ul>
+                        <p className="italic text-gray-500">Toutefois, il est possible de modifier ces règles si vous le souhaitez par exemple : introduire des apports en nature (biens, matériel, véhicule, etc.), des apports en industrie, ou opter pour un capital variable.</p>
                       </div>
+                    </AccordionItem>
 
+                    {/* Montant du capital social */}
+                    <div className="space-y-4">
                       <div>
-                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant total du capital social (€)</label>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Quel est le montant de votre capital social ? (€)</label>
+                        <p className="text-sm text-gray-500 mb-2">Minimum 1 euro</p>
                         <input
                           type="number"
                           min="1"
                           value={answers.capital_social || ""}
                           onChange={(e) => setAnswer("capital_social", e.target.value)}
-                          placeholder="Ex : 12000"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={answers.valeur_action || "1"}
-                          onChange={(e) => setAnswer("valeur_action", e.target.value)}
                           placeholder="1"
                           className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>
-
-                      <div>
-                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
-                        <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
-                          {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
-                        </div>
-                      </div>
                     </div>
-
-                    <hr className="border-gray-200" />
 
                     {/* Formule simplifiée / personnalisée */}
                     <div>
                       <p className="text-base font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
                       <div className="grid grid-cols-2 gap-3">
                         <button
-                          onClick={() => setAnswer("formule_capital", "simplifiee")}
+                          onClick={() => { setAnswer("formule_capital", "simplifiee"); setAnswer("valeur_action", "1"); }}
                           className={cn(
                             "flex flex-col items-center gap-2 p-5 rounded-xl border-2 text-center transition-all",
                             answers.formule_capital === "simplifiee"
@@ -2587,18 +2892,52 @@ export default function CreationSASUPage() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Si simplifiée: valeur action = 1€, afficher résumé */}
+                    {answers.formule_capital === "simplifiee" && (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+                        <p className="text-sm text-green-800"><strong>Formule simplifiée sélectionnée</strong></p>
+                        <p className="text-sm text-green-700">Valeur nominale d&apos;une action : <strong>1 €</strong></p>
+                        <p className="text-sm text-green-700">Nombre total d&apos;actions : <strong>{(Number(answers.capital_social) || 0).toLocaleString("fr-FR")}</strong></p>
+                      </div>
+                    )}
+
+                    {/* Si personnalisée: demander la valeur d'une action */}
+                    {answers.formule_capital === "personnalisee" && (
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Valeur unitaire d&apos;une action (€)</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={answers.valeur_action || "1"}
+                            onChange={(e) => setAnswer("valeur_action", e.target.value)}
+                            placeholder="1"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
+                          <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
+                            {((Number(answers.capital_social) || 0) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* ── Actions et capital social (personnalisée only) ── */}
+                {/* ── Actions et capital social (personnalisée only — legacy, kept for route) ── */}
                 {POST_PAGES[postPage]?.id === "actions_capital" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                      <p className="text-base text-gray-700">Dans le parcours simplifié, la valeur d&apos;une action est fixée à 1 euro.</p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                      <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Montant du capital</strong> : somme totale apportée par les associés.</p>
+                      <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Valeur unitaire d&apos;une action</strong> : prix de base d&apos;une action.</p>
+                      <p className="text-base text-gray-700"><strong className="text-[#1E3A8A]">Nombre d&apos;actions</strong> : calcul automatique = Montant du capital ÷ Valeur d&apos;une action.</p>
                     </div>
 
                     <div className="space-y-5">
@@ -2628,6 +2967,419 @@ export default function CreationSASUPage() {
                         <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre total d&apos;actions</label>
                         <div className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm text-gray-800">
                           {((Number(answers.capital_social) || 1) / (Number(answers.valeur_action) || 1)).toLocaleString("fr-FR", { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Règles statutaires par défaut ── */}
+                {POST_PAGES[postPage]?.id === "regles_statutaires" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Règles statutaires</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-4 text-justify">
+                        <p className="font-bold text-[#1E3A8A] text-center text-base">Règles statutaires proposées par défaut – SASU</p>
+                        <p>Afin de simplifier la rédaction de vos statuts, nous vous proposons ci-dessous les règles les plus couramment adoptées dans les SASU.</p>
+
+                        <p className="font-bold text-[#1E3A8A] text-center">Résumé des règles par défaut proposées :</p>
+
+                        <p><strong className="text-[#1E3A8A]">Actions :</strong> Les actions sont librement cessibles et négociables.</p>
+                        <p><strong className="text-[#1E3A8A]">Commissaire aux comptes :</strong> Aucun commissaire aux comptes n&apos;est désigné dans les statuts.</p>
+                        <p><strong className="text-[#1E3A8A]">Durée de la société :</strong> La société est créée pour une durée de 99 ans, durée maximale autorisée par la loi.</p>
+                        <p><strong className="text-[#1E3A8A]">Déclaration de l&apos;associé unique :</strong> L&apos;associé unique déclare n&apos;avoir accompli aucun acte pour le compte de la société avant sa création.</p>
+
+                        <p className="font-bold text-[#1E3A8A]">Décisions de l&apos;associé unique et assemblées :</p>
+                        <p className="italic">Tant que la société ne comporte qu&apos;un seul associé, toutes les décisions sont prises par l&apos;associé unique et consignées par écrit dans un registre ou un document signé et daté (papier ou électronique).</p>
+                        <p className="italic">Si la société accueille ultérieurement de nouveaux associés, les assemblées seront convoquées par le Président, par tout moyen (courrier, e-mail, etc.).</p>
+                        <p className="italic">Chaque associé dispose d&apos;un nombre de voix proportionnel au nombre d&apos;actions qu&apos;il détient.</p>
+                        <p className="italic">En cas d&apos;égalité des voix, le Président dispose d&apos;une voix prépondérante.</p>
+                        <p className="italic">Les décisions sont prises à la majorité simple (plus de 50 % des voix) des associés présents ou représentés.</p>
+
+                        <p><strong className="text-red-600">Important :</strong> Ces clauses correspondent aux usages classiques des SASU. Toutefois, si vous avez des besoins spécifiques (contrôle des cessions d&apos;actions, limitation de pouvoirs, etc.), vous pouvez les adapter librement à l&apos;aide des options de personnalisation ci-dessous.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <button
+                      className="w-full sm:w-auto px-6 py-3 rounded-xl border-2 border-[#2563EB] bg-[#2563EB] text-white font-semibold text-base hover:bg-[#1d4ed8] transition-all"
+                    >
+                      Explication simple des règles par défaut
+                    </button>
+
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Que préférez-vous ?</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("regles_statutaires", "defaut")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.regles_statutaires === "defaut" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je choisis ces règles par défaut
+                        </button>
+                        <button
+                          onClick={() => setAnswer("regles_statutaires", "personnaliser")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.regles_statutaires === "personnaliser" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je souhaite modifier certaines règles
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Commissaire aux Comptes (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_cac" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Commissaire aux comptes</p>
+                    </div>
+
+                    <div className="rounded-xl border border-[#D1D5DB] bg-[#F8FAFF] p-5 space-y-3 text-sm text-gray-600">
+                      <p>Le commissaire aux comptes est un contrôleur indépendant qui vérifie la régularité des comptes de la société.</p>
+                      <p>À la création, sa nomination n&apos;est pas obligatoire, sauf cas particuliers. Elle le devient seulement si la société dépasse deux des trois seuils suivants :</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li><strong>Chiffre d&apos;affaires &gt; 8 M€</strong></li>
+                        <li><strong>Total du bilan &gt; 4 M€</strong></li>
+                        <li><strong>Effectif moyen &gt; 50 salariés</strong></li>
+                      </ul>
+                      <p>Si votre projet prévoit une forte croissance ou un groupe de sociétés, vous pouvez choisir d&apos;en nommer un dès la création pour anticiper ces obligations.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un commissaire aux Comptes ?</p>
+
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => { setAnswer("nommer_cac", "oui"); setAnswer("services_comptables", ""); }}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.nommer_cac === "oui" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Oui</span>
+                          <span className="block text-sm text-[#2563EB]">Vous nommez dès maintenant un commissaire aux comptes.</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("nommer_cac", "non")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.nommer_cac === "non" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Non</span>
+                          <span className="block text-sm text-[#2563EB]">Vous ne prévoyez pas de CAC (pas obligatoire tant que vous êtes en dessous des seuils).</span>
+                        </button>
+                        <button
+                          onClick={() => { setAnswer("nommer_cac", "plus_tard"); setAnswer("services_comptables", ""); }}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.nommer_cac === "plus_tard" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Je déciderai plus tard</span>
+                          <span className="block text-sm text-[#2563EB]">Vous gardez la possibilité de nommer un CAC ultérieurement, sans l&apos;inscrire dans les statuts dès la création.</span>
+                        </button>
+                      </div>
+
+                      {/* Sous-question si Non */}
+                      {answers.nommer_cac === "non" && (
+                        <div className="space-y-3 mt-4">
+                          <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous néanmoins bénéficier de services comptables ?</p>
+                          <button
+                            onClick={() => setAnswer("services_comptables", "logiciel")}
+                            className={cn(
+                              "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.services_comptables === "logiciel" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui, je suis intéressé(e) par un logiciel de comptabilité en ligne.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("services_comptables", "expert_comptable")}
+                            className={cn(
+                              "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.services_comptables === "expert_comptable" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui, je souhaite être mis(e) en relation avec un expert-comptable dans mon secteur.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("services_comptables", "non")}
+                            className={cn(
+                              "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.services_comptables === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non merci
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Durée de la société (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_duree" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Durée de la société</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-base font-bold text-[#1E3A8A]">Durée de la société</p>
+                        <p className="text-sm text-gray-500 mt-1 flex items-start gap-1"><span>⏳</span> La durée légale maximale d&apos;une société est de 99 ans. Elle peut être plus courte si vous le souhaitez.</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setAnswer("duree_societe", "99"); setAnswer("duree_societe_annees", "99"); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.duree_societe === "99" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Durée standard de 99 ans
+                        </button>
+                        <button
+                          onClick={() => setAnswer("duree_societe", "personnalisee")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.duree_societe === "personnalisee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je souhaite une durée déterminée
+                        </button>
+                      </div>
+
+                      {answers.duree_societe === "personnalisee" && (
+                        <div className="mt-3">
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nombre d&apos;années souhaitées</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="99"
+                            value={answers.duree_societe_annees || ""}
+                            onChange={(e) => setAnswer("duree_societe_annees", e.target.value)}
+                            placeholder="Ex : 50"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Règles de transmission/cession (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_transmission" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Transmission et cession des actions</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-lg font-bold text-[#2563EB]">Comment souhaitez-vous encadrer les modalités de cession ou transmission de vos actions ?</p>
+                      <p className="text-sm text-gray-600">
+                        En SASU, l&apos;associé unique reste libre de décider seul de toute cession ou transmission de ses actions. Les options ci-dessous n&apos;ont <strong>aucun effet tant que la société demeure unipersonnelle</strong>. Elles permettent uniquement <strong>d&apos;anticiper les règles applicables le jour où de nouveaux associés entreraient au capital</strong> (cession, donation, succession).
+                      </p>
+
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => { setAnswer("cession_actions", "libre"); setAnswer("transmission_heritiers", ""); }}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.cession_actions === "libre" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Cession et transmission libres (par défaut)</span>
+                          <span className="block text-sm text-[#2563EB]">Je ne souhaite pas imposer de restrictions</span>
+                        </button>
+                        <button
+                          onClick={() => { setAnswer("cession_actions", "agrement"); setAnswer("transmission_heritiers", ""); }}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.cession_actions === "agrement" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Clause d&apos;agrément</span>
+                          <span className="block text-sm text-[#2563EB]">Je souhaite prévoir une clause d&apos;agrément</span>
+                        </button>
+                        <button
+                          onClick={() => setAnswer("cession_actions", "heritiers")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all",
+                            answers.cession_actions === "heritiers" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <span className="block text-base font-semibold text-[#2563EB]">Transmission libre uniquement à certains héritiers</span>
+                          <span className="block text-sm text-[#2563EB]">Je souhaite que mes actions soient transmises librement uniquement à certaines personnes</span>
+                        </button>
+                      </div>
+
+                      {/* Sous-options héritiers */}
+                      {answers.cession_actions === "heritiers" && (
+                        <div className="space-y-4 mt-2">
+                          <p className="text-sm text-gray-600">Les personnes que vous sélectionnez ci-dessous pourront recevoir librement des actions, sans autorisation préalable des autres associés. Toute autre cession à un tiers extérieur sera soumise à la procédure d&apos;agrément prévue par les statuts.</p>
+
+                          <div>
+                            <p className="text-base font-bold text-[#1E3A8A]">À quelles personnes souhaitez-vous autoriser la transmission libre des titres ?</p>
+                            <p className="text-sm text-gray-500 mb-3">(Pour toutes les autres personnes, une procédure d&apos;agrément sera requise.)</p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {[
+                                { value: "conjoint", label: "Conjoint / Partenaire" },
+                                { value: "descendants", label: "Aux descendants (enfants, petits-enfants)" },
+                                { value: "ascendants", label: "Aux ascendants (parents)" },
+                                { value: "heritiers_reservataires", label: "Aux héritiers réservataires" },
+                              ].map((opt) => {
+                                const selected = (answers.transmission_heritiers || "").split(",").filter(Boolean);
+                                const isSelected = selected.includes(opt.value);
+                                return (
+                                  <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                      const newSelected = isSelected
+                                        ? selected.filter((v: string) => v !== opt.value)
+                                        : [...selected, opt.value];
+                                      setAnswer("transmission_heritiers", newSelected.join(","));
+                                    }}
+                                    className={cn(
+                                      "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                                      isSelected ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                    )}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <p className="text-sm text-gray-500 italic mt-4">Cliquez pour des explications si besoin</p>
+                      <button
+                        onClick={() => setAnswer("show_explication_agrement", answers.show_explication_agrement === "oui" ? "" : "oui")}
+                        className="px-6 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity"
+                      >
+                        Explications clause agrément
+                      </button>
+
+                      {answers.show_explication_agrement === "oui" && (
+                        <div className="space-y-5 text-sm text-gray-700 mt-4">
+                          <div>
+                            <p className="font-bold italic text-[#1E3A8A]">La clause d&apos;agrément, c&apos;est quoi ?</p>
+                            <p>C&apos;est une règle qui impose que toute cession ou transmission d&apos;actions soit soumise à l&apos;accord de la société lorsqu&apos;il y aura plusieurs associés. Elle permet donc de contrôler l&apos;entrée de nouveaux actionnaires.</p>
+                          </div>
+
+                          <div>
+                            <p className="font-bold italic text-[#2563EB]">🟦 Option 1 — Cession et transmission libres</p>
+                            <p>Aucune restriction :</p>
+                            <ul className="list-disc pl-8 space-y-1">
+                              <li>les actions peuvent être librement vendues à un tiers,</li>
+                              <li>ou transmises en cas de décès, donation ou succession.</li>
+                            </ul>
+                            <p className="font-bold mt-1">Aucune clause d&apos;agrément n&apos;est prévue dans les statuts.</p>
+                          </div>
+
+                          <div>
+                            <p className="font-bold italic text-[#2563EB]">🟦 Option 2 — Clause d&apos;agrément</p>
+                            <p>Toute cession ou transmission à une autre personne (tiers ou héritier) devra recevoir l&apos;accord préalable de la société. <strong>Intérêt :</strong> contrôle total sur l&apos;arrivée de nouveaux associés et utile si vous envisagez l&apos;évolution de la SASU vers une SAS à plusieurs associés.</p>
+                            <p className="font-bold text-[#1E3A8A] mt-2">Modalités d&apos;agrément prévues par les statuts</p>
+                            <p>Tant que la société demeure unipersonnelle, l&apos;associé unique conserve seul le pouvoir d&apos;agrément. Lorsque la société comptera plusieurs associés, toute cession ou transmission soumise à agrément devra être approuvée par la collectivité des associés statuant à la <strong>majorité simple (plus de 50 % des droits de vote)</strong>, conformément aux statuts.</p>
+                          </div>
+
+                          <div>
+                            <p className="font-bold italic text-[#2563EB]">🟦 Option 3 — Transmission libre uniquement à certaines personnes</p>
+                            <p>Certaines personnes pourront recevoir les actions sans agrément, par exemple :</p>
+                            <ul className="list-disc pl-8 space-y-1">
+                              <li>votre conjoint,</li>
+                              <li>vos enfants,</li>
+                              <li>vos héritiers réservataires.</li>
+                            </ul>
+                            <p>Pour toute autre personne → <strong>agrément obligatoire</strong>.</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Nantissement et location d'actions (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_nantissement" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Nantissement et location des actions</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p className="font-bold text-[#1E3A8A]">Nantissement des actions</p>
+                        <p>Le nantissement permet d&apos;utiliser vos actions comme garantie pour un prêt bancaire ou une dette.</p>
+                        <p>Oui → Vous autorisez la possibilité de nantir vos actions (utile pour accéder à certains financements).</p>
+                        <p>Non → Vos actions ne pourront pas être données en garantie.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous prévoir la possibilité de donner vos actions en garantie (nantissement) ?</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("nantissement_actions", "oui")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.nantissement_actions === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui → vous autorisez cette possibilité.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("nantissement_actions", "non")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.nantissement_actions === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non → vous interdisez cette possibilité.
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous prévoir la possibilité de louer temporairement vos actions ?</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("location_actions", "oui")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.location_actions === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui → vous autorisez cette pratique.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("location_actions", "non")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.location_actions === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non → vous l&apos;interdisez.
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -3418,7 +4170,7 @@ export default function CreationSASUPage() {
                             </div>
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                              <input type="text" value={answers.president_adresse || ""} onChange={(e) => setAnswer("president_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              <AddressAutocomplete value={answers.president_adresse || ""} onChange={(v) => setAnswer("president_adresse", v)} placeholder="Adresse complète" />
                             </div>
 
                             {/* Filiation */}
@@ -3586,8 +4338,18 @@ export default function CreationSASUPage() {
                                   </div>
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                      <input type="date" value={answers.president_rp_date_naissance || ""} onChange={(e) => setAnswer("president_rp_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                    <div>
+                                      <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
+                                      <input type="text" value={answers.president_rp_lieu_naissance || ""} onChange={(e) => setAnswer("president_rp_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
-                                      <input type="text" value={answers.president_rp_adresse || ""} onChange={(e) => setAnswer("president_rp_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                      <AddressAutocomplete value={answers.president_rp_adresse || ""} onChange={(v) => setAnswer("president_rp_adresse", v)} placeholder="Adresse complète" />
                                     </div>
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
@@ -3609,14 +4371,16 @@ export default function CreationSASUPage() {
                                   </div>
 
                                   {/* Non-condamnation du RP */}
+                                  <p className="text-base font-bold text-[#1E3A8A] pt-2">Déclaration de non-condamnation du représentant permanent</p>
+                                  <p className="text-sm text-gray-500">En tant que représentant permanent de la société dirigeante, cette déclaration est faite en votre nom personnel.</p>
                                   <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
                                     <label className="flex items-start gap-3 cursor-pointer">
                                       <input type="checkbox" checked={answers.president_rp_non_condamnation === "true"} onChange={(e) => setAnswer("president_rp_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                      <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
+                                      <span className="text-base text-gray-700">Je soussigné(e), en qualité de représentant permanent de la société dirigeante, atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction civile ou administrative de nature à m&apos;interdire de gérer, d&apos;administrer ou de diriger une personne morale.</span>
                                     </label>
                                     <label className="flex items-start gap-3 cursor-pointer">
                                       <input type="checkbox" checked={answers.president_rp_non_interdiction === "true"} onChange={(e) => setAnswer("president_rp_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
-                                      <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
+                                      <span className="text-base text-gray-700">Je soussigné(e), en qualité de représentant permanent de la société dirigeante, atteste sur l&apos;honneur ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer prévue à l&apos;article L. 653-8 du Code de commerce.</span>
                                     </label>
                                   </div>
                                 </div>
@@ -3626,6 +4390,101 @@ export default function CreationSASUPage() {
                         )}
                       </motion.div>
                     )}
+
+                    {/* ── Question DG : souhaitez-vous nommer un DG ? ── */}
+                    <div className="border-t border-gray-200 pt-5 space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un Directeur Général ?</p>
+                      <p className="text-sm text-gray-500">Le DG dispose des mêmes pouvoirs que le Président vis-à-vis des tiers. C&apos;est facultatif en SASU.</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("nommer_dg", "oui")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.nommer_dg === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui
+                        </button>
+                        <button
+                          onClick={() => setAnswer("nommer_dg", "non")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.nommer_dg === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non
+                        </button>
+                      </div>
+
+                      {answers.nommer_dg === "oui" && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#2563EB]/30 pl-4 ml-2">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                              <select value={answers.dg_civilite || ""} onChange={(e) => setAnswer("dg_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                <option value="">Choisir</option>
+                                <option value="M.">M.</option>
+                                <option value="Mme">Mme</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                              <input type="text" value={answers.dg_nom || ""} onChange={(e) => setAnswer("dg_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                              <input type="text" value={answers.dg_prenom || ""} onChange={(e) => setAnswer("dg_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                              <input type="date" value={answers.dg_date_naissance || ""} onChange={(e) => setAnswer("dg_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                              <input type="text" value={answers.dg_lieu_naissance || ""} onChange={(e) => setAnswer("dg_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                            <div>
+                              <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                              <input type="text" value={answers.dg_nationalite || ""} onChange={(e) => setAnswer("dg_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                            <AddressAutocomplete value={answers.dg_adresse || ""} onChange={(v) => setAnswer("dg_adresse", v)} placeholder="Adresse complète" />
+                          </div>
+
+                          <div className="border-t border-gray-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Pouvoirs du Directeur Général</p>
+                            <div className="space-y-2">
+                              <button
+                                onClick={() => setAnswer("dg_pouvoirs", "interne")}
+                                className={cn(
+                                  "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                                  answers.dg_pouvoirs === "interne" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Direction interne uniquement
+                                <span className="block text-sm font-normal text-gray-500 mt-1">Pas de représentation externe</span>
+                              </button>
+                              <button
+                                onClick={() => setAnswer("dg_pouvoirs", "representation")}
+                                className={cn(
+                                  "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                                  answers.dg_pouvoirs === "representation" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Direction interne + représentation externe
+                                <span className="block text-sm font-normal text-gray-500 mt-1">Engage la société vis-à-vis des tiers</span>
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -3836,7 +4695,16 @@ export default function CreationSASUPage() {
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Dépôt du capital</p>
                     </div>
+
+                    {/* Message formule par défaut */}
+                    {answers.formule_capital !== "personnalisee" && (
+                      <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-1">
+                        <p className="text-sm text-green-800 font-semibold">Formule simplifiée</p>
+                        <p className="text-sm text-green-700">Votre capital est constitué uniquement d&apos;apports en numéraire (argent), intégralement libéré (100 % déposé).</p>
+                      </div>
+                    )}
 
                     <div className="space-y-5">
                       <div>
@@ -3854,6 +4722,19 @@ export default function CreationSASUPage() {
 
                       <div>
                         <label className="block text-base font-bold text-[#1E3A8A] mb-1">
+                          Adresse de l&apos;établissement bancaire
+                        </label>
+                        <input
+                          type="text"
+                          value={answers.banque_adresse || ""}
+                          onChange={(e) => setAnswer("banque_adresse", e.target.value)}
+                          placeholder="Adresse de la banque"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">
                           À quelle date le dépôt a-t-il été effectué ?
                         </label>
                         <input
@@ -3864,7 +4745,7 @@ export default function CreationSASUPage() {
                         />
                       </div>
 
-                      {/* État du versement — formule personnalisée */}
+                      {/* État du versement — formule personnalisée uniquement */}
                       {answers.formule_capital === "personnalisee" && (
                         <div className="space-y-3">
                           <div>
@@ -3972,6 +4853,27 @@ export default function CreationSASUPage() {
                         )}
                       </div>
                     </AccordionItem>
+
+                    {/* Aide IA fiscalité */}
+                    <button
+                      onClick={() => {
+                        const isHolding = answers.type_structure === "holding_passive" || answers.type_structure === "holding_animatrice";
+                        const reco = isHolding
+                          ? "Pour une holding, l'IS est fortement recommandé : vous bénéficiez du régime mère-fille (exonération de 95 % des dividendes reçus) et du taux réduit à 15 % sur les premiers 42 500 €. L'IR n'est pertinent que dans de rares cas de déficit reportable sur vos revenus personnels."
+                          : "Pour la plupart des SASU, l'IS est le choix optimal : taux réduit de 15 % jusqu'à 42 500 € de bénéfice, puis 25 %. Vous maîtrisez votre rémunération et vos dividendes. L'IR peut être intéressant les premières années si vous prévoyez des pertes (reportables sur vos revenus) ou un résultat faible imposé dans les tranches basses du barème.";
+                        setAnswer("aide_ia_fiscal", reco);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#7C3AED] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Aide IA : quelle option choisir ?
+                    </button>
+                    {answers.aide_ia_fiscal && (
+                      <div className="bg-[#F5F3FF] border border-[#7C3AED]/30 rounded-xl p-4 text-base text-gray-700 text-justify leading-relaxed">
+                        <p className="font-bold text-[#7C3AED] mb-1 flex items-center gap-2"><Sparkles className="w-4 h-4" /> Recommandation IA</p>
+                        <p>{answers.aide_ia_fiscal}</p>
+                      </div>
+                    )}
 
                     <div className="space-y-3">
                       <button
@@ -4083,6 +4985,221 @@ export default function CreationSASUPage() {
                   </div>
                 )}
 
+                {/* ── Page: Exercice comptable ── */}
+                {POST_PAGES[postPage]?.id === "exercice_comptable" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Date de clôture de l&apos;exercice comptable</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-4 text-justify">
+                        <p className="font-bold text-[#1E3A8A]">Date de clôture de l&apos;exercice comptable, que choisir ?</p>
+
+                        <div>
+                          <p className="font-bold text-[#1E3A8A]">Clôture au 31 décembre (par défaut)</p>
+                          <p>L&apos;exercice se termine avec l&apos;année civile. Simple, courant et pratique pour la gestion.</p>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-[#1E3A8A]">Clôture spéciale la 1<sup>re</sup> année</p>
+                          <p>Le premier exercice comptable peut durer au maximum 24 mois à compter de la date d&apos;immatriculation.</p>
+                          <p><strong className="text-[#1E3A8A]">Exemple :</strong> Si votre société est créée le 15 avril 2025, vous pourrez fixer la fin de votre premier exercice jusqu&apos;au 15 avril 2027 au plus tard. Mais, vous pouvez aussi choisir une date fixe comme le 31 décembre 2026, pour être aligné sur l&apos;année civile.</p>
+                        </div>
+
+                        <div>
+                          <p className="font-bold text-[#1E3A8A]">Autre date permanente</p>
+                          <p>Vous pouvez fixer une autre date chaque année (ex. 30 septembre). Ce choix peut mieux correspondre à votre cycle d&apos;activité, mais demande un suivi régulier.</p>
+                        </div>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Date de clôture de l&apos;exercice comptable</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setAnswer("cloture_exercice", "31_dec"); setAnswer("cloture_1ere_annee_date", ""); setAnswer("cloture_suivantes_31dec", ""); setAnswer("cloture_date_permanente", ""); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.cloture_exercice === "31_dec" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Clôture au 31 décembre chaque année (recommandé)
+                        </button>
+                        <button
+                          onClick={() => { setAnswer("cloture_exercice", "differente_1ere"); setAnswer("cloture_date_permanente", ""); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.cloture_exercice === "differente_1ere" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je souhaite une clôture différente la 1re année
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => { setAnswer("cloture_exercice", "autre_permanente"); setAnswer("cloture_1ere_annee_date", ""); setAnswer("cloture_suivantes_31dec", ""); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.cloture_exercice === "autre_permanente" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Je souhaite une autre date permanente
+                        </button>
+                      </div>
+
+                      {/* Sous-options: clôture différente la 1re année */}
+                      {answers.cloture_exercice === "differente_1ere" && (
+                        <div className="space-y-5 mt-2">
+                          <div>
+                            <p className="text-base font-bold text-[#1E3A8A] mb-1">Quelle date souhaitez-vous fixer pour la clôture du premier exercice ?</p>
+                            <p className="text-sm text-gray-500 mb-2">Le premier exercice comptable peut durer au maximum 24 mois à compter de la date d&apos;immatriculation.</p>
+                            <input
+                              type="date"
+                              value={answers.cloture_1ere_annee_date || ""}
+                              onChange={(e) => setAnswer("cloture_1ere_annee_date", e.target.value)}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+
+                          <div className="space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous que les exercices suivants se clôturent au 31 décembre ?</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <button
+                                onClick={() => setAnswer("cloture_suivantes_31dec", "oui")}
+                                className={cn(
+                                  "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                                  answers.cloture_suivantes_31dec === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Oui (recommandé)
+                              </button>
+                              <button
+                                onClick={() => setAnswer("cloture_suivantes_31dec", "non")}
+                                className={cn(
+                                  "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                                  answers.cloture_suivantes_31dec === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                                )}
+                              >
+                                Non, je fixerai une autre date permanente
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Si non, demander la date permanente */}
+                          {answers.cloture_suivantes_31dec === "non" && (
+                            <div>
+                              <p className="text-base font-bold text-[#1E3A8A] mb-1">Quelle est la date de clôture souhaitée chaque année ?</p>
+                              <select
+                                value={answers.cloture_date_permanente || ""}
+                                onChange={(e) => setAnswer("cloture_date_permanente", e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                              >
+                                <option value="">Sélectionnez une date</option>
+                                <option value="31_01">31 janvier</option>
+                                <option value="28_02">28/29 février</option>
+                                <option value="31_03">31 mars</option>
+                                <option value="30_04">30 avril</option>
+                                <option value="31_05">31 mai</option>
+                                <option value="30_06">30 juin</option>
+                                <option value="31_07">31 juillet</option>
+                                <option value="31_08">31 août</option>
+                                <option value="30_09">30 septembre</option>
+                                <option value="31_10">31 octobre</option>
+                                <option value="30_11">30 novembre</option>
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Sous-options: autre date permanente */}
+                      {answers.cloture_exercice === "autre_permanente" && (
+                        <div className="mt-2">
+                          <p className="text-base font-bold text-[#1E3A8A] mb-1">Quelle est la date de clôture souhaitée chaque année ?</p>
+                          <select
+                            value={answers.cloture_date_permanente || ""}
+                            onChange={(e) => setAnswer("cloture_date_permanente", e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          >
+                            <option value="">Sélectionnez une date</option>
+                            <option value="31_01">31 janvier</option>
+                            <option value="28_02">28/29 février</option>
+                            <option value="31_03">31 mars</option>
+                            <option value="30_04">30 avril</option>
+                            <option value="31_05">31 mai</option>
+                            <option value="30_06">30 juin</option>
+                            <option value="31_07">31 juillet</option>
+                            <option value="31_08">31 août</option>
+                            <option value="30_09">30 septembre</option>
+                            <option value="31_10">31 octobre</option>
+                            <option value="30_11">30 novembre</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Services comptables ── */}
+                {POST_PAGES[postPage]?.id === "services_comptables" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Services comptables</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p>Même sans commissaire aux comptes, vous devez tenir une comptabilité rigoureuse. Un expert-comptable ou un logiciel de comptabilité peut vous accompagner dans la gestion de vos obligations (déclarations fiscales, bilan annuel, TVA, etc.).</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="rounded-xl border border-[#D1D5DB] bg-[#F8FAFF] p-4">
+                      <p className="text-sm text-gray-600">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous néanmoins bénéficier de services comptables ?</p>
+                        <p className="text-sm text-gray-500 mb-3">Dans la formule par défaut, vous avez indiqué ne pas vouloir nommer de commissaire aux comptes.</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setAnswer("services_comptables", "logiciel")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.services_comptables === "logiciel" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui, je suis intéressé(e) par un logiciel de comptabilité en ligne.
+                        </button>
+                        <button
+                          onClick={() => setAnswer("services_comptables", "expert_comptable")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.services_comptables === "expert_comptable" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui, je souhaite être mis(e) en relation avec un expert-comptable dans mon secteur.
+                        </button>
+                        <button
+                          onClick={() => setAnswer("services_comptables", "non")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                            answers.services_comptables === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non merci
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* ── Page: Régime de TVA ── */}
                 {POST_PAGES[postPage]?.id === "regime_tva" && (
                   <div className="space-y-6">
@@ -4121,6 +5238,34 @@ export default function CreationSASUPage() {
                         <p><strong>Mini-réel :</strong> IS au réel simplifié + TVA au réel normal. Permet de récupérer la TVA mensuellement.</p>
                       </div>
                     </AccordionItem>
+
+                    {/* Aide IA TVA */}
+                    <button
+                      onClick={() => {
+                        const isHoldingPassive = answers.type_structure === "holding_passive";
+                        const isHoldingAnim = answers.type_structure === "holding_animatrice";
+                        const hasFees = answers.management_fees === "oui";
+                        let reco = "";
+                        if (isHoldingPassive) {
+                          reco = "Pour une holding passive, vous n'êtes généralement pas assujetti à la TVA car vos revenus (dividendes, plus-values) sont hors champ. Choisissez « Non assujetti ». Si vous facturez ponctuellement des prestations, optez pour la franchise en base.";
+                        } else if (isHoldingAnim && hasFees) {
+                          reco = "Votre holding animatrice facture des management fees : vous êtes assujetti à la TVA. Le réel simplifié est adapté si votre CA est inférieur aux seuils (254 000 € services). Si vous avez beaucoup de TVA à récupérer rapidement, le réel normal ou mini-réel permet des déclarations mensuelles.";
+                        } else {
+                          reco = "Pour une SASU classique en démarrage, la franchise en base est souvent le meilleur choix : pas de TVA à facturer ni déclarer, tant que votre CA reste sous les seuils (91 900 € ventes / 36 800 € services). Si vous avez des investissements importants à faire au démarrage (matériel, locaux), le réel simplifié vous permet de récupérer la TVA sur ces achats.";
+                        }
+                        setAnswer("aide_ia_tva", reco);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-[#2563EB] to-[#7C3AED] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Aide IA : quel régime de TVA choisir ?
+                    </button>
+                    {answers.aide_ia_tva && (
+                      <div className="bg-[#F5F3FF] border border-[#7C3AED]/30 rounded-xl p-4 text-base text-gray-700 text-justify leading-relaxed">
+                        <p className="font-bold text-[#7C3AED] mb-1 flex items-center gap-2"><Sparkles className="w-4 h-4" /> Recommandation IA</p>
+                        <p>{answers.aide_ia_tva}</p>
+                      </div>
+                    )}
 
                     <div className="space-y-3">
                       {/* Franchise en base — pas pour les holdings animatrices avec management fees */}
@@ -4241,14 +5386,91 @@ export default function CreationSASUPage() {
                         <div className="text-base text-gray-600">{QUESTIONS[11].info.content}</div>
                       </AccordionItem>
                     )}
-                    <input
-                      type="text"
+                    <AddressAutocomplete
                       value={answers.adresse_siege || ""}
-                      onChange={(e) => setAnswer("adresse_siege", e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter" && answers.adresse_siege) { setPostPage((p) => p + 1); window.scrollTo({ top: 0, behavior: "smooth" }); } }}
+                      onChange={(v) => setAnswer("adresse_siege", v)}
                       placeholder={QUESTIONS[11].placeholder}
                       className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
                     />
+                  </div>
+                )}
+
+                {/* ── Page: Reprise des dépenses ── */}
+                {POST_PAGES[postPage]?.id === "reprise_depenses" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Reprise des dépenses</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p>Avant l&apos;immatriculation, vous pouvez avoir engagé des dépenses pour le compte de la société en formation (frais juridiques, achat de matériel, dépôt de marque, etc.).</p>
+                        <p>Ces dépenses peuvent être <strong>reprises par la société</strong> une fois immatriculée, à condition qu&apos;elles soient listées dans un <strong>état des actes</strong> annexé aux statuts.</p>
+                        <p>La société pourra alors les déduire fiscalement et rembourser le fondateur.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Avez-vous engagé des dépenses pour le compte de la société avant son immatriculation ?</p>
+                      <p className="text-sm text-gray-500">Exemples : frais juridiques, achat de matériel, dépôt de marque, location de locaux, abonnements logiciels, etc.</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("reprise_depenses", "oui")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.reprise_depenses === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui
+                          <span className="block text-sm font-normal text-gray-500 mt-1">Je souhaite que la société reprenne ces dépenses</span>
+                        </button>
+                        <button
+                          onClick={() => { setAnswer("reprise_depenses", "non"); setAnswer("depenses_liste", ""); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.reprise_depenses === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non
+                          <span className="block text-sm font-normal text-gray-500 mt-1">Aucune dépense à reprendre</span>
+                        </button>
+                      </div>
+
+                      {/* Liste des dépenses si oui */}
+                      {answers.reprise_depenses === "oui" && (
+                        <div className="space-y-4 mt-2">
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">
+                              Listez les dépenses engagées
+                            </label>
+                            <p className="text-sm text-gray-500 mb-2">Indiquez la nature de chaque dépense et son montant. Ces informations seront reprises dans l&apos;état des actes annexé aux statuts.</p>
+                            <textarea
+                              value={answers.depenses_liste || ""}
+                              onChange={(e) => setAnswer("depenses_liste", e.target.value)}
+                              placeholder={"Ex :\n- Frais juridiques (création) : 500 €\n- Achat ordinateur : 1 200 €\n- Dépôt de marque INPI : 190 €"}
+                              rows={6}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all resize-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">
+                              Montant total des dépenses (€)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={answers.depenses_total || ""}
+                              onChange={(e) => setAnswer("depenses_total", e.target.value)}
+                              placeholder="Ex : 1890"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -4364,7 +5586,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Dénomination</h3>
-                        <button onClick={() => setPostPage(0)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("denomination"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.nom_societe || "—"}</span></p>
@@ -4378,7 +5600,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Type de structure</h3>
-                        <button onClick={() => setPostPage(1)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("type_structure"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p><span className="text-gray-500">Structure :</span> <span className="text-gray-800 font-medium">{answers.type_structure === "classique" ? "Société classique" : answers.type_structure === "holding_passive" ? "Holding passive" : answers.type_structure === "holding_animatrice" ? "Holding animatrice" : "—"}</span></p>
@@ -4389,7 +5611,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Objet social</h3>
-                        <button onClick={() => setPostPage(3)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("objet_social"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800">{answers.objet_social || "—"}</p>
@@ -4400,14 +5622,14 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Associé unique</h3>
-                        <button onClick={() => setPostPage(6)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("associe_unique"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_associe === "physique" ? "Personne physique" : answers.type_associe === "morale" ? "Personne morale" : "—"}</span></p>
                         {answers.type_associe === "physique" && (
                           <>
                             {answers.assoc_nom && <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.assoc_prenom} {answers.assoc_nom}</span></p>}
-                            {answers.assoc_date_naissance && <p><span className="text-gray-500">Né(e) le :</span> <span className="text-gray-800 font-medium">{answers.assoc_date_naissance}</span></p>}
+                            {answers.associe_date_naissance && <p><span className="text-gray-500">Né(e) le :</span> <span className="text-gray-800 font-medium">{answers.associe_date_naissance}</span></p>}
                           </>
                         )}
                         {answers.type_associe === "morale" && (
@@ -4423,7 +5645,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Capital social</h3>
-                        <button onClick={() => setPostPage(7)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("capital_social"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_capital === "fixe" ? "Capital fixe" : answers.type_capital === "variable" ? "Capital variable" : "—"}</span></p>
@@ -4435,11 +5657,17 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Président</h3>
-                        <button onClick={() => setPostPage(9)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("nomination_president"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Président :</span> <span className="text-gray-800 font-medium">
-                          {answers.president_type === "associe" ? "L'associé unique" : answers.president_type === "tiers_physique" ? "Un tiers (personne physique)" : answers.president_type === "tiers_morale" ? "Un tiers (personne morale)" : "—"}
+                          {answers.president_option === "associe"
+                            ? `L'associé unique${answers.type_associe !== "morale" ? ` (${answers.associe_prenom || ""} ${answers.associe_nom || ""})`.trim() : ` (${answers.associe_societe_nom || ""})`}`
+                            : answers.president_type === "physique"
+                            ? `${answers.president_prenom || ""} ${answers.president_nom || ""} (personne physique)`
+                            : answers.president_type === "morale"
+                            ? `${answers.president_pm_nom || ""} (personne morale)`
+                            : "—"}
                         </span></p>
                         {answers.mandat_duree_type && <p><span className="text-gray-500">Durée du mandat :</span> <span className="text-gray-800 font-medium">{answers.mandat_duree_type === "indeterminee" ? "Indéterminée" : `${answers.mandat_duree_annees || "—"} ans`}</span></p>}
                       </div>
@@ -4449,7 +5677,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Dépôt du capital</h3>
-                        <button onClick={() => setPostPage(11)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("depot_capital"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Établissement :</span> <span className="text-gray-800 font-medium">{answers.banque_nom || "—"}</span></p>
@@ -4461,7 +5689,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime fiscal</h3>
-                        <button onClick={() => setPostPage(12)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("regime_fiscal"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm space-y-1">
                         <p><span className="text-gray-500">Régime :</span> <span className="text-gray-800 font-medium">{answers.regime_fiscal === "is" ? "Impôt sur les sociétés (IS)" : answers.regime_fiscal === "ir" ? "Impôt sur le revenu (IR)" : "—"}</span></p>
@@ -4474,7 +5702,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime de TVA</h3>
-                        <button onClick={() => setPostPage(13)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("regime_tva"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p><span className="text-gray-500">TVA :</span> <span className="text-gray-800 font-medium">
@@ -4487,7 +5715,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Siège social</h3>
-                        <button onClick={() => setPostPage(14)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("adresse_siege"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800 font-medium">{answers.adresse_siege || "—"}</p>
@@ -4498,7 +5726,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Date et lieu de signature</h3>
-                        <button onClick={() => setPostPage(15)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("date_lieu"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Date :</span> <span className="text-gray-800 font-medium">{answers.date_signature || "—"}</span></p>
@@ -4507,6 +5735,82 @@ export default function CreationSASUPage() {
                         </span></p>
                       </div>
                     </div>
+
+                    {/* Statuts — Aperçu + Téléchargement */}
+                    <div className="bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] rounded-xl p-5 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <FileText className="w-6 h-6 text-white" />
+                        <div>
+                          <p className="text-white font-bold text-base">Statuts de votre SASU</p>
+                          <p className="text-blue-200 text-sm">Générés automatiquement à partir de vos réponses</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={async () => {
+                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
+                            const text = buildStatutsSASU(answers);
+                            setAnswer("statuts_preview", text);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-[#1E3A8A] font-semibold text-sm hover:bg-blue-50 transition-colors"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Aperçu
+                        </button>
+                        <button
+                          onClick={async () => {
+                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
+                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildStatutsSASU(answers);
+                            const blob = await generateSasuDocumentDocx(text);
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
+                            a.click();
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/20 text-white font-semibold text-sm hover:bg-white/30 transition-colors border border-white/30"
+                        >
+                          <Download className="w-4 h-4" />
+                          Télécharger (.docx)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Modal Aperçu des statuts */}
+                    {answers.statuts_preview && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[85vh] flex flex-col">
+                          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                            <h3 className="text-lg font-bold text-[#1E3A8A] flex items-center gap-2"><FileText className="w-5 h-5" /> Aperçu des statuts</h3>
+                            <button onClick={() => setAnswer("statuts_preview", "")} className="p-1 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
+                          </div>
+                          <div className="flex-1 overflow-y-auto px-6 py-4">
+                            <pre className="whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">{answers.statuts_preview}</pre>
+                          </div>
+                          <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                            <button onClick={() => setAnswer("statuts_preview", "")} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50">Fermer</button>
+                            <button
+                              onClick={async () => {
+                                const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
+                                const blob = await generateSasuDocumentDocx(answers.statuts_preview || "");
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              className="px-5 py-2.5 rounded-xl bg-[#2563EB] text-white font-semibold text-sm hover:bg-[#1D4ED8] flex items-center gap-2"
+                            >
+                              <Download className="w-4 h-4" />
+                              Télécharger
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -4532,7 +5836,9 @@ export default function CreationSASUPage() {
                           <User className="w-5 h-5 text-[#2563EB]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Pièce d&apos;identité du président</p>
+                          <p className="font-semibold text-[#1E3A8A] text-sm">
+                            Pièce d&apos;identité {answers.president_type === "morale" ? "du représentant permanent" : "du président"}
+                          </p>
                           <p className="text-xs text-gray-500">Carte d&apos;identité ou passeport (recto-verso)</p>
                         </div>
                         {answers.justif_identite && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
@@ -4544,6 +5850,50 @@ export default function CreationSASUPage() {
                       </label>
                       {answers.justif_identite && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_identite}</p>}
                     </div>
+
+                    {/* Justificatif d'émancipation — si mineur émancipé */}
+                    {answers.associe_emancipe === "oui" && (
+                      <div className="bg-white border border-amber-300 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                            <Shield className="w-5 h-5 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif d&apos;émancipation</p>
+                            <p className="text-xs text-gray-500">Jugement du tribunal judiciaire prononçant l&apos;émancipation du mineur</p>
+                          </div>
+                          {answers.justif_emancipation && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-amber-400 text-amber-700 text-sm font-medium cursor-pointer hover:bg-amber-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_emancipation ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_emancipation", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_emancipation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_emancipation}</p>}
+                      </div>
+                    )}
+
+                    {/* Extrait Kbis de la société dirigeante — si président PM */}
+                    {answers.president_type === "morale" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Extrait Kbis de la société dirigeante</p>
+                            <p className="text-xs text-gray-500">Kbis de moins de 3 mois de {answers.president_pm_nom || "la société présidente"}</p>
+                          </div>
+                          {answers.justif_kbis_president && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_kbis_president ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_kbis_president", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_kbis_president && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_kbis_president}</p>}
+                      </div>
+                    )}
 
                     {/* Justificatif de domicile */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
@@ -4564,6 +5914,43 @@ export default function CreationSASUPage() {
                       </label>
                       {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
                     </div>
+
+                    {/* Justificatifs activité réglementée — si détectée */}
+                    {answers.est_reglementee === "oui" && answers.reglementation_justificatifs && (() => {
+                      try {
+                        const justifs = JSON.parse(answers.reglementation_justificatifs);
+                        if (justifs.length === 0) return null;
+                        return (
+                          <div className="space-y-3">
+                            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
+                              <p className="text-sm font-bold text-amber-800 flex items-center gap-2 mb-2">⚠️ Justificatifs requis — Activité réglementée ({answers.activite_principale_desc})</p>
+                              {answers.reglementation_description && <p className="text-sm text-amber-700 mb-2">{answers.reglementation_description}</p>}
+                              {answers.reglementation_autorite && <p className="text-xs text-amber-600">Autorité compétente : {answers.reglementation_autorite}</p>}
+                            </div>
+                            {justifs.map((justif: string, idx: number) => (
+                              <div key={idx} className="bg-white border border-amber-200 rounded-xl p-5 space-y-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                    <Shield className="w-5 h-5 text-amber-600" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-[#1E3A8A] text-sm">{justif}</p>
+                                    <p className="text-xs text-gray-500">Requis pour l&apos;exercice de votre activité réglementée</p>
+                                  </div>
+                                  {answers[`justif_reglemente_${idx}`] && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                                </div>
+                                <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-amber-400 text-amber-700 text-sm font-medium cursor-pointer hover:bg-amber-50 transition-colors">
+                                  <Upload className="w-4 h-4" />
+                                  {answers[`justif_reglemente_${idx}`] ? "Remplacer le fichier" : "Importer le document"}
+                                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer(`justif_reglemente_${idx}`, e.target.files[0].name); }} />
+                                </label>
+                                {answers[`justif_reglemente_${idx}`] && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers[`justif_reglemente_${idx}`]}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } catch { return null; }
+                    })()}
 
                     {/* Attestation de mise à disposition / hébergement — génération auto */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
@@ -4624,8 +6011,15 @@ export default function CreationSASUPage() {
                           <Shield className="w-5 h-5 text-[#2563EB]" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Déclaration de non-condamnation et de filiation</p>
-                          <p className="text-xs text-gray-500">Générée automatiquement à partir de vos informations</p>
+                          <p className="font-semibold text-[#1E3A8A] text-sm">
+                            Déclaration de non-condamnation et de filiation
+                            {answers.president_type === "morale" && " (représentant permanent)"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {answers.president_type === "morale"
+                              ? "Générée au nom du représentant permanent de la société dirigeante"
+                              : "Générée automatiquement à partir de vos informations"}
+                          </p>
                         </div>
                       </div>
                       <button
@@ -4766,7 +6160,12 @@ export default function CreationSASUPage() {
                   <button
                     onClick={() => {
                       if (postPage > 0) {
-                        setPostPage((p) => p - 1);
+                        // Skip conditional pages backwards
+                        let prev = postPage - 1;
+                        while (prev > 0 && shouldSkipPage(POST_PAGES[prev]?.id)) {
+                          prev--;
+                        }
+                        setPostPage(prev);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       } else {
                         setPhase("pricing");
@@ -4779,7 +6178,12 @@ export default function CreationSASUPage() {
                   <button
                     onClick={() => {
                       if (postPage < POST_PAGES.length - 1) {
-                        setPostPage((p) => p + 1);
+                        // Skip conditional pages forwards
+                        let next = postPage + 1;
+                        while (next < POST_PAGES.length - 1 && shouldSkipPage(POST_PAGES[next]?.id)) {
+                          next++;
+                        }
+                        setPostPage(next);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }
                     }}

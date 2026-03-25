@@ -401,3 +401,283 @@ Par acte SSP en date du **${formatDate(answers.date_signature)}**, il a été co
 
   return contenu;
 }
+
+// ── Statuts SASU (modèle complet) ─────────────────────────────────────────
+export function buildStatutsSASU(answers: Answers): string {
+  const denomination = answers.nom_societe || "[DÉNOMINATION]";
+  const sigle = answers.sigle || "";
+  const enseigne = answers.enseigne || "";
+  const nomCommercial = answers.nom_commercial || "";
+  const siege = answers.adresse_siege || "[ADRESSE DU SIÈGE]";
+  const capital = Number(answers.capital_social) || 1;
+  const capitalLetters = numberToWords(capital);
+  const isSimplifiee = answers.formule_capital === "simplifiee";
+  const valeurAction = isSimplifiee ? 1 : (Number(answers.valeur_action) || 1);
+  const nbActions = Math.floor(capital / valeurAction);
+  const isVariable = answers.type_capital === "variable";
+  const capitalMin = Number(answers.capital_minimum) || capital;
+  const capitalMinLetters = numberToWords(capitalMin);
+  const capitalMax = Number(answers.capital_maximum) || capital * 10;
+  const capitalMaxLetters = numberToWords(capitalMax);
+  const duree = answers.duree_societe === "personnalisee" ? (answers.duree_societe_annees || "99") : "99";
+  const dureeLetters = numberToWords(Number(duree));
+  const dateSignature = formatDate(answers.date_signature);
+  const lieuSignature = answers.lieu_signature_type === "siege" ? siege : (answers.lieu_signature_autre || siege);
+  const objet = answers.objet_social || "[OBJET SOCIAL]";
+
+  // Flags
+  const isAssociePhysique = answers.type_associe !== "morale";
+  const isHoldingPassive = answers.type_structure === "holding_passive";
+  const isHoldingAnimatrice = answers.type_structure === "holding_animatrice";
+  const hasDG = answers.nommer_dg === "oui";
+  const isPresidentAssocie = answers.president_option === "associe";
+  const isPresidentPM = answers.president_type === "morale";
+  const hasManagementFees = answers.management_fees === "oui";
+  const isVersementPartiel = answers.versement_capital === "partiel";
+  const pourcentageVerse = answers.pourcentage_verse || "50";
+  const hasApportNature = answers.apport_nature === "oui" || (answers.apports_nature_liste?.length > 0);
+  const hasApportIndustrie = answers.apport_industrie === "oui";
+  const montantNumeraire = Number(answers.capital_social) || 1;
+
+  // Associé unique
+  const associeIdentite = isAssociePhysique
+    ? `${answers.associe_civilite === "Mme" ? "Madame" : "Monsieur"} ${answers.associe_prenom || "[PRÉNOM]"} ${answers.associe_nom || "[NOM]"}, demeurant à ${answers.associe_adresse || "[ADRESSE]"}, né(e) le ${formatDate(answers.associe_date_naissance)} à ${answers.associe_lieu_naissance || "[LIEU]"}, de nationalité ${answers.associe_nationalite || "française"}.`
+    : `La société dénommée ${answers.associe_societe_nom || "[DÉNOMINATION]"}, ${answers.associe_societe_forme || "[FORME]"}, au capital de ${answers.associe_societe_capital || "[CAPITAL]"} euros, siège social à ${answers.associe_societe_adresse || "[ADRESSE]"}, immatriculée au RCS sous le n° ${answers.associe_societe_siren || "[SIREN]"}, représentée par ${answers.associe_societe_representant || "[REPRÉSENTANT]"}.`;
+
+  // Situation matrimoniale
+  let situationMatrimoniale = "";
+  if (isAssociePhysique) {
+    const sit = answers.situation_matrimoniale;
+    if (sit === "celibataire") situationMatrimoniale = "Célibataire, ni marié(e) ni pacsé(e).";
+    else if (sit === "marie") {
+      const regime = answers.regime_matrimonial;
+      const regimeLabel = regime === "communaute_reduite" ? "la communauté réduite aux acquêts"
+        : regime === "separation_biens" ? "la séparation de biens (contrat de mariage signé)"
+        : regime === "participation_acquets" ? "la participation aux acquêts"
+        : regime === "communaute_universelle" ? "la communauté universelle"
+        : "[RÉGIME]";
+      situationMatrimoniale = `Marié(e) à ${answers.conjoint_nom || "[CONJOINT]"}, sous le régime de ${regimeLabel}.`;
+    } else if (sit === "pacse") situationMatrimoniale = `Pacsé(e) à ${answers.conjoint_nom || "[PARTENAIRE]"}.`;
+    else if (sit === "divorce") situationMatrimoniale = "Divorcé(e) et non remarié(e).";
+    else if (sit === "veuf") situationMatrimoniale = "Veuf/Veuve.";
+  }
+
+  // Président
+  let presidentNomination = "";
+  if (isPresidentAssocie && isAssociePhysique) {
+    presidentNomination = `${answers.associe_civilite === "Mme" ? "Madame" : "Monsieur"} ${answers.associe_prenom || "[PRÉNOM]"} ${answers.associe_nom || "[NOM]"}, né(e) le ${formatDate(answers.associe_date_naissance)}, domicilié(e) à ${answers.associe_adresse || "[ADRESSE]"}.`;
+  } else if (isPresidentAssocie && !isAssociePhysique) {
+    presidentNomination = `La société ${answers.associe_societe_nom || "[DÉNOMINATION]"}, immatriculée au RCS sous le n° ${answers.associe_societe_siren || "[SIREN]"}, représentée par son représentant permanent ${answers.associe_societe_representant || "[REPRÉSENTANT]"}.`;
+  } else if (answers.president_type === "physique") {
+    presidentNomination = `${answers.president_civilite === "Mme" ? "Madame" : "Monsieur"} ${answers.president_prenom || "[PRÉNOM]"} ${answers.president_nom || "[NOM]"}, né(e) le ${formatDate(answers.president_date_naissance)}, domicilié(e) à ${answers.president_adresse || "[ADRESSE]"}.`;
+  } else {
+    presidentNomination = `La société ${answers.president_pm_nom || "[DÉNOMINATION]"}, immatriculée au RCS sous le n° ${answers.president_pm_siren || "[SIREN]"}, représentée par son représentant permanent ${answers.president_rp_civilite === "Mme" ? "Madame" : "Monsieur"} ${answers.president_rp_prenom || "[PRÉNOM]"} ${answers.president_rp_nom || "[NOM]"}.`;
+  }
+
+  const dureeMandat = answers.duree_mandat === "determinee"
+    ? `pour une durée de ${answers.duree_mandat_annees || "[X]"} ans`
+    : "pour une durée indéterminée";
+  const mandatRenouvelable = answers.mandat_renouvelable === "non" ? "non renouvelable" : "renouvelable";
+
+  // DG
+  let dgNomination = "";
+  if (hasDG) {
+    dgNomination = `${answers.dg_civilite === "Mme" ? "Madame" : "Monsieur"} ${answers.dg_prenom || "[PRÉNOM]"} ${answers.dg_nom || "[NOM]"}, né(e) le ${formatDate(answers.dg_date_naissance)}, domicilié(e) à ${answers.dg_adresse || "[ADRESSE]"}.`;
+  }
+
+  // Signature associe
+  const signatureAssocie = isAssociePhysique
+    ? `${answers.associe_prenom || "[PRÉNOM]"} ${answers.associe_nom || "[NOM]"} — Associé(e) unique${isPresidentAssocie ? " et Président(e)" : ""}`
+    : `${answers.associe_societe_nom || "[DÉNOMINATION]"} — Associé(e) unique${isPresidentAssocie ? " et Président(e)" : ""}`;
+
+  return `STATUTS DE LA SOCIÉTÉ
+${denomination.toUpperCase()}${sigle}
+SOCIÉTÉ PAR ACTIONS SIMPLIFIÉE UNIPERSONNELLE
+AU CAPITAL${isVariable ? " VARIABLE" : ""} DE ${capital.toLocaleString("fr-FR")} EUROS
+
+===
+
+ENTRE LES SOUSSIGNÉS :
+
+${associeIdentite}
+
+Ci-après dénommé(e) « l'Associé unique »,
+
+IL A ÉTÉ ÉTABLI AINSI QU'IL SUIT LES STATUTS DE LA SOCIÉTÉ PAR ACTIONS SIMPLIFIÉE UNIPERSONNELLE DEVANT ÊTRE IMMATRICULÉE AU REGISTRE DU COMMERCE ET DES SOCIÉTÉS.
+
+---
+
+TITRE I — FORME – OBJET – DÉNOMINATION – SIÈGE – DURÉE
+
+---
+
+**Article 1 — Forme**
+
+Il est constitué par les présentes une Société par Actions Simplifiée Unipersonnelle (SASU) régie par les articles L. 227-1 et suivants du Code de commerce, ainsi que par les présents statuts.
+
+**Article 2 — Objet social**
+
+La Société a pour objet, en France et à l'étranger :
+
+${objet}
+
+Et plus généralement, toutes opérations industrielles, commerciales, financières, civiles, mobilières ou immobilières, pouvant se rattacher directement ou indirectement à l'objet social ou à tout objet similaire, connexe ou complémentaire.
+
+**Article 3 — Dénomination sociale**
+
+La Société est dénommée : **${denomination}**${sigle}.
+
+Dans tous les actes et documents émanant de la Société et destinés aux tiers, la dénomination sociale doit toujours être précédée ou suivie des mots « Société par Actions Simplifiée Unipersonnelle » ou du sigle « SASU », du montant du capital social et du numéro d'immatriculation au Registre du Commerce et des Sociétés.
+
+**Article 4 — Siège social**
+
+Le siège social est fixé au : **${siege}**.
+
+Il pourra être transféré en tout autre endroit par décision de l'Associé unique.
+
+**Article 5 — Durée**
+
+La durée de la Société est fixée à **${duree} ans** à compter de son immatriculation au Registre du Commerce et des Sociétés, sauf dissolution anticipée ou prorogation.
+
+---
+
+TITRE II — APPORTS – CAPITAL SOCIAL
+
+---
+
+**Article 6 — Apports**
+
+Lors de la constitution, l'Associé unique a effectué un apport en numéraire d'un montant de **${capital.toLocaleString("fr-FR")} euros**, intégralement libéré.
+
+Cette somme a été déposée sur un compte bloqué ouvert au nom de la Société en formation auprès de ${answers.etablissement_depot || "[ÉTABLISSEMENT BANCAIRE]"}.
+
+**Article 7 — Capital social**
+
+${isVariable
+    ? `Le capital social est variable. Il est fixé à ${capital.toLocaleString("fr-FR")} euros (${capitalLetters} euros). Il ne peut être inférieur à ${capitalMin.toLocaleString("fr-FR")} euros ni supérieur à ${capitalMax.toLocaleString("fr-FR")} euros. Il est divisé en ${nbActions.toLocaleString("fr-FR")} actions d'une valeur nominale de ${valeurAction} euro${valeurAction > 1 ? "s" : ""} chacune, entièrement souscrites et libérées.`
+    : `Le capital social est fixé à la somme de ${capital.toLocaleString("fr-FR")} euros (${capitalLetters} euros). Il est divisé en ${nbActions.toLocaleString("fr-FR")} actions d'une valeur nominale de ${valeurAction} euro${valeurAction > 1 ? "s" : ""} chacune, entièrement souscrites et libérées.`}
+
+Les actions sont nominatives. Elles sont indivisibles à l'égard de la Société.
+
+**Article 8 — Modifications du capital social**
+
+Le capital social peut être augmenté ou réduit par décision de l'Associé unique, dans les conditions prévues par la loi.
+
+---
+
+TITRE III — ADMINISTRATION ET DIRECTION
+
+---
+
+**Article 9 — Président**
+
+La Société est dirigée par un Président, personne physique ou morale, associé ou non.
+
+Est nommé(e) en qualité de premier Président :
+
+${presidentNomination}
+
+Le Président est nommé pour une durée ${answers.duree_mandat === "determinee" ? `de ${answers.duree_mandat_annees || "[X]"} ans` : "indéterminée"}.
+
+Le Président représente la Société à l'égard des tiers. Il est investi des pouvoirs les plus étendus pour agir en toute circonstance au nom de la Société, dans la limite de l'objet social et sous réserve des pouvoirs que la loi attribue expressément à l'Associé unique.
+${hasDG ? `
+**Article 10 — Directeur Général**
+
+Est nommé(e) en qualité de premier Directeur Général :
+
+${dgNomination}
+
+Le Directeur Général dispose des mêmes pouvoirs que le Président à l'égard des tiers.
+` : ""}
+**Article ${hasDG ? "11" : "10"} — Rémunération des dirigeants**
+
+Le Président${hasDG ? " et le Directeur Général" : ""} ${answers.president_remunere === "oui" ? "exercera ses fonctions à titre rémunéré. Les conditions de sa rémunération seront fixées par décision de l'Associé unique" : "exercera ses fonctions à titre gratuit"}.
+
+---
+
+TITRE IV — DÉCISIONS DE L'ASSOCIÉ UNIQUE
+
+---
+
+**Article ${hasDG ? "12" : "11"} — Décisions de l'Associé unique**
+
+L'Associé unique exerce les pouvoirs dévolus à l'assemblée des actionnaires. Ses décisions sont consignées dans un registre spécial.
+
+L'Associé unique ne peut déléguer ses pouvoirs. Il prend toutes les décisions de sa compétence unilatéralement et les consigne dans un procès-verbal.
+
+**Article ${hasDG ? "13" : "12"} — Comptes sociaux et affectation des résultats**
+
+À la clôture de chaque exercice, le Président établit les comptes annuels. L'Associé unique statue sur les comptes et décide de l'affectation du résultat.
+
+Sur le bénéfice de l'exercice, diminué des pertes antérieures, il est prélevé 5 % pour constituer le fonds de réserve légale. Ce prélèvement cesse d'être obligatoire lorsque la réserve atteint le dixième du capital social.
+
+Le solde, augmenté du report à nouveau bénéficiaire, est à la libre disposition de l'Associé unique.
+
+---
+
+TITRE V — EXERCICE SOCIAL – COMPTES
+
+---
+
+**Article ${hasDG ? "14" : "13"} — Exercice social**
+
+Chaque exercice social a une durée de douze mois. Il commence le 1er janvier et se termine le 31 décembre de chaque année.
+
+Exceptionnellement, le premier exercice comprendra le temps écoulé entre la date d'immatriculation de la Société et le 31 décembre de l'année en cours${answers.cloture_prolongee === "oui" ? ", prolongé jusqu'au 31 décembre de l'année suivante" : ""}.
+
+---
+
+TITRE VI — DISSOLUTION – LIQUIDATION
+
+---
+
+**Article ${hasDG ? "15" : "14"} — Dissolution**
+
+La Société est dissoute dans les cas prévus par la loi ou par décision de l'Associé unique. La dissolution entraîne la liquidation de la Société.
+
+**Article ${hasDG ? "16" : "15"} — Liquidation**
+
+En cas de dissolution, l'Associé unique règle le mode de liquidation et nomme un liquidateur dont il détermine les pouvoirs. Le liquidateur dispose des pouvoirs les plus étendus pour réaliser l'actif et payer le passif.
+
+---
+
+TITRE VII — RÉGIME FISCAL
+
+---
+
+**Article ${hasDG ? "17" : "16"} — Régime fiscal**
+
+La Société est soumise à ${answers.regime_fiscal === "ir" ? "l'impôt sur le revenu (option temporaire — 5 ans max)" : "l'impôt sur les sociétés"}.
+
+---
+
+TITRE VIII — DISPOSITIONS DIVERSES
+
+---
+
+**Article ${hasDG ? "18" : "17"} — Contestations**
+
+Toutes les contestations qui pourraient s'élever pendant la durée de la Société ou lors de sa liquidation entre l'Associé unique et la Société seront soumises à la juridiction des tribunaux compétents.
+
+**Article ${hasDG ? "19" : "18"} — Frais**
+
+Les frais, droits et honoraires des présentes et de leurs suites seront pris en charge par la Société au titre des frais de constitution.
+
+**Article ${hasDG ? "20" : "19"} — Pouvoirs**
+
+Tous pouvoirs sont donnés au Président pour accomplir les formalités de publicité et d'immatriculation prescrites par la loi.
+
+---
+
+Fait à ${lieuSignature}, le ${dateSignature}.
+
+En un exemplaire original.
+
+
+**L'Associé unique :**
+
+
+_______________________________
+${isAssociePhysique ? `${answers.associe_prenom || "[PRÉNOM]"} ${answers.associe_nom || "[NOM]"}` : `${answers.associe_societe_nom || "[DÉNOMINATION]"}, représentée par ${answers.associe_societe_representant || "[REPRÉSENTANT]"}`}
+`;
+}

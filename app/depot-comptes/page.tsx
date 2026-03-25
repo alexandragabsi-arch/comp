@@ -23,8 +23,8 @@ const TOTAL_STEPS = 7;
 const NAVY = "#0d1f4e";
 const BLUE = "#2563EB";
 
-const HT_PRICE = 89;
-const GREFFE_FEES = 5.9;
+const HT_PRICE = 99;
+const GREFFE_FEES = 44.77;
 const TVA_RATE = 0.2;
 const TOTAL_HT = HT_PRICE + GREFFE_FEES;
 const TOTAL_TTC = +(TOTAL_HT * (1 + TVA_RATE)).toFixed(2);
@@ -471,12 +471,40 @@ export default function DepotComptesPage() {
         </div>
 
         <button
-          onClick={goNext}
-          className="w-full flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-white font-semibold text-lg shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all duration-200"
+          onClick={async () => {
+            updateData("stripe_loading", true);
+            try {
+              const res = await fetch("/api/stripe/checkout-depot-comptes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  formule: "essentiel",
+                  stateKey: "",
+                }),
+              });
+              const result = await res.json();
+              if (result.url) {
+                window.location.href = result.url;
+              } else {
+                updateData("stripe_error", result.error || "Erreur paiement");
+                updateData("stripe_loading", false);
+              }
+            } catch {
+              updateData("stripe_error", "Erreur de connexion");
+              updateData("stripe_loading", false);
+            }
+          }}
+          disabled={data.stripe_loading}
+          className="w-full flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl text-white font-semibold text-lg shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all duration-200 disabled:opacity-50"
           style={{ background: `linear-gradient(135deg, ${BLUE}, #1E3A8A)` }}
         >
-          Payer et d&eacute;poser <ArrowRight className="w-5 h-5" />
+          {data.stripe_loading ? (
+            <><Loader2 className="w-5 h-5 animate-spin" /> Redirection...</>
+          ) : (
+            <>Payer et déposer <ArrowRight className="w-5 h-5" /></>
+          )}
         </button>
+        {data.stripe_error && <p className="text-sm text-red-500 text-center mt-2">{data.stripe_error}</p>}
       </div>
     );
   };
@@ -540,12 +568,15 @@ export default function DepotComptesPage() {
       <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 bg-[#1E3A8A] rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xs">LC</span>
+            <div>
+              <div className="flex items-center gap-0.5">
+                <span className="text-[18px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>Legal</span>
+                <Search className="w-[11px] h-[11px] text-[#0d1f4e] -mt-0.5" />
+              </div>
+              <div className="ml-[24px] -mt-0.5">
+                <span className="text-[18px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>corners</span>
+              </div>
             </div>
-            <span className="font-bold text-gray-900 group-hover:text-[#2563EB] transition-colors">
-              LegalCorners
-            </span>
           </Link>
           {step > 0 && step < TOTAL_STEPS - 1 && (
             <span className="text-sm text-gray-400">

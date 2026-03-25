@@ -830,20 +830,24 @@ export function buildTitre2(v: V): string {
       lines.push("");
       if (v.apportIndustrieDesc) {
         lines.push(
-          `L'Associé unique réalise un apport en industrie consistant en la mise à disposition de la Société de : **${v.apportIndustrieDesc}**.`
+          `L'Associé unique réalise, en complément de son apport en numéraire, un apport en industrie consistant en la mise à disposition de la Société de : **${v.apportIndustrieDesc}**.`
         );
       } else {
         lines.push(
-          "L'Associé unique réalise un apport en industrie consistant en la mise à disposition de la Société de ses compétences professionnelles, savoir-faire technique et relations d'affaires."
+          "L'Associé unique réalise, en complément de son apport en numéraire, un apport en industrie consistant en la mise à disposition de la Société de ses compétences professionnelles, savoir-faire technique et relations d'affaires."
         );
       }
       lines.push("");
       lines.push(
-        "Conformément aux dispositions de l'article L.227-1 du Code de commerce, cet apport en industrie n'entre pas dans la formation du capital social. Il donne lieu à l'attribution d'actions inaliénables conférant à leur titulaire le droit de participer aux décisions collectives et de percevoir une quote-part des bénéfices, dans les conditions déterminées par les présents statuts ou par décision de l'Associé unique."
+        `Cet engagement est consenti pour toute la durée de la Société, soit ${v.duree} ans à compter de l'immatriculation au Registre du Commerce et des Sociétés.`
       );
       lines.push("");
       lines.push(
-        `L'apporteur en industrie est tenu d'exécuter sa prestation personnellement et de manière effective pendant toute la durée de la Société, soit ${v.duree} ans à compter de l'immatriculation au Registre du Commerce et des Sociétés. En cas de cessation de l'apport, pour quelque cause que ce soit (décès, incapacité, révocation, démission), les actions d'industrie sont annulées de plein droit et sans indemnité.`
+        "Conformément aux dispositions de l'article L.227-1 du Code de commerce, cet apport en industrie n'entre pas dans la formation du capital social. Il donne lieu à l'attribution d'actions inaliénables qui ne peuvent être cédées ni transmises. Ces actions confèrent à l'Associé unique le droit de participer aux décisions collectives et de percevoir une quote-part des bénéfices, dans les conditions déterminées par les présents statuts."
+      );
+      lines.push("");
+      lines.push(
+        "En cas de cessation de l'apport en industrie, pour quelque cause que ce soit (décès, incapacité), les actions d'industrie sont annulées de plein droit."
       );
     }
   }

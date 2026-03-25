@@ -364,7 +364,9 @@ export function buildCouverture(v: V): string {
     "===",
     "",
     `Dénomination sociale : **${v.denomination}**`,
+    "",
     `Capital social : **${capital} euros**`,
+    "",
     `Siège social : **${v.siege}**`,
     "",
     "===",
@@ -374,90 +376,97 @@ export function buildSommaire(v: V): string {
   const lines: string[] = [
     "## SOMMAIRE",
     "",
-    "DÉCLARATIONS PRÉLIMINAIRES ET TERMINOLOGIE",
+    "**DÉCLARATIONS PRÉLIMINAIRES ET TERMINOLOGIE**",
     "",
-    "TITRE 1 — CARACTÉRISTIQUES DE LA SOCIÉTÉ",
-    "Art. 1 — Forme de la Société",
-    "Art. 2 — Objet social",
-    "Art. 3 — Dénomination sociale",
-    "Art. 4 — Siège social",
-    "Art. 5 — Durée de la Société",
+    "**TITRE 1 — CARACTÉRISTIQUES DE LA SOCIÉTÉ**",
     "",
-    "TITRE 2 — APPORTS — CAPITAL SOCIAL — ACTIONS",
-    "Art. 6 — Apports",
-    "Art. 7 — Capital social",
+    "- Art. 1 — Forme de la Société",
+    "- Art. 2 — Objet social",
+    "- Art. 3 — Dénomination sociale",
+    "- Art. 4 — Siège social",
+    "- Art. 5 — Durée de la Société",
+    "",
+    "**TITRE 2 — APPORTS — CAPITAL SOCIAL — ACTIONS**",
+    "",
+    "- Art. 6 — Apports",
+    "- Art. 7 — Capital social",
   ];
 
   if (v.isCapitalVariable) {
-    lines.push("Art. 8 — Variabilité du capital");
+    lines.push("- Art. 8 — Variabilité du capital");
   } else {
-    lines.push("Art. 8 — Augmentation et réduction du capital");
+    lines.push("- Art. 8 — Augmentation et réduction du capital");
   }
 
   lines.push(
-    "Art. 9 — Actions",
-    "Art. 10 — Libération des actions",
-    "Art. 11 — Droits et obligations attachés aux actions",
-    "Art. 12 — Indivisibilité des actions",
+    "- Art. 9 — Actions",
+    "- Art. 10 — Libération des actions",
+    "- Art. 11 — Droits et obligations attachés aux actions",
+    "- Art. 12 — Indivisibilité des actions",
     "",
-    "TITRE 3 — CESSION ET TRANSMISSION DES ACTIONS",
-    "Art. 13 — Cession des actions",
-    "Art. 14 — Agrément",
-    "Art. 15 — Transmission des actions",
-    "Art. 16 — Nantissement des actions",
-    "Art. 17 — Location des actions",
+    "**TITRE 3 — CESSION ET TRANSMISSION DES ACTIONS**",
     "",
-    "TITRE 4 — DIRECTION ET ADMINISTRATION DE LA SOCIÉTÉ",
-    "Art. 18 — Président",
-    "Art. 19 — Pouvoirs du Président",
-    "Art. 20 — Rémunération du Président",
-    "Art. 21 — Responsabilité du Président",
+    "- Art. 13 — Cession des actions",
+    "- Art. 14 — Agrément",
+    "- Art. 15 — Transmission des actions",
+    "- Art. 16 — Nantissement des actions",
+    "- Art. 17 — Location des actions",
+    "",
+    "**TITRE 4 — DIRECTION ET ADMINISTRATION DE LA SOCIÉTÉ**",
+    "",
+    "- Art. 18 — Président",
+    "- Art. 19 — Pouvoirs du Président",
+    "- Art. 20 — Rémunération du Président",
+    "- Art. 21 — Responsabilité du Président",
   );
 
   if (v.hasDG) {
     lines.push(
-      "Art. 22 — Directeur Général",
-      "Art. 23 — Pouvoirs du Directeur Général",
+      "- Art. 22 — Directeur Général",
+      "- Art. 23 — Pouvoirs du Directeur Général",
     );
   } else {
     lines.push(
-      "Art. 22 — Directeur Général (réservé)",
-      "Art. 23 — Pouvoirs du Directeur Général (réservé)",
+      "- Art. 22 — Directeur Général *(réservé)*",
+      "- Art. 23 — Pouvoirs du Directeur Général *(réservé)*",
     );
   }
 
   lines.push(
-    "Art. 24 — Conventions réglementées",
+    "- Art. 24 — Conventions réglementées",
     "",
-    "TITRE 5 — DÉCISIONS DE L'ASSOCIÉ UNIQUE",
-    "Art. 25 — Compétence de l'Associé unique",
-    "Art. 26 — Modalités des décisions",
-    "Art. 27 — Droit de communication",
-    "Art. 28 — Registre des décisions",
+    "**TITRE 5 — DÉCISIONS DE L'ASSOCIÉ UNIQUE**",
     "",
-    "TITRE 6 — COMPTES SOCIAUX — AFFECTATION DU RÉSULTAT",
-    "Art. 29 — Exercice social",
-    "Art. 30 — Comptes annuels",
-    "Art. 31 — Affectation et répartition du résultat",
-    "Art. 32 — Dividendes",
-    "Art. 33 — Comptes courants d'associé",
+    "- Art. 25 — Compétence de l'Associé unique",
+    "- Art. 26 — Modalités des décisions",
+    "- Art. 27 — Droit de communication",
+    "- Art. 28 — Registre des décisions",
+    "",
+    "**TITRE 6 — COMPTES SOCIAUX — AFFECTATION DU RÉSULTAT**",
+    "",
+    "- Art. 29 — Exercice social",
+    "- Art. 30 — Comptes annuels",
+    "- Art. 31 — Affectation et répartition du résultat",
+    "- Art. 32 — Dividendes",
+    "- Art. 33 — Comptes courants d'associé",
   );
 
   if (v.nommerCAC) {
-    lines.push("Art. 34 — Commissaire aux comptes");
+    lines.push("- Art. 34 — Commissaire aux comptes");
   } else {
-    lines.push("Art. 34 — Commissaire aux comptes (réservé)");
+    lines.push("- Art. 34 — Commissaire aux comptes *(réservé)*");
   }
 
   lines.push(
     "",
-    "TITRE 7 — DISPOSITIONS DIVERSES",
-    "Art. 35 — Non-concurrence",
-    "Art. 36 — Transformation de la Société",
-    "Art. 37 — Dissolution — Liquidation",
-    "Art. 38 — Contestations",
-    "Art. 39 — Actes accomplis pour le compte de la Société en formation",
-    "Art. 40 — Formalités",
+    "**TITRE 7 — DISPOSITIONS DIVERSES**",
+    "",
+    "- Art. 35 — Non-concurrence",
+    "- Art. 36 — Transformation de la Société",
+    "- Art. 37 — Dissolution — Liquidation",
+    "- Art. 38 — Contestations",
+    "- Art. 39 — Actes accomplis pour le compte de la Société en formation",
+    "- Art. 40 — Formalités",
   );
 
   return lines.join("\n");

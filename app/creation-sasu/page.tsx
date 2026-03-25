@@ -400,7 +400,7 @@ const BRAND_PLANS = [
   },
 ];
 
-function BrandProtectionSection() {
+function BrandProtectionSection({ onPlanChange }: { onPlanChange?: (planId: string) => void }) {
   const [selectedPlan, setSelectedPlan] = useState("france");
   const [selectedClasses, setSelectedClasses] = useState(0);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -424,7 +424,7 @@ function BrandProtectionSection() {
         {BRAND_PLANS.map((p) => (
           <button
             key={p.id}
-            onClick={() => setSelectedPlan(p.id)}
+            onClick={() => { setSelectedPlan(p.id); onPlanChange?.(p.id); }}
             className={cn(
               "text-left rounded-xl border-2 p-5 transition-all",
               selectedPlan === p.id
@@ -1694,7 +1694,7 @@ export default function CreationSASUPage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="space-y-6"
               >
-                <BrandProtectionSection />
+                <BrandProtectionSection onPlanChange={(planId) => setAnswer("brand_plan", planId)} />
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
@@ -1780,6 +1780,55 @@ export default function CreationSASUPage() {
                   selected={answers.formule || ""}
                   onSelect={(val) => setAnswer("formule", val)}
                 />
+
+                {/* ── Récapitulatif des frais avant paiement ── */}
+                {answers.formule && (() => {
+                  const plan = PRICING_PLANS.find(p => p.id === answers.formule);
+                  if (!plan) return null;
+                  const optionsList: { id: string; label: string; ht: number }[] = [];
+                  if (answers.fermeture_micro === "oui") optionsList.push({ id: "fermeture_micro", label: "Fermeture micro-entreprise", ht: 89 });
+                  if (answers.activite_artisanale === "oui") optionsList.push({ id: "activite_artisanale", label: "Immatriculation CMA (artisanal)", ht: 79 });
+                  if (answers.proteger_nom === "oui" && answers.brand_plan === "france") optionsList.push({ id: "brand_france", label: "Protection marque France (INPI)", ht: 269 });
+                  if (answers.proteger_nom === "oui" && answers.brand_plan === "eu") optionsList.push({ id: "brand_eu", label: "Protection marque UE (EUIPO)", ht: 950 });
+                  if (answers.proteger_nom === "oui" && answers.brand_plan === "international") optionsList.push({ id: "brand_international", label: "Protection marque International (OMPI)", ht: 1150 });
+                  const totalHT = plan.priceHT + optionsList.reduce((s, o) => s + o.ht, 0);
+                  const fraisObligatoires = 196.86;
+
+                  return (
+                    <div className="bg-white border-2 border-[#2563EB] rounded-2xl p-5 space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Récapitulatif de votre commande</p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-700">Formule {plan.name}</span>
+                          <span className="font-semibold text-gray-800">{plan.priceHT.toFixed(2)} € HT</span>
+                        </div>
+                        {optionsList.map((opt) => (
+                          <div key={opt.id} className="flex justify-between">
+                            <span className="text-gray-700">{opt.label}</span>
+                            <span className="font-semibold text-gray-800">{opt.ht.toFixed(2)} € HT</span>
+                          </div>
+                        ))}
+                        <div className="border-t border-gray-200 pt-2 flex justify-between">
+                          <span className="text-gray-700">Sous-total HT</span>
+                          <span className="font-semibold text-gray-800">{totalHT.toFixed(2)} € HT</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-700">TVA (20%)</span>
+                          <span className="font-semibold text-gray-800">{(totalHT * 0.2).toFixed(2)} €</span>
+                        </div>
+                        <div className="border-t border-gray-200 pt-2 flex justify-between text-base">
+                          <span className="font-bold text-[#1E3A8A]">Total TTC</span>
+                          <span className="font-bold text-[#1E3A8A]">{(totalHT * 1.2).toFixed(2)} €</span>
+                        </div>
+                        <div className="flex justify-between text-gray-500 text-xs pt-1">
+                          <span>+ Frais obligatoires (greffe, JAL, DBE)</span>
+                          <span>~{fraisObligatoires.toFixed(2)} € HT</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
@@ -1797,6 +1846,13 @@ export default function CreationSASUPage() {
                         setPhase("avocat_confirmation");
                         return;
                       }
+                      // Collect selected options
+                      const opts: string[] = [];
+                      if (answers.fermeture_micro === "oui") opts.push("fermeture_micro");
+                      if (answers.activite_artisanale === "oui") opts.push("activite_artisanale");
+                      if (answers.proteger_nom === "oui" && answers.brand_plan === "france") opts.push("brand_france");
+                      if (answers.proteger_nom === "oui" && answers.brand_plan === "eu") opts.push("brand_eu");
+                      if (answers.proteger_nom === "oui" && answers.brand_plan === "international") opts.push("brand_international");
                       // Save state to sessionStorage before Stripe redirect
                       const stateKey = `lc_sasu_${Date.now()}`;
                       sessionStorage.setItem(stateKey, JSON.stringify(answers));
@@ -1806,7 +1862,7 @@ export default function CreationSASUPage() {
                         const res = await fetch("/api/stripe/checkout-creation-sasu", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ formule: answers.formule, stateKey }),
+                          body: JSON.stringify({ formule: answers.formule, stateKey, options: opts }),
                         });
                         const data = await res.json();
                         if (data.url) {

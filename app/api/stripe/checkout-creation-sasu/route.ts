@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   });
 
   try {
-    const { formule } = await request.json();
+    const { formule, stateKey } = await request.json();
 
     if (!formule || !(formule in PRODUCTS)) {
       return NextResponse.json(
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       ],
       mode: "payment",
       metadata: { type: "creation-sasu", formule },
-      success_url: `${baseUrl}/creation-sasu?payment=success&session_id={CHECKOUT_SESSION_ID}&formule=${formule}`,
+      success_url: `${baseUrl}/creation-sasu?payment=success&session_id={CHECKOUT_SESSION_ID}&formule=${formule}&state=${stateKey || ""}`,
       cancel_url: `${baseUrl}/creation-sasu?payment=cancel&formule=${formule}`,
       locale: "fr",
     });

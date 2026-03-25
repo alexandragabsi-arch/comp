@@ -1210,12 +1210,59 @@ export default function CreationSASUPage() {
   // Handle Stripe return
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("payment") === "success") {
-      setPhase("post_payment");
-      setPostPage(0);
-      // Clean URL
-      window.history.replaceState({}, "", window.location.pathname);
+    const payment = params.get("payment");
+    const sessionId = params.get("session_id");
+    const formule = params.get("formule");
+    const stateKey = params.get("state");
+
+    if (payment === "success" && sessionId) {
+      // Verify payment server-side
+      fetch(`/api/stripe/verify?session_id=${sessionId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.paid) {
+            // Restore state from sessionStorage
+            if (stateKey) {
+              try {
+                const saved = sessionStorage.getItem(stateKey);
+                if (saved) {
+                  const s = JSON.parse(saved);
+                  // Restore all answers
+                  Object.entries(s).forEach(([k, v]) => setAnswer(k, v));
+                  sessionStorage.removeItem(stateKey);
+                }
+              } catch { /* ignore */ }
+            }
+            if (formule) setAnswer("formule", formule);
+            setPhase("post_payment");
+            setPostPage(0);
+            // Save dossier to Supabase
+            fetch("/api/dossiers", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: data.email,
+                company_name: answers.nom_societe || "Création SASU",
+                siren: "",
+                forme_juridique: "SASU",
+                type: "creation-sasu",
+                status: "en_cours",
+                stripe_session_id: sessionId,
+                stripe_paid: true,
+                data: { formule, ...answers },
+              }),
+            }).catch(() => {});
+            // Clean URL
+            window.history.replaceState({}, "", "/creation-sasu");
+          }
+        })
+        .catch(() => {});
+    } else if (payment === "cancel") {
+      if (formule) setAnswer("formule", formule);
+      setPhase("pricing");
+      window.history.replaceState({}, "", "/creation-sasu");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1748,13 +1795,16 @@ export default function CreationSASUPage() {
                         setPhase("avocat_confirmation");
                         return;
                       }
+                      // Save state to sessionStorage before Stripe redirect
+                      const stateKey = `lc_sasu_${Date.now()}`;
+                      sessionStorage.setItem(stateKey, JSON.stringify(answers));
                       // Redirect to Stripe checkout
                       setAnswer("stripe_loading", "oui");
                       try {
                         const res = await fetch("/api/stripe/checkout-creation-sasu", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ formule: answers.formule }),
+                          body: JSON.stringify({ formule: answers.formule, stateKey }),
                         });
                         const data = await res.json();
                         if (data.url) {

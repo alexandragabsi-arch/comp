@@ -193,11 +193,11 @@ export function buildNonCondamnation(answers: Answers): string {
   // Bloc identité
   let blocIdentite = "";
   if (isPersonnePhysique) {
-    blocIdentite = `Je soussigné(e) : **${civilite(answers)} ${answers.assoc_prenom || "[PRÉNOM]"} ${answers.assoc_nom || "[NOM]"}**, demeurant à ${answers.assoc_adresse || "[ADRESSE]"}, né${answers.assoc_genre === "F" ? "e" : ""} le ${formatDate(answers.assoc_date_naissance)} à ${answers.assoc_lieu_naissance || "[LIEU]"}, de nationalité ${answers.assoc_nationalite || "française"}.`;
+    blocIdentite = `Je soussigné${answers.assoc_genre === "F" ? "e" : ""} : **${civilite(answers)} ${answers.assoc_prenom || "[PRÉNOM]"} ${answers.assoc_nom || "[NOM]"}**, demeurant à ${answers.assoc_adresse || "[ADRESSE]"}, né${answers.assoc_genre === "F" ? "e" : ""} le ${formatDate(answers.assoc_date_naissance)} à ${answers.assoc_lieu_naissance || "[LIEU]"}, de nationalité ${answers.assoc_nationalite || "française"}.`;
   } else {
-    blocIdentite = `Je soussigné(e) : **${answers.assoc_pm_representant_civilite || ""} ${answers.assoc_pm_representant_prenom || "[PRÉNOM]"} ${answers.assoc_pm_representant_nom || "[NOM]"}**, demeurant à ${answers.assoc_pm_representant_adresse || "[ADRESSE]"}, né(e) le ${formatDate(answers.assoc_pm_representant_date_naissance)} à ${answers.assoc_pm_representant_lieu_naissance || "[LIEU]"}.
+    blocIdentite = `Je soussigné${answers.assoc_pm_representant_genre === "F" ? "e" : ""} : **${answers.assoc_pm_representant_civilite || ""} ${answers.assoc_pm_representant_prenom || "[PRÉNOM]"} ${answers.assoc_pm_representant_nom || "[NOM]"}**, demeurant à ${answers.assoc_pm_representant_adresse || "[ADRESSE]"}, né${answers.assoc_pm_representant_genre === "F" ? "e" : ""} le ${formatDate(answers.assoc_pm_representant_date_naissance)} à ${answers.assoc_pm_representant_lieu_naissance || "[LIEU]"}.
 
-Agissant en qualité de représentant permanent de la société **${answers.assoc_pm_denomination || "[DÉNOMINATION]"}**, elle-même nommée dirigeant de la Société.`;
+Agissant en qualité de représentant permanent de la société ${answers.assoc_pm_denomination || "[DÉNOMINATION]"}, elle-même nommée dirigeant de la Société.`;
   }
 
   // Bloc signature
@@ -205,7 +205,7 @@ Agissant en qualité de représentant permanent de la société **${answers.asso
   if (isPersonnePhysique) {
     blocSignature = `${civilite(answers)} ${answers.assoc_prenom || "[PRÉNOM]"} ${answers.assoc_nom || "[NOM]"}`;
   } else {
-    blocSignature = `La société dénommée **${answers.assoc_pm_denomination || "[DÉNOMINATION]"}**`;
+    blocSignature = `La société dénommée ${answers.assoc_pm_denomination || "[DÉNOMINATION]"}`;
   }
 
   let text = TEMPLATE_NON_CONDAMNATION;

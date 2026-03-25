@@ -7645,6 +7645,54 @@ export default function CreationSASUPage() {
                       </div>
                     </div>
 
+                    {/* Upsell relecture avocat — uniquement formules Essentielle et Premium */}
+                    {(answers.formule === "essentielle" || answers.formule === "premium") && (
+                      <div className={cn(
+                        "rounded-xl border-2 p-5 space-y-3 transition-all",
+                        answers.relecture_avocat === "oui"
+                          ? "border-amber-400 bg-amber-50"
+                          : "border-gray-200 bg-white"
+                      )}>
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                            <Shield className="w-6 h-6 text-amber-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-base font-bold text-[#1E3A8A]">Relecture par un avocat</p>
+                            <p className="text-sm text-gray-600 mt-1">Un avocat en droit des sociétés relit vos statuts et vous transmet ses remarques sous <strong>24h</strong>. Consultation de <strong>30 minutes</strong> incluse pour répondre à vos questions.</p>
+                            <p className="text-lg font-bold text-amber-600 mt-2">199 € HT</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <button
+                            onClick={() => setAnswer("relecture_avocat", "oui")}
+                            className={cn(
+                              "py-3 rounded-xl border-2 text-base font-semibold transition-all",
+                              answers.relecture_avocat === "oui"
+                                ? "border-amber-400 bg-amber-100 text-amber-800"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-amber-300"
+                            )}
+                          >
+                            Oui, je veux la relecture
+                          </button>
+                          <button
+                            onClick={() => setAnswer("relecture_avocat", "non")}
+                            className={cn(
+                              "py-3 rounded-xl border-2 text-base font-semibold transition-all",
+                              (answers.relecture_avocat || "non") === "non"
+                                ? "border-gray-200 bg-gray-50 text-gray-600"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                            )}
+                          >
+                            Non merci
+                          </button>
+                        </div>
+                        {answers.relecture_avocat === "oui" && (
+                          <p className="text-sm text-amber-700 italic">La relecture sera facturée en supplément (199 € HT soit 238,80 € TTC). Un avocat vous contactera sous 24h après validation du dossier.</p>
+                        )}
+                      </div>
+                    )}
+
                     {/* Aperçu pleine page des statuts (style cession) */}
                     {answers.statuts_preview && answers.statuts_docx_url && (
                       <DocumentPreviewPanel

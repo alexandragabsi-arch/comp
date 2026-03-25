@@ -3419,6 +3419,33 @@ export default function CreationSASUPage() {
                               className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                             />
                           </div>
+
+                          {/* CAC suppléant */}
+                          <div className="border-t border-blue-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un commissaire aux comptes suppléant ?</p>
+                            <p className="text-sm text-gray-600">Le suppléant remplace le titulaire en cas d&apos;empêchement. C&apos;est facultatif depuis la loi PACTE (2019).</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button onClick={() => setAnswer("nommer_cac_suppleant", "oui")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.nommer_cac_suppleant === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui</button>
+                              <button onClick={() => setAnswer("nommer_cac_suppleant", "non")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.nommer_cac_suppleant || "non") === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
+                            </div>
+
+                            {answers.nommer_cac_suppleant === "oui" && (
+                              <div className="space-y-3 border-l-2 border-[#2563EB]/30 pl-4 ml-2">
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Dénomination / Nom du suppléant</label>
+                                  <input type="text" value={answers.cac_suppleant_denomination || ""} onChange={(e) => setAnswer("cac_suppleant_denomination", e.target.value)} placeholder="Ex : Cabinet Martin" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Adresse</label>
+                                  <AddressAutocomplete value={answers.cac_suppleant_adresse || ""} onChange={(v) => setAnswer("cac_suppleant_adresse", v)} placeholder="Adresse complète" />
+                                </div>
+                                <div>
+                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Numéro d&apos;inscription CNCC</label>
+                                  <input type="text" value={answers.cac_suppleant_numero_cncc || ""} onChange={(e) => setAnswer("cac_suppleant_numero_cncc", e.target.value)} placeholder="N° CNCC" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
 
@@ -7138,25 +7165,132 @@ export default function CreationSASUPage() {
                       </div>
                     )}
 
-                    {/* Justificatif de domicile */}
-                    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="w-5 h-5 text-[#2563EB]" />
+                    {/* Justificatifs siège social — conditionnels selon type_domiciliation */}
+
+                    {/* Domicile du dirigeant */}
+                    {answers.type_domiciliation === "domicile_dirigeant" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <MapPin className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif de domicile du dirigeant</p>
+                            <p className="text-xs text-gray-500">Facture EDF, eau, internet ou avis d&apos;imposition de moins de 3 mois</p>
+                          </div>
+                          {answers.justif_domicile && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
                         </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif de domiciliation du siège</p>
-                          <p className="text-xs text-gray-500">Bail, contrat de domiciliation, ou attestation d&apos;hébergement</p>
-                        </div>
-                        {answers.justif_domicile && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_domicile ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_domicile", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
                       </div>
-                      <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
-                        <Upload className="w-4 h-4" />
-                        {answers.justif_domicile ? "Remplacer le fichier" : "Importer le document"}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_domicile", e.target.files[0].name); }} />
-                      </label>
-                      {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
-                    </div>
+                    )}
+
+                    {/* Local commercial — bail */}
+                    {answers.type_domiciliation === "local_commercial_bail" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Copie du bail commercial ou professionnel</p>
+                            <p className="text-xs text-gray-500">Bail en cours de validité</p>
+                          </div>
+                          {answers.justif_bail && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_bail ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_bail", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_bail && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_bail}</p>}
+                      </div>
+                    )}
+
+                    {/* Local commercial — propriétaire */}
+                    {answers.type_domiciliation === "local_commercial_proprio" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Titre de propriété ou taxe foncière</p>
+                            <p className="text-xs text-gray-500">Document attestant que vous êtes propriétaire du local</p>
+                          </div>
+                          {answers.justif_propriete && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_propriete ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_propriete", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_propriete && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_propriete}</p>}
+                      </div>
+                    )}
+
+                    {/* Société de domiciliation */}
+                    {answers.type_domiciliation === "societe_domiciliation" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Landmark className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Contrat de domiciliation</p>
+                            <p className="text-xs text-gray-500">Contrat signé avec la société de domiciliation</p>
+                          </div>
+                          {answers.justif_contrat_domiciliation && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_contrat_domiciliation ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_contrat_domiciliation", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_contrat_domiciliation && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_contrat_domiciliation}</p>}
+                      </div>
+                    )}
+
+                    {/* Pépinière / incubateur / coworking */}
+                    {answers.type_domiciliation === "pepiniere" && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Users className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Convention d&apos;hébergement</p>
+                            <p className="text-xs text-gray-500">Convention signée avec la pépinière, l&apos;incubateur ou le coworking</p>
+                          </div>
+                          {answers.justif_convention_hebergement && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                        </div>
+                        <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-[#2563EB]/40 text-[#2563EB] text-sm font-medium cursor-pointer hover:bg-blue-50 transition-colors">
+                          <Upload className="w-4 h-4" />
+                          {answers.justif_convention_hebergement ? "Remplacer le fichier" : "Importer le document"}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer("justif_convention_hebergement", e.target.files[0].name); }} />
+                        </label>
+                        {answers.justif_convention_hebergement && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_convention_hebergement}</p>}
+                      </div>
+                    )}
+
+                    {/* Fallback — aucun type sélectionné */}
+                    {!answers.type_domiciliation && (
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-5 h-5 text-[#2563EB]" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-[#1E3A8A] text-sm">Justificatif de domiciliation du siège</p>
+                            <p className="text-xs text-gray-500">Sélectionnez un type de domiciliation dans la page &quot;Siège social&quot; pour voir le justificatif requis</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Justificatifs activité réglementée — si détectée */}
                     {answers.est_reglementee === "oui" && answers.reglementation_justificatifs && (() => {

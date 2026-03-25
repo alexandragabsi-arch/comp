@@ -1906,10 +1906,7 @@ export default function CreationSASUPage() {
                   </button>
                   <button
                     onClick={async () => {
-                      if (answers.formule === "avocat") {
-                        setPhase("avocat_confirmation");
-                        return;
-                      }
+                      // Toutes les formules vont directement vers Stripe (y compris avocat)
                       // Collect selected options
                       const opts: string[] = [];
                       if (answers.fermeture_micro === "oui") opts.push("fermeture_micro");

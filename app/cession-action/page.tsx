@@ -474,7 +474,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   <div className="min-h-screen bg-white" suppressHydrationWarning>
       {/* Header */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="px-6 py-4 flex items-center justify-between">
           <Link href="/" className="block h-12 w-auto" style={{ aspectRatio: 'auto' }}>
             <Image 
               src="/images/logo-legal-corners.svg" 

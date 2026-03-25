@@ -1278,7 +1278,7 @@ export default function CreationSASUPage() {
 
   // Post-payment pages (step 4: dossier juridique) — dynamic based on formule_capital
   const POST_PAGES = [
-    { id: "rdv_avocat" },           // prise de RDV avocat (formule avocat uniquement)
+    { id: "rdv_avocat" },           // prise de RDV avocat (formule avocat OU relecture avocat)
     { id: "denomination" },        // dénomination + sigle + nom commercial + enseigne
     { id: "type_structure" },      // classique / holding passive / holding animatrice
     { id: "objet_principal" },      // catégories visuelles + sous-catégories
@@ -1309,6 +1309,7 @@ export default function CreationSASUPage() {
     { id: "recapitulatif" },         // récapitulatif de toutes les informations
     { id: "justificatifs" },         // pièces justificatives à fournir
     { id: "signature" },              // signature électronique des documents
+    { id: "rdv_relecture" },          // RDV relecture avocat (si option 199€ choisie)
   ];
 
   // Skip conditional pages based on answers
@@ -1318,8 +1319,10 @@ export default function CreationSASUPage() {
     if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
     // Skip services_comptables if CAC is explicitly "oui"
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
-    // Skip rdv_avocat if not formule avocat
+    // Skip rdv_avocat if not formule avocat (850€)
     if (pageId === "rdv_avocat" && answers.formule !== "avocat") return true;
+    // Skip rdv_relecture if not relecture avocat option (199€)
+    if (pageId === "rdv_relecture" && answers.relecture_avocat !== "oui") return true;
     // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
     if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
     // Skip depot_capital if no numéraire (only apport en nature)
@@ -8474,6 +8477,78 @@ export default function CreationSASUPage() {
                           <p className="font-bold text-green-800 text-lg">Votre dossier a été transmis !</p>
                           <p className="text-sm text-green-700">Vous recevrez votre Kbis sous 3 à 5 jours ouvrés. Suivez l&apos;avancement dans votre espace client.</p>
                           {answers.dossier_id && <p className="text-xs text-gray-500">N° de dossier : {answers.dossier_id}</p>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: RDV Relecture avocat (option 199€) ── */}
+                {POST_PAGES[postPage]?.id === "rdv_relecture" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-2">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Relecture par un avocat</h2>
+                      <p className="text-gray-500">Prenez rendez-vous pour la relecture de vos statuts</p>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 space-y-2">
+                      <p className="font-bold text-amber-800">Ce qui est inclus :</p>
+                      <p className="text-sm text-amber-700">Un avocat en droit des sociétés relit vos statuts, vous transmet ses remarques par écrit et vous accorde une <strong>consultation de 30 minutes</strong> pour répondre à vos questions.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Vos coordonnées</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                          <input type="text" value={answers.rdv_nom || answers.associe_nom || ""} onChange={(e) => setAnswer("rdv_nom", e.target.value)} placeholder="Nom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                        </div>
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                          <input type="text" value={answers.rdv_prenom || answers.associe_prenom || ""} onChange={(e) => setAnswer("rdv_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Email</label>
+                        <input type="email" value={answers.rdv_email || ""} onChange={(e) => setAnswer("rdv_email", e.target.value)} placeholder="votre@email.com" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Téléphone</label>
+                        <input type="tel" value={answers.rdv_telephone || ""} onChange={(e) => setAnswer("rdv_telephone", e.target.value)} placeholder="06 12 34 56 78" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Choisissez un créneau</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from({ length: 14 }, (_, i) => {
+                          const d = new Date();
+                          d.setDate(d.getDate() + i + 1);
+                          if (d.getDay() === 0 || d.getDay() === 6) return null;
+                          const dateStr = d.toISOString().split("T")[0];
+                          const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+                          return (
+                            <button key={dateStr} onClick={() => setAnswer("rdv_date", dateStr)} className={cn("px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all", answers.rdv_date === dateStr ? "border-amber-400 bg-amber-50 text-amber-800" : "border-gray-200 bg-white text-gray-600 hover:border-amber-300")}>
+                              {label}
+                            </button>
+                          );
+                        }).filter(Boolean)}
+                      </div>
+                      {answers.rdv_date && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((h) => (
+                            <button key={h} onClick={() => setAnswer("rdv_heure", h)} className={cn("py-2.5 rounded-xl border-2 text-sm font-medium transition-all", answers.rdv_heure === h ? "border-amber-400 bg-amber-50 text-amber-800" : "border-gray-200 bg-white text-gray-600 hover:border-amber-300")}>
+                              {h}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {answers.rdv_date && answers.rdv_heure && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                          <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                          <p className="text-sm text-green-800">
+                            RDV relecture prévu le <strong>{new Date(answers.rdv_date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</strong> à <strong>{answers.rdv_heure}</strong>.
+                          </p>
                         </div>
                       )}
                     </div>

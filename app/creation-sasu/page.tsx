@@ -1228,19 +1228,20 @@ export default function CreationSASUPage() {
     { id: "associe_unique" },       // type d'associé + infos + situation matrimoniale
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
     { id: "depot_capital" },        // établissement bancaire + date dépôt + versement
-    { id: "regles_statutaires" },  // règles statutaires par défaut ou personnalisées
+    { id: "apport_associe" },      // apport de l'associé unique (si personnalisée)
+    { id: "nomination_president" },  // nomination du président
+    { id: "mandat_president" },     // règles du président (durée, révocation, rémunération, pouvoirs)
+    { id: "adresse_siege" },        // détermination siège social
+    { id: "regles_statutaires" },  // règles organisation société (CAC etc) — modifier ou pas
     { id: "exercice_comptable" },   // date clôture exercice comptable
     { id: "services_comptables" }, // services comptables (si pas de CAC nommé)
     { id: "regles_cac" },          // commissaire aux comptes (si personnaliser)
     { id: "regles_duree" },        // durée de la société (si personnaliser)
     { id: "regles_transmission" }, // règles transmission/cession (si personnaliser)
     { id: "regles_nantissement" }, // nantissement + location actions (si personnaliser)
-    { id: "regime_fiscal" },        // IS / IR (choix impôts sur les bénéfices)
-    { id: "apport_associe" },      // apport de l'associé unique
-    { id: "nomination_president" },  // nomination du président (1 seul)
-    { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
+    { id: "regime_fiscal" },        // impôts sur les bénéfices (IS / IR)
     { id: "regime_tva" },           // régime de TVA
-    { id: "adresse_siege" },        // adresse
+    { id: "reprise_depenses" },    // reprise des dépenses engagées pour la société en formation
     { id: "date_lieu" },            // date et lieu de signature des statuts
     { id: "recapitulatif" },         // récapitulatif de toutes les informations
     { id: "justificatifs" },         // pièces justificatives à fournir
@@ -1253,6 +1254,8 @@ export default function CreationSASUPage() {
     if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
     // Skip services_comptables if CAC is explicitly "oui"
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
+    // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
+    if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
     return false;
   }
 
@@ -5268,6 +5271,85 @@ export default function CreationSASUPage() {
                       placeholder={QUESTIONS[11].placeholder}
                       className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
                     />
+                  </div>
+                )}
+
+                {/* ── Page: Reprise des dépenses ── */}
+                {POST_PAGES[postPage]?.id === "reprise_depenses" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Reprise des dépenses</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p>Avant l&apos;immatriculation, vous pouvez avoir engagé des dépenses pour le compte de la société en formation (frais juridiques, achat de matériel, dépôt de marque, etc.).</p>
+                        <p>Ces dépenses peuvent être <strong>reprises par la société</strong> une fois immatriculée, à condition qu&apos;elles soient listées dans un <strong>état des actes</strong> annexé aux statuts.</p>
+                        <p>La société pourra alors les déduire fiscalement et rembourser le fondateur.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Avez-vous engagé des dépenses pour le compte de la société avant son immatriculation ?</p>
+                      <p className="text-sm text-gray-500">Exemples : frais juridiques, achat de matériel, dépôt de marque, location de locaux, abonnements logiciels, etc.</p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setAnswer("reprise_depenses", "oui")}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.reprise_depenses === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Oui
+                          <span className="block text-sm font-normal text-gray-500 mt-1">Je souhaite que la société reprenne ces dépenses</span>
+                        </button>
+                        <button
+                          onClick={() => { setAnswer("reprise_depenses", "non"); setAnswer("depenses_liste", ""); }}
+                          className={cn(
+                            "p-4 rounded-xl border-2 text-center text-base font-semibold transition-all",
+                            answers.reprise_depenses === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          Non
+                          <span className="block text-sm font-normal text-gray-500 mt-1">Aucune dépense à reprendre</span>
+                        </button>
+                      </div>
+
+                      {/* Liste des dépenses si oui */}
+                      {answers.reprise_depenses === "oui" && (
+                        <div className="space-y-4 mt-2">
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">
+                              Listez les dépenses engagées
+                            </label>
+                            <p className="text-sm text-gray-500 mb-2">Indiquez la nature de chaque dépense et son montant. Ces informations seront reprises dans l&apos;état des actes annexé aux statuts.</p>
+                            <textarea
+                              value={answers.depenses_liste || ""}
+                              onChange={(e) => setAnswer("depenses_liste", e.target.value)}
+                              placeholder={"Ex :\n- Frais juridiques (création) : 500 €\n- Achat ordinateur : 1 200 €\n- Dépôt de marque INPI : 190 €"}
+                              rows={6}
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all resize-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">
+                              Montant total des dépenses (€)
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={answers.depenses_total || ""}
+                              onChange={(e) => setAnswer("depenses_total", e.target.value)}
+                              placeholder="Ex : 1890"
+                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

@@ -8160,6 +8160,49 @@ export default function CreationSASUPage() {
                         <p className="text-xs text-gray-500">Document à imprimer, signer et joindre au dossier.</p>
                       </div>
                     )}
+                    {/* Paiement relecture avocat — si option choisie */}
+                    {answers.relecture_avocat === "oui" && (
+                      <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-2 border-amber-300 rounded-xl p-5 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <Shield className="w-6 h-6 text-amber-600" />
+                          <div>
+                            <p className="font-bold text-[#1E3A8A] text-base">Relecture par un avocat — 199 € HT</p>
+                            <p className="text-sm text-gray-600">Un avocat relira vos statuts et vous transmettra ses remarques sous 24h + consultation 30 min.</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            setAnswer("relecture_loading", "oui");
+                            try {
+                              const res = await fetch("/api/stripe/checkout-creation-sasu", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  formule: "essentielle",
+                                  options: ["relecture_avocat"],
+                                  stateKey: "",
+                                }),
+                              });
+                              const data = await res.json();
+                              if (data.url) {
+                                window.location.href = data.url;
+                              } else {
+                                setAnswer("relecture_error", data.error || "Erreur paiement");
+                                setAnswer("relecture_loading", "");
+                              }
+                            } catch {
+                              setAnswer("relecture_error", "Erreur de connexion");
+                              setAnswer("relecture_loading", "");
+                            }
+                          }}
+                          disabled={answers.relecture_loading === "oui"}
+                          className="w-full py-3 rounded-xl bg-amber-500 text-white font-semibold text-base hover:bg-amber-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                        >
+                          {answers.relecture_loading === "oui" ? "Redirection..." : <><CreditCard className="w-4 h-4" /> Payer la relecture avocat (238,80 € TTC)</>}
+                        </button>
+                        {answers.relecture_error && <p className="text-sm text-red-500">{answers.relecture_error}</p>}
+                      </div>
+                    )}
                   </div>
                 )}
 

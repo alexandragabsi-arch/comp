@@ -1458,14 +1458,40 @@ export default function CreationSASUPage() {
         </div>
       </aside>
 
+      {/* ── Mobile progress bar (visible only on mobile) ── */}
+      <div className="md:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-[#1E3A8A]">Création SASU</p>
+          <p className="text-xs text-gray-500">
+            {phase === "intro" ? "Bienvenue" :
+             phase === "questions" ? `Question ${currentQ + 1}/${totalQ}` :
+             phase === "pricing" ? "Tarifs" :
+             phase === "post_payment" ? `Étape ${postPage + 1}/${POST_PAGES.length}` :
+             ""}
+          </p>
+        </div>
+        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-[#2563EB] to-[#7C3AED] rounded-full transition-all duration-300"
+            style={{
+              width: phase === "intro" ? "2%" :
+                     phase === "questions" ? `${Math.max(5, ((currentQ + 1) / totalQ) * 30)}%` :
+                     phase === "pricing" ? "35%" :
+                     phase === "post_payment" ? `${35 + ((postPage + 1) / POST_PAGES.length) * 65}%` :
+                     "50%"
+            }}
+          />
+        </div>
+      </div>
+
       {/* ── Main content ── */}
       <main className={cn(
         "flex-1 flex justify-center min-h-screen",
         phase === "questions" || phase === "intro"
-          ? "md:ml-72 p-6 md:p-10 items-center"
+          ? "md:ml-72 p-4 sm:p-6 md:p-10 items-center"
           : phase === "pricing" || phase === "post_payment"
-            ? "md:ml-72 p-6 md:p-10 items-start pt-10"
-            : "md:ml-72 p-6 items-start"
+            ? "md:ml-72 p-4 sm:p-6 md:p-10 items-start pt-6 md:pt-10"
+            : "md:ml-72 p-4 sm:p-6 items-start"
       )}>
         <div className={cn(
           "w-full",
@@ -1498,7 +1524,7 @@ export default function CreationSASUPage() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                   <div className="space-y-3 flex flex-col items-center">
                     <div className="w-16 h-16 rounded-2xl bg-[#1E3A8A] flex items-center justify-center">
                       <Clock className="w-7 h-7 text-white" />
@@ -2102,7 +2128,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de management fees</label>
                             <p className="text-sm text-gray-500 mb-2">Facturation de prestations de direction aux filiales</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("management_fees", "oui")}
                                 className={cn(
@@ -2133,7 +2159,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Convention de trésorerie (cash pooling)</label>
                             <p className="text-sm text-gray-500 mb-2">Centralisation de la trésorerie du groupe</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("cash_pooling", "oui")}
                                 className={cn(
@@ -2172,7 +2198,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Pacte Dutreil (transmission)</label>
                             <p className="text-sm text-gray-500 mb-2">Prévoir un engagement de conservation pour bénéficier de l&apos;exonération Dutreil (art. 787 B CGI)</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("pacte_dutreil", "oui")}
                                 className={cn(
@@ -2581,7 +2607,7 @@ export default function CreationSASUPage() {
                     {/* Type d'associé */}
                     <div className="space-y-3">
                       <p className="text-base font-bold text-[#1E3A8A]">Type d&apos;associé :</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => setAnswer("type_associe", "physique")}
                           className={cn(
@@ -2614,7 +2640,7 @@ export default function CreationSASUPage() {
                       <div className="space-y-4 border-t border-gray-200 pt-5">
                         <div className="space-y-2">
                           <label className="block text-base font-bold text-[#1E3A8A]">Civilité</label>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button
                               onClick={() => setAnswer("associe_civilite", "M.")}
                               className={cn(
@@ -2639,7 +2665,7 @@ export default function CreationSASUPage() {
                             </button>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
                             <input
@@ -2739,7 +2765,7 @@ export default function CreationSASUPage() {
                         {/* Résidence fiscale */}
                         <div className="border-t border-gray-200 pt-4 space-y-3">
                           <label className="block text-base font-bold text-[#1E3A8A]">Résidence fiscale</label>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button
                               onClick={() => setAnswer("resident_fiscal", "oui")}
                               className={cn(
@@ -2783,7 +2809,7 @@ export default function CreationSASUPage() {
                             <Heart className="w-4 h-4" />
                             Situation matrimoniale
                           </label>
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {[
                               { value: "celibataire", label: "Célibataire" },
                               { value: "marie", label: "Marié(e)" },
@@ -2812,7 +2838,7 @@ export default function CreationSASUPage() {
                               <div className="space-y-3">
                                 <div>
                                   <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Civilité du conjoint</label>
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <button
                                       onClick={() => setAnswer("conjoint_civilite", "M.")}
                                       className={cn(
@@ -2837,7 +2863,7 @@ export default function CreationSASUPage() {
                                     </button>
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
                                     <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Prénom du conjoint</label>
                                     <input
@@ -2893,7 +2919,7 @@ export default function CreationSASUPage() {
                               <div className="space-y-3">
                                 <div>
                                   <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Civilité du partenaire</label>
-                                  <div className="grid grid-cols-2 gap-2">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <button
                                       onClick={() => setAnswer("conjoint_civilite", "M.")}
                                       className={cn(
@@ -2918,7 +2944,7 @@ export default function CreationSASUPage() {
                                     </button>
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
                                     <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Prénom du partenaire</label>
                                     <input
@@ -2991,7 +3017,7 @@ export default function CreationSASUPage() {
                         {(answers.associe_societe_mode === "siren" || answers.associe_societe_mode === "manuel") && (
                           <div className="space-y-4 border-t border-gray-200 pt-4">
                             <p className="text-sm font-bold text-[#2563EB]">Informations de la société associée</p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Dénomination de la société</label>
                                 <input type="text" value={answers.associe_societe_nom || ""} onChange={(e) => setAnswer("associe_societe_nom", e.target.value)} placeholder="Nom de la société" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -3001,7 +3027,7 @@ export default function CreationSASUPage() {
                                 <input type="text" value={answers.associe_societe_forme || ""} onChange={(e) => setAnswer("associe_societe_forme", e.target.value)} placeholder="Ex : SAS, SARL, SA..." className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
                                 <input type="text" value={answers.associe_societe_capital || ""} onChange={(e) => setAnswer("associe_societe_capital", e.target.value)} placeholder="Ex : 1000" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -3032,7 +3058,7 @@ export default function CreationSASUPage() {
                     {/* Capital fixe / variable choice */}
                     <div className="space-y-3">
                       <p className="text-base font-bold text-[#1E3A8A]">Souhaitez vous prévoir un capital fixe ou variable ?</p>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button
                           onClick={() => setAnswer("type_capital", "fixe")}
                           className={cn(
@@ -3062,7 +3088,7 @@ export default function CreationSASUPage() {
 
                     {/* Capital variable: montant min/max */}
                     {answers.type_capital === "variable" && (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Montant minimum</label>
                           <input
@@ -3133,7 +3159,7 @@ export default function CreationSASUPage() {
                     {/* Formule simplifiée / personnalisée */}
                     <div>
                       <p className="text-base font-bold text-[#1E3A8A] mb-3">Choix entre formule simplifiée ou personnalisée</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => { setAnswer("formule_capital", "simplifiee"); setAnswer("valeur_action", "1"); }}
                           className={cn(
@@ -3539,7 +3565,7 @@ export default function CreationSASUPage() {
                         <div className="space-y-3 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                           <label className="block text-base font-bold text-[#1E3A8A]">Majorité requise pour l&apos;agrément</label>
                           <p className="text-sm text-gray-600">Quel pourcentage des droits de vote sera nécessaire pour approuver l&apos;entrée d&apos;un nouvel associé ?</p>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {["50", "66", "75"].map((pct) => (
                               <button
                                 key={pct}
@@ -3730,7 +3756,7 @@ export default function CreationSASUPage() {
 
                     <div className="space-y-4">
                       <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous inclure une clause de non-concurrence dans les statuts ?</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => setAnswer("non_concurrence", "oui")}
                           className={cn(
@@ -3755,7 +3781,7 @@ export default function CreationSASUPage() {
                         <div className="space-y-4 p-4 border-l-2 border-[#2563EB]/30 ml-2">
                           <div>
                             <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Durée de la clause (en années après cessation)</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                               {["1", "2", "3"].map((y) => (
                                 <button
                                   key={y}
@@ -3784,7 +3810,7 @@ export default function CreationSASUPage() {
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Contrepartie financière ?</label>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <button
                                 onClick={() => setAnswer("indemnite_non_concurrence", "oui")}
                                 className={cn(
@@ -3892,7 +3918,7 @@ export default function CreationSASUPage() {
 
                       <div className="space-y-3">
                         <p className="text-base font-bold text-[#1E3A8A]">Plafond des avances en compte courant ?</p>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <button
                             onClick={() => setAnswer("plafond_compte_courant", "non")}
                             className={cn(
@@ -4292,7 +4318,7 @@ export default function CreationSASUPage() {
                                 ) && (
                                   <div>
                                     <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Ce bien est :</label>
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                       <button
                                         onClick={() => {
                                           const list = [...(answers.apports_nature_liste || [])];
@@ -4389,7 +4415,7 @@ export default function CreationSASUPage() {
                               <p className="text-sm text-gray-500 mb-2">
                                 Mise à disposition de connaissances techniques, de travail ou de services. <strong>Attention :</strong> l&apos;apport en industrie ne concourt pas à la formation du capital social, mais donne droit à des actions.
                               </p>
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <button
                                   onClick={() => setAnswer("apport_industrie", "oui")}
                                   className={cn(
@@ -4449,7 +4475,7 @@ export default function CreationSASUPage() {
 
                               <div>
                                 <label className="block text-sm font-semibold text-yellow-800 mb-2">Souhaitez-vous faire une déclaration de remploi (bien propre) ?</label>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <button
                                     onClick={() => setAnswer("declaration_remploi", "oui")}
                                     className={cn(
@@ -4644,7 +4670,7 @@ export default function CreationSASUPage() {
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <button
                             onClick={() => setAnswer("president_type", "physique")}
                             className={cn(
@@ -4674,7 +4700,7 @@ export default function CreationSASUPage() {
                         {/* ── Président PP : identité + filiation + non-condamnation ── */}
                         {answers.president_type === "physique" && (
                           <div className="space-y-4 border-t border-gray-200 pt-5">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                                 <select
@@ -4692,7 +4718,7 @@ export default function CreationSASUPage() {
                                 <input type="text" value={answers.president_nom || ""} onChange={(e) => setAnswer("president_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                                 <input type="text" value={answers.president_prenom || ""} onChange={(e) => setAnswer("president_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4728,7 +4754,7 @@ export default function CreationSASUPage() {
                                 })()}
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance (ville)</label>
                                 <input type="text" value={answers.president_lieu_naissance || ""} onChange={(e) => setAnswer("president_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4745,7 +4771,7 @@ export default function CreationSASUPage() {
 
                             {/* Filiation */}
                             <p className="text-base font-bold text-[#1E3A8A] pt-2">Filiation</p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du père</label>
                                 <input type="text" value={answers.president_pere_nom || ""} onChange={(e) => setAnswer("president_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4816,7 +4842,7 @@ export default function CreationSASUPage() {
                             {(answers.president_pm_mode === "siren" || answers.president_pm_mode === "manuel") && (
                               <div className="space-y-4 border-t border-gray-200 pt-4">
                                 <p className="text-sm font-bold text-[#2563EB]">Informations entreprise</p>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom de la société</label>
                                     <input type="text" value={answers.president_pm_nom || ""} onChange={(e) => setAnswer("president_pm_nom", e.target.value)} placeholder="Ex : LAW AND CO" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4826,7 +4852,7 @@ export default function CreationSASUPage() {
                                     <input type="text" value={answers.president_pm_forme || ""} onChange={(e) => setAnswer("president_pm_forme", e.target.value)} placeholder="Ex : SASU" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Capital social</label>
                                     <input type="text" value={answers.president_pm_capital || ""} onChange={(e) => setAnswer("president_pm_capital", e.target.value)} placeholder="Ex : 100" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4836,7 +4862,7 @@ export default function CreationSASUPage() {
                                     <input type="text" value={answers.president_pm_representant || ""} onChange={(e) => setAnswer("president_pm_representant", e.target.value)} placeholder="Ex : Nora Gabsi" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse</label>
                                     <input type="text" value={answers.president_pm_adresse || ""} onChange={(e) => setAnswer("president_pm_adresse", e.target.value)} placeholder="Ex : 7 RUE MEYERBEER" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4846,7 +4872,7 @@ export default function CreationSASUPage() {
                                     <input type="text" value={answers.president_pm_adresse_complement || ""} onChange={(e) => setAnswer("president_pm_adresse_complement", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Ville RCS</label>
                                     <input type="text" value={answers.president_pm_ville_rcs || ""} onChange={(e) => setAnswer("president_pm_ville_rcs", e.target.value)} placeholder="Ex : PARIS" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4876,7 +4902,7 @@ export default function CreationSASUPage() {
                                     </p>
                                   </div>
 
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                                       <select value={answers.president_rp_civilite || ""} onChange={(e) => setAnswer("president_rp_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
@@ -4890,7 +4916,7 @@ export default function CreationSASUPage() {
                                       <input type="text" value={answers.president_rp_nom || ""} onChange={(e) => setAnswer("president_rp_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                                       <input type="text" value={answers.president_rp_prenom || ""} onChange={(e) => setAnswer("president_rp_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4906,7 +4932,7 @@ export default function CreationSASUPage() {
                                       </select>
                                     </div>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
                                       <input type="date" value={answers.president_rp_date_naissance || ""} onChange={(e) => setAnswer("president_rp_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4931,7 +4957,7 @@ export default function CreationSASUPage() {
                                       <input type="text" value={answers.president_rp_lieu_naissance || ""} onChange={(e) => setAnswer("president_rp_lieu_naissance", e.target.value)} placeholder="Ville de naissance" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                     </div>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
                                       <AddressAutocomplete value={answers.president_rp_adresse || ""} onChange={(v) => setAnswer("president_rp_adresse", v)} placeholder="Adresse complète" />
@@ -4944,7 +4970,7 @@ export default function CreationSASUPage() {
 
                                   {/* Filiation du RP */}
                                   <p className="text-base font-bold text-[#1E3A8A] pt-2">Filiation du représentant permanent</p>
-                                  <div className="grid grid-cols-2 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                       <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom du père</label>
                                       <input type="text" value={answers.president_rp_pere_nom || ""} onChange={(e) => setAnswer("president_rp_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -4980,7 +5006,7 @@ export default function CreationSASUPage() {
                     <div className="border-t border-gray-200 pt-5 space-y-3">
                       <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un Directeur Général ?</p>
                       <p className="text-sm text-gray-500">Le DG dispose des mêmes pouvoirs que le Président vis-à-vis des tiers. C&apos;est facultatif en SASU.</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <button
                           onClick={() => setAnswer("nommer_dg", "oui")}
                           className={cn(
@@ -5003,7 +5029,7 @@ export default function CreationSASUPage() {
 
                       {answers.nommer_dg === "oui" && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#2563EB]/30 pl-4 ml-2">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                               <select value={answers.dg_civilite || ""} onChange={(e) => setAnswer("dg_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
@@ -5017,7 +5043,7 @@ export default function CreationSASUPage() {
                               <input type="text" value={answers.dg_nom || ""} onChange={(e) => setAnswer("dg_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                               <input type="text" value={answers.dg_prenom || ""} onChange={(e) => setAnswer("dg_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -5053,7 +5079,7 @@ export default function CreationSASUPage() {
                               })()}
                             </div>
                           </div>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
                               <input type="text" value={answers.dg_lieu_naissance || ""} onChange={(e) => setAnswer("dg_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -5097,7 +5123,7 @@ export default function CreationSASUPage() {
                           {/* Filiation du DG */}
                           <div className="border-t border-gray-200 pt-4 space-y-3">
                             <p className="text-base font-bold text-[#1E3A8A]">Filiation du Directeur Général</p>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>
                                 <input type="text" value={answers.dg_pere_nom || ""} onChange={(e) => setAnswer("dg_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -5131,14 +5157,14 @@ export default function CreationSASUPage() {
                         <div className="border-t border-gray-200 pt-5 space-y-3 mt-4">
                           <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un Directeur Général Délégué (DGD) ?</p>
                           <p className="text-sm text-gray-500">Le DGD assiste le DG ou le Président dans la direction, avec des pouvoirs délégués. C&apos;est facultatif et rare en SASU.</p>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button onClick={() => setAnswer("nommer_dgd", "oui")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", answers.nommer_dgd === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui</button>
                             <button onClick={() => setAnswer("nommer_dgd", "non")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", (answers.nommer_dgd || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
                           </div>
 
                           {answers.nommer_dgd === "oui" && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#7C3AED]/30 pl-4 ml-2">
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
                                   <select value={answers.dgd_civilite || ""} onChange={(e) => setAnswer("dgd_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
@@ -5152,7 +5178,7 @@ export default function CreationSASUPage() {
                                   <input type="text" value={answers.dgd_nom || ""} onChange={(e) => setAnswer("dgd_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                 </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
                                   <input type="text" value={answers.dgd_prenom || ""} onChange={(e) => setAnswer("dgd_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -5183,7 +5209,7 @@ export default function CreationSASUPage() {
                                   })()}
                                 </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
                                   <input type="text" value={answers.dgd_lieu_naissance || ""} onChange={(e) => setAnswer("dgd_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -5199,7 +5225,7 @@ export default function CreationSASUPage() {
                               </div>
                               <div className="border-t border-gray-200 pt-4 space-y-3">
                                 <p className="text-base font-bold text-[#1E3A8A]">Filiation du DGD</p>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>
                                     <input type="text" value={answers.dgd_pere_nom || ""} onChange={(e) => setAnswer("dgd_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
@@ -5965,7 +5991,7 @@ export default function CreationSASUPage() {
                         <div>
                           <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Régime mère-fille</label>
                           <p className="text-sm text-gray-500 mb-2">Exonération de 95 % des dividendes reçus des filiales (détention ≥ 5 % depuis 2 ans)</p>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button
                               onClick={() => setAnswer("regime_mere_fille", "oui")}
                               className={cn(
@@ -5991,7 +6017,7 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-sm font-semibold text-[#1E3A8A] mb-2">Intégration fiscale</label>
                             <p className="text-sm text-gray-500 mb-2">Consolider les résultats des filiales détenues à 95 % ou plus</p>
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <button
                                 onClick={() => setAnswer("integration_fiscale", "oui")}
                                 className={cn(

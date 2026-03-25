@@ -3120,9 +3120,49 @@ export default function CreationSASUPage() {
                       )}
 
                       <p className="text-sm text-gray-500 italic mt-4">Cliquez pour des explications si besoin</p>
-                      <button className="px-6 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity">
+                      <button
+                        onClick={() => setAnswer("show_explication_agrement", answers.show_explication_agrement === "oui" ? "" : "oui")}
+                        className="px-6 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity"
+                      >
                         Explications clause agrément
                       </button>
+
+                      {answers.show_explication_agrement === "oui" && (
+                        <div className="space-y-5 text-sm text-gray-700 mt-4">
+                          <div>
+                            <p className="font-bold italic text-[#1E3A8A]">La clause d&apos;agrément, c&apos;est quoi ?</p>
+                            <p>C&apos;est une règle qui impose que toute cession ou transmission d&apos;actions soit soumise à l&apos;accord de la société lorsqu&apos;il y aura plusieurs associés. Elle permet donc de contrôler l&apos;entrée de nouveaux actionnaires.</p>
+                          </div>
+
+                          <div>
+                            <p className="font-bold italic text-[#2563EB]">🟦 Option 1 — Cession et transmission libres</p>
+                            <p>Aucune restriction :</p>
+                            <ul className="list-disc pl-8 space-y-1">
+                              <li>les actions peuvent être librement vendues à un tiers,</li>
+                              <li>ou transmises en cas de décès, donation ou succession.</li>
+                            </ul>
+                            <p className="font-bold mt-1">Aucune clause d&apos;agrément n&apos;est prévue dans les statuts.</p>
+                          </div>
+
+                          <div>
+                            <p className="font-bold italic text-[#2563EB]">🟦 Option 2 — Clause d&apos;agrément</p>
+                            <p>Toute cession ou transmission à une autre personne (tiers ou héritier) devra recevoir l&apos;accord préalable de la société. <strong>Intérêt :</strong> contrôle total sur l&apos;arrivée de nouveaux associés et utile si vous envisagez l&apos;évolution de la SASU vers une SAS à plusieurs associés.</p>
+                            <p className="font-bold text-[#1E3A8A] mt-2">Modalités d&apos;agrément prévues par les statuts</p>
+                            <p>Tant que la société demeure unipersonnelle, l&apos;associé unique conserve seul le pouvoir d&apos;agrément. Lorsque la société comptera plusieurs associés, toute cession ou transmission soumise à agrément devra être approuvée par la collectivité des associés statuant à la <strong>majorité simple (plus de 50 % des droits de vote)</strong>, conformément aux statuts.</p>
+                          </div>
+
+                          <div>
+                            <p className="font-bold italic text-[#2563EB]">🟦 Option 3 — Transmission libre uniquement à certaines personnes</p>
+                            <p>Certaines personnes pourront recevoir les actions sans agrément, par exemple :</p>
+                            <ul className="list-disc pl-8 space-y-1">
+                              <li>votre conjoint,</li>
+                              <li>vos enfants,</li>
+                              <li>vos héritiers réservataires.</li>
+                            </ul>
+                            <p>Pour toute autre personne → <strong>agrément obligatoire</strong>.</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

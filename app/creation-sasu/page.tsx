@@ -8554,8 +8554,7 @@ export default function CreationSASUPage() {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
-                                  formule: "essentielle",
-                                  options: ["relecture_avocat"],
+                                  formule: "relecture_only",
                                   stateKey: "",
                                 }),
                               });

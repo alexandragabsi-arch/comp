@@ -451,28 +451,20 @@ Fait à {VilleSignature}, le {CurrentDateTime}
 // ── Déclaration de non-condamnation et de filiation ─────────────────────────
 export const TEMPLATE_NON_CONDAMNATION = `DÉCLARATION DE NON-CONDAMNATION ET DE FILIATION
 
-===
-
 ## IDENTITÉ DU DÉCLARANT
 
 {BLOC_IDENTITE_DECLARANT}
 
----
-
 ## FILIATION
 
-Fils / Fille de **Monsieur {PrenomPere} {NomPere}** et de **Madame {PrenomMere} {NomMere}**.
-
----
+{FilsFille} de Monsieur {PrenomPere} {NomPere} et de Madame {PrenomMere} {NomMere}.
 
 ## DÉCLARATION
 
-Déclare, conformément aux dispositions de l'**article A 123-51 du Code de commerce**, relatif au Registre du commerce et des sociétés, n'avoir jamais fait l'objet d'aucune condamnation pénale, ni de sanction civile ou administrative de nature à m'interdire :
+Déclare, conformément aux dispositions de l'article A 123-51 du Code de commerce, relatif au Registre du commerce et des sociétés, n'avoir jamais fait l'objet d'aucune condamnation pénale, ni de sanction civile ou administrative de nature à m'interdire :
 
 • d'exercer une activité commerciale ;
 • ou de gérer, administrer ou diriger une personne morale.
-
----
 
 ## SIGNATURE
 
@@ -481,8 +473,6 @@ Fait à {VilleSignature}, le {CurrentDateTime}
 {BLOC_SIGNATURE_DECLARANT}
 
 Signature :
-
-
 `;
 
 // ── Attestation de mise à disposition / hébergement de locaux ────────────────

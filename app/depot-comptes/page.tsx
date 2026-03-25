@@ -73,7 +73,7 @@ export default function DepotComptesPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success") {
-      setStep(7);
+      setStep(5);
       window.history.replaceState({}, "", "/depot-comptes");
     }
   }, []);
@@ -891,7 +891,7 @@ export default function DepotComptesPage() {
     </div>
   );
 
-  const steps = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4, renderStep5, renderStep6, renderStep7, renderStep8, renderStep9, renderStep10, renderStep11];
+  const steps = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep5, renderStep6, renderStep7, renderStep8, renderStep9, renderStep10, renderStep4, renderStep11];
 
   /* ───────── Can proceed logic ───────── */
   const canProceed = () => {

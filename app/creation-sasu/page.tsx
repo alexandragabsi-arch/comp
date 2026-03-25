@@ -3040,7 +3040,7 @@ export default function CreationSASUPage() {
                             </div>
                             <div>
                               <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse du siège</label>
-                              <input type="text" value={answers.associe_societe_adresse || ""} onChange={(e) => setAnswer("associe_societe_adresse", e.target.value)} placeholder="Adresse complète" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                              <AddressAutocomplete value={answers.associe_societe_adresse || ""} onChange={(v) => setAnswer("associe_societe_adresse", v)} placeholder="Adresse complète" />
                             </div>
                           </div>
                         )}
@@ -3403,12 +3403,10 @@ export default function CreationSASUPage() {
                           </div>
                           <div>
                             <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Adresse</label>
-                            <input
-                              type="text"
+                            <AddressAutocomplete
                               value={answers.cac_adresse || ""}
-                              onChange={(e) => setAnswer("cac_adresse", e.target.value)}
+                              onChange={(v) => setAnswer("cac_adresse", v)}
                               placeholder="Adresse complète du cabinet"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                             />
                           </div>
                           <div>
@@ -4866,7 +4864,7 @@ export default function CreationSASUPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse</label>
-                                    <input type="text" value={answers.president_pm_adresse || ""} onChange={(e) => setAnswer("president_pm_adresse", e.target.value)} placeholder="Ex : 7 RUE MEYERBEER" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                    <AddressAutocomplete value={answers.president_pm_adresse || ""} onChange={(v) => setAnswer("president_pm_adresse", v)} placeholder="Adresse complète" />
                                   </div>
                                   <div>
                                     <label className="block text-base font-bold text-[#1E3A8A] mb-1">Complément d&apos;adresse</label>
@@ -6449,18 +6447,158 @@ export default function CreationSASUPage() {
                   <div className="space-y-6">
                     <div className="text-center space-y-1">
                       <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Siège social</p>
                     </div>
-                    {QUESTIONS[11].info && (
-                      <AccordionItem title={QUESTIONS[11].info.title}>
-                        <div className="text-base text-gray-600">{QUESTIONS[11].info.content}</div>
-                      </AccordionItem>
+
+                    {/* Step 1: Type de domiciliation */}
+                    <div className="space-y-3">
+                      <p className="text-base font-bold text-[#1E3A8A]">Où sera domicilié le siège social de votre SASU ?</p>
+
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "domicile_dirigeant")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "domicile_dirigeant" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <MapPin className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "domicile_dirigeant" ? "text-[#1E3A8A]" : "text-gray-700")}>Au domicile du dirigeant (président)</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Vous utilisez votre adresse personnelle comme siège social</p>
+                          </div>
+                          {answers.type_domiciliation === "domicile_dirigeant" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "local_commercial_bail")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "local_commercial_bail" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Building2 className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "local_commercial_bail" ? "text-[#1E3A8A]" : "text-gray-700")}>Dans un local commercial (locataire)</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Vous disposez d&apos;un bail commercial ou professionnel</p>
+                          </div>
+                          {answers.type_domiciliation === "local_commercial_bail" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "local_commercial_proprio")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "local_commercial_proprio" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Building2 className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "local_commercial_proprio" ? "text-[#1E3A8A]" : "text-gray-700")}>Dans un local commercial (propriétaire)</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Vous êtes propriétaire du local</p>
+                          </div>
+                          {answers.type_domiciliation === "local_commercial_proprio" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "societe_domiciliation")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "societe_domiciliation" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Landmark className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "societe_domiciliation" ? "text-[#1E3A8A]" : "text-gray-700")}>Auprès d&apos;une société de domiciliation</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Entreprise spécialisée (ex : SeDomicilier, LegalPlace...)</p>
+                          </div>
+                          {answers.type_domiciliation === "societe_domiciliation" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+
+                        <button
+                          onClick={() => setAnswer("type_domiciliation", "pepiniere")}
+                          className={cn(
+                            "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                            answers.type_domiciliation === "pepiniere" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"
+                          )}
+                        >
+                          <Users className="w-5 h-5 text-[#2563EB] flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className={cn("font-semibold text-base", answers.type_domiciliation === "pepiniere" ? "text-[#1E3A8A]" : "text-gray-700")}>Pépinière d&apos;entreprises / incubateur / coworking</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Espace partagé avec convention d&apos;hébergement</p>
+                          </div>
+                          {answers.type_domiciliation === "pepiniere" && <Check className="w-5 h-5 text-[#2563EB] flex-shrink-0" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Adresse */}
+                    {answers.type_domiciliation && (
+                      <div className="space-y-2">
+                        <label className="block text-base font-bold text-[#1E3A8A]">Adresse du siège social</label>
+                        <AddressAutocomplete
+                          value={answers.adresse_siege || ""}
+                          onChange={(v) => setAnswer("adresse_siege", v)}
+                          placeholder={QUESTIONS[11].placeholder}
+                          className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
+                        />
+                      </div>
                     )}
-                    <AddressAutocomplete
-                      value={answers.adresse_siege || ""}
-                      onChange={(v) => setAnswer("adresse_siege", v)}
-                      placeholder={QUESTIONS[11].placeholder}
-                      className="w-full px-5 py-4 rounded-xl border-2 border-[#2563EB] bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 text-base"
-                    />
+
+                    {/* Step 3: Conditional fields based on type */}
+                    {answers.type_domiciliation === "domicile_dirigeant" && (
+                      <div className="border-l-2 border-[#2563EB]/30 pl-4 ml-2 space-y-4">
+                        <div className="bg-blue-50 border border-[#2563EB]/20 rounded-xl p-4 flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-[#2563EB] mt-0.5 flex-shrink-0" />
+                          <p className="text-sm text-[#1E3A8A]">
+                            La domiciliation au domicile du dirigeant est autorisée pour une durée de 5 ans maximum (sauf si le bail ou le règlement de copropriété l&apos;interdit). Passé ce délai, vous devrez transférer le siège social.
+                          </p>
+                        </div>
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={answers.domicile_bail_autorise === "oui"}
+                            onChange={(e) => setAnswer("domicile_bail_autorise", e.target.checked ? "oui" : "")}
+                            className="mt-1 w-4 h-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]"
+                          />
+                          <span className="text-sm text-gray-700">Je confirme que mon bail ou règlement de copropriété n&apos;interdit pas l&apos;exercice d&apos;une activité professionnelle à cette adresse</span>
+                        </label>
+                      </div>
+                    )}
+
+                    {answers.type_domiciliation === "societe_domiciliation" && (
+                      <div className="border-l-2 border-[#2563EB]/30 pl-4 ml-2 space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Nom de la société de domiciliation</label>
+                          <input
+                            type="text"
+                            value={answers.nom_domiciliataire || ""}
+                            onChange={(e) => setAnswer("nom_domiciliataire", e.target.value)}
+                            placeholder="Ex : SeDomicilier, LegalPlace..."
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">SIREN de la société de domiciliation</label>
+                          <input
+                            type="text"
+                            value={answers.siren_domiciliataire || ""}
+                            onChange={(e) => setAnswer("siren_domiciliataire", e.target.value)}
+                            placeholder="Ex : 123 456 789"
+                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Info accordion */}
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p>L&apos;INPI exige un <strong>justificatif de jouissance du local</strong> (bail, titre de propriété, contrat de domiciliation...) pour valider l&apos;adresse du siège social.</p>
+                        <p>Au domicile du dirigeant : un <strong>justificatif de domicile de moins de 3 mois</strong> est obligatoire (facture EDF, eau, internet ou avis d&apos;imposition).</p>
+                        <p>Le justificatif correspondant à votre situation vous sera demandé dans la page <strong>&quot;Pièces justificatives&quot;</strong>.</p>
+                      </div>
+                    </AccordionItem>
                   </div>
                 )}
 

@@ -5518,8 +5518,21 @@ export default function CreationSASUPage() {
                                 <AddressAutocomplete value={answers.dgd_adresse || ""} onChange={(v) => setAnswer("dgd_adresse", v)} placeholder="Adresse complète" />
                               </div>
                               <div className="border-t border-gray-200 pt-4 space-y-3">
+                                {/* Pouvoirs DGD */}
+                                <p className="text-base font-bold text-[#1E3A8A]">Pouvoirs du DGD</p>
+                                <div className="space-y-2">
+                                  <button onClick={() => setAnswer("dgd_pouvoirs", "interne")} className={cn("w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all", (answers.dgd_pouvoirs || "interne") === "interne" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>
+                                    Direction interne uniquement
+                                    <span className="block text-sm font-normal text-gray-500 mt-1">Assiste le DG/Président en interne, sans représentation externe</span>
+                                  </button>
+                                  <button onClick={() => setAnswer("dgd_pouvoirs", "representation")} className={cn("w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all", answers.dgd_pouvoirs === "representation" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>
+                                    Direction interne + représentation externe
+                                    <span className="block text-sm font-normal text-gray-500 mt-1">Peut engager la société vis-à-vis des tiers dans la limite des pouvoirs délégués</span>
+                                  </button>
+                                </div>
+
                                 {/* Durée du mandat DGD */}
-                                <p className="text-base font-bold text-[#1E3A8A]">Durée du mandat du DGD</p>
+                                <p className="text-base font-bold text-[#1E3A8A] pt-3">Durée du mandat du DGD</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   <button onClick={() => setAnswer("dgd_duree_mandat", "indeterminee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.dgd_duree_mandat || "indeterminee") === "indeterminee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Indéterminée</button>
                                   <button onClick={() => setAnswer("dgd_duree_mandat", "determinee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.dgd_duree_mandat === "determinee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Déterminée</button>

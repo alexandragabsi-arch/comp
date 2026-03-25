@@ -1228,17 +1228,17 @@ export default function CreationSASUPage() {
     { id: "associe_unique" },       // type d'associé + infos + situation matrimoniale
     { id: "capital_social" },       // capital fixe/variable + montant + actions + formule
     { id: "regles_statutaires" },  // règles statutaires par défaut ou personnalisées
+    { id: "exercice_comptable" },   // date clôture exercice comptable
+    { id: "services_comptables" }, // services comptables (si pas de CAC nommé)
     { id: "regles_cac" },          // commissaire aux comptes (si personnaliser)
     { id: "regles_duree" },        // durée de la société (si personnaliser)
     { id: "regles_transmission" }, // règles transmission/cession (si personnaliser)
     { id: "regles_nantissement" }, // nantissement + location actions (si personnaliser)
+    { id: "regime_fiscal" },        // IS / IR (choix impôts sur les bénéfices)
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
     { id: "depot_capital" },        // établissement bancaire + date dépôt
-    { id: "regime_fiscal" },        // IS / IR (adapté holdings)
-    { id: "exercice_comptable" },   // date clôture exercice comptable
-    { id: "services_comptables" }, // services comptables (si pas de CAC nommé)
     { id: "regime_tva" },           // régime de TVA
     { id: "adresse_siege" },        // adresse
     { id: "date_lieu" },            // date et lieu de signature des statuts
@@ -1254,6 +1254,11 @@ export default function CreationSASUPage() {
     // Skip services_comptables if CAC is explicitly "oui"
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
     return false;
+  }
+
+  // Helper to find page index by id
+  function pageIndex(id: string): number {
+    return POST_PAGES.findIndex((p) => p.id === id);
   }
 
   // Determine sidebar step from phase
@@ -5356,7 +5361,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Dénomination</h3>
-                        <button onClick={() => setPostPage(0)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("denomination"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Nom :</span> <span className="text-gray-800 font-medium">{answers.nom_societe || "—"}</span></p>
@@ -5370,7 +5375,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Type de structure</h3>
-                        <button onClick={() => setPostPage(1)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("type_structure"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p><span className="text-gray-500">Structure :</span> <span className="text-gray-800 font-medium">{answers.type_structure === "classique" ? "Société classique" : answers.type_structure === "holding_passive" ? "Holding passive" : answers.type_structure === "holding_animatrice" ? "Holding animatrice" : "—"}</span></p>
@@ -5381,7 +5386,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Objet social</h3>
-                        <button onClick={() => setPostPage(3)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("objet_social"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800">{answers.objet_social || "—"}</p>
@@ -5392,7 +5397,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Associé unique</h3>
-                        <button onClick={() => setPostPage(6)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("associe_unique"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_associe === "physique" ? "Personne physique" : answers.type_associe === "morale" ? "Personne morale" : "—"}</span></p>
@@ -5415,7 +5420,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Capital social</h3>
-                        <button onClick={() => setPostPage(7)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("capital_social"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Type :</span> <span className="text-gray-800 font-medium">{answers.type_capital === "fixe" ? "Capital fixe" : answers.type_capital === "variable" ? "Capital variable" : "—"}</span></p>
@@ -5427,7 +5432,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Président</h3>
-                        <button onClick={() => setPostPage(9)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("nomination_president"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Président :</span> <span className="text-gray-800 font-medium">
@@ -5447,7 +5452,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Dépôt du capital</h3>
-                        <button onClick={() => setPostPage(11)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("depot_capital"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Établissement :</span> <span className="text-gray-800 font-medium">{answers.banque_nom || "—"}</span></p>
@@ -5459,7 +5464,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime fiscal</h3>
-                        <button onClick={() => setPostPage(12)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("regime_fiscal"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm space-y-1">
                         <p><span className="text-gray-500">Régime :</span> <span className="text-gray-800 font-medium">{answers.regime_fiscal === "is" ? "Impôt sur les sociétés (IS)" : answers.regime_fiscal === "ir" ? "Impôt sur le revenu (IR)" : "—"}</span></p>
@@ -5472,7 +5477,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Régime de TVA</h3>
-                        <button onClick={() => setPostPage(13)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("regime_tva"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p><span className="text-gray-500">TVA :</span> <span className="text-gray-800 font-medium">
@@ -5485,7 +5490,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Siège social</h3>
-                        <button onClick={() => setPostPage(14)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("adresse_siege"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 text-sm">
                         <p className="text-gray-800 font-medium">{answers.adresse_siege || "—"}</p>
@@ -5496,7 +5501,7 @@ export default function CreationSASUPage() {
                     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
                       <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-200">
                         <h3 className="font-semibold text-[#1E3A8A] text-sm">Date et lieu de signature</h3>
-                        <button onClick={() => setPostPage(15)} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
+                        <button onClick={() => setPostPage(pageIndex("date_lieu"))} className="text-xs text-[#2563EB] hover:underline flex items-center gap-1"><Edit3 className="w-3 h-3" /> Modifier</button>
                       </div>
                       <div className="px-5 py-3 space-y-1 text-sm">
                         <p><span className="text-gray-500">Date :</span> <span className="text-gray-800 font-medium">{answers.date_signature || "—"}</span></p>

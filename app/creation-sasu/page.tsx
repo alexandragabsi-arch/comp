@@ -1318,6 +1318,8 @@ export default function CreationSASUPage() {
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
     // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
     if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
+    // Skip reprise_depenses if default rules (no reprise in default formula)
+    if (pageId === "reprise_depenses" && answers.regles_statutaires !== "personnaliser") return true;
     return false;
   }
 
@@ -3427,10 +3429,29 @@ export default function CreationSASUPage() {
                             />
                           </div>
 
-                          {/* CAC suppléant */}
+                          {/* Durée du mandat CAC */}
+                          <div className="border-t border-blue-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Durée du mandat</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button onClick={() => setAnswer("cac_duree_mandat", "6")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.cac_duree_mandat || "6") === "6" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>6 exercices (par défaut)</button>
+                              <button onClick={() => setAnswer("cac_duree_mandat", "3")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.cac_duree_mandat === "3" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>3 exercices</button>
+                            </div>
+                          </div>
+
+                          {/* Type CAC : personne physique ou société */}
+                          <div className="border-t border-blue-200 pt-4 space-y-3">
+                            <p className="text-base font-bold text-[#1E3A8A]">Le CAC est...</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button onClick={() => setAnswer("cac_type", "societe")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.cac_type || "societe") === "societe" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Un cabinet / société</button>
+                              <button onClick={() => setAnswer("cac_type", "physique")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.cac_type === "physique" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Une personne physique</button>
+                            </div>
+                          </div>
+
+                          {/* CAC suppléant — uniquement si CAC titulaire est PP (loi PACTE) */}
+                          {answers.cac_type === "physique" && (
                           <div className="border-t border-blue-200 pt-4 space-y-3">
                             <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un commissaire aux comptes suppléant ?</p>
-                            <p className="text-sm text-gray-600">Le suppléant remplace le titulaire en cas d&apos;empêchement. C&apos;est facultatif depuis la loi PACTE (2019).</p>
+                            <p className="text-sm text-gray-600">Obligatoire uniquement si le CAC titulaire est une <strong>personne physique</strong> (loi PACTE 2019). Si le titulaire est une société, le suppléant n&apos;est pas requis.</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <button onClick={() => setAnswer("nommer_cac_suppleant", "oui")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.nommer_cac_suppleant === "oui" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui</button>
                               <button onClick={() => setAnswer("nommer_cac_suppleant", "non")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.nommer_cac_suppleant || "non") === "non" ? "border-[#2563EB] bg-white text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
@@ -3449,6 +3470,7 @@ export default function CreationSASUPage() {
                               </div>
                             )}
                           </div>
+                          )}
                         </div>
                       )}
 

@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 65" width="130" height="65">
-  <!-- Legal text - top left -->
-  <text x="0" y="28" font-family="'Poppins', 'Montserrat', 'Helvetica Neue', sans-serif" font-weight="700" font-size="26" fill="#0d1f4e">Legal</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 145 60" width="145" height="60">
+  <!-- Legal text -->
+  <text x="0" y="25" font-family="'Poppins', 'Montserrat', 'Helvetica Neue', sans-serif" font-weight="700" font-size="25" fill="#0d1f4e">Legal</text>
 
-  <!-- Magnifying glass icon - top right, next to Legal -->
-  <circle cx="97" cy="14" r="8.5" stroke="#0d1f4e" stroke-width="2.8" fill="none"/>
-  <line x1="103" y1="20" x2="110" y2="28" stroke="#0d1f4e" stroke-width="2.8" stroke-linecap="round"/>
+  <!-- Magnifying glass icon - tucked right after Legal -->
+  <circle cx="90" cy="12" r="7.5" stroke="#0d1f4e" stroke-width="2.5" fill="none"/>
+  <line x1="96" y1="17" x2="102" y2="24" stroke="#0d1f4e" stroke-width="2.5" stroke-linecap="round"/>
 
-  <!-- corners text - bottom, aligned to right edge of magnifying glass -->
-  <text x="18" y="55" font-family="'Poppins', 'Montserrat', 'Helvetica Neue', sans-serif" font-weight="700" font-size="26" fill="#0d1f4e">corners</text>
+  <!-- corners text - starts under the "al" of Legal -->
+  <text x="38" y="52" font-family="'Poppins', 'Montserrat', 'Helvetica Neue', sans-serif" font-weight="700" font-size="25" fill="#0d1f4e">corners</text>
 </svg>

@@ -69,6 +69,7 @@ interface V {
   isVersementTotal: boolean;
   hasApportNature: boolean;
   hasApportIndustrie: boolean;
+  apportIndustrieDesc: string;
   hasDG: boolean;
   isPresidentAssocie: boolean;
   isSimplifiee: boolean;
@@ -263,6 +264,7 @@ function prep(a: Answers): V {
     isVersementTotal: a.etat_versement !== "partiel" && a.versement_capital !== "partiel",
     hasApportNature: a.apport_nature === "oui",
     hasApportIndustrie: a.apport_industrie === "oui",
+    apportIndustrieDesc: a.apport_industrie_description || "",
     hasDG,
     isPresidentAssocie,
     isSimplifiee,
@@ -826,16 +828,22 @@ export function buildTitre2(v: V): string {
       lines.push("");
       lines.push(v.hasApportNature ? "**7.3 — Apports en industrie**" : "**7.2 — Apports en industrie**");
       lines.push("");
+      if (v.apportIndustrieDesc) {
+        lines.push(
+          `L'Associé unique réalise un apport en industrie consistant en la mise à disposition de la Société de : **${v.apportIndustrieDesc}**.`
+        );
+      } else {
+        lines.push(
+          "L'Associé unique réalise un apport en industrie consistant en la mise à disposition de la Société de ses compétences professionnelles, savoir-faire technique et relations d'affaires."
+        );
+      }
+      lines.push("");
       lines.push(
-        "Conformément aux dispositions de l'article L.227-1 du Code de commerce, des apports en industrie pourront être effectués au profit de la Société."
+        "Conformément aux dispositions de l'article L.227-1 du Code de commerce, cet apport en industrie n'entre pas dans la formation du capital social. Il donne lieu à l'attribution d'actions inaliénables conférant à leur titulaire le droit de participer aux décisions collectives et de percevoir une quote-part des bénéfices, dans les conditions déterminées par les présents statuts ou par décision de l'Associé unique."
       );
       lines.push("");
       lines.push(
-        "Les actions émises en contrepartie d'apports en industrie sont des actions inaliénables, qui ne concourent pas à la formation du capital social. Elles donnent toutefois droit à une quote-part des bénéfices et confèrent le droit de participer aux décisions collectives, dans les conditions déterminées par les présents statuts."
-      );
-      lines.push("");
-      lines.push(
-        "L'apporteur en industrie est tenu d'exécuter sa prestation personnellement et de manière effective. En cas de manquement grave à cette obligation, l'Associé unique pourra décider le rachat forcé des actions d'industrie dans les conditions prévues aux présents statuts."
+        "L'apporteur en industrie est tenu d'exécuter sa prestation personnellement et de manière effective pendant toute la durée de son engagement. En cas de cessation de l'apport, pour quelque cause que ce soit, les actions d'industrie sont annulées de plein droit."
       );
     }
   }

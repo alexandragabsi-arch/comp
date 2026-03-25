@@ -1840,7 +1840,7 @@ export function buildTitre6(v: V): string {
   if (v.nommerCAC) {
     s.push("L'Associé unique, lors de la constitution de la Société, a décidé de nommer en qualité de Commissaire aux comptes titulaire :");
     s.push("");
-    s.push(`**${v.cacDenomination}**, dont le siège est situé à ${v.cacAdresse}, inscrit auprès de la Compagnie Nationale des Commissaires aux Comptes (CNCC) sous le numéro ${v.cacNumeroCNCC}.`);
+    s.push(`**${v.cacDenomination}**, dont le siège est situé à ${v.cacAdresse}.`);
     s.push("");
     s.push("Le Commissaire aux comptes est nommé pour une durée de six (6) exercices, soit jusqu'à l'issue de la décision de l'Associé unique statuant sur les comptes du sixième exercice clos après sa nomination.");
   } else {

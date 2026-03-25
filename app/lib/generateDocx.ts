@@ -499,8 +499,8 @@ function buildSasuCoverPage(meta: {
 }): Paragraph[] {
   const children: Paragraph[] = [];
 
-  // ~30% empty space at top
-  for (let i = 0; i < 8; i++) {
+  // ~40% empty space at top (title centered vertically)
+  for (let i = 0; i < 12; i++) {
     children.push(sasuEmptyLine(100));
   }
 
@@ -587,22 +587,40 @@ function buildSasuCoverPage(meta: {
     }),
   );
 
-  // Empty space before bottom tag
-  for (let i = 0; i < 6; i++) {
+  // Empty space before bottom
+  for (let i = 0; i < 4; i++) {
     children.push(sasuEmptyLine(100));
   }
 
-  // Bottom tag
+  // Date
+  const today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   children.push(
     new Paragraph({
       children: [
-        sasuRun("LegalCorners — Statuts constitutifs", {
-          size: 16,
-          color: SASU_GRAY,
-        }),
+        sasuRun(`Établi le ${today}`, { size: 18, color: SASU_GRAY, italics: true }),
       ],
       alignment: AlignmentType.CENTER,
-      spacing: { before: 200 },
+      spacing: { after: 200 },
+    }),
+  );
+
+  // Bottom line
+  children.push(
+    new Paragraph({
+      text: "",
+      border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" } },
+      spacing: { after: 80 },
+    }),
+  );
+
+  // Confidentiel + LegalCorners
+  children.push(
+    new Paragraph({
+      children: [
+        sasuRun("Confidentiel", { size: 14, color: SASU_GRAY, italics: true }),
+        sasuRun(" — LegalCorners", { size: 14, color: SASU_GRAY }),
+      ],
+      alignment: AlignmentType.CENTER,
     }),
   );
 
@@ -629,13 +647,13 @@ function buildSasuFooter(): Footer {
     children: [
       new Paragraph({
         children: [
-          new TextRun({ text: "Page ", size: 16, color: SASU_GRAY, font: "Cambria" }),
-          new TextRun({ children: [PageNumber.CURRENT], size: 16, color: SASU_GRAY, font: "Cambria" }),
-          new TextRun({ text: " sur ", size: 16, color: SASU_GRAY, font: "Cambria" }),
-          new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, color: SASU_GRAY, font: "Cambria" }),
+          new TextRun({ text: "Confidentiel — Page ", size: 14, color: SASU_GRAY, font: "Cambria", italics: true }),
+          new TextRun({ children: [PageNumber.CURRENT], size: 14, color: SASU_GRAY, font: "Cambria", italics: true }),
+          new TextRun({ text: " sur ", size: 14, color: SASU_GRAY, font: "Cambria", italics: true }),
+          new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 14, color: SASU_GRAY, font: "Cambria", italics: true }),
         ],
         alignment: AlignmentType.CENTER,
-        border: { top: { style: BorderStyle.SINGLE, size: 2, color: "DDDDDD" } },
+        border: { top: { style: BorderStyle.SINGLE, size: 2, color: "CCCCCC" } },
         spacing: { before: 80 },
       }),
     ],

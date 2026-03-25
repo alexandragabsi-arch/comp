@@ -106,6 +106,7 @@ export default async function DashboardPage() {
             <p className="font-medium text-gray-700">Aucun dossier pour l'instant</p>
             <p className="text-sm text-gray-400 mt-1 mb-6">Vos formalités apparaîtront ici dès leur création.</p>
             <div className="flex flex-wrap justify-center gap-3 text-sm">
+              <a href="/creation-sasu" className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors">Créer une SASU</a>
               <a href="/dissolution" className="px-4 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors">Dissolution</a>
               <a href="/modification-societe" className="px-4 py-2 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors">Modification</a>
               <a href="/mise-en-sommeil" className="px-4 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">Mise en sommeil</a>

@@ -19,7 +19,7 @@ import {
 import Link from "next/link";
 
 /* ───────── Constants ───────── */
-const TOTAL_STEPS = 12;
+const TOTAL_STEPS = 11;
 const NAVY = "#0d1f4e";
 const BLUE = "#2563EB";
 
@@ -891,7 +891,7 @@ export default function DepotComptesPage() {
     </div>
   );
 
-  const steps = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep5, renderStep6, renderStep7, renderStep8, renderStep9, renderStep10, renderStep4, renderStep11];
+  const steps = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep5, renderStep7, renderStep8, renderStep9, renderStep10, renderStep4, renderStep11];
 
   /* ───────── Can proceed logic ───────── */
   const canProceed = () => {
@@ -997,7 +997,7 @@ export default function DepotComptesPage() {
               <ArrowLeft className="w-4 h-4" /> Retour
             </button>
 
-            {step < TOTAL_STEPS - 2 && (
+            {step < TOTAL_STEPS - 2 && step !== 4 && (
               <button
                 onClick={goNext}
                 disabled={!canProceed()}

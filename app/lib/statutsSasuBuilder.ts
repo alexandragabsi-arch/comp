@@ -843,7 +843,7 @@ export function buildTitre2(v: V): string {
       );
       lines.push("");
       lines.push(
-        "L'apporteur en industrie est tenu d'exécuter sa prestation personnellement et de manière effective pendant toute la durée de son engagement. En cas de cessation de l'apport, pour quelque cause que ce soit, les actions d'industrie sont annulées de plein droit."
+        `L'apporteur en industrie est tenu d'exécuter sa prestation personnellement et de manière effective pendant toute la durée de la Société, soit ${v.duree} ans à compter de l'immatriculation au Registre du Commerce et des Sociétés. En cas de cessation de l'apport, pour quelque cause que ce soit (décès, incapacité, révocation, démission), les actions d'industrie sont annulées de plein droit et sans indemnité.`
       );
     }
   }

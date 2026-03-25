@@ -1231,6 +1231,7 @@ export default function CreationSASUPage() {
     { id: "regles_cac" },          // commissaire aux comptes (si personnaliser)
     { id: "regles_duree" },        // durée de la société (si personnaliser)
     { id: "regles_transmission" }, // règles transmission/cession (si personnaliser)
+    { id: "regles_nantissement" }, // nantissement + location actions (si personnaliser)
     { id: "apport_associe" },      // apport de l'associé unique
     { id: "nomination_president" },  // nomination du président (1 seul)
     { id: "mandat_president" },     // majorité, révocation, durée, rémunération, pouvoirs
@@ -1247,7 +1248,7 @@ export default function CreationSASUPage() {
   // Skip conditional pages based on answers
   function shouldSkipPage(pageId: string | undefined): boolean {
     if (!pageId) return false;
-    const customPages = ["regles_cac", "regles_duree", "regles_transmission"];
+    const customPages = ["regles_cac", "regles_duree", "regles_transmission", "regles_nantissement"];
     if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
     return false;
   }
@@ -3180,6 +3181,75 @@ export default function CreationSASUPage() {
                           </div>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Page: Nantissement et location d'actions (personnaliser) ── */}
+                {POST_PAGES[postPage]?.id === "regles_nantissement" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-gray-500 text-sm">Nantissement et location des actions</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-sm text-gray-600 space-y-3 text-justify">
+                        <p className="font-bold text-[#1E3A8A]">Nantissement des actions</p>
+                        <p>Le nantissement permet d&apos;utiliser vos actions comme garantie pour un prêt bancaire ou une dette.</p>
+                        <p>Oui → Vous autorisez la possibilité de nantir vos actions (utile pour accéder à certains financements).</p>
+                        <p>Non → Vos actions ne pourront pas être données en garantie.</p>
+                      </div>
+                    </AccordionItem>
+
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous prévoir la possibilité de donner vos actions en garantie (nantissement) ?</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("nantissement_actions", "oui")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.nantissement_actions === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui → vous autorisez cette possibilité.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("nantissement_actions", "non")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.nantissement_actions === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non → vous interdisez cette possibilité.
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous prévoir la possibilité de louer temporairement vos actions ?</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <button
+                            onClick={() => setAnswer("location_actions", "oui")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.location_actions === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Oui → vous autorisez cette pratique.
+                          </button>
+                          <button
+                            onClick={() => setAnswer("location_actions", "non")}
+                            className={cn(
+                              "p-4 rounded-xl border-2 text-left text-base font-semibold transition-all",
+                              answers.location_actions === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                            )}
+                          >
+                            Non → vous l&apos;interdisez.
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

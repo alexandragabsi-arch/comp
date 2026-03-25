@@ -5823,9 +5823,10 @@ export default function CreationSASUPage() {
                         </label>
                         <input
                           type="text"
+                          autoComplete="off"
                           value={answers.banque_adresse || ""}
                           onChange={(e) => setAnswer("banque_adresse", e.target.value)}
-                          placeholder="Adresse de la banque"
+                          placeholder="Ex : 44 rue Laborde, 75017 Paris"
                           className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
                         />
                       </div>

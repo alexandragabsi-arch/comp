@@ -2317,6 +2317,7 @@ export default function CreationSASUPage() {
                             <p className="text-base font-bold text-amber-800 flex items-center gap-2">
                               ⚠️ Activité réglementée détectée
                             </p>
+                            <p className="text-xs text-amber-700 italic font-semibold">Les justificatifs ci-dessous vous seront demandés à l&apos;étape &quot;Pièces justificatives&quot;.</p>
                             {answers.reglementation_description && (
                               <p className="text-sm text-amber-700">{answers.reglementation_description}</p>
                             )}
@@ -5884,6 +5885,43 @@ export default function CreationSASUPage() {
                       </label>
                       {answers.justif_domicile && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers.justif_domicile}</p>}
                     </div>
+
+                    {/* Justificatifs activité réglementée — si détectée */}
+                    {answers.est_reglementee === "oui" && answers.reglementation_justificatifs && (() => {
+                      try {
+                        const justifs = JSON.parse(answers.reglementation_justificatifs);
+                        if (justifs.length === 0) return null;
+                        return (
+                          <div className="space-y-3">
+                            <div className="bg-amber-50 border border-amber-300 rounded-xl p-4">
+                              <p className="text-sm font-bold text-amber-800 flex items-center gap-2 mb-2">⚠️ Justificatifs requis — Activité réglementée ({answers.activite_principale_desc})</p>
+                              {answers.reglementation_description && <p className="text-sm text-amber-700 mb-2">{answers.reglementation_description}</p>}
+                              {answers.reglementation_autorite && <p className="text-xs text-amber-600">Autorité compétente : {answers.reglementation_autorite}</p>}
+                            </div>
+                            {justifs.map((justif: string, idx: number) => (
+                              <div key={idx} className="bg-white border border-amber-200 rounded-xl p-5 space-y-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                                    <Shield className="w-5 h-5 text-amber-600" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-[#1E3A8A] text-sm">{justif}</p>
+                                    <p className="text-xs text-gray-500">Requis pour l&apos;exercice de votre activité réglementée</p>
+                                  </div>
+                                  {answers[`justif_reglemente_${idx}`] && <Check className="w-5 h-5 text-green-500 flex-shrink-0" />}
+                                </div>
+                                <label className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-amber-400 text-amber-700 text-sm font-medium cursor-pointer hover:bg-amber-50 transition-colors">
+                                  <Upload className="w-4 h-4" />
+                                  {answers[`justif_reglemente_${idx}`] ? "Remplacer le fichier" : "Importer le document"}
+                                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files?.[0]) setAnswer(`justif_reglemente_${idx}`, e.target.files[0].name); }} />
+                                </label>
+                                {answers[`justif_reglemente_${idx}`] && <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> {answers[`justif_reglemente_${idx}`]}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      } catch { return null; }
+                    })()}
 
                     {/* Attestation de mise à disposition / hébergement — génération auto */}
                     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">

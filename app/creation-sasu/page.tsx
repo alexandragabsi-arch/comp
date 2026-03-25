@@ -1199,7 +1199,7 @@ function shouldShowQuestion(qIndex: number, answers: Record<string, any>): boole
 
 /* ───────── Main page ───────── */
 
-type Phase = "intro" | "questions" | "brand_protection" | "micro_search" | "pricing" | "avocat_confirmation" | "post_payment";
+type Phase = "intro" | "questions" | "brand_protection" | "micro_search" | "pricing" | "avocat_confirmation" | "payment_success" | "payment_progress" | "post_payment";
 
 export default function CreationSASUPage() {
   const [phase, setPhase] = useState<Phase>("intro");
@@ -1235,8 +1235,9 @@ export default function CreationSASUPage() {
               } catch { /* ignore */ }
             }
             if (formule) setAnswer("formule", formule);
-            setPhase("post_payment");
-            setPostPage(0);
+            setAnswer("stripe_session_id", sessionId);
+            setAnswer("stripe_paid_amount", String(data.amount_total || ""));
+            setPhase("payment_success");
             // Save dossier to Supabase
             fetch("/api/dossiers", {
               method: "POST",
@@ -1520,6 +1521,137 @@ export default function CreationSASUPage() {
           "max-w-2xl"
         )}>
           <AnimatePresence mode="wait">
+
+            {/* ══════ PAIEMENT RÉUSSI ══════ */}
+            {phase === "payment_success" && (
+              <motion.div
+                key="payment-success"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-2xl mx-auto w-full"
+              >
+                <div className="bg-white rounded-2xl border border-gray-200 p-8 space-y-6 text-center">
+                  {/* Logo */}
+                  <div className="flex justify-center">
+                    <div>
+                      <div className="flex items-center gap-0.5 justify-center">
+                        <span className="text-[28px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>Legal</span>
+                        <Search className="w-[16px] h-[16px] text-[#0d1f4e] -mt-1" />
+                      </div>
+                      <div className="ml-[36px] -mt-1">
+                        <span className="text-[28px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>corners</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Check icon */}
+                  <div className="flex justify-center">
+                    <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
+                      <CheckCircle2 className="w-10 h-10 text-green-500" />
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#1E3A8A]">Paiement réussi !</h2>
+                    <p className="text-gray-500 mt-2">Votre paiement a été traité avec succès. Vous allez recevoir un email de confirmation sous peu.</p>
+                  </div>
+
+                  {/* Total */}
+                  <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+                    <span className="font-medium text-gray-700">Total :</span>
+                    <span className="text-lg font-bold text-[#1E3A8A]">
+                      {answers.stripe_paid_amount ? `${(Number(answers.stripe_paid_amount) / 100).toFixed(2)} €` : "—"}
+                    </span>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setPhase("payment_progress")}
+                      className="flex-1 py-3.5 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    >
+                      Continuer <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ══════ PROGRESSION ══════ */}
+            {phase === "payment_progress" && (
+              <motion.div
+                key="payment-progress"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-3xl mx-auto w-full space-y-8"
+              >
+                {/* Logo */}
+                <div className="flex justify-center">
+                  <div>
+                    <div className="flex items-center gap-0.5 justify-center">
+                      <span className="text-[32px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>Legal</span>
+                      <Search className="w-[18px] h-[18px] text-[#0d1f4e] -mt-1" />
+                    </div>
+                    <div className="ml-[42px] -mt-1">
+                      <span className="text-[32px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>corners</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-[#1E3A8A]">La création de <span className="text-[#2563EB]">votre SASU</span> avance bien</h2>
+                  <p className="text-gray-500 mt-2">Vous allez bientôt pouvoir compléter votre dossier juridique et finaliser la création de votre entreprise</p>
+                </div>
+
+                {/* Steps */}
+                <div className="flex items-start justify-between max-w-2xl mx-auto">
+                  {[
+                    { id: 1, label: "Informations personnelles", desc: "Création de votre compte et vérification de vos données" },
+                    { id: 2, label: "Informations sur l'entreprise", desc: "Définition des éléments essentiels de votre société" },
+                    { id: 3, label: "Paiement", desc: "Validation et règlement de votre commande" },
+                    { id: 4, label: "Dossier juridique", desc: "Constitution du dossier avec l'aide de nos experts" },
+                    { id: 5, label: "Validation", desc: "Vérification finale et envoi de votre dossier" },
+                    { id: 6, label: "Justificatifs", desc: "Téléversement et vérification de vos documents requis" },
+                    { id: 7, label: "Signature", desc: "Signature électronique de vos documents" },
+                  ].map((s, i, arr) => (
+                    <div key={s.id} className="flex flex-col items-center text-center" style={{ width: `${100 / arr.length}%` }}>
+                      <div className="relative">
+                        <div className={cn(
+                          "w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold",
+                          s.id <= 3 ? "bg-green-500 text-white" :
+                          s.id === 4 ? "bg-[#2563EB] text-white" :
+                          "bg-gray-200 text-gray-500"
+                        )}>
+                          {s.id <= 3 ? <Check className="w-5 h-5" /> : s.id}
+                        </div>
+                        {i < arr.length - 1 && (
+                          <div className={cn(
+                            "absolute top-5 left-full w-full h-0.5",
+                            s.id <= 3 ? "bg-green-500" : "bg-gray-200"
+                          )} style={{ width: "calc(100% - 4px)", marginLeft: "2px" }} />
+                        )}
+                      </div>
+                      <p className={cn("text-xs font-semibold mt-2", s.id === 4 ? "text-[#1E3A8A]" : s.id <= 3 ? "text-green-700" : "text-gray-400")}>{s.label}</p>
+                      <p className="text-[10px] text-gray-400 mt-0.5 leading-tight hidden sm:block">{s.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Continue */}
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => { setPhase("post_payment"); setPostPage(0); }}
+                    className="px-8 py-3.5 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 transition-opacity flex items-center gap-2"
+                  >
+                    Continuer <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
 
             {/* ══════ INTRO ══════ */}
             {phase === "intro" && (

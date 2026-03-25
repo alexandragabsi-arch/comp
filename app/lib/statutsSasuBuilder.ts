@@ -194,6 +194,10 @@ interface V {
 
   // Majority decisions
   majoriteDecisions: string;
+
+  // Montant numéraire (distinct from capital when apport en nature exists)
+  montantNumeraire: number;
+  montantNumeraireLetters: string;
 }
 
 function prep(a: Answers): V {
@@ -367,6 +371,8 @@ function prep(a: Answers): V {
     majoriteDecisions: a.majorite_decisions === "renforcee" ? `${a.majorite_decisions_pct || "66"} %`
       : a.majorite_decisions === "unanimite" ? "l'unanimité"
       : "la majorité simple",
+    montantNumeraire: Number(a.apport_numeraire) || Number(a.capital_social) || 1,
+    montantNumeraireLetters: numberToWords(Number(a.apport_numeraire) || Number(a.capital_social) || 1),
   };
 }
 
@@ -810,7 +816,7 @@ export function buildTitre2(v: V): string {
 
     if (v.isVersementTotal) {
       lines.push(
-        `L'Associé unique a apporté à la Société une somme de **${fmtNum(v.capital)} euros** (${v.capitalLetters} euros), à titre d'apport en numéraire, intégralement libérée lors de la constitution.`
+        `L'Associé unique a apporté à la Société une somme de **${fmtNum(v.montantNumeraire)} euros** (${v.montantNumeraireLetters} euros), à titre d'apport en numéraire, intégralement libérée lors de la constitution.`
       );
       lines.push("");
       lines.push(
@@ -818,11 +824,11 @@ export function buildTitre2(v: V): string {
       );
     } else {
       lines.push(
-        `L'Associé unique a apporté à la Société une somme de **${fmtNum(v.capital)} euros** (${v.capitalLetters} euros), à titre d'apport en numéraire.`
+        `L'Associé unique a apporté à la Société une somme de **${fmtNum(v.montantNumeraire)} euros** (${v.montantNumeraireLetters} euros), à titre d'apport en numéraire.`
       );
       lines.push("");
       lines.push(
-        `Sur cette somme, **${v.pourcentageVerse} %** ont été libérés lors de la constitution, soit la somme de **${fmtNum(Math.round(v.capital * Number(v.pourcentageVerse) / 100))} euros**, déposée sur un compte ouvert au nom de la Société en formation auprès de **${v.banqueDepot}**, en date du **${fmtDate(v.dateDepot)}**, ainsi qu'il résulte du certificat de dépôt des fonds établi par ledit établissement.`
+        `Sur cette somme, **${v.pourcentageVerse} %** ont été libérés lors de la constitution, soit la somme de **${fmtNum(Math.round(v.montantNumeraire * Number(v.pourcentageVerse) / 100))} euros**, déposée sur un compte ouvert au nom de la Société en formation auprès de **${v.banqueDepot}**, en date du **${fmtDate(v.dateDepot)}**, ainsi qu'il résulte du certificat de dépôt des fonds établi par ledit établissement.`
       );
       lines.push("");
       lines.push(

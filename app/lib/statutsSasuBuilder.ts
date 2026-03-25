@@ -839,7 +839,7 @@ export function buildTitre2(v: V): string {
       }
       lines.push("");
       lines.push(
-        `Cet engagement est consenti pour toute la durée de la Société, soit ${v.duree} ans à compter de l'immatriculation au Registre du Commerce et des Sociétés.`
+        "Cet engagement est consenti pour toute la durée pendant laquelle l'Associé unique conserve cette qualité. En cas de cession de la totalité de ses actions, l'apport en industrie prend fin de plein droit."
       );
       lines.push("");
       lines.push(

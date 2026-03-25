@@ -166,8 +166,92 @@ async function generatePDF(
     y += h + 4;
   };
 
+  // ── STATUTS COVER PAGE ──────────────────────────────────────────────────
+  if (!isDeclaration && cover.doctitle.includes("STATUTS")) {
+    // Top space
+    y = 80;
+
+    // Logo text
+    doc.setFont("times", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(...NAVY);
+    doc.text("Legal", 70, y);
+    doc.setFont("times", "normal");
+    doc.text("corners", 95, y);
+
+    y = 130;
+
+    // Navy line
+    doc.setDrawColor(...NAVY);
+    doc.setLineWidth(0.5);
+    doc.line(ML + 20, y, PW - MR - 20, y);
+    y += 15;
+
+    // Title
+    doc.setFont("times", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(...NAVY);
+    doc.text("STATUTS CONSTITUTIFS", PW / 2, y, { align: "center" });
+    y += 12;
+
+    // Subtitle italic
+    doc.setFont("times", "italic");
+    doc.setFontSize(12);
+    doc.text("Société par Actions Simplifiée Unipersonnelle", PW / 2, y, { align: "center" });
+    y += 8;
+
+    // Navy line
+    doc.line(ML + 20, y, PW - MR - 20, y);
+    y += 30;
+
+    // Meta info
+    doc.setFont("times", "normal");
+    doc.setFontSize(11);
+
+    // Extract denomination, capital, siege from cover data or body text
+    const denomMatch = bodyText.match(/Dénomination sociale\s*:\s*\*?\*?(.+?)\*?\*?\s*$/m);
+    const capitalMatch = bodyText.match(/Capital social\s*:\s*\*?\*?(.+?)\*?\*?\s*$/m);
+    const siegeMatch = bodyText.match(/Siège social\s*:\s*\*?\*?(.+?)\*?\*?\s*$/m);
+
+    const denom = denomMatch ? denomMatch[1].trim() : cover.societe || "";
+    const cap = capitalMatch ? capitalMatch[1].trim() : "";
+    const siege = siegeMatch ? siegeMatch[1].trim() : "";
+
+    doc.setFont("times", "normal");
+    doc.text("Dénomination sociale : ", PW / 2 - 30, y, { align: "right" });
+    doc.setFont("times", "bold");
+    doc.text(denom, PW / 2 - 28, y);
+    y += 8;
+
+    doc.setFont("times", "normal");
+    doc.text("Capital social : ", PW / 2 - 30, y, { align: "right" });
+    doc.setFont("times", "bold");
+    doc.text(cap, PW / 2 - 28, y);
+    y += 8;
+
+    doc.setFont("times", "normal");
+    doc.text("Siège social : ", PW / 2 - 30, y, { align: "right" });
+    doc.setFont("times", "bold");
+    doc.text(siege, PW / 2 - 28, y);
+
+    // Bottom
+    y = 250;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.line(ML, y, PW - MR, y);
+    y += 6;
+    doc.setFont("times", "italic");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("Confidentiel — LegalCorners", PW / 2, y, { align: "center" });
+
+    doc.addPage();
+    pageNum = 2;
+    y = MT;
+  }
+
   // ── COVER PAGE (acte/PV) ─────────────────────────────────────────────────
-  if (!isDeclaration) {
+  if (!isDeclaration && !cover.doctitle.includes("STATUTS")) {
     // Top bar
     doc.setFillColor(...NAVY);
     doc.rect(0, 0, PW, 5, "F");

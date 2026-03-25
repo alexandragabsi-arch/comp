@@ -6431,7 +6431,16 @@ export default function CreationSASUPage() {
                               <div className="space-y-3">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-500 mb-1">Adresse</label>
-                                  <AddressAutocomplete value={be.adresse || ""} onChange={(v) => updateBeneficiaire(idx, "adresse", v)} placeholder="Adresse complète" />
+                                  <AddressAutocomplete value={be.adresse || ""} onChange={(v) => {
+                                    const updated = [...beneficiaires];
+                                    updated[idx] = { ...updated[idx], adresse: v };
+                                    // Auto-extract CP and ville from address
+                                    const cpMatch = v.match(/\b(\d{5})\b/);
+                                    const villeMatch = v.match(/\d{5}\s+(.+?)$/);
+                                    if (cpMatch) updated[idx].code_postal = cpMatch[1];
+                                    if (villeMatch) updated[idx].ville = villeMatch[1].trim();
+                                    setAnswer("beneficiaires_effectifs", updated);
+                                  }} placeholder="Adresse complète" />
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                   <div>

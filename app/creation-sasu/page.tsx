@@ -1376,8 +1376,8 @@ export default function CreationSASUPage() {
     if (pageId === "rdv_relecture" && answers.relecture_avocat !== "oui") return true;
     // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
     if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
-    // Skip depot_capital if no numéraire (only apport en nature)
-    if (pageId === "depot_capital" && answers.formule_capital === "personnalisee" && Number(answers.apport_numeraire || 0) === 0 && Number(answers.capital_social || 0) > 0) return true;
+    // Skip depot_capital only if user explicitly set apport_numeraire to "0"
+    if (pageId === "depot_capital" && answers.apport_numeraire === "0") return true;
     // Skip reprise_depenses if default rules (no reprise in default formula)
     if (pageId === "reprise_depenses" && answers.regles_statutaires !== "personnaliser") return true;
     return false;

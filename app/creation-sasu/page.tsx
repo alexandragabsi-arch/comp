@@ -3988,7 +3988,8 @@ export default function CreationSASUPage() {
                 {/* ── Apport de l'associé unique ── */}
                 {POST_PAGES[postPage]?.id === "apport_associe" && (() => {
                   const capitalTotal = Number(answers.capital_social) || 0;
-                  const apportNum = Number(answers.apport_numeraire) || 0;
+                  const isSimplifiee = answers.formule_capital === "simplifiee" || !answers.formule_capital;
+                  const apportNum = isSimplifiee ? capitalTotal : (Number(answers.apport_numeraire) || 0);
                   const apportsNatureListe: { description: string; valeur: string; bien_type?: string }[] = answers.apports_nature_liste || [];
                   const apportNature = apportsNatureListe.reduce((s: number, a) => s + (Number(a.valeur) || 0), 0) || Number(answers.apport_nature) || 0;
                   const totalApports = apportNum + apportNature;
@@ -3996,7 +3997,7 @@ export default function CreationSASUPage() {
                   const nbActions = capitalTotal > 0 ? capitalTotal / valeurAction : 0;
                   const pctApport = capitalTotal > 0 ? Math.round((totalApports / capitalTotal) * 100) : 0;
                   const nomComplet = answers.type_associe === "morale"
-                    ? (answers.associe_denomination || "Société non renseignée")
+                    ? (answers.associe_societe_nom || answers.associe_denomination || "Société non renseignée")
                     : [answers.associe_prenom, answers.associe_nom].filter(Boolean).join(" ") || "Associé non renseigné";
 
                   return (

@@ -5125,9 +5125,393 @@ export default function CreationSASUPage() {
                           </div>
                         </motion.div>
                       )}
+
+                      {/* ── Question DGD : souhaitez-vous nommer un DGD ? (si DG nommé) ── */}
+                      {answers.nommer_dg === "oui" && (
+                        <div className="border-t border-gray-200 pt-5 space-y-3 mt-4">
+                          <p className="text-base font-bold text-[#1E3A8A]">Souhaitez-vous nommer un Directeur Général Délégué (DGD) ?</p>
+                          <p className="text-sm text-gray-500">Le DGD assiste le DG ou le Président dans la direction, avec des pouvoirs délégués. C&apos;est facultatif et rare en SASU.</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <button onClick={() => setAnswer("nommer_dgd", "oui")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", answers.nommer_dgd === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Oui</button>
+                            <button onClick={() => setAnswer("nommer_dgd", "non")} className={cn("p-4 rounded-xl border-2 text-center text-base font-semibold transition-all", (answers.nommer_dgd || "non") === "non" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Non</button>
+                          </div>
+
+                          {answers.nommer_dgd === "oui" && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4 border-l-2 border-[#7C3AED]/30 pl-4 ml-2">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                                  <select value={answers.dgd_civilite || ""} onChange={(e) => setAnswer("dgd_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                                    <option value="">Choisir</option>
+                                    <option value="M.">M.</option>
+                                    <option value="Mme">Mme</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                                  <input type="text" value={answers.dgd_nom || ""} onChange={(e) => setAnswer("dgd_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                                  <input type="text" value={answers.dgd_prenom || ""} onChange={(e) => setAnswer("dgd_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                                  <input type="date" value={answers.dgd_date_naissance || ""} onChange={(e) => setAnswer("dgd_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  {(() => {
+                                    if (!answers.dgd_date_naissance) return null;
+                                    const birth = new Date(answers.dgd_date_naissance);
+                                    const today = new Date();
+                                    let age = today.getFullYear() - birth.getFullYear();
+                                    const m = today.getMonth() - birth.getMonth();
+                                    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                                    if (age >= 18) return null;
+                                    if (age < 16) return (<div className="bg-red-50 border border-red-300 rounded-xl p-3 mt-2"><p className="text-sm font-semibold text-red-800">Un mineur de moins de 16 ans ne peut pas être DGD.</p></div>);
+                                    return (
+                                      <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 mt-2 space-y-2">
+                                        <p className="text-sm font-semibold text-amber-800">Le DGD a entre 16 et 17 ans. Il doit être mineur émancipé.</p>
+                                        <div className="flex gap-3">
+                                          <button onClick={() => setAnswer("dgd_emancipe", "oui")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold", answers.dgd_emancipe === "oui" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600")}>Oui, émancipé</button>
+                                          <button onClick={() => setAnswer("dgd_emancipe", "non")} className={cn("flex-1 py-2 rounded-xl border-2 text-sm font-semibold", answers.dgd_emancipe === "non" ? "border-red-500 bg-red-50 text-red-700" : "border-gray-200 bg-white text-gray-600")}>Non</button>
+                                        </div>
+                                        {answers.dgd_emancipe === "non" && <p className="text-sm text-red-600">Impossible.</p>}
+                                        {answers.dgd_emancipe === "oui" && <p className="text-sm text-green-700">Justificatif requis.</p>}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                                  <input type="text" value={answers.dgd_lieu_naissance || ""} onChange={(e) => setAnswer("dgd_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                                  <input type="text" value={answers.dgd_nationalite || ""} onChange={(e) => setAnswer("dgd_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                                <AddressAutocomplete value={answers.dgd_adresse || ""} onChange={(v) => setAnswer("dgd_adresse", v)} placeholder="Adresse complète" />
+                              </div>
+                              <div className="border-t border-gray-200 pt-4 space-y-3">
+                                <p className="text-base font-bold text-[#1E3A8A]">Filiation du DGD</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>
+                                    <input type="text" value={answers.dgd_pere_nom || ""} onChange={(e) => setAnswer("dgd_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom de la mère</label>
+                                    <input type="text" value={answers.dgd_mere_nom || ""} onChange={(e) => setAnswer("dgd_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="border-t border-gray-200 pt-4 space-y-3">
+                                <p className="text-base font-bold text-[#1E3A8A]">Déclaration de non-condamnation du DGD</p>
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                                  <label className="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" checked={answers.dgd_non_condamnation === "true"} onChange={(e) => setAnswer("dgd_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">Je soussigné(e) atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation ou sanction de nature à m&apos;interdire de gérer une personne morale.</span>
+                                  </label>
+                                  <label className="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" checked={answers.dgd_non_interdiction === "true"} onChange={(e) => setAnswer("dgd_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">Je soussigné(e) atteste ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer (art. L. 653-8 C. com.).</span>
+                                  </label>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
+
+                {/* ── Bénéficiaire effectif (DBE) ── */}
+                {POST_PAGES[postPage]?.id === "beneficiaire_effectif" && (() => {
+                  // Auto-populate first beneficial owner from associate data
+                  if (!answers.beneficiaires_effectifs?.length) {
+                    const isPhysique = answers.type_associe !== "morale";
+                    const firstBE = {
+                      nom: isPhysique ? (answers.associe_nom || "") : "",
+                      prenom: isPhysique ? (answers.associe_prenom || "") : "",
+                      date_naissance: isPhysique ? (answers.associe_date_naissance || "") : "",
+                      lieu_naissance: isPhysique ? (answers.associe_lieu_naissance || "") : "",
+                      code_postal_naissance: "",
+                      pays_naissance: "France",
+                      nationalite: isPhysique ? (answers.associe_nationalite || "Française") : "Française",
+                      adresse: isPhysique ? (answers.associe_adresse || "") : "",
+                      code_postal: "",
+                      ville: "",
+                      pays_residence: "France",
+                      nature_controle: ["detention_capital", "detention_votes"],
+                      modalite_controle: "directe",
+                      pct_capital: "100",
+                      pct_votes: "100",
+                      auto_detected: true,
+                    };
+                    setTimeout(() => setAnswer("beneficiaires_effectifs", [firstBE]), 0);
+                  }
+
+                  const beneficiaires: any[] = answers.beneficiaires_effectifs || [];
+
+                  const updateBeneficiaire = (index: number, field: string, value: any) => {
+                    const updated = [...beneficiaires];
+                    updated[index] = { ...updated[index], [field]: value };
+                    setAnswer("beneficiaires_effectifs", updated);
+                  };
+
+                  const toggleNatureControle = (index: number, key: string) => {
+                    const updated = [...beneficiaires];
+                    const current: string[] = updated[index].nature_controle || [];
+                    if (current.includes(key)) {
+                      updated[index] = { ...updated[index], nature_controle: current.filter((k: string) => k !== key) };
+                    } else {
+                      updated[index] = { ...updated[index], nature_controle: [...current, key] };
+                    }
+                    setAnswer("beneficiaires_effectifs", updated);
+                  };
+
+                  const addBeneficiaire = () => {
+                    setAnswer("beneficiaires_effectifs", [...beneficiaires, {
+                      nom: "", prenom: "", date_naissance: "", lieu_naissance: "",
+                      code_postal_naissance: "", pays_naissance: "France",
+                      nationalite: "Française", adresse: "", code_postal: "", ville: "",
+                      pays_residence: "France",
+                      nature_controle: [], modalite_controle: "directe",
+                      pct_capital: "", pct_votes: "", auto_detected: false,
+                    }]);
+                  };
+
+                  const removeBeneficiaire = (index: number) => {
+                    setAnswer("beneficiaires_effectifs", beneficiaires.filter((_: any, i: number) => i !== index));
+                  };
+
+                  const NATURE_OPTIONS = [
+                    { key: "detention_capital", label: "Détention de plus de 25% du capital social" },
+                    { key: "detention_votes", label: "Détention de plus de 25% des droits de vote" },
+                    { key: "controle_direction", label: "Exercice d\u2019un pouvoir de contrôle sur les organes de direction" },
+                    { key: "autre_moyen", label: "Autre moyen de contrôle" },
+                  ];
+
+                  const MODALITE_OPTIONS = [
+                    { key: "directe", label: "Directe (en son nom propre)" },
+                    { key: "indirecte", label: "Indirecte (via une ou plusieurs entités)" },
+                    { key: "conjointe", label: "Conjointe (avec d\u2019autres personnes)" },
+                  ];
+
+                  return (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Création d&apos;une SASU</h2>
+                      <p className="text-base text-gray-500">Déclaration des bénéficiaires effectifs (DBE)</p>
+                    </div>
+
+                    <AccordionItem title="Plus d&apos;informations">
+                      <div className="text-base text-gray-600 space-y-2">
+                        <p>Obligation légale depuis janvier 2017. Toute société doit déclarer les personnes physiques qui la contrôlent. Sont concernés :</p>
+                        <ul className="list-disc ml-5 space-y-1">
+                          <li>Toute personne physique détenant directement ou indirectement plus de 25% du capital ou des droits de vote</li>
+                          <li>Toute personne physique exerçant un pouvoir de contrôle sur les organes de gestion, d&apos;administration ou de direction (le Président)</li>
+                        </ul>
+                      </div>
+                    </AccordionItem>
+
+                    {/* Auto-detected beneficial owner */}
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-5 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-5 h-5 text-green-600" />
+                        <p className="text-base font-bold text-green-800">Bénéficiaire effectif détecté automatiquement</p>
+                      </div>
+                      <p className="text-sm text-green-700">L&apos;associé unique détient 100% du capital et des droits de vote.</p>
+                    </div>
+
+                    {/* Beneficial owner cards */}
+                    {beneficiaires.map((be: any, idx: number) => {
+                      const expandedKey = `be_expanded_${idx}`;
+                      const isExpanded = answers[expandedKey] !== false;
+                      return (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: idx * 0.1 }}
+                        className="border-2 border-gray-200 rounded-2xl overflow-hidden"
+                      >
+                        {/* Card header */}
+                        <button
+                          type="button"
+                          onClick={() => setAnswer(expandedKey, !isExpanded)}
+                          className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-[#2563EB]/10 flex items-center justify-center">
+                              <User className="w-5 h-5 text-[#2563EB]" />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-base font-semibold text-[#1E3A8A]">
+                                {be.prenom || be.nom ? `${be.prenom} ${be.nom}`.trim() : `Bénéficiaire ${idx + 1}`}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {be.pct_capital ? `${be.pct_capital}% capital` : ""}{be.pct_capital && be.pct_votes ? " · " : ""}{be.pct_votes ? `${be.pct_votes}% droits de vote` : ""}
+                              </p>
+                            </div>
+                            {be.auto_detected && (
+                              <span className="ml-2 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">Auto-détecté</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {!be.auto_detected && (
+                              <span
+                                role="button"
+                                onClick={(e) => { e.stopPropagation(); removeBeneficiaire(idx); }}
+                                className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </span>
+                            )}
+                            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                          </div>
+                        </button>
+
+                        {/* Card body */}
+                        {isExpanded && (
+                          <div className="p-5 space-y-5 border-t border-gray-100">
+                            {/* Identity */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Identité</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Nom</label>
+                                  <input type="text" value={be.nom || ""} onChange={(e) => updateBeneficiaire(idx, "nom", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Nom" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Prénom</label>
+                                  <input type="text" value={be.prenom || ""} onChange={(e) => updateBeneficiaire(idx, "prenom", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Prénom" />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Birth */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Naissance</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Date de naissance</label>
+                                  <input type="date" value={be.date_naissance || ""} onChange={(e) => updateBeneficiaire(idx, "date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Lieu de naissance</label>
+                                  <input type="text" value={be.lieu_naissance || ""} onChange={(e) => updateBeneficiaire(idx, "lieu_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Ville de naissance" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Code postal de naissance</label>
+                                  <input type="text" value={be.code_postal_naissance || ""} onChange={(e) => updateBeneficiaire(idx, "code_postal_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Code postal" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Pays de naissance</label>
+                                  <input type="text" value={be.pays_naissance || "France"} onChange={(e) => updateBeneficiaire(idx, "pays_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="France" />
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Nationalité</label>
+                                  <input type="text" value={be.nationalite || "Française"} onChange={(e) => updateBeneficiaire(idx, "nationalite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Française" />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Address */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Adresse de résidence</p>
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">Adresse</label>
+                                  <AddressAutocomplete value={be.adresse || ""} onChange={(v) => updateBeneficiaire(idx, "adresse", v)} placeholder="Adresse complète" />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Code postal</label>
+                                    <input type="text" value={be.code_postal || ""} onChange={(e) => updateBeneficiaire(idx, "code_postal", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Code postal" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Ville</label>
+                                    <input type="text" value={be.ville || ""} onChange={(e) => updateBeneficiaire(idx, "ville", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="Ville" />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Pays de résidence</label>
+                                    <input type="text" value={be.pays_residence || "France"} onChange={(e) => updateBeneficiaire(idx, "pays_residence", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" placeholder="France" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Nature du contrôle */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Nature du contrôle</p>
+                              <div className="space-y-2">
+                                {NATURE_OPTIONS.map((opt) => (
+                                  <label key={opt.key} className="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" checked={(be.nature_controle || []).includes(opt.key)} onChange={() => toggleNatureControle(idx, opt.key)} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">{opt.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Modalités du contrôle */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Modalités du contrôle</p>
+                              <div className="space-y-2">
+                                {MODALITE_OPTIONS.map((opt) => (
+                                  <label key={opt.key} className="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name={`modalite_${idx}`} checked={be.modalite_controle === opt.key} onChange={() => updateBeneficiaire(idx, "modalite_controle", opt.key)} className="h-4 w-4 border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                                    <span className="text-base text-gray-700">{opt.label}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Pourcentages */}
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E3A8A] mb-3">Pourcentages détenus</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">% du capital social</label>
+                                  <div className="relative">
+                                    <input type="number" min="0" max="100" value={be.pct_capital || ""} onChange={(e) => updateBeneficiaire(idx, "pct_capital", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all pr-10" placeholder="100" />
+                                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-500 mb-1">% des droits de vote</label>
+                                  <div className="relative">
+                                    <input type="number" min="0" max="100" value={be.pct_votes || ""} onChange={(e) => updateBeneficiaire(idx, "pct_votes", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all pr-10" placeholder="100" />
+                                    <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                      );
+                    })}
+
+                    {/* Add another beneficial owner */}
+                    <button
+                      type="button"
+                      onClick={addBeneficiaire}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#2563EB] hover:bg-blue-50 text-gray-500 hover:text-[#2563EB] transition-all text-base font-medium"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Ajouter un bénéficiaire effectif
+                    </button>
+                  </div>
+                  );
+                })()}
 
                 {/* ── Mandat du Président ── */}
                 {POST_PAGES[postPage]?.id === "mandat_president" && (

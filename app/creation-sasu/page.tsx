@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus, AlertTriangle, Send
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus, AlertTriangle, Send, Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DocumentPreviewPanel } from "@/components/document-preview-panel";
@@ -1406,7 +1406,15 @@ export default function CreationSASUPage() {
       <aside className="hidden md:flex flex-col w-72 bg-white border-r border-gray-100 fixed top-0 left-0 h-full z-20">
         <div className="p-6 border-b border-gray-100">
           <Link href="/">
-            <Image src="/images/logo-legal-corners.svg" alt="LegalCorners" width={140} height={36} />
+            <div>
+              <div className="flex items-center gap-0.5">
+                <span className="text-[22px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>Legal</span>
+                <Search className="w-[14px] h-[14px] text-[#0d1f4e] -mt-1" />
+              </div>
+              <div className="ml-[30px] -mt-1">
+                <span className="text-[22px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>corners</span>
+              </div>
+            </div>
           </Link>
         </div>
 

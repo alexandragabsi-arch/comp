@@ -53,6 +53,11 @@ const OPTIONS: Record<string, { name: string; amount: number; description: strin
     amount: 9480, // 79€ HT × 1.20 = 94.80€ TTC
     description: "Inscription au Répertoire des Métiers auprès de la Chambre de Métiers et de l'Artisanat",
   },
+  relecture_avocat: {
+    name: "Relecture des statuts par un avocat",
+    amount: 23880, // 199€ HT × 1.20 = 238.80€ TTC
+    description: "Relecture complète + remarques sous 24h + consultation 30 min",
+  },
   brand_france: {
     name: "Protection de marque — France (INPI)",
     amount: 32280, // 269€ HT × 1.20 = 322.80€ TTC

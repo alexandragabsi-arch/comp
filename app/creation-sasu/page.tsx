@@ -2631,8 +2631,8 @@ export default function CreationSASUPage() {
                           <label className="block text-base font-bold text-[#1E3A8A] mb-1">Activité principale</label>
                           <input
                             type="text"
-                            value={answers.activite_principale_desc || answers.sous_categorie || ""}
-                            onChange={(e) => setAnswer("activite_principale_desc", e.target.value)}
+                            value={answers.activite_principale_desc ?? answers.sous_categorie ?? ""}
+                            onChange={(e) => { setAnswer("activite_principale_desc", e.target.value); if (answers.sous_categorie) setAnswer("sous_categorie", ""); }}
                             placeholder="Ex : Soutien scolaire"
                             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all"
                           />

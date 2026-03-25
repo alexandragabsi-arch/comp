@@ -3409,16 +3409,6 @@ export default function CreationSASUPage() {
                               placeholder="Adresse complète du cabinet"
                             />
                           </div>
-                          <div>
-                            <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Numéro d&apos;inscription CNCC</label>
-                            <input
-                              type="text"
-                              value={answers.cac_numero_cncc || ""}
-                              onChange={(e) => setAnswer("cac_numero_cncc", e.target.value)}
-                              placeholder="N° CNCC"
-                              className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all"
-                            />
-                          </div>
 
                           {/* CAC suppléant */}
                           <div className="border-t border-blue-200 pt-4 space-y-3">
@@ -3438,10 +3428,6 @@ export default function CreationSASUPage() {
                                 <div>
                                   <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Adresse</label>
                                   <AddressAutocomplete value={answers.cac_suppleant_adresse || ""} onChange={(v) => setAnswer("cac_suppleant_adresse", v)} placeholder="Adresse complète" />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-semibold text-[#1E3A8A] mb-1">Numéro d&apos;inscription CNCC</label>
-                                  <input type="text" value={answers.cac_suppleant_numero_cncc || ""} onChange={(e) => setAnswer("cac_suppleant_numero_cncc", e.target.value)} placeholder="N° CNCC" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
                                 </div>
                               </div>
                             )}
@@ -6483,7 +6469,14 @@ export default function CreationSASUPage() {
 
                       <div className="space-y-2">
                         <button
-                          onClick={() => setAnswer("type_domiciliation", "domicile_dirigeant")}
+                          onClick={() => {
+                            setAnswer("type_domiciliation", "domicile_dirigeant");
+                            // Pré-remplir avec l'adresse du dirigeant
+                            const adresseDirigeant = answers.president_option === "associe"
+                              ? (answers.associe_adresse || "")
+                              : (answers.president_adresse || answers.president_rp_adresse || "");
+                            if (adresseDirigeant) setAnswer("adresse_siege", adresseDirigeant);
+                          }}
                           className={cn(
                             "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-3",
                             answers.type_domiciliation === "domicile_dirigeant" ? "border-[#2563EB] bg-blue-50" : "border-gray-200 bg-white hover:border-[#2563EB]/50"

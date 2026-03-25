@@ -6687,7 +6687,9 @@ export default function CreationSASUPage() {
                             setAnswer("type_domiciliation", "domicile_dirigeant");
                             // Pré-remplir avec l'adresse du dirigeant
                             const addr = answers.associe_adresse
+                              || answers.associe_societe_adresse
                               || answers.president_adresse
+                              || answers.president_pm_adresse
                               || answers.president_rp_adresse
                               || "";
                             if (addr) setAnswer("adresse_siege", addr);

@@ -5111,6 +5111,20 @@ export default function CreationSASUPage() {
                           <div>
                             <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
                             <DateNaissanceInput value={answers.president_rp_date_naissance || ""} onChange={(v) => setAnswer("president_rp_date_naissance", v)} />
+                            {(() => {
+                              if (!answers.president_rp_date_naissance) return null;
+                              const birth = new Date(answers.president_rp_date_naissance);
+                              const today = new Date();
+                              let age = today.getFullYear() - birth.getFullYear();
+                              const m = today.getMonth() - birth.getMonth();
+                              if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                              if (age < 18) return (
+                                <div className="bg-red-50 border border-red-300 rounded-xl p-3 mt-2">
+                                  <p className="text-sm font-semibold text-red-800">Le représentant permanent doit être majeur (18 ans minimum).</p>
+                                </div>
+                              );
+                              return null;
+                            })()}
                           </div>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -6390,7 +6404,7 @@ export default function CreationSASUPage() {
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                   <label className="block text-xs font-medium text-gray-500 mb-1">Date de naissance</label>
-                                  <input type="date" value={be.date_naissance || ""} onChange={(e) => updateBeneficiaire(idx, "date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                                  <DateNaissanceInput value={be.date_naissance || ""} onChange={(v) => updateBeneficiaire(idx, "date_naissance", v)} />
                                 </div>
                                 <div>
                                   <label className="block text-xs font-medium text-gray-500 mb-1">Lieu de naissance</label>

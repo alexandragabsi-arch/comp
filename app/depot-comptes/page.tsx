@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -19,7 +19,7 @@ import {
 import Link from "next/link";
 
 /* ───────── Constants ───────── */
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 12;
 const NAVY = "#0d1f4e";
 const BLUE = "#2563EB";
 
@@ -60,11 +60,23 @@ const DOC_ZONES: DocZone[] = [
   { key: "rapport_cac", label: "Rapport du CAC (si applicable)", required: false },
 ];
 
+/* ───────── Heure options ───────── */
+const HEURE_OPTIONS = ["9h", "9h30", "10h", "10h30", "11h", "14h", "14h30", "15h", "16h", "17h"];
+
 /* ───────── Main component ───────── */
 export default function DepotComptesPage() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [data, setData] = useState<Record<string, any>>({});
+
+  /* ── Stripe return detection ── */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      setStep(7);
+      window.history.replaceState({}, "", "/depot-comptes");
+    }
+  }, []);
 
   /* SIREN lookup state */
   const [sirenInput, setSirenInput] = useState("");
@@ -80,12 +92,26 @@ export default function DepotComptesPage() {
 
   const goNext = () => {
     setDirection(1);
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
+    setStep((s) => {
+      let next = s + 1;
+      // Skip step 8 (affectation details) if perte
+      if (next === 8 && data.type_resultat === "perte") next = 10;
+      // Skip step 9 (dividendes historique) if no dividendes
+      if (next === 9 && (!data.dividendes || parseFloat(data.dividendes) <= 0)) next = 10;
+      return Math.min(next, TOTAL_STEPS - 1);
+    });
   };
 
   const goBack = () => {
     setDirection(-1);
-    setStep((s) => Math.max(s - 1, 0));
+    setStep((s) => {
+      let prev = s - 1;
+      // Skip step 9 going back if no dividendes
+      if (prev === 9 && (!data.dividendes || parseFloat(data.dividendes) <= 0)) prev = 8;
+      // Skip step 8 going back if perte
+      if (prev === 8 && data.type_resultat === "perte") prev = 7;
+      return Math.max(prev, 0);
+    });
   };
 
   /* ── SIREN lookup ── */
@@ -537,7 +563,335 @@ export default function DepotComptesPage() {
     </div>
   );
 
-  const steps = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4, renderStep5, renderStep6];
+  /* ── Step 7: Résultat de l'exercice ── */
+  const renderStep7 = () => (
+    <div className="w-full max-w-lg space-y-8">
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] mb-2">
+          <FileText className="w-6 h-6" />
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: NAVY }}>
+          Quel est le r&eacute;sultat de l&apos;exercice ?
+        </h2>
+        <p className="text-gray-500">Indiquez si l&apos;exercice s&apos;est sold&eacute; par un b&eacute;n&eacute;fice ou une perte</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {[
+          { value: "benefice", label: "Bénéfice", emoji: "📈" },
+          { value: "perte", label: "Perte", emoji: "📉" },
+        ].map((opt) => {
+          const selected = data.type_resultat === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => updateData("type_resultat", opt.value)}
+              className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all duration-200 hover:shadow-md"
+              style={{
+                borderColor: selected ? BLUE : "#e5e7eb",
+                backgroundColor: selected ? "#eff6ff" : "white",
+              }}
+            >
+              <span className="text-3xl">{opt.emoji}</span>
+              <span className="font-semibold text-gray-900">{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-gray-700">Montant du r&eacute;sultat (&euro;)</label>
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={data.montant_resultat || ""}
+          onChange={(e) => updateData("montant_resultat", e.target.value)}
+          placeholder="0.00"
+          className={inputClass}
+        />
+      </div>
+    </div>
+  );
+
+  /* ── Step 8: Affectation du résultat ── */
+  const renderStep8 = () => {
+    const montant = parseFloat(data.montant_resultat) || 0;
+    const reserve_legale = parseFloat(data.reserve_legale) || 0;
+    const reserve_statutaire = parseFloat(data.reserve_statutaire) || 0;
+    const report_nouveau = parseFloat(data.report_nouveau) || 0;
+    const dividendes = parseFloat(data.dividendes) || 0;
+    const total = reserve_legale + reserve_statutaire + report_nouveau + dividendes;
+    const diff = +(montant - total).toFixed(2);
+
+    if (data.type_resultat === "perte") {
+      return (
+        <div className="w-full max-w-lg space-y-8">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] mb-2">
+              <FileText className="w-6 h-6" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: NAVY }}>
+              Affectation du r&eacute;sultat
+            </h2>
+          </div>
+          <div className="p-6 rounded-2xl bg-amber-50 border border-amber-200 text-center">
+            <p className="text-amber-800 font-medium">
+              La perte de {montant.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} &euro; sera affect&eacute;e au report &agrave; nouveau d&eacute;biteur.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-full max-w-lg space-y-8">
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] mb-2">
+            <FileText className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: NAVY }}>
+            Comment souhaitez-vous affecter le b&eacute;n&eacute;fice ?
+          </h2>
+          <p className="text-gray-500">
+            B&eacute;n&eacute;fice &agrave; r&eacute;partir : {montant.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} &euro;
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">R&eacute;serve l&eacute;gale (&euro;)</label>
+            <p className="text-xs text-gray-400">5% du b&eacute;n&eacute;fice jusqu&apos;&agrave; 10% du capital</p>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={data.reserve_legale || ""}
+              onChange={(e) => updateData("reserve_legale", e.target.value)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">R&eacute;serve statutaire (&euro;)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={data.reserve_statutaire || ""}
+              onChange={(e) => updateData("reserve_statutaire", e.target.value)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Report &agrave; nouveau (&euro;)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={data.report_nouveau || ""}
+              onChange={(e) => updateData("report_nouveau", e.target.value)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Dividendes distribu&eacute;s (&euro;)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={data.dividendes || ""}
+              onChange={(e) => updateData("dividendes", e.target.value)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        {/* Total indicator */}
+        <div
+          className="p-4 rounded-xl border-2 text-center transition-all"
+          style={{
+            borderColor: diff === 0 ? "#10b981" : "#f59e0b",
+            backgroundColor: diff === 0 ? "#ecfdf5" : "#fffbeb",
+          }}
+        >
+          <p className="text-sm font-medium" style={{ color: diff === 0 ? "#065f46" : "#92400e" }}>
+            Total affect&eacute; : {total.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} &euro;
+            {diff !== 0 && (
+              <span className="ml-2">
+                (reste {diff > 0 ? "+" : ""}{diff.toLocaleString("fr-FR", { minimumFractionDigits: 2 })} &euro;)
+              </span>
+            )}
+            {diff === 0 && <span className="ml-2">&mdash; Affectation compl&egrave;te</span>}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  /* ── Step 9: Dividendes historique ── */
+  const renderStep9 = () => (
+    <div className="w-full max-w-lg space-y-8">
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] mb-2">
+          <FileText className="w-6 h-6" />
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: NAVY }}>
+          Historique des dividendes des 3 derniers exercices
+        </h2>
+        <p className="text-gray-500">Ces informations sont requises pour le PV d&apos;approbation</p>
+      </div>
+
+      <div className="space-y-4">
+        {[
+          { key: "dividendes_n1", label: "Exercice N-1 (€)" },
+          { key: "dividendes_n2", label: "Exercice N-2 (€)" },
+          { key: "dividendes_n3", label: "Exercice N-3 (€)" },
+        ].map((field) => (
+          <div key={field.key} className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">{field.label}</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={data[field.key] || ""}
+              onChange={(e) => updateData(field.key, e.target.value)}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  /* ── Step 10: Assemblée générale ── */
+  const renderStep10 = () => (
+    <div className="w-full max-w-lg space-y-8">
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 text-[#2563EB] mb-2">
+          <Calendar className="w-6 h-6" />
+        </div>
+        <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: NAVY }}>
+          Informations sur l&apos;assembl&eacute;e g&eacute;n&eacute;rale
+        </h2>
+        <p className="text-gray-500">Param&egrave;tres de l&apos;AG d&apos;approbation des comptes</p>
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-700">Date de l&apos;AG</label>
+          <input
+            type="date"
+            value={data.date_ag || ""}
+            onChange={(e) => updateData("date_ag", e.target.value)}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Heure d&apos;ouverture</label>
+            <select
+              value={data.heure_ouverture || ""}
+              onChange={(e) => updateData("heure_ouverture", e.target.value)}
+              className={inputClass}
+            >
+              <option value="">Choisir</option>
+              {HEURE_OPTIONS.map((h) => (
+                <option key={h} value={h}>{h}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-gray-700">Heure de cl&ocirc;ture</label>
+            <select
+              value={data.heure_cloture || ""}
+              onChange={(e) => updateData("heure_cloture", e.target.value)}
+              className={inputClass}
+            >
+              <option value="">Choisir</option>
+              {HEURE_OPTIONS.map((h) => (
+                <option key={h} value={h}>{h}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-700">Lieu de l&apos;AG</label>
+          <input
+            type="text"
+            value={data.lieu_ag ?? data.adresse_siege ?? ""}
+            onChange={(e) => updateData("lieu_ag", e.target.value)}
+            placeholder="Adresse du lieu de l'assemblée"
+            className={inputClass}
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-gray-700">Pr&eacute;sident de s&eacute;ance</label>
+          <input
+            type="text"
+            value={data.president_seance ?? data.president_nom ?? ""}
+            onChange={(e) => updateData("president_seance", e.target.value)}
+            placeholder="Nom du président de séance"
+            className={inputClass}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── Step 11: Confirmation finale ── */
+  const renderStep11 = () => (
+    <div className="flex flex-col items-center text-center gap-8">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
+        className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center"
+      >
+        <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+      </motion.div>
+      <div className="space-y-3">
+        <h2 className="text-3xl sm:text-4xl font-bold" style={{ color: NAVY }}>
+          Votre PV d&apos;approbation des comptes a &eacute;t&eacute; g&eacute;n&eacute;r&eacute;
+        </h2>
+        <p className="text-gray-500 text-lg max-w-md mx-auto">
+          Vous pouvez t&eacute;l&eacute;charger le document ou le pr&eacute;visualiser ci-dessous.
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button
+          onClick={() => {
+            /* TODO: generateSasuDocumentDocx(buildPVAGO(data)) */
+          }}
+          className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl text-white font-semibold text-lg shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all duration-200"
+          style={{ background: `linear-gradient(135deg, ${BLUE}, #1E3A8A)` }}
+        >
+          <FileText className="w-5 h-5" /> T&eacute;l&eacute;charger le PV (.docx)
+        </button>
+        <button
+          onClick={() => updateData("show_preview", true)}
+          className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl font-semibold text-lg border-2 border-gray-200 text-gray-700 hover:border-[#2563EB] hover:text-[#2563EB] transition-all duration-200"
+        >
+          <Search className="w-5 h-5" /> Aper&ccedil;u du PV
+        </button>
+      </div>
+      <Link
+        href="/dashboard"
+        className="mt-2 text-[#2563EB] font-medium hover:underline transition-all"
+      >
+        Retour au tableau de bord
+      </Link>
+    </div>
+  );
+
+  const steps = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4, renderStep5, renderStep6, renderStep7, renderStep8, renderStep9, renderStep10, renderStep11];
 
   /* ───────── Can proceed logic ───────── */
   const canProceed = () => {
@@ -556,6 +910,21 @@ export default function DepotComptesPage() {
       }
       case 5:
         return true;
+      case 7:
+        return !!(data.type_resultat && data.montant_resultat);
+      case 8: {
+        if (data.type_resultat === "perte") return true;
+        const rl = parseFloat(data.reserve_legale) || 0;
+        const rs = parseFloat(data.reserve_statutaire) || 0;
+        const rn = parseFloat(data.report_nouveau) || 0;
+        const dv = parseFloat(data.dividendes) || 0;
+        const montant = parseFloat(data.montant_resultat) || 0;
+        return Math.abs(rl + rs + rn + dv - montant) < 0.01;
+      }
+      case 9:
+        return true;
+      case 10:
+        return !!(data.date_ag && data.heure_ouverture);
       default:
         return true;
     }

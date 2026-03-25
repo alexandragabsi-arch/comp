@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus, AlertTriangle
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus, AlertTriangle, Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DocumentPreviewPanel } from "@/components/document-preview-panel";
@@ -1307,6 +1307,7 @@ export default function CreationSASUPage() {
     { id: "date_lieu" },            // date et lieu de signature des statuts
     { id: "recapitulatif" },         // récapitulatif de toutes les informations
     { id: "justificatifs" },         // pièces justificatives à fournir
+    { id: "signature" },              // signature électronique des documents
   ];
 
   // Skip conditional pages based on answers
@@ -1338,6 +1339,7 @@ export default function CreationSASUPage() {
     phase === "pricing" || phase === "avocat_confirmation" ? 3 :
     phase === "post_payment" && POST_PAGES[postPage]?.id === "recapitulatif" ? 5 :
     phase === "post_payment" && POST_PAGES[postPage]?.id === "justificatifs" ? 6 :
+    phase === "post_payment" && POST_PAGES[postPage]?.id === "signature" ? 7 :
     4;
 
   function goNextQuestion(freshAnswers?: Record<string, string>) {
@@ -8203,6 +8205,183 @@ export default function CreationSASUPage() {
                         {answers.relecture_error && <p className="text-sm text-red-500">{answers.relecture_error}</p>}
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* ── Page: Signature électronique ── */}
+                {POST_PAGES[postPage]?.id === "signature" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Signature électronique</h2>
+                      <p className="text-gray-500 text-sm">Signez vos documents pour finaliser votre dossier</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <p className="text-base text-[#1E3A8A]">
+                        Cliquez sur <strong>&quot;Signer&quot;</strong> pour chaque document. Vous recevrez un email ou SMS avec un code de vérification. Une fois tous les documents signés, vous pourrez soumettre votre dossier.
+                      </p>
+                    </div>
+
+                    {/* Statuts — Signature qualifiée */}
+                    <div className={cn(
+                      "bg-white border-2 rounded-xl p-5 space-y-3",
+                      answers.signature_statuts_ok === "true" ? "border-green-400" : "border-[#2563EB]"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-6 h-6 text-[#2563EB]" />
+                          <div>
+                            <p className="font-bold text-[#1E3A8A]">Statuts constitutifs</p>
+                            <p className="text-xs text-gray-500">Signature qualifiée (vérification d&apos;identité)</p>
+                          </div>
+                        </div>
+                        {answers.signature_statuts_ok === "true" ? (
+                          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold"><Check className="w-3 h-3" /> Signé</span>
+                        ) : (
+                          <button
+                            onClick={async () => {
+                              setAnswer("signature_loading", "statuts");
+                              try {
+                                const { buildStatutsComplets } = await import("@/app/lib/statutsSasuBuilder");
+                                const { generateStatutsSasuDocx } = await import("@/app/lib/generateDocx");
+                                const text = buildStatutsComplets(answers);
+                                const denomination = answers.nom_societe || answers.denomination_sociale || "SASU";
+                                const blob = await generateStatutsSasuDocx(text, { denomination, capital: String(answers.capital_social || "1"), siege: answers.adresse_siege || "" });
+                                const buffer = await blob.arrayBuffer();
+                                const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+
+                                const signers = [];
+                                if (answers.type_associe !== "morale") {
+                                  signers.push({ firstName: answers.associe_prenom || "", lastName: answers.associe_nom || "", email: answers.email || "", role: "associe" });
+                                }
+                                if (answers.president_option !== "associe") {
+                                  signers.push({ firstName: answers.president_prenom || answers.president_rp_prenom || "", lastName: answers.president_nom || answers.president_rp_nom || "", email: answers.president_email || answers.email || "", role: "president" });
+                                }
+
+                                const res = await fetch("/api/creation-sasu/sign", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({
+                                    companyName: denomination,
+                                    signatureLevel: "qualified",
+                                    documents: [{ type: "statuts", contentBase64: base64, signaturePage: 1 }],
+                                    signers: signers.length > 0 ? signers : [{ firstName: "Associé", lastName: "Unique", email: answers.email || "", role: "associe" }],
+                                  }),
+                                });
+                                const data = await res.json();
+                                if (data.signatureRequestId) {
+                                  setAnswer("signature_statuts_request_id", data.signatureRequestId);
+                                  setAnswer("signature_statuts_ok", "true");
+                                } else {
+                                  setAnswer("signature_error", data.error || "Erreur lors de l'envoi pour signature");
+                                }
+                              } catch {
+                                setAnswer("signature_error", "Erreur de connexion");
+                              }
+                              setAnswer("signature_loading", "");
+                            }}
+                            disabled={answers.signature_loading === "statuts"}
+                            className="px-4 py-2 rounded-xl bg-[#2563EB] text-white text-sm font-semibold hover:bg-[#1D4ED8] disabled:opacity-50 flex items-center gap-2"
+                          >
+                            {answers.signature_loading === "statuts" ? "Envoi..." : <><PenTool className="w-3.5 h-3.5" /> Signer</>}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Annexes — Signature simple */}
+                    {[
+                      { key: "non_condamnation", label: "Déclaration de non-condamnation", icon: Shield },
+                      { key: "attestation_origine", label: "Attestation d'origine des fonds", icon: Landmark },
+                      ...(answers.type_domiciliation === "domicile_dirigeant" ? [{ key: "attestation_hebergement", label: "Attestation de domiciliation", icon: MapPin }] : []),
+                    ].map((doc) => {
+                      const DocIcon = doc.icon;
+                      const isSigned = answers[`signature_${doc.key}_ok`] === "true";
+                      return (
+                        <div key={doc.key} className={cn(
+                          "bg-white border-2 rounded-xl p-5",
+                          isSigned ? "border-green-400" : "border-gray-200"
+                        )}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <DocIcon className="w-5 h-5 text-gray-500" />
+                              <div>
+                                <p className="font-semibold text-[#1E3A8A] text-sm">{doc.label}</p>
+                                <p className="text-xs text-gray-400">Signature simple</p>
+                              </div>
+                            </div>
+                            {isSigned ? (
+                              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold"><Check className="w-3 h-3" /> Signé</span>
+                            ) : (
+                              <button
+                                onClick={() => setAnswer(`signature_${doc.key}_ok`, "true")}
+                                className="px-4 py-2 rounded-xl border-2 border-[#2563EB] text-[#2563EB] text-sm font-semibold hover:bg-blue-50 flex items-center gap-2"
+                              >
+                                <PenTool className="w-3.5 h-3.5" /> Signer
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {answers.signature_error && (
+                      <p className="text-sm text-red-500">{answers.signature_error}</p>
+                    )}
+
+                    {/* Bouton final — Soumettre */}
+                    <div className="pt-4">
+                      <button
+                        onClick={async () => {
+                          setAnswer("submit_loading", "oui");
+                          try {
+                            const res = await fetch("/api/creation-sasu/inpi", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ answers }),
+                            });
+                            const data = await res.json();
+                            if (data.dossierId) {
+                              setAnswer("dossier_id", data.dossierId);
+                              setAnswer("dossier_submitted", "true");
+                            } else {
+                              setAnswer("submit_error", data.error || "Erreur lors de la soumission");
+                            }
+                          } catch {
+                            setAnswer("submit_error", "Erreur de connexion");
+                          }
+                          setAnswer("submit_loading", "");
+                        }}
+                        disabled={
+                          answers.signature_statuts_ok !== "true" ||
+                          answers.submit_loading === "oui" ||
+                          answers.dossier_submitted === "true"
+                        }
+                        className="w-full py-4 rounded-xl bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] text-white font-bold text-lg hover:opacity-90 disabled:opacity-40 transition-all flex items-center justify-center gap-3"
+                      >
+                        {answers.dossier_submitted === "true" ? (
+                          <><Check className="w-5 h-5" /> Dossier soumis avec succès !</>
+                        ) : answers.submit_loading === "oui" ? (
+                          "Soumission en cours..."
+                        ) : (
+                          <><Send className="w-5 h-5" /> Valider et soumettre mon dossier</>
+                        )}
+                      </button>
+                      {answers.signature_statuts_ok !== "true" && (
+                        <p className="text-xs text-gray-400 text-center mt-2">Signez tous les documents pour activer ce bouton</p>
+                      )}
+                      {answers.submit_error && (
+                        <p className="text-sm text-red-500 text-center mt-2">{answers.submit_error}</p>
+                      )}
+                      {answers.dossier_submitted === "true" && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-5 mt-4 text-center space-y-2">
+                          <CheckCircle2 className="w-10 h-10 text-green-500 mx-auto" />
+                          <p className="font-bold text-green-800 text-lg">Votre dossier a été transmis !</p>
+                          <p className="text-sm text-green-700">Vous recevrez votre Kbis sous 3 à 5 jours ouvrés. Suivez l&apos;avancement dans votre espace client.</p>
+                          {answers.dossier_id && <p className="text-xs text-gray-500">N° de dossier : {answers.dossier_id}</p>}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

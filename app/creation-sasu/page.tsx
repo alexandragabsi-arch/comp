@@ -4714,6 +4714,79 @@ export default function CreationSASUPage() {
                       </button>
                     )}
 
+                    {/* RP du président quand associé = PM */}
+                    {answers.president_option === "associe" && answers.type_associe === "morale" && (
+                      <div className="border-2 border-[#2563EB]/30 rounded-xl p-5 space-y-4">
+                        <h4 className="text-base font-bold text-[#1E3A8A]">Représentant permanent de {answers.associe_societe_nom || "la société"} en qualité de Président</h4>
+                        <p className="text-sm text-gray-600">La société étant nommée Président, elle doit désigner une <strong>personne physique</strong> comme représentant permanent. Ses informations seront déclarées au greffe.</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Civilité</label>
+                            <select value={answers.president_rp_civilite || ""} onChange={(e) => setAnswer("president_rp_civilite", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-sm text-gray-800 bg-white transition-all">
+                              <option value="">Choisir</option>
+                              <option value="M.">M.</option>
+                              <option value="Mme">Mme</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                            <input type="text" value={answers.president_rp_nom || ""} onChange={(e) => setAnswer("president_rp_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                            <input type="text" value={answers.president_rp_prenom || ""} onChange={(e) => setAnswer("president_rp_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Date de naissance</label>
+                            <input type="date" value={answers.president_rp_date_naissance || ""} onChange={(e) => setAnswer("president_rp_date_naissance", e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Lieu de naissance</label>
+                            <input type="text" value={answers.president_rp_lieu_naissance || ""} onChange={(e) => setAnswer("president_rp_lieu_naissance", e.target.value)} placeholder="Ville" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nationalité</label>
+                            <input type="text" value={answers.president_rp_nationalite || ""} onChange={(e) => setAnswer("president_rp_nationalite", e.target.value)} placeholder="Ex : Française" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Adresse personnelle</label>
+                          <AddressAutocomplete value={answers.president_rp_adresse || ""} onChange={(v) => setAnswer("president_rp_adresse", v)} placeholder="Adresse complète" />
+                        </div>
+
+                        <p className="text-base font-bold text-[#1E3A8A] pt-2">Informations sur les parents du représentant permanent</p>
+                        <p className="text-xs text-gray-500">Requis par le greffe pour l&apos;immatriculation</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom du père</label>
+                            <input type="text" value={answers.president_rp_pere_nom || ""} onChange={(e) => setAnswer("president_rp_pere_nom", e.target.value)} placeholder="Nom et prénom du père" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                          <div>
+                            <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom et prénom de la mère</label>
+                            <input type="text" value={answers.president_rp_mere_nom || ""} onChange={(e) => setAnswer("president_rp_mere_nom", e.target.value)} placeholder="Nom et prénom de la mère" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                          </div>
+                        </div>
+
+                        <p className="text-base font-bold text-[#1E3A8A] pt-2">Attestation sur l&apos;honneur</p>
+                        <p className="text-xs text-gray-500">Le greffe exige que chaque dirigeant confirme n&apos;avoir jamais été interdit de gérer une société</p>
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 space-y-3">
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" checked={answers.president_rp_non_condamnation === "true"} onChange={(e) => setAnswer("president_rp_non_condamnation", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                            <span className="text-base text-gray-700">J&apos;atteste sur l&apos;honneur ne pas avoir fait l&apos;objet d&apos;une condamnation pénale ou d&apos;une sanction de nature à m&apos;interdire de gérer une personne morale.</span>
+                          </label>
+                          <label className="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" checked={answers.president_rp_non_interdiction === "true"} onChange={(e) => setAnswer("president_rp_non_interdiction", e.target.checked ? "true" : "")} className="mt-1 h-4 w-4 rounded border-gray-300 text-[#2563EB] focus:ring-[#2563EB]" />
+                            <span className="text-base text-gray-700">J&apos;atteste ne pas être frappé(e) d&apos;une mesure d&apos;interdiction de gérer (art. L. 653-8 C. com.).</span>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Formulaire tiers */}
                     {answers.president_option === "distinct" && (
                       <motion.div
@@ -5518,8 +5591,21 @@ export default function CreationSASUPage() {
                                 <AddressAutocomplete value={answers.dgd_adresse || ""} onChange={(v) => setAnswer("dgd_adresse", v)} placeholder="Adresse complète" />
                               </div>
                               <div className="border-t border-gray-200 pt-4 space-y-3">
+                                {/* Pouvoirs DGD */}
+                                <p className="text-base font-bold text-[#1E3A8A]">Pouvoirs du DGD</p>
+                                <div className="space-y-2">
+                                  <button onClick={() => setAnswer("dgd_pouvoirs", "interne")} className={cn("w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all", (answers.dgd_pouvoirs || "interne") === "interne" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>
+                                    Direction interne uniquement
+                                    <span className="block text-sm font-normal text-gray-500 mt-1">Assiste le DG/Président en interne, sans représentation externe</span>
+                                  </button>
+                                  <button onClick={() => setAnswer("dgd_pouvoirs", "representation")} className={cn("w-full p-4 rounded-xl border-2 text-left text-base font-semibold transition-all", answers.dgd_pouvoirs === "representation" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>
+                                    Direction interne + représentation externe
+                                    <span className="block text-sm font-normal text-gray-500 mt-1">Peut engager la société vis-à-vis des tiers dans la limite des pouvoirs délégués</span>
+                                  </button>
+                                </div>
+
                                 {/* Durée du mandat DGD */}
-                                <p className="text-base font-bold text-[#1E3A8A]">Durée du mandat du DGD</p>
+                                <p className="text-base font-bold text-[#1E3A8A] pt-3">Durée du mandat du DGD</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   <button onClick={() => setAnswer("dgd_duree_mandat", "indeterminee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", (answers.dgd_duree_mandat || "indeterminee") === "indeterminee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Indéterminée</button>
                                   <button onClick={() => setAnswer("dgd_duree_mandat", "determinee")} className={cn("p-3 rounded-xl border-2 text-base font-medium transition-all", answers.dgd_duree_mandat === "determinee" ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50")}>Déterminée</button>

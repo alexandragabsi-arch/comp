@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1207,6 +1207,17 @@ export default function CreationSASUPage() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [postPage, setPostPage] = useState(0); // for post-payment pages
 
+  // Handle Stripe return
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      setPhase("post_payment");
+      setPostPage(0);
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setAnswer = (id: string, val: any) =>
     setAnswers((prev) => ({ ...prev, [id]: val }));
@@ -1732,19 +1743,37 @@ export default function CreationSASUPage() {
                     Retour
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (answers.formule === "avocat") {
                         setPhase("avocat_confirmation");
-                      } else {
-                        setPhase("post_payment");
-                        setPostPage(0);
+                        return;
+                      }
+                      // Redirect to Stripe checkout
+                      setAnswer("stripe_loading", "oui");
+                      try {
+                        const res = await fetch("/api/stripe/checkout-creation-sasu", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ formule: answers.formule }),
+                        });
+                        const data = await res.json();
+                        if (data.url) {
+                          window.location.href = data.url;
+                        } else {
+                          setAnswer("stripe_error", data.error || "Erreur lors du paiement");
+                          setAnswer("stripe_loading", "");
+                        }
+                      } catch {
+                        setAnswer("stripe_error", "Erreur de connexion au service de paiement");
+                        setAnswer("stripe_loading", "");
                       }
                     }}
-                    disabled={!answers.formule}
+                    disabled={!answers.formule || answers.stripe_loading === "oui"}
                     className="flex-1 py-3 rounded-xl bg-[#1E3A8A] text-white font-semibold text-base hover:opacity-90 disabled:opacity-30 flex items-center justify-center gap-2"
                   >
-                    Continuer <ArrowRight className="w-4 h-4" />
+                    {answers.stripe_loading === "oui" ? "Redirection en cours..." : <>Payer et continuer <ArrowRight className="w-4 h-4" /></>}
                   </button>
+                  {answers.stripe_error && <p className="text-sm text-red-500 text-center">{answers.stripe_error}</p>}
                 </div>
               </motion.div>
             )}

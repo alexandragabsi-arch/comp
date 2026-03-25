@@ -1203,6 +1203,7 @@ type Phase = "intro" | "questions" | "brand_protection" | "micro_search" | "pric
 
 export default function CreationSASUPage() {
   const [phase, setPhase] = useState<Phase>("intro");
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [currentQ, setCurrentQ] = useState(0); // index into activeQuestions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [answers, setAnswers] = useState<Record<string, any>>({});
@@ -1217,6 +1218,7 @@ export default function CreationSASUPage() {
     const stateKey = params.get("state");
 
     if (payment === "success" && sessionId) {
+      setVerifyingPayment(true);
       // Verify payment server-side
       fetch(`/api/stripe/verify?session_id=${sessionId}`)
         .then((r) => r.json())
@@ -1237,6 +1239,7 @@ export default function CreationSASUPage() {
             if (formule) setAnswer("formule", formule);
             setAnswer("stripe_session_id", sessionId);
             setAnswer("stripe_paid_amount", String(data.amount_total || ""));
+            setVerifyingPayment(false);
             setPhase("payment_success");
             // Save dossier to Supabase
             fetch("/api/dossiers", {
@@ -1479,6 +1482,24 @@ export default function CreationSASUPage() {
           </div>
         </div>
       </aside>
+
+      {/* ── Loading screen during Stripe verification ── */}
+      {verifyingPayment && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center gap-4">
+          <div>
+            <div className="flex items-center gap-0.5 justify-center">
+              <span className="text-[28px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>Legal</span>
+              <Search className="w-[16px] h-[16px] text-[#0d1f4e] -mt-1" />
+            </div>
+            <div className="ml-[36px] -mt-1">
+              <span className="text-[28px] font-bold text-[#0d1f4e] leading-none" style={{ fontFamily: "Georgia, serif" }}>corners</span>
+            </div>
+          </div>
+          <svg className="animate-spin w-8 h-8 text-[#2563EB]" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+          <p className="text-lg font-semibold text-[#1E3A8A]">Vérification du paiement...</p>
+          <p className="text-sm text-gray-400">Merci de patienter quelques instants</p>
+        </div>
+      )}
 
       {/* ── Mobile progress bar (visible only on mobile) ── */}
       <div className="md:hidden sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3">

@@ -6291,8 +6291,8 @@ export default function CreationSASUPage() {
                       <div className="flex gap-3">
                         <button
                           onClick={async () => {
-                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
-                            const text = buildStatutsSASU(answers);
+                            const { buildStatutsComplets } = await import("@/app/lib/statutsSasuBuilder");
+                            const text = buildStatutsComplets(answers);
                             setAnswer("statuts_preview", text);
                           }}
                           className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white text-[#1E3A8A] font-semibold text-sm hover:bg-blue-50 transition-colors"
@@ -6302,14 +6302,19 @@ export default function CreationSASUPage() {
                         </button>
                         <button
                           onClick={async () => {
-                            const { buildStatutsSASU } = await import("@/app/lib/generateSasuDocuments");
-                            const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
-                            const text = buildStatutsSASU(answers);
-                            const blob = await generateSasuDocumentDocx(text);
+                            const { buildStatutsComplets } = await import("@/app/lib/statutsSasuBuilder");
+                            const { generateStatutsSasuDocx } = await import("@/app/lib/generateDocx");
+                            const text = buildStatutsComplets(answers);
+                            const denomination = answers.nom_societe || answers.denomination_sociale || "SASU";
+                            const blob = await generateStatutsSasuDocx(text, {
+                              denomination,
+                              capital: String(answers.capital_social || "1"),
+                              siege: answers.adresse_siege || "[ADRESSE]",
+                            });
                             const url = URL.createObjectURL(blob);
                             const a = document.createElement("a");
                             a.href = url;
-                            a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
+                            a.download = `statuts-${denomination.toLowerCase().replace(/\s+/g, "-")}.docx`;
                             a.click();
                             URL.revokeObjectURL(url);
                           }}
@@ -6336,12 +6341,17 @@ export default function CreationSASUPage() {
                             <button onClick={() => setAnswer("statuts_preview", "")} className="px-5 py-2.5 rounded-xl border-2 border-gray-200 text-gray-600 font-semibold text-sm hover:bg-gray-50">Fermer</button>
                             <button
                               onClick={async () => {
-                                const { generateSasuDocumentDocx } = await import("@/app/lib/generateDocx");
-                                const blob = await generateSasuDocumentDocx(answers.statuts_preview || "");
+                                const { generateStatutsSasuDocx } = await import("@/app/lib/generateDocx");
+                                const denomination = answers.nom_societe || answers.denomination_sociale || "SASU";
+                                const blob = await generateStatutsSasuDocx(answers.statuts_preview || "", {
+                                  denomination,
+                                  capital: String(answers.capital_social || "1"),
+                                  siege: answers.adresse_siege || "[ADRESSE]",
+                                });
                                 const url = URL.createObjectURL(blob);
                                 const a = document.createElement("a");
                                 a.href = url;
-                                a.download = `statuts-${(answers.nom_societe || "SASU").toLowerCase().replace(/\s+/g, "-")}.docx`;
+                                a.download = `statuts-${denomination.toLowerCase().replace(/\s+/g, "-")}.docx`;
                                 a.click();
                                 URL.revokeObjectURL(url);
                               }}

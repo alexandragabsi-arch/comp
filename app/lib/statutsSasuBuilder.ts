@@ -947,8 +947,649 @@ export function buildTitre2(v: V): string {
 
   return lines.join("\n");
 }
-export function buildTitre3(v: V): string { return ""; }
-export function buildTitre4(v: V): string { return ""; }
+export function buildTitre3(v: V): string {
+  const lines: string[] = [];
+
+  lines.push("## TITRE 3 — ACTIONS");
+  lines.push("");
+
+  // ── Article 10 — Forme des actions ──
+  lines.push("### Article 10 — Forme des actions");
+  lines.push("");
+  lines.push(
+    "Les actions émises par la Société sont obligatoirement nominatives. Elles donnent lieu à une inscription en compte individuel dans les conditions et selon les modalités prévues par les dispositions législatives et réglementaires en vigueur."
+  );
+  lines.push("");
+  lines.push(
+    "La Société tient un registre des mouvements de titres dans lequel sont inscrits, dans l'ordre chronologique, l'ensemble des mouvements ayant affecté le capital social et les actions le composant."
+  );
+  lines.push("");
+  lines.push(
+    "La propriété des actions résulte de leur inscription en compte au nom du ou des titulaires dans le registre des mouvements de titres tenu par la Société, conformément aux dispositions de l'article R. 228-8 du Code de commerce."
+  );
+  lines.push("");
+  lines.push(
+    "Il pourra être créé, par décision de l'associé unique ou, en cas de pluralité d'associés, par décision collective des associés statuant dans les conditions prévues par la loi, des actions de préférence, avec ou sans droit de vote, assorties de droits particuliers de toute nature, à titre temporaire ou permanent, dans les conditions fixées par les articles L. 228-11 et suivants du Code de commerce."
+  );
+  lines.push("");
+
+  // ── Article 11 — Droits et obligations attachés aux actions ──
+  lines.push("### Article 11 — Droits et obligations attachés aux actions");
+  lines.push("");
+  lines.push(
+    "Chaque action donne droit, dans les bénéfices, l'actif net et le boni de liquidation, à une part proportionnelle à la quotité du capital qu'elle représente."
+  );
+  lines.push("");
+  lines.push(
+    "Chaque action donne droit à une voix lors de la prise de décisions par l'associé unique ou, en cas de pluralité d'associés, lors des consultations et votes en assemblée générale."
+  );
+  lines.push("");
+  lines.push(
+    "Les associés ne supportent les pertes qu'à concurrence de leurs apports. Les droits et obligations attachés à l'action suivent le titre dans quelque main qu'il passe."
+  );
+  lines.push("");
+  lines.push(
+    "La propriété d'une action emporte de plein droit adhésion aux statuts de la Société et aux décisions régulièrement prises par l'associé unique ou, en cas de pluralité d'associés, par la collectivité des associés."
+  );
+  lines.push("");
+  lines.push(
+    "Les héritiers, créanciers, ayants droit ou autres représentants d'un associé ne peuvent requérir l'apposition de scellés sur les biens et valeurs de la Société, ni en demander le partage ou la licitation. Ils ne peuvent en aucun cas s'immiscer dans les actes de la gestion sociale."
+  );
+  lines.push("");
+  lines.push("**Démembrement de propriété**");
+  lines.push("");
+  lines.push(
+    "En cas de démembrement de la propriété des actions, le droit de vote attaché aux actions est exercé de la manière suivante :"
+  );
+  lines.push("");
+  lines.push(
+    "- L'usufruitier exerce le droit de vote pour toutes les décisions relatives à l'affectation et à la distribution des bénéfices, ainsi que pour toute décision portant sur la distribution de réserves ou de primes ;"
+  );
+  lines.push(
+    "- Le nu-propriétaire exerce le droit de vote pour toutes les autres décisions, et notamment pour toutes les décisions emportant modification des statuts, y compris les augmentations et réductions de capital, les fusions, scissions et apports partiels d'actif, ainsi que la dissolution de la Société."
+  );
+  lines.push("");
+  lines.push(
+    "Les dividendes et toutes distributions de bénéfices reviennent à l'usufruitier, sauf convention contraire entre l'usufruitier et le nu-propriétaire dûment notifiée à la Société."
+  );
+  lines.push("");
+  lines.push(
+    "L'usufruitier et le nu-propriétaire doivent porter à la connaissance de la Société tout démembrement de propriété affectant les actions, en précisant l'identité du nu-propriétaire et de l'usufruitier ainsi que la répartition des droits de vote entre eux."
+  );
+  lines.push("");
+
+  // ── Article 12 — Libération des actions ──
+  lines.push("### Article 12 — Libération des actions");
+  lines.push("");
+  lines.push(
+    "Les actions de numéraire doivent être libérées, lors de leur souscription, de la moitié au moins de leur valeur nominale, conformément aux dispositions de l'article L. 227-1 du Code de commerce renvoyant à l'article L. 225-3 du même code."
+  );
+  lines.push("");
+  lines.push(
+    "La prime d'émission, s'il en existe, doit être intégralement libérée lors de la souscription."
+  );
+  lines.push("");
+  lines.push(
+    "La libération du surplus doit intervenir en une ou plusieurs fois, dans un délai maximum de cinq (5) ans à compter de l'immatriculation de la Société au Registre du commerce et des sociétés, ou, s'il s'agit d'une augmentation de capital, dans un délai de cinq (5) ans à compter du jour où l'augmentation de capital est devenue définitive, sur appel du Président, dans les proportions et aux dates qu'il fixera."
+  );
+  lines.push("");
+  lines.push(
+    "Les appels de fonds sont portés à la connaissance de l'associé unique ou, en cas de pluralité d'associés, de chaque associé, par lettre recommandée avec demande d'avis de réception expédiée quinze (15) jours au moins avant la date fixée pour chaque versement."
+  );
+  lines.push("");
+  lines.push(
+    "Tout retard dans le versement des sommes dues sur le montant non libéré des actions entraîne, de plein droit et sans qu'il soit besoin de procéder à une formalité quelconque, le paiement d'un intérêt au taux légal, majoré de deux (2) points, calculé à compter de la date d'exigibilité, sans préjudice de l'action personnelle que la Société peut exercer contre l'associé défaillant et des mesures d'exécution forcée prévues par la loi."
+  );
+  lines.push("");
+
+  // ── Article 13 — Transmissions des actions ──
+  lines.push("### Article 13 — Transmissions des actions");
+  lines.push("");
+
+  if (v.cessionActions === "libre") {
+    lines.push(
+      "Tant que la Société ne comporte qu'un associé unique, celui-ci peut librement céder tout ou partie de ses actions à toute personne de son choix."
+    );
+    lines.push("");
+    lines.push(
+      "En cas de pluralité d'associés, les cessions d'actions seront libres entre associés et au profit de tiers, sans qu'il soit nécessaire de recueillir un quelconque agrément."
+    );
+    lines.push("");
+    lines.push(
+      "Toute cession d'actions devra être constatée par un acte sous seing privé ou authentique, et ne sera opposable à la Société qu'après lui avoir été signifiée ou après son acceptation dans un acte authentique, ou par le transfert sur les registres de la Société, conformément aux dispositions de l'article L. 228-1 du Code de commerce."
+    );
+    lines.push("");
+    lines.push(
+      "Elle n'est opposable aux tiers qu'après avoir fait l'objet d'une publicité dont les conditions sont fixées par décret en Conseil d'État."
+    );
+  } else if (v.cessionActions === "agrement") {
+    lines.push(
+      "Tant que la Société ne comporte qu'un associé unique, celui-ci peut librement céder tout ou partie de ses actions à toute personne de son choix."
+    );
+    lines.push("");
+    lines.push(
+      "Toute cession d'actions devra être constatée par un acte sous seing privé ou authentique, et ne sera opposable à la Société qu'après lui avoir été signifiée ou après son acceptation dans un acte authentique, ou par le transfert sur les registres de la Société, conformément aux dispositions de l'article L. 228-1 du Code de commerce. Elle n'est opposable aux tiers qu'après avoir fait l'objet d'une publicité dont les conditions sont fixées par décret en Conseil d'État."
+    );
+    lines.push("");
+    lines.push("**Clause d'agrément**");
+    lines.push("");
+    lines.push(
+      `En cas de pluralité d'associés, toute cession d'actions à un tiers non associé, à quelque titre que ce soit, est soumise à l'agrément préalable des associés statuant à la majorité de ${v.majoriteAgrement} % des voix des associés disposant du droit de vote.`
+    );
+    lines.push("");
+    lines.push(
+      "Le projet de cession est notifié à la Société par lettre recommandée avec demande d'avis de réception ou par acte extrajudiciaire adressé au Président, indiquant les nom, prénom, adresse du cessionnaire proposé, le nombre d'actions dont la cession est envisagée et le prix offert."
+    );
+    lines.push("");
+    lines.push(
+      "La décision d'agrément ou de refus d'agrément est notifiée au cédant par lettre recommandée avec demande d'avis de réception dans un délai de trois (3) mois à compter de la réception de la notification du projet de cession. À défaut de réponse dans ce délai, l'agrément est réputé acquis."
+    );
+    lines.push("");
+    lines.push(
+      "En cas de refus d'agrément, les associés sont tenus, dans un délai de trois (3) mois à compter de la notification du refus, d'acquérir ou de faire acquérir les actions dont la cession était projetée, à un prix fixé d'un commun accord entre les parties ou, à défaut, déterminé par un expert désigné conformément aux dispositions de l'article 1843-4 du Code civil, soit par les parties, soit par ordonnance du Président du tribunal de commerce statuant en référé."
+    );
+    lines.push("");
+    lines.push(
+      "Si, à l'expiration du délai de trois (3) mois ci-dessus, le rachat n'est pas réalisé, l'agrément est réputé acquis, sauf si le cédant renonce à la cession envisagée."
+    );
+    lines.push("");
+    lines.push(
+      "Les cessions entre associés et les transmissions par voie de succession ou de liquidation de communauté de biens entre époux sont libres."
+    );
+  } else if (v.cessionActions === "heritiers") {
+    lines.push(
+      "Tant que la Société ne comporte qu'un associé unique, celui-ci peut librement céder tout ou partie de ses actions à toute personne de son choix."
+    );
+    lines.push("");
+    lines.push(
+      "Toute cession d'actions devra être constatée par un acte sous seing privé ou authentique, et ne sera opposable à la Société qu'après lui avoir été signifiée ou après son acceptation dans un acte authentique, ou par le transfert sur les registres de la Société, conformément aux dispositions de l'article L. 228-1 du Code de commerce. Elle n'est opposable aux tiers qu'après avoir fait l'objet d'une publicité dont les conditions sont fixées par décret en Conseil d'État."
+    );
+    lines.push("");
+
+    const personnes: string[] = [];
+    if (v.transmissionHeritiers.includes("conjoint")) personnes.push("le conjoint de l'associé cédant");
+    if (v.transmissionHeritiers.includes("descendants")) personnes.push("les descendants de l'associé cédant");
+    if (v.transmissionHeritiers.includes("ascendants")) personnes.push("les ascendants de l'associé cédant");
+
+    if (personnes.length > 0) {
+      lines.push(
+        `**Cessions libres** — En cas de pluralité d'associés, les cessions d'actions réalisées au profit des personnes suivantes sont libres et ne sont pas soumises à agrément : ${personnes.join(", ")}.`
+      );
+      lines.push("");
+      lines.push(
+        "Les cessions entre associés sont également libres."
+      );
+      lines.push("");
+    }
+
+    lines.push("**Clause d'agrément**");
+    lines.push("");
+    lines.push(
+      `En cas de pluralité d'associés, toute cession d'actions à un tiers non visé ci-dessus est soumise à l'agrément préalable des associés statuant à la majorité de ${v.majoriteAgrement} % des voix des associés disposant du droit de vote.`
+    );
+    lines.push("");
+    lines.push(
+      "Le projet de cession est notifié à la Société par lettre recommandée avec demande d'avis de réception ou par acte extrajudiciaire adressé au Président, indiquant les nom, prénom, adresse du cessionnaire proposé, le nombre d'actions dont la cession est envisagée et le prix offert."
+    );
+    lines.push("");
+    lines.push(
+      "La décision d'agrément ou de refus d'agrément est notifiée au cédant par lettre recommandée avec demande d'avis de réception dans un délai de trois (3) mois à compter de la réception de la notification du projet de cession. À défaut de réponse dans ce délai, l'agrément est réputé acquis."
+    );
+    lines.push("");
+    lines.push(
+      "En cas de refus d'agrément, les associés sont tenus, dans un délai de trois (3) mois à compter de la notification du refus, d'acquérir ou de faire acquérir les actions dont la cession était projetée, à un prix fixé d'un commun accord entre les parties ou, à défaut, déterminé par un expert désigné conformément aux dispositions de l'article 1843-4 du Code civil, soit par les parties, soit par ordonnance du Président du tribunal de commerce statuant en référé."
+    );
+    lines.push("");
+    lines.push(
+      "Si, à l'expiration du délai de trois (3) mois ci-dessus, le rachat n'est pas réalisé, l'agrément est réputé acquis, sauf si le cédant renonce à la cession envisagée."
+    );
+  }
+
+  lines.push("");
+
+  if (v.pacteDutreil) {
+    lines.push("**Engagement de conservation — Pacte Dutreil**");
+    lines.push("");
+    lines.push(
+      `Conformément aux dispositions de l'article 787 B du Code général des impôts, l'associé unique s'engage à conserver l'intégralité de ses actions pendant une durée minimale de ${v.pacteDutreilDuree} ans à compter de la date d'enregistrement de l'engagement de conservation, dans le cadre du dispositif dit « Pacte Dutreil ».`
+    );
+    lines.push("");
+    lines.push(
+      "Cet engagement de conservation porte sur au moins 34 % des droits financiers et des droits de vote attachés aux actions de la Société. L'associé unique exercera, ou l'un de ses héritiers ou donataires exercera, une fonction de direction effective dans la Société, au sens de l'article 885 O bis, 1° du Code général des impôts, pendant toute la durée de l'engagement collectif de conservation et pendant les trois (3) années suivant la date de la transmission."
+    );
+    lines.push("");
+    lines.push(
+      "En cas de cession d'actions pendant la durée de l'engagement de conservation, le cédant s'engage à en informer immédiatement la Société et l'administration fiscale, et reconnaît que la remise en cause de l'engagement de conservation entraînera la déchéance du régime de faveur prévu par l'article 787 B du Code général des impôts."
+    );
+    lines.push("");
+  }
+
+  // ── Article 14 — Location d'actions ──
+  lines.push("### Article 14 — Location d'actions");
+  lines.push("");
+  lines.push(
+    "Conformément aux dispositions de l'article L. 239-2 du Code de commerce, les actions de la Société peuvent faire l'objet d'une location au profit de toute personne physique ou morale."
+  );
+  lines.push("");
+  lines.push(
+    "Le contrat de location d'actions est constaté par un acte écrit enregistré, comportant les mentions obligatoires prévues par les dispositions réglementaires en vigueur."
+  );
+  lines.push("");
+  lines.push(
+    "Pendant la durée de la location, le droit de vote attaché aux actions louées est exercé de la manière suivante :"
+  );
+  lines.push("");
+  lines.push(
+    "- Le locataire exerce le droit de vote pour toutes les décisions relevant des décisions ordinaires, et notamment l'approbation des comptes annuels et l'affectation du résultat ;"
+  );
+  lines.push(
+    "- Le bailleur conserve le droit de vote pour toutes les décisions emportant modification des statuts, y compris les augmentations et réductions de capital, les fusions, scissions, apports partiels d'actif, ainsi que la dissolution de la Société."
+  );
+  lines.push("");
+  lines.push(
+    "Les dividendes et toutes distributions de bénéfices décidées pendant la durée de la location reviennent au locataire, sauf convention contraire entre le bailleur et le locataire."
+  );
+  lines.push("");
+  lines.push(
+    "La sous-location d'actions est interdite. Toute sous-location consentie en violation de la présente clause est nulle et non avenue."
+  );
+  lines.push("");
+  lines.push(
+    "Le locataire ne peut céder le bénéfice de la location à un tiers sans l'accord exprès du bailleur."
+  );
+  lines.push("");
+
+  // ── Article 15 — Nantissement des actions ──
+  lines.push("### Article 15 — Nantissement des actions");
+  lines.push("");
+
+  if (v.nantissementAutorise) {
+    lines.push(
+      "Le nantissement des actions de la Société est autorisé. Il est constitué et réalisé conformément aux dispositions des articles L. 228-23 et suivants du Code de commerce."
+    );
+    lines.push("");
+    lines.push(
+      "Le nantissement est constaté par un acte authentique ou sous seing privé, signifié à la Société dans les conditions prévues à l'article L. 228-1 du Code de commerce, ou par la remise à la Société d'un exemplaire de l'acte constitutif du nantissement."
+    );
+    lines.push("");
+    lines.push(
+      "Le nantissement est inscrit sur le registre des mouvements de titres tenu par la Société. L'inscription mentionne l'identité du titulaire des actions et du créancier nanti, le nombre d'actions nanties et la date de constitution du nantissement."
+    );
+    lines.push("");
+    lines.push(
+      "L'associé dont les actions sont nanties conserve l'exercice du droit de vote attaché à ses actions."
+    );
+    lines.push("");
+    lines.push(
+      "En cas de pluralité d'associés, la réalisation du nantissement emportant cession des actions au profit du créancier nanti est soumise à la procédure d'agrément prévue à l'article 13 des présents statuts."
+    );
+  } else {
+    lines.push(
+      "Le nantissement des actions de la Société est interdit."
+    );
+    lines.push("");
+    lines.push(
+      "Tout nantissement consenti en violation de la présente clause est nul et non avenu, et ne saurait être opposable à la Société ni aux tiers."
+    );
+    lines.push("");
+    lines.push(
+      "Cette interdiction s'applique à toute forme de sûreté portant sur les actions de la Société, qu'il s'agisse d'un nantissement conventionnel, judiciaire ou légal, d'un gage ou de toute autre sûreté réelle mobilière portant sur lesdites actions."
+    );
+  }
+
+  return lines.join("\n");
+}
+
+export function buildTitre4(v: V): string {
+  const lines: string[] = [];
+
+  lines.push("## TITRE 4 — DIRECTION DE LA SOCIÉTÉ");
+  lines.push("");
+
+  // ── Article 16 — Nomination des Dirigeants ──
+  lines.push("### Article 16 — Nomination des Dirigeants");
+  lines.push("");
+  lines.push("**16.1 — Président**");
+  lines.push("");
+  lines.push(
+    "La Société est dirigée par un Président, personne physique ou personne morale, associé ou non associé de la Société."
+  );
+  lines.push("");
+  lines.push(
+    `Est nommé(e) en qualité de premier Président de la Société, pour une durée ${v.dureeMandat}, ${v.mandatRenouvelable} :`
+  );
+  lines.push("");
+  lines.push(v.presidentNomination);
+  lines.push("");
+  lines.push(
+    "Le Président est nommé et ses fonctions sont renouvelées par décision de l'associé unique ou, en cas de pluralité d'associés, par décision collective des associés."
+  );
+  lines.push("");
+
+  if (v.hasDG) {
+    lines.push("**16.2 — Directeur Général**");
+    lines.push("");
+    lines.push(
+      "L'associé unique ou, en cas de pluralité d'associés, la collectivité des associés peut nommer un ou plusieurs Directeurs Généraux, personnes physiques, chargés d'assister le Président dans la direction de la Société."
+    );
+    lines.push("");
+    lines.push(
+      "Est nommé(e) en qualité de premier Directeur Général de la Société :"
+    );
+    lines.push("");
+    lines.push(v.dgNomination);
+    lines.push("");
+    lines.push(
+      `Le Directeur Général est nommé pour une durée ${v.dureeMandat}, ${v.mandatRenouvelable}. Son mandat est renouvelé par décision de l'associé unique ou, en cas de pluralité d'associés, par décision collective des associés.`
+    );
+    lines.push("");
+  }
+
+  // ── Article 17 — Pouvoirs des Dirigeants ──
+  lines.push("### Article 17 — Pouvoirs des Dirigeants");
+  lines.push("");
+  lines.push("**17.1 — Pouvoirs du Président**");
+  lines.push("");
+  lines.push(
+    "Le Président est investi des pouvoirs les plus étendus pour agir en toutes circonstances au nom de la Société, dans la limite de l'objet social et sous réserve des pouvoirs que la loi attribue expressément à l'associé unique ou, en cas de pluralité d'associés, à la collectivité des associés."
+  );
+  lines.push("");
+  lines.push(
+    "Le Président représente la Société à l'égard des tiers. La Société est engagée même par les actes du Président qui ne relèvent pas de l'objet social, à moins qu'elle ne prouve que le tiers savait que l'acte dépassait cet objet ou qu'il ne pouvait l'ignorer compte tenu des circonstances, étant exclu que la seule publication des statuts suffise à constituer cette preuve."
+  );
+  lines.push("");
+  lines.push(
+    "Les limitations statutaires ou conventionnelles des pouvoirs du Président sont inopposables aux tiers."
+  );
+  lines.push("");
+
+  if (v.limitationPouvoirs) {
+    lines.push("**Limitations internes des pouvoirs du Président**");
+    lines.push("");
+    lines.push(
+      "Dans les rapports entre associés et dans l'ordre interne uniquement, le Président doit obtenir l'autorisation préalable de l'associé unique ou, en cas de pluralité d'associés, de la collectivité des associés, avant de réaliser les opérations suivantes :"
+    );
+    lines.push("");
+    lines.push(
+      `- Toute acquisition, cession ou échange de biens immobiliers ou de fonds de commerce d'un montant supérieur à ${v.montantLimitation} euros ;`
+    );
+    lines.push(
+      `- Tout emprunt, prêt ou ouverture de crédit d'un montant supérieur à ${v.montantLimitation} euros ;`
+    );
+    lines.push(
+      `- Toute constitution de sûretés (hypothèques, nantissements, cautionnements, avals et garanties) d'un montant supérieur à ${v.montantLimitation} euros ;`
+    );
+    lines.push(
+      `- Toute conclusion, modification ou résiliation de contrats, conventions ou engagements d'un montant supérieur à ${v.montantLimitation} euros ;`
+    );
+    lines.push(
+      "- Toute embauche ou licenciement de cadres dirigeants de la Société."
+    );
+    lines.push("");
+    lines.push(
+      "Ces limitations sont purement internes et ne sont pas opposables aux tiers. Leur méconnaissance par le Président ne peut constituer une cause de nullité des actes accomplis, mais est susceptible d'engager la responsabilité du Président à l'égard de la Société."
+    );
+  } else {
+    lines.push(
+      "Dans l'ordre interne, le Président exerce ses pouvoirs sans aucune limitation autre que celles résultant de la loi et des présents statuts. Il n'est soumis à aucune autorisation préalable de l'associé unique pour la réalisation des actes de gestion courante ou exceptionnelle."
+    );
+  }
+  lines.push("");
+
+  if (v.hasDG) {
+    lines.push("**17.2 — Pouvoirs du Directeur Général**");
+    lines.push("");
+
+    if (v.dgPouvoirs === "representation") {
+      lines.push(
+        "Le Directeur Général dispose des mêmes pouvoirs que le Président. Il est investi des pouvoirs les plus étendus pour agir en toutes circonstances au nom de la Société, dans la limite de l'objet social et sous réserve des pouvoirs attribués par la loi à l'associé unique ou à la collectivité des associés, et de ceux expressément réservés au Président par les présents statuts."
+      );
+      lines.push("");
+      lines.push(
+        "Le Directeur Général représente la Société à l'égard des tiers dans les mêmes conditions que le Président. Les limitations de ses pouvoirs sont inopposables aux tiers."
+      );
+    } else {
+      lines.push(
+        "Le Directeur Général assiste le Président dans la gestion et l'administration de la Société. Il dispose, dans l'ordre interne, des pouvoirs de gestion les plus étendus pour agir au nom de la Société, dans la limite de l'objet social et sous réserve des pouvoirs réservés par la loi à l'associé unique ou à la collectivité des associés, et de ceux expressément dévolus au Président."
+      );
+      lines.push("");
+      lines.push(
+        "Le Directeur Général ne dispose pas du pouvoir de représentation de la Société à l'égard des tiers, lequel est exclusivement réservé au Président. Le Directeur Général ne peut engager la Société vis-à-vis des tiers que dans le cadre d'une délégation de pouvoirs expressément consentie par le Président."
+      );
+    }
+    lines.push("");
+  }
+
+  if (v.managementFees) {
+    lines.push("**Convention de management fees**");
+    lines.push("");
+    lines.push(
+      `Conformément à la décision de l'associé unique, une convention de prestations de services (management fees) pourra être conclue entre la Société et son associé unique ou toute société du groupe, portant sur des prestations de direction, de gestion administrative, comptable, financière, juridique, commerciale et stratégique. La rémunération de ces prestations sera fixée à ${v.managementFeesPct} % du chiffre d'affaires hors taxes de la Société, ou à tout autre montant déterminé par l'associé unique.`
+    );
+    lines.push("");
+    lines.push(
+      "Cette convention devra être conclue à des conditions normales et faire l'objet des formalités de contrôle prévues par les articles L. 227-10 et suivants du Code de commerce relatives aux conventions réglementées. Elle devra correspondre à des prestations effectives, distinctes des fonctions de direction exercées par les mandataires sociaux, et être rémunérée à un prix conforme aux conditions de marché."
+    );
+    lines.push("");
+  }
+
+  // ── Article 18 — Cumul mandat social et contrat de travail ──
+  lines.push("### Article 18 — Cumul mandat social et contrat de travail");
+  lines.push("");
+  lines.push(
+    "Le Président ou le Directeur Général peut cumuler son mandat social avec un contrat de travail au sein de la Société, sous réserve que les conditions suivantes soient réunies :"
+  );
+  lines.push("");
+  lines.push(
+    "- Le contrat de travail doit correspondre à un emploi effectif, c'est-à-dire à des fonctions techniques distinctes de celles exercées dans le cadre du mandat social ;"
+  );
+  lines.push(
+    "- Le dirigeant doit se trouver dans un lien de subordination effective à l'égard de la Société, caractérisé par l'exercice d'un contrôle hiérarchique et la soumission à des directives et instructions ;"
+  );
+  lines.push(
+    "- Le contrat de travail doit donner lieu au versement d'une rémunération distincte de celle perçue au titre du mandat social."
+  );
+  lines.push("");
+  lines.push(
+    "Le contrat de travail conclu entre la Société et un dirigeant est soumis aux dispositions des articles L. 227-10 et suivants du Code de commerce relatives aux conventions réglementées."
+  );
+  lines.push("");
+  lines.push(
+    "En cas de cessation du mandat social, pour quelque cause que ce soit, le contrat de travail subsiste dans tous ses effets. La révocation du mandat social n'entraîne pas la rupture du contrat de travail, et inversement."
+  );
+  lines.push("");
+
+  // ── Article 19 — Révocation, démission et responsabilité ──
+  lines.push("### Article 19 — Révocation, démission et responsabilité");
+  lines.push("");
+  lines.push("**19.1 — Révocation**");
+  lines.push("");
+  lines.push(
+    "Le Président peut être révoqué à tout moment par décision de l'associé unique."
+  );
+  lines.push("");
+
+  if (v.revocationPresident === "libre") {
+    lines.push(
+      "La révocation du Président peut intervenir librement, sans qu'il soit nécessaire d'invoquer un juste motif ni de respecter un préavis. Elle n'ouvre droit à aucune indemnité, sauf disposition contraire résultant d'un engagement particulier de la Société."
+    );
+  } else {
+    lines.push(
+      "La révocation du Président ne peut intervenir que pour un juste motif, caractérisé notamment par une faute de gestion, une violation des dispositions légales, réglementaires ou statutaires, une mésentente grave compromettant le fonctionnement de la Société, ou tout autre motif légitime apprécié souverainement par l'associé unique ou la collectivité des associés."
+    );
+    lines.push("");
+    lines.push(
+      "Toute révocation intervenue sans juste motif ouvre droit au versement de dommages et intérêts au profit du Président révoqué, sans préjudice de toute autre action en responsabilité."
+    );
+  }
+  lines.push("");
+
+  lines.push(
+    `En cas de pluralité d'associés, la révocation du Président est prononcée par décision collective des associés statuant à la majorité de ${v.majoritePresident} des voix des associés disposant du droit de vote.`
+  );
+  lines.push("");
+
+  if (v.hasDG) {
+    lines.push(
+      "Le Directeur Général peut être révoqué dans les mêmes conditions que celles applicables au Président."
+    );
+    lines.push("");
+  }
+
+  lines.push("**19.2 — Démission**");
+  lines.push("");
+  lines.push(
+    "Le Président peut démissionner de ses fonctions à tout moment, sous réserve de respecter un préavis de trois (3) mois, notifié à la Société par lettre recommandée avec demande d'avis de réception."
+  );
+  lines.push("");
+  lines.push(
+    "Ce délai de préavis peut être réduit ou supprimé par décision de l'associé unique ou, en cas de pluralité d'associés, par décision collective des associés."
+  );
+  lines.push("");
+  lines.push(
+    "La démission ne prend effet qu'à l'expiration du délai de préavis, sauf accord de l'associé unique ou de la collectivité des associés pour une prise d'effet immédiate ou à une date antérieure."
+  );
+  lines.push("");
+
+  if (v.hasDG) {
+    lines.push(
+      "Le Directeur Général peut démissionner de ses fonctions dans les mêmes conditions que celles applicables au Président."
+    );
+    lines.push("");
+  }
+
+  lines.push("**19.3 — Responsabilité**");
+  lines.push("");
+  lines.push(
+    "Le Président et, le cas échéant, le Directeur Général sont responsables, individuellement ou solidairement selon les cas, envers la Société et envers les tiers :"
+  );
+  lines.push("");
+  lines.push(
+    "- Des infractions aux dispositions législatives et réglementaires applicables aux sociétés par actions simplifiées ;"
+  );
+  lines.push(
+    "- Des violations des dispositions des présents statuts ;"
+  );
+  lines.push(
+    "- Des fautes commises dans leur gestion, appréciées au regard de la diligence d'un dirigeant normalement prudent et avisé placé dans les mêmes circonstances ;"
+  );
+  lines.push(
+    "- Des actes de fraude, d'abus de biens sociaux, d'abus de pouvoir ou d'abus de voix commis dans l'exercice de leurs fonctions."
+  );
+  lines.push("");
+  lines.push(
+    "L'action en responsabilité contre les dirigeants, tant sociale qu'individuelle, se prescrit par trois (3) ans à compter du fait dommageable ou, s'il a été dissimulé, de sa révélation, conformément aux dispositions de l'article L. 225-254 du Code de commerce, applicable par renvoi de l'article L. 227-8 du même code."
+  );
+  lines.push("");
+
+  // ── Article 20 — Rémunération des Dirigeants ──
+  lines.push("### Article 20 — Rémunération des Dirigeants");
+  lines.push("");
+
+  if (v.presidentRemunere === "non") {
+    lines.push(
+      "Le Président exerce ses fonctions à titre gratuit. Il ne perçoit aucune rémunération au titre de son mandat social."
+    );
+    lines.push("");
+    lines.push(
+      "L'associé unique pourra, par décision ultérieure, décider d'attribuer une rémunération au Président et en fixer le montant, la périodicité et les modalités de versement."
+    );
+  } else if (v.presidentRemunere === "possible") {
+    lines.push(
+      "Le Président pourra percevoir une rémunération au titre de ses fonctions de mandataire social, dont le montant, la périodicité et les modalités de versement seront fixés par décision de l'associé unique ou, en cas de pluralité d'associés, par décision collective des associés."
+    );
+    lines.push("");
+    lines.push(
+      "Jusqu'à décision contraire de l'associé unique, le Président exerce ses fonctions à titre gratuit."
+    );
+  } else {
+    lines.push(
+      "Le Président perçoit une rémunération au titre de ses fonctions de mandataire social, dont le montant, la périodicité et les modalités de versement sont fixés par décision de l'associé unique ou, en cas de pluralité d'associés, par décision collective des associés."
+    );
+    lines.push("");
+    lines.push(
+      "La rémunération du Président peut être fixe, proportionnelle au chiffre d'affaires ou au résultat de la Société, ou comporter une part fixe et une part variable. Elle peut être modifiée à tout moment par décision de l'associé unique ou de la collectivité des associés."
+    );
+  }
+  lines.push("");
+
+  if (v.hasDG) {
+    lines.push(
+      "Le Directeur Général pourra percevoir une rémunération au titre de ses fonctions, dont le montant et les modalités seront fixés par décision de l'associé unique ou, en cas de pluralité d'associés, par décision collective des associés."
+    );
+    lines.push("");
+  }
+
+  lines.push(
+    "Le Président et, le cas échéant, le Directeur Général ont droit au remboursement de leurs frais de déplacement et de représentation engagés dans l'intérêt de la Société, sur présentation de justificatifs et dans les conditions fixées par l'associé unique ou la collectivité des associés."
+  );
+  lines.push("");
+
+  // ── Article 21 — Clause de non-concurrence ──
+  lines.push("### Article 21 — Clause de non-concurrence");
+  lines.push("");
+
+  if (v.nonConcurrence) {
+    lines.push(
+      `Le Président et, le cas échéant, le Directeur Général s'engagent, pendant toute la durée de leurs fonctions et pendant une durée de ${v.dureeNonConcurrence} an(s) suivant la cessation de celles-ci, pour quelque cause que ce soit, à ne pas exercer, directement ou indirectement, une activité concurrente de celle de la Société sur le territoire suivant : ${v.perimetreNonConcurrence}.`
+    );
+    lines.push("");
+    lines.push(
+      "Cette obligation de non-concurrence couvre notamment les activités suivantes :"
+    );
+    lines.push("");
+    lines.push(
+      "- La création, l'acquisition, la gérance ou la direction d'une entreprise exerçant une activité concurrente de celle de la Société ;"
+    );
+    lines.push(
+      "- La prise de participation, directe ou indirecte, dans toute société ou entreprise exerçant une activité concurrente de celle de la Société, à l'exception de la détention de participations purement financières n'excédant pas 5 % du capital d'une société cotée sur un marché réglementé ;"
+    );
+    lines.push(
+      "- L'exercice d'une activité salariée, de conseil ou de prestation de services au profit d'une entreprise concurrente de la Société ;"
+    );
+    lines.push(
+      "- Le démarchage, la sollicitation ou le détournement de clients ou de fournisseurs de la Société, directement ou par personne interposée ;"
+    );
+    lines.push(
+      "- L'embauche ou la sollicitation de salariés ou de collaborateurs de la Société en vue de les affecter à une activité concurrente."
+    );
+    lines.push("");
+
+    if (v.indemniteNonConcurrence) {
+      lines.push(
+        `En contrepartie de cette obligation de non-concurrence post-mandat, le dirigeant percevra une indemnité mensuelle d'un montant de ${v.montantIndemniteNC} euros bruts, versée pendant toute la durée de l'obligation de non-concurrence suivant la cessation des fonctions. Cette indemnité est due quelle que soit la cause de la cessation des fonctions (révocation, démission, non-renouvellement).`
+      );
+    } else {
+      lines.push(
+        "La contrepartie de cette obligation de non-concurrence est intégrée dans la rémunération globale du dirigeant au titre de son mandat social et ne donne lieu à aucune indemnité spécifique distincte lors de la cessation des fonctions."
+      );
+    }
+    lines.push("");
+
+    lines.push(
+      "En cas de violation de la présente clause de non-concurrence, le dirigeant sera redevable envers la Société d'une pénalité d'un montant égal à la rémunération brute perçue au titre de ses fonctions pendant les douze (12) derniers mois d'exercice de son mandat, sans préjudice du droit pour la Société de demander la réparation intégrale de son préjudice et la cessation de l'activité concurrente par voie de référé."
+    );
+    lines.push("");
+    lines.push(
+      "La Société pourra, à tout moment, libérer le dirigeant de son obligation de non-concurrence, par décision de l'associé unique ou de la collectivité des associés, notifiée par lettre recommandée avec demande d'avis de réception dans un délai de trente (30) jours suivant la cessation des fonctions. Dans ce cas, aucune indemnité de non-concurrence ne sera due."
+    );
+  } else {
+    lines.push(
+      "Les présents statuts ne comportent pas de clause de non-concurrence à l'égard des dirigeants de la Société."
+    );
+    lines.push("");
+    lines.push(
+      "Il est toutefois rappelé que les dirigeants sont tenus, pendant toute la durée de leurs fonctions, d'une obligation de loyauté à l'égard de la Société qui leur interdit d'exercer une activité concurrente susceptible de porter atteinte aux intérêts de celle-ci."
+    );
+    lines.push("");
+    lines.push(
+      "Une clause de non-concurrence pourra être prévue dans un acte séparé, conclu entre la Société et le dirigeant concerné, aux conditions et selon les modalités qui y seront définies."
+    );
+  }
+
+  return lines.join("\n");
+}
+
 export function buildTitre5(v: V): string {
   const s: string[] = [];
 

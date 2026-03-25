@@ -8,7 +8,7 @@ import {
   ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, ChevronRight,
   User, Building2, CreditCard, FolderOpen, CheckCircle2,
   FileUp, PenTool, HelpCircle, Lightbulb, Clock, Zap, Shield, Users, Sparkles, X,
-  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus
+  Coins, Percent, Edit3, MapPin, Calendar, Upload, Eye, Landmark, Download, Heart, FileText, Trash2, Plus, AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRef, useCallback } from "react";
@@ -1288,8 +1288,8 @@ export default function CreationSASUPage() {
     { id: "depot_capital" },        // établissement bancaire + date dépôt + versement
     { id: "apport_associe" },      // apport de l'associé unique (si personnalisée)
     { id: "nomination_president" },  // nomination du président
-    { id: "beneficiaire_effectif" }, // déclaration des bénéficiaires effectifs (INPI/DBE)
     { id: "mandat_president" },     // règles du président (durée, révocation, rémunération, pouvoirs)
+    { id: "beneficiaire_effectif" }, // déclaration des bénéficiaires effectifs (INPI/DBE)
     { id: "adresse_siege" },        // détermination siège social
     { id: "regles_statutaires" },  // règles organisation société (CAC etc) — modifier ou pas
     { id: "exercice_comptable" },   // date clôture exercice comptable
@@ -5322,13 +5322,30 @@ export default function CreationSASUPage() {
                     </AccordionItem>
 
                     {/* Auto-detected beneficial owner */}
-                    <div className="bg-green-50 border border-green-200 rounded-xl p-5 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-5 h-5 text-green-600" />
-                        <p className="text-base font-bold text-green-800">Bénéficiaire effectif détecté automatiquement</p>
+                    {answers.type_associe !== "morale" ? (
+                      <div className="bg-green-50 border border-green-200 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-5 h-5 text-green-600" />
+                          <p className="text-base font-bold text-green-800">Bénéficiaire effectif détecté automatiquement</p>
+                        </div>
+                        <p className="text-sm text-green-700">L&apos;associé unique détient 100% du capital et des droits de vote.</p>
                       </div>
-                      <p className="text-sm text-green-700">L&apos;associé unique détient 100% du capital et des droits de vote.</p>
-                    </div>
+                    ) : (
+                      <div className="bg-amber-50 border border-amber-300 rounded-xl p-5 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="w-5 h-5 text-amber-600" />
+                          <p className="text-base font-bold text-amber-800">Associé unique = personne morale</p>
+                        </div>
+                        <p className="text-sm text-amber-700">
+                          L&apos;associé unique est une société (<strong>{answers.associe_societe_nom || "PM"}</strong>). Le bénéficiaire effectif doit être une <strong>personne physique</strong>. Vous devez identifier la ou les personnes physiques qui contrôlent cette société :
+                        </p>
+                        <ul className="text-sm text-amber-700 list-disc ml-5 space-y-1">
+                          <li>Un associé de la société mère détenant plus de 25% du capital</li>
+                          <li>Ou le représentant légal exerçant le contrôle effectif de la direction</li>
+                        </ul>
+                        <p className="text-sm text-amber-700 font-semibold">L&apos;INPI exige au minimum 1 personne physique identifiée.</p>
+                      </div>
+                    )}
 
                     {/* Beneficial owner cards */}
                     {beneficiaires.map((be: any, idx: number) => {

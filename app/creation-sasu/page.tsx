@@ -1278,6 +1278,7 @@ export default function CreationSASUPage() {
 
   // Post-payment pages (step 4: dossier juridique) — dynamic based on formule_capital
   const POST_PAGES = [
+    { id: "rdv_avocat" },           // prise de RDV avocat (formule avocat uniquement)
     { id: "denomination" },        // dénomination + sigle + nom commercial + enseigne
     { id: "type_structure" },      // classique / holding passive / holding animatrice
     { id: "objet_principal" },      // catégories visuelles + sous-catégories
@@ -1317,6 +1318,8 @@ export default function CreationSASUPage() {
     if (customPages.includes(pageId) && answers.regles_statutaires !== "personnaliser") return true;
     // Skip services_comptables if CAC is explicitly "oui"
     if (pageId === "services_comptables" && answers.nommer_cac === "oui") return true;
+    // Skip rdv_avocat if not formule avocat
+    if (pageId === "rdv_avocat" && answers.formule !== "avocat") return true;
     // Skip apport_associe if formule simplifiée (100% numéraire, pas d'apport nature/industrie)
     if (pageId === "apport_associe" && answers.formule_capital !== "personnalisee") return true;
     // Skip depot_capital if no numéraire (only apport en nature)
@@ -2014,6 +2017,98 @@ export default function CreationSASUPage() {
                 </div>
 
                 {/* ── Page 0: Dénomination sociale ── */}
+                {/* ── Page: RDV Avocat (formule avocat uniquement) ── */}
+                {POST_PAGES[postPage]?.id === "rdv_avocat" && (
+                  <div className="space-y-6">
+                    <div className="text-center space-y-2">
+                      <h2 className="text-2xl font-bold text-[#1E3A8A]">Merci pour votre confiance !</h2>
+                      <p className="text-gray-500">Vous avez choisi la <strong className="text-[#1E3A8A]">formule Avocat</strong>. Un avocat spécialisé va prendre en charge votre dossier.</p>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-[#1E3A8A] to-[#2563EB] rounded-xl p-5 text-white space-y-2">
+                      <p className="font-bold text-lg">Comment ça se passe ?</p>
+                      <p className="text-blue-100 text-sm">Un avocat en droit des sociétés vous contactera pour un rendez-vous de 30 à 45 minutes. Il rédigera vos statuts sur mesure et vous accompagnera jusqu&apos;à l&apos;immatriculation.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Vos coordonnées</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Nom</label>
+                          <input type="text" value={answers.rdv_nom || answers.associe_nom || ""} onChange={(e) => setAnswer("rdv_nom", e.target.value)} placeholder="Nom de famille" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                        </div>
+                        <div>
+                          <label className="block text-base font-bold text-[#1E3A8A] mb-1">Prénom</label>
+                          <input type="text" value={answers.rdv_prenom || answers.associe_prenom || ""} onChange={(e) => setAnswer("rdv_prenom", e.target.value)} placeholder="Prénom" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Email</label>
+                        <input type="email" value={answers.rdv_email || ""} onChange={(e) => setAnswer("rdv_email", e.target.value)} placeholder="votre@email.com" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                      </div>
+                      <div>
+                        <label className="block text-base font-bold text-[#1E3A8A] mb-1">Téléphone</label>
+                        <input type="tel" value={answers.rdv_telephone || ""} onChange={(e) => setAnswer("rdv_telephone", e.target.value)} placeholder="06 12 34 56 78" className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-base text-gray-800 transition-all" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p className="text-base font-bold text-[#1E3A8A]">Choisissez un créneau pour le rendez-vous</p>
+                      <p className="text-sm text-gray-500">Sélectionnez une date puis un horaire disponible.</p>
+
+                      {/* Date selection — next 14 weekdays */}
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from({ length: 14 }, (_, i) => {
+                          const d = new Date();
+                          d.setDate(d.getDate() + i + 1);
+                          if (d.getDay() === 0 || d.getDay() === 6) return null;
+                          const dateStr = d.toISOString().split("T")[0];
+                          const label = d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+                          return (
+                            <button
+                              key={dateStr}
+                              onClick={() => setAnswer("rdv_date", dateStr)}
+                              className={cn(
+                                "px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all",
+                                answers.rdv_date === dateStr ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              {label}
+                            </button>
+                          );
+                        }).filter(Boolean)}
+                      </div>
+
+                      {/* Time slots */}
+                      {answers.rdv_date && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((h) => (
+                            <button
+                              key={h}
+                              onClick={() => setAnswer("rdv_heure", h)}
+                              className={cn(
+                                "py-2.5 rounded-xl border-2 text-sm font-medium transition-all",
+                                answers.rdv_heure === h ? "border-[#2563EB] bg-blue-50 text-[#1E3A8A]" : "border-gray-200 bg-white text-gray-600 hover:border-[#2563EB]/50"
+                              )}
+                            >
+                              {h}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {answers.rdv_date && answers.rdv_heure && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3">
+                          <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+                          <p className="text-sm text-green-800">
+                            Rendez-vous prévu le <strong>{new Date(answers.rdv_date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</strong> à <strong>{answers.rdv_heure}</strong>. Un avocat vous contactera pour confirmer.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {POST_PAGES[postPage]?.id === "denomination" && (
                   <div className="space-y-6">
                     <div className="text-center space-y-1">

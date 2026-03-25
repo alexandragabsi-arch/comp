@@ -657,7 +657,7 @@ export function DocumentPreviewPanel({
                         </h2>
                       ),
                       h3: ({ children }) => (
-                        <h3 style={{ fontSize: "11.5px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "6px 10px" }}>
+                        <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "6px 10px" }}>
                           {children}
                         </h3>
                       ),
@@ -667,7 +667,7 @@ export function DocumentPreviewPanel({
                         </h4>
                       ),
                       p: ({ children }) => (
-                        <p style={{ fontSize: "11.5px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify" }}>
+                        <p style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify" }}>
                           {children}
                         </p>
                       ),
@@ -678,7 +678,7 @@ export function DocumentPreviewPanel({
                         <ul style={{ paddingLeft: "18px", marginBottom: "14px" }}>{children}</ul>
                       ),
                       li: ({ children }) => (
-                        <li style={{ fontSize: "11.5px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
+                        <li style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
                       ),
                       hr: () => <div style={{ borderTop: "1px solid #d1d5db", margin: "16px 0" }} />,
                       blockquote: ({ children }) => (
@@ -717,7 +717,7 @@ export function DocumentPreviewPanel({
                   ),
                   h3: ({ children }) => (
                     isStatuts ? (
-                      <h3 style={{ fontSize: "11.5px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", paddingLeft: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "6px 10px" }}>
+                      <h3 style={{ fontSize: "12px", fontWeight: "bold", color: "#0D2459", marginTop: "24px", marginBottom: "10px", paddingLeft: "10px", borderLeft: "3px solid #0D2459", backgroundColor: "#F5F6FA", padding: "6px 10px" }}>
                         {children}
                       </h3>
                     ) : (
@@ -727,7 +727,7 @@ export function DocumentPreviewPanel({
                     )
                   ),
                   p: ({ children }) => (
-                    <p style={{ fontSize: "11.5px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify", hyphens: "auto" } as React.CSSProperties}>
+                    <p style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "14px", textAlign: "justify", hyphens: "auto" } as React.CSSProperties}>
                       {children}
                     </p>
                   ),
@@ -741,7 +741,7 @@ export function DocumentPreviewPanel({
                     <ol style={{ paddingLeft: "18px", marginBottom: "14px" }}>{children}</ol>
                   ),
                   li: ({ children }) => (
-                    <li style={{ fontSize: "11.5px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
+                    <li style={{ fontSize: "12px", lineHeight: "1.85", color: "#0D2459", marginBottom: "4px" }}>{children}</li>
                   ),
                   table: ({ children }) => (
                     <table style={{ width: "100%", borderCollapse: "collapse", margin: "16px 0", fontSize: "11px" }}>

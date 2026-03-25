@@ -57,15 +57,16 @@ ${contextStructure}
 
 RÈGLES STRICTES DE RÉDACTION :
 1. Commence DIRECTEMENT par la description de l'activité (ex: "La prestation de services en matière de...")
-2. Sois CONCIS et JURIDIQUEMENT PRÉCIS — un paragraphe principal suffit, deux maximum
-3. Inclus les activités secondaires dans le même flux
-4. Utilise le vocabulaire juridique approprié (prestations de services, négoce, conseil, intermédiation, etc.)
-5. NE TERMINE PAS par la clause omnibus "Et plus généralement..." — elle sera ajoutée automatiquement par les statuts
-6. NE METS PAS de tirets, bullets, ou numéros — rédige en PROSE CONTINUE
-7. N'ajoute AUCUN commentaire, AUCUNE explication — retourne UNIQUEMENT le texte de l'objet social
-8. Style avocat : concis, précis, pas de bavardage. Maximum 8 lignes.
+2. Sois CONCIS et JURIDIQUEMENT PRÉCIS — un seul paragraphe fluide
+3. Intègre les activités secondaires avec des LIAISONS naturelles ("; la prestation de...", "; le conseil en...", "; ainsi que..."). JAMAIS de phrase sèche collée sans transition.
+4. Tout doit former UN SEUL TEXTE FLUIDE, comme rédigé par un avocat — pas une liste déguisée en prose
+5. Utilise le vocabulaire juridique approprié (prestations de services, négoce, conseil, intermédiation, etc.)
+6. NE TERMINE PAS par la clause omnibus "Et plus généralement..." — elle sera ajoutée automatiquement par les statuts
+7. NE METS PAS de tirets, bullets, ou numéros — rédige en PROSE CONTINUE
+8. N'ajoute AUCUN commentaire, AUCUNE explication — retourne UNIQUEMENT le texte de l'objet social
+9. Maximum 6 lignes. Style avocat : concis, précis, fluide.
 
-IMPORTANT : Le résultat doit être d'un niveau professionnel de cabinet d'avocats — concis et juridiquement solide, pas verbeux.`;
+IMPORTANT : Le résultat doit être d'un niveau professionnel de cabinet d'avocats. Les activités doivent être liées par des points-virgules et des connecteurs ("; la...", "; ainsi que...", "; le..."), JAMAIS par des points suivis d'une nouvelle phrase sèche.`;
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-20250514",

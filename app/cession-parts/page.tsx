@@ -861,83 +861,81 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
+              className="space-y-8 max-w-xl mx-auto"
             >
-              {/* Titre centre */}
-              <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-[#1E3A8A]">
+              {/* Titre centré avec icône */}
+              <div className="text-center space-y-2 mb-8">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto">
+                  <FileText className="w-7 h-7 text-[#2563EB]" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1E3A8A] text-center">
                   Cession d&apos;actions / parts sociales
-                </h1>
-                <p className="text-gray-600 mt-1">
-                  Generez votre acte de cession en quelques minutes
+                </h2>
+                <p className="text-gray-500 text-center">
+                  Générez votre acte de cession en quelques minutes
                 </p>
               </div>
-  {/* Type de cession */}
-              <div className="bg-white rounded-2xl border border-gray-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-xl font-semibold text-[#1E3A8A]">Que souhaitez-vous ceder ?</h2>
-                  <TooltipHelp title={TOOLTIPS.typeCession.title} content={TOOLTIPS.typeCession.content} />
-                </div>
-                <p className="text-gray-600 mb-6">Selectionnez le type de titres concernes par la cession</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* Type de cession */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+                <h3 className="text-sm font-semibold text-[#1E3A8A] mb-1">Que souhaitez-vous céder ?</h3>
+                <p className="text-gray-500 text-sm mb-6">Sélectionnez le type de titres concernés par la cession</p>
+
+                <div className="space-y-3">
                   <button
                     onClick={() => setTypeCession("actions")}
                     className={cn(
-                      "p-6 rounded-2xl border-2 text-left transition-all",
+                      "w-full p-5 rounded-2xl border-2 text-left transition-all duration-200 hover:shadow-md flex items-start gap-4",
                       typeCession === "actions"
-                        ? "border-[#1E3A8A] bg-[#2563EB]/10 shadow-md"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
+                        ? "border-[#2563EB] bg-blue-50"
+                        : "border-gray-200 bg-white"
                     )}
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                        <Briefcase className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <span className="font-bold text-lg text-[#1E3A8A]">Actions</span>
+                    <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all" style={{ borderColor: typeCession === "actions" ? "#2563EB" : "#d1d5db", backgroundColor: typeCession === "actions" ? "#2563EB" : "transparent" }}>
+                      {typeCession === "actions" && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                     </div>
-                    <p className="text-sm text-gray-600">SAS, SASU, SA, SCA</p>
+                    <div>
+                      <span className="font-semibold text-[#1E3A8A] block">Actions</span>
+                      <span className="text-sm text-[#1E3A8A]/70"><strong>SAS</strong>, <strong>SASU</strong>, <strong>SA</strong>, <strong>SCA</strong></span>
+                    </div>
                   </button>
+
                   <button
                     onClick={() => setTypeCession("parts-sociales")}
                     className={cn(
-                      "p-6 rounded-2xl border-2 text-left transition-all",
+                      "w-full p-5 rounded-2xl border-2 text-left transition-all duration-200 hover:shadow-md flex items-start gap-4",
                       typeCession === "parts-sociales"
-                        ? "border-[#1E3A8A] bg-[#2563EB]/10 shadow-md"
-                        : "border-gray-200 hover:border-[#1E3A8A]/50"
+                        ? "border-[#2563EB] bg-blue-50"
+                        : "border-gray-200 bg-white"
                     )}
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-indigo-600" />
-                      </div>
-                      <span className="font-bold text-lg text-[#1E3A8A]">Parts sociales</span>
+                    <div className="w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all" style={{ borderColor: typeCession === "parts-sociales" ? "#2563EB" : "#d1d5db", backgroundColor: typeCession === "parts-sociales" ? "#2563EB" : "transparent" }}>
+                      {typeCession === "parts-sociales" && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                     </div>
-                    <p className="text-sm text-gray-600">SARL, EURL, SCI, SNC</p>
+                    <div>
+                      <span className="font-semibold text-[#1E3A8A] block">Parts sociales</span>
+                      <span className="text-sm text-[#1E3A8A]/70"><strong>SARL</strong>, <strong>EURL</strong>, <strong>SCI</strong>, <strong>SNC</strong></span>
+                    </div>
                   </button>
                 </div>
               </div>
+
               {/* Option changement de dirigeant */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-blue-50 rounded-2xl border border-blue-200"
-              >
-                <div className="flex items-center gap-3 mb-4">
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+                <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     id="changement-dirigeant"
                     checked={includChangementDirigeant}
                     onChange={(e) => setIncludChangementDirigeant(e.target.checked)}
-                    className="w-5 h-5 rounded cursor-pointer accent-[#1E3A8A]"
+                    className="w-5 h-5 rounded cursor-pointer accent-[#2563EB]"
                   />
-                  <label htmlFor="changement-dirigeant" className="cursor-pointer flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-[#1E3A8A]">Inclure un changement de dirigeant</h3>
-                    <TooltipHelp title="Changement de dirigeant" content="Genere egalement un PV de changement de dirigeant (ancien dirigeant part, nouveau dirigeant arrive)" />
+                  <label htmlFor="changement-dirigeant" className="cursor-pointer">
+                    <span className="font-semibold text-[#1E3A8A]">Inclure un changement de dirigeant</span>
                   </label>
                 </div>
-                <p className="text-sm text-gray-600">La cession peut s'accompagner d'un changement de gerant/president. Un PV sera genere pour ce changement.</p>
-              </motion.div>
+                <p className="text-sm text-[#1E3A8A]/70 mt-2 text-justify">La cession peut s&apos;accompagner d&apos;un <strong>changement de gérant/président</strong>. Un <strong>PV</strong> sera généré pour ce changement.</p>
+              </div>
               {/* Type de propriété */}
               {typeCession && (
                 <motion.div

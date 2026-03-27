@@ -767,7 +767,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-[#5D9CEC] h-2 rounded-full transition-all duration-300"
+              className="bg-[#2563EB] h-2 rounded-full transition-all duration-300"
               style={{ width: `${(step / STEPS.length) * 100}%` }}
             />
           </div>
@@ -779,7 +779,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               key={s.id}
               className={cn(
                 "w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all flex-shrink-0",
-                s.id === step ? "bg-[#5D9CEC] text-white" :
+                s.id === step ? "bg-[#2563EB] text-white" :
                 s.id < step ? "bg-green-500 text-white" :
                 "bg-gray-100 text-gray-400"
               )}
@@ -807,7 +807,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <div className="flex flex-col items-center">
                       <div className={cn(
                         "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all",
-                        isActive ? "bg-[#5D9CEC] text-white" : 
+                        isActive ? "bg-[#2563EB] text-white" : 
                         isCompleted ? "bg-green-500 text-white" : 
                         "bg-gray-100 text-gray-400"
                       )}>
@@ -841,7 +841,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               <p className="text-xs text-[#1E3A8A]/80 mb-3">
                 Notre equipe est disponible pour vous accompagner
               </p>
-              <a href="mailto:support@legalcorners.fr" className="text-[#5D9CEC] text-sm font-medium">
+              <a href="mailto:support@legalcorners.fr" className="text-[#2563EB] text-sm font-medium">
                 support@legalcorners.fr
               </a>
             </div>
@@ -870,9 +870,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </p>
               </div>
   {/* Type de cession */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="bg-white rounded-2xl border border-gray-200">
                 <div className="flex items-center gap-2 mb-2">
-                  <h2 className="text-xl font-semibold text-[#3B6FD9]">Que souhaitez-vous ceder ?</h2>
+                  <h2 className="text-xl font-semibold text-[#1E3A8A]">Que souhaitez-vous ceder ?</h2>
                   <TooltipHelp title={TOOLTIPS.typeCession.title} content={TOOLTIPS.typeCession.content} />
                 </div>
                 <p className="text-gray-600 mb-6">Selectionnez le type de titres concernes par la cession</p>
@@ -881,10 +881,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     onClick={() => setTypeCession("actions")}
                     className={cn(
-                      "p-6 rounded-xl border-2 text-left transition-all",
+                      "p-6 rounded-2xl border-2 text-left transition-all",
                       typeCession === "actions"
-                        ? "border-[#3B6FD9] bg-[#5D9CEC]/10 shadow-md"
-                        : "border-gray-200 hover:border-[#3B6FD9]/50"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10 shadow-md"
+                        : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
                     <div className="flex items-center gap-3 mb-3">
@@ -898,10 +898,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     onClick={() => setTypeCession("parts-sociales")}
                     className={cn(
-                      "p-6 rounded-xl border-2 text-left transition-all",
+                      "p-6 rounded-2xl border-2 text-left transition-all",
                       typeCession === "parts-sociales"
-                        ? "border-[#3B6FD9] bg-[#5D9CEC]/10 shadow-md"
-                        : "border-gray-200 hover:border-[#3B6FD9]/50"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10 shadow-md"
+                        : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
                     <div className="flex items-center gap-3 mb-3">
@@ -918,7 +918,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-blue-50 rounded-xl p-6 border border-blue-200"
+                className="bg-blue-50 rounded-2xl border border-blue-200"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <input
@@ -926,7 +926,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     id="changement-dirigeant"
                     checked={includChangementDirigeant}
                     onChange={(e) => setIncludChangementDirigeant(e.target.checked)}
-                    className="w-5 h-5 rounded cursor-pointer accent-[#3B6FD9]"
+                    className="w-5 h-5 rounded cursor-pointer accent-[#1E3A8A]"
                   />
                   <label htmlFor="changement-dirigeant" className="cursor-pointer flex items-center gap-2">
                     <h3 className="text-lg font-semibold text-[#1E3A8A]">Inclure un changement de dirigeant</h3>
@@ -940,7 +940,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl p-6 border border-gray-200"
+                  className="bg-white rounded-2xl border border-gray-200"
                 >
                   <h2 className="text-xl font-semibold text-[#1E3A8A] mb-2">Type de transfert de propriété</h2>
                   <p className="text-gray-600 mb-6">Comment souhaitez-vous transférer les {typeCession === "actions" ? "actions" : "parts sociales"} ?</p>
@@ -949,9 +949,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <button
                       onClick={() => setTypePropriete("pleine-propriete")}
                       className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
+                        "p-4 rounded-2xl border-2 text-center transition-all",
                         typePropriete === "pleine-propriete"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
                           : "border-gray-200 hover:border-[#1E3A8A]/50"
                       )}
                     >
@@ -961,9 +961,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <button
                       onClick={() => setTypePropriete("usufruit")}
                       className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
+                        "p-4 rounded-2xl border-2 text-center transition-all",
                         typePropriete === "usufruit"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
                           : "border-gray-200 hover:border-[#1E3A8A]/50"
                       )}
                     >
@@ -973,9 +973,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <button
                       onClick={() => setTypePropriete("nue-propriete")}
                       className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
+                        "p-4 rounded-2xl border-2 text-center transition-all",
                         typePropriete === "nue-propriete"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
                           : "border-gray-200 hover:border-[#1E3A8A]/50"
                       )}
                     >
@@ -1013,15 +1013,15 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <p className="text-gray-600">Quelques informations pour préparer votre document</p>
               </div>
               {/* Cédant */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="bg-white rounded-2xl border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cédant (vendeur)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
                     onClick={() => { setCedantType("physique"); setCedantIsSocieteCible(false); }}
                     className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
+                      "p-4 rounded-2xl border-2 text-center transition-all",
                       cedantType === "physique"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1032,9 +1032,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     onClick={() => { setCedantType("morale"); setCedantIsSocieteCible(false); }}
                     className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
+                      "p-4 rounded-2xl border-2 text-center transition-all",
                       cedantType === "morale"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1067,9 +1067,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       }
                     }}
                     className={cn(
-                      "mt-3 w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                      "mt-3 w-full p-3 rounded-2xl border-2 text-left transition-all flex items-center gap-3",
                       cedantIsSocieteCible
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1081,15 +1081,15 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 )}
               </div>
               {/* Cessionnaire */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="bg-white rounded-2xl border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Le Cessionnaire (acheteur)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button
                     onClick={() => { setCessionnaireType("physique"); setCessionnaireIsSocieteCible(false); }}
                     className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
+                      "p-4 rounded-2xl border-2 text-center transition-all",
                       cessionnaireType === "physique"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1099,9 +1099,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     onClick={() => { setCessionnaireType("morale"); setCessionnaireIsSocieteCible(false); }}
                     className={cn(
-                      "p-4 rounded-xl border-2 text-center transition-all",
+                      "p-4 rounded-2xl border-2 text-center transition-all",
                       cessionnaireType === "morale"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1133,9 +1133,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       }
                     }}
                     className={cn(
-                      "mt-3 w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3",
+                      "mt-3 w-full p-3 rounded-2xl border-2 text-left transition-all flex items-center gap-3",
                       cessionnaireIsSocieteCible
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1147,7 +1147,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 )}
               </div>
               {/* Estimation */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="bg-white rounded-2xl border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Estimation de la cession</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -1175,7 +1175,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
               </div>
               {/* Expert-comptable pour évaluation */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="bg-white rounded-2xl border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-2">Évaluation des parts/actions</h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Avez-vous besoin d&apos;un expert-comptable pour évaluer la valeur des parts ou actions ?
@@ -1185,14 +1185,14 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     onClick={() => setBesoinExpertComptable("oui")}
                     className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4",
+                      "w-full p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-4",
                       besoinExpertComptable === "oui"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                      <Scale className="w-5 h-5 text-amber-600" />
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Scale className="w-5 h-5 text-[#2563EB]/70" />
                     </div>
                     <div>
                       <span className="font-medium text-[#1E3A8A] block">Oui, je souhaite une évaluation</span>
@@ -1202,9 +1202,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     onClick={() => setBesoinExpertComptable("deja")}
                     className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4",
+                      "w-full p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-4",
                       besoinExpertComptable === "deja"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1219,9 +1219,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     onClick={() => setBesoinExpertComptable("non")}
                     className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4",
+                      "w-full p-4 rounded-2xl border-2 text-left transition-all flex items-center gap-4",
                       besoinExpertComptable === "non"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -1236,8 +1236,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
                 
                 {besoinExpertComptable === "oui" && (
-                  <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-sm text-amber-800">
+                  <div className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-[#2563EB]/20">
+                    <p className="text-sm text-[#1E3A8A]">
                       <Info className="w-4 h-4 inline mr-1" />
                       Un expert-comptable vous contactera sous 24h pour réaliser l&apos;évaluation. Ce service est facturé 150€ HT en supplément.
                     </p>
@@ -1268,17 +1268,17 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   className={cn(
                     "relative p-6 rounded-2xl border-2 text-left transition-all",
                     selectedFormule === "essentiel"
-                      ? "border-[#5D9CEC] bg-[#5D9CEC]/5 shadow-lg"
-                      : "border-gray-200 hover:border-[#5D9CEC]/50 hover:shadow-md"
+                      ? "border-[#2563EB] bg-[#2563EB]/5 shadow-lg"
+                      : "border-gray-200 hover:border-[#2563EB]/50 hover:shadow-md"
                   )}
                 >
                   {selectedFormule === "essentiel" && (
                     <div className="absolute top-4 right-4">
-                      <CheckCircle className="w-6 h-6 text-[#5D9CEC]" />
+                      <CheckCircle className="w-6 h-6 text-[#2563EB]" />
                     </div>
                   )}
                   
-                  <p className="text-sm font-medium text-[#5D9CEC] mb-2">ESSENTIEL</p>
+                  <p className="text-sm font-medium text-[#2563EB] mb-2">ESSENTIEL</p>
                   <div className="flex items-baseline gap-1 mb-4">
                     <span className="text-3xl font-bold text-[#1E3A8A]">199€</span>
                     <span className="text-gray-500">HT</span>
@@ -1318,24 +1318,24 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   className={cn(
                     "relative p-6 rounded-2xl border-2 text-left transition-all",
                     selectedFormule === "premium"
-                      ? "border-[#5D9CEC] bg-[#5D9CEC]/5 shadow-lg"
-                      : "border-gray-200 hover:border-[#5D9CEC]/50 hover:shadow-md"
+                      ? "border-[#2563EB] bg-[#2563EB]/5 shadow-lg"
+                      : "border-gray-200 hover:border-[#2563EB]/50 hover:shadow-md"
                   )}
                 >
                   {/* Badge recommandé */}
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-[#5D9CEC] to-[#3B6FD9] text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    <span className="bg-gradient-to-r from-[#2563EB] to-[#1E3A8A] text-white text-xs font-semibold px-3 py-1 rounded-full">
                       RECOMMANDÉ
                     </span>
                   </div>
                   
                   {selectedFormule === "premium" && (
                     <div className="absolute top-4 right-4">
-                      <CheckCircle className="w-6 h-6 text-[#5D9CEC]" />
+                      <CheckCircle className="w-6 h-6 text-[#2563EB]" />
                     </div>
                   )}
                   
-                  <p className="text-sm font-medium text-[#5D9CEC] mb-2">PREMIUM</p>
+                  <p className="text-sm font-medium text-[#2563EB] mb-2">PREMIUM</p>
                   <div className="flex items-baseline gap-1 mb-4">
                     <span className="text-3xl font-bold text-[#1E3A8A]">299€</span>
                     <span className="text-gray-500">HT</span>
@@ -1370,8 +1370,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </button>
               </div>
               {/* Simulateur frais d'État */}
-              <div className="bg-amber-50 rounded-xl p-6 border border-amber-200 mb-6">
-                <h2 className="font-semibold text-amber-800 mb-4 flex items-center gap-2">
+              <div className="bg-blue-50/50 rounded-2xl border border-[#2563EB]/20 mb-6">
+                <h2 className="font-semibold text-[#1E3A8A] mb-4 flex items-center gap-2">
                   <Scale className="w-5 h-5" />
                   Frais obligatoires (versés aux administrations)
                 </h2>
@@ -1392,21 +1392,21 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
 
                 {/* Frais cession pris en charge */}
-                <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Formalités cession (inclus dans notre service)</p>
+                <p className="text-xs font-semibold text-[#1E3A8A]/80 uppercase tracking-wide mb-2">Formalités cession (inclus dans notre service)</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                   <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Annonce légale (JAL)</p>
-                    <p className="font-semibold text-amber-900">~150€</p>
+                    <p className="text-xs text-[#2563EB]/70 mb-1">Annonce légale (JAL)</p>
+                    <p className="font-semibold text-[#1E3A8A]">~150€</p>
                     <p className="text-[10px] text-amber-500">Journal officiel habilité</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Annonce légale (JAL)</p>
-                    <p className="font-semibold text-amber-900">~150€</p>
+                    <p className="text-xs text-[#2563EB]/70 mb-1">Annonce légale (JAL)</p>
+                    <p className="font-semibold text-[#1E3A8A]">~150€</p>
                     <p className="text-[10px] text-amber-500">Journal officiel habilité</p>
                   </div>
                   <div className="p-3 bg-white rounded-lg text-center">
-                    <p className="text-xs text-amber-600 mb-1">Frais de Greffe</p>
-                    <p className="font-semibold text-amber-900">~60€</p>
+                    <p className="text-xs text-[#2563EB]/70 mb-1">Frais de Greffe</p>
+                    <p className="font-semibold text-[#1E3A8A]">~60€</p>
                     <p className="text-[10px] text-amber-500">Tribunal de commerce</p>
                   </div>
                 </div>
@@ -1414,24 +1414,24 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 {/* Frais changement de dirigeant */}
                 {includChangementDirigeant && (
                   <>
-                    <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2 mt-4 border-t border-amber-200 pt-3">
+                    <p className="text-xs font-semibold text-[#1E3A8A]/80 uppercase tracking-wide mb-2 mt-4 border-t border-[#2563EB]/20 pt-3">
                       + Changement de dirigeant
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                      <div className="p-3 bg-white rounded-lg text-center border border-amber-200">
-                        <p className="text-xs text-amber-600 mb-1">Annonce légale (JAL)</p>
-                        <p className="font-semibold text-amber-900">~150€</p>
+                      <div className="p-3 bg-white rounded-lg text-center border border-[#2563EB]/20">
+                        <p className="text-xs text-[#2563EB]/70 mb-1">Annonce légale (JAL)</p>
+                        <p className="font-semibold text-[#1E3A8A]">~150€</p>
                         <p className="text-[10px] text-amber-500">Changement de gérant/président</p>
                       </div>
-                      <div className="p-3 bg-white rounded-lg text-center border border-amber-200">
-                        <p className="text-xs text-amber-600 mb-1">Frais de Greffe</p>
-                        <p className="font-semibold text-amber-900">~200€</p>
+                      <div className="p-3 bg-white rounded-lg text-center border border-[#2563EB]/20">
+                        <p className="text-xs text-[#2563EB]/70 mb-1">Frais de Greffe</p>
+                        <p className="font-semibold text-[#1E3A8A]">~200€</p>
                         <p className="text-[10px] text-amber-500">Modification au RCS</p>
                       </div>
                     </div>
-                    <div className="p-3 bg-amber-100 rounded-lg text-center mb-3">
-                      <p className="text-xs text-amber-700 font-medium">Total formalités estimées (hors droits d&apos;enregistrement)</p>
-                      <p className="text-lg font-bold text-amber-900">
+                    <div className="p-3 bg-blue-100 rounded-lg text-center mb-3">
+                      <p className="text-xs text-[#1E3A8A]/80 font-medium">Total formalités estimées (hors droits d&apos;enregistrement)</p>
+                      <p className="text-lg font-bold text-[#1E3A8A]">
                         ~{/* cession: JAL 150 + greffe 60 | dirigeant: JAL 150 + greffe 200 | débours: 12 */}
                         {150 + 60 + 150 + 200 + 12}€
                       </p>
@@ -1440,27 +1440,27 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 )}
 
                 {/* Débours */}
-                <div className="mt-4 border-t border-amber-200 pt-3">
-                  <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Débours (documents officiels)</p>
+                <div className="mt-4 border-t border-[#2563EB]/20 pt-3">
+                  <p className="text-xs font-semibold text-[#1E3A8A]/80 uppercase tracking-wide mb-2">Débours (documents officiels)</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div className="p-3 bg-white rounded-lg flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-medium text-amber-800">Extrait Kbis</p>
+                        <p className="text-xs font-medium text-[#1E3A8A]">Extrait Kbis</p>
                         <p className="text-[10px] text-amber-500">Téléchargé au Greffe</p>
                       </div>
-                      <p className="font-semibold text-amber-900">~4€</p>
+                      <p className="font-semibold text-[#1E3A8A]">~4€</p>
                     </div>
                     <div className="p-3 bg-white rounded-lg flex items-center justify-between">
                       <div>
-                        <p className="text-xs font-medium text-amber-800">Statuts à jour certifiés</p>
+                        <p className="text-xs font-medium text-[#1E3A8A]">Statuts à jour certifiés</p>
                         <p className="text-[10px] text-amber-500">Téléchargés au Greffe</p>
                       </div>
-                      <p className="font-semibold text-amber-900">~8€</p>
+                      <p className="font-semibold text-[#1E3A8A]">~8€</p>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-amber-600 text-center mt-2">
+                <p className="text-xs text-[#2563EB]/70 text-center mt-2">
                   Ces frais sont versés directement aux administrations et refacturés à l&apos;identique.
                 </p>
               </div>
@@ -1469,7 +1469,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl p-6 border border-gray-200"
+                  className="bg-white rounded-2xl border border-gray-200"
                 >
                   <h2 className="font-semibold text-[#1E3A8A] mb-2">Paiement sécurisé</h2>
                   <p className="text-sm text-gray-500 mb-5">
@@ -1521,7 +1521,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       }
                     }}
                     disabled={stripeLoading}
-                    className="w-full bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white py-6 text-base gap-2"
+                    className="w-full bg-[#2563EB] hover:bg-[#4A8BD9] text-white py-6 text-base gap-2"
                   >
                     {stripeLoading ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Redirection…</>
@@ -1552,7 +1552,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <p className="text-gray-600">Recherchez la société par son numéro SIREN</p>
               </div>
               {/* Recherche par SIREN ou Nom */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200">
+              <div className="bg-white rounded-2xl border border-gray-200">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4 flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
                   Recherche par SIREN ou Nom
@@ -1679,14 +1679,14 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       }
                     }}
                     disabled={sirenSearch.length < 2 || sirenLoading}
-                    className="bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white px-6"
+                    className="bg-[#2563EB] hover:bg-[#4A8BD9] text-white px-6"
                   >
                     {sirenLoading ? "Recherche..." : "Rechercher"}
                   </Button>
                 </div>
                 
                 {sirenError && (
-                  <p className="text-amber-600 text-sm mt-2 flex items-center gap-1">
+                  <p className="text-[#2563EB]/70 text-sm mt-2 flex items-center gap-1">
                     <Info className="w-4 h-4" />
                     {sirenError}
                   </p>
@@ -1700,7 +1700,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-xl p-6 border border-gray-200 space-y-4"
+                  className="bg-white rounded-2xl border border-gray-200 space-y-4"
                 >
                   <h3 className="font-semibold text-[#1E3A8A] mb-2">Informations de la société</h3>
                   
@@ -1824,7 +1824,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <button
                     type="button"
                     onClick={() => setSirenFound(true)}
-                    className="text-[#5D9CEC] hover:underline text-sm"
+                    className="text-[#2563EB] hover:underline text-sm"
                   >
                     Je ne connais pas le SIREN, saisir manuellement
                   </button>
@@ -1845,7 +1845,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Informations du Cédant</h1>
                 <p className="text-gray-600">Le vendeur des {typeCession === "actions" ? "actions" : "parts sociales"}</p>
               </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
                 {cedantType === "physique" ? (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -1974,7 +1974,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                           className={cn(
                             "p-3 rounded-lg border-2 text-center transition-all text-sm",
                             cedantRegimeMatrimonial === "communaute"
-                              ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                              ? "border-[#1E3A8A] bg-[#2563EB]/10"
                               : "border-gray-200 hover:border-[#1E3A8A]/50"
                           )}
                         >
@@ -1985,7 +1985,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                           className={cn(
                             "p-3 rounded-lg border-2 text-center transition-all text-sm",
                             cedantRegimeMatrimonial === "separation"
-                              ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                              ? "border-[#1E3A8A] bg-[#2563EB]/10"
                               : "border-gray-200 hover:border-[#1E3A8A]/50"
                           )}
                         >
@@ -1996,7 +1996,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                           className={cn(
                             "p-3 rounded-lg border-2 text-center transition-all text-sm",
                             cedantRegimeMatrimonial === "celibataire"
-                              ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                              ? "border-[#1E3A8A] bg-[#2563EB]/10"
                               : "border-gray-200 hover:border-[#1E3A8A]/50"
                           )}
                         >
@@ -2007,15 +2007,15 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200"
+                          className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-[#2563EB]/20"
                         >
-                          <p className="text-sm text-amber-800 mb-3">
+                          <p className="text-sm text-[#1E3A8A] mb-3">
                             <AlertTriangle className="w-4 h-4 inline mr-1" />
                             Le conjoint doit consentir à la cession
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                              <label className="block text-sm font-medium text-amber-800 mb-1">Civilité *</label>
+                              <label className="block text-sm font-medium text-[#1E3A8A] mb-1">Civilité *</label>
                               <Select value={cedantConjointCivilite} onValueChange={(v) => setCedantConjointCivilite(v as "M." | "Mme")}>
                                 <SelectTrigger><SelectValue placeholder="--" /></SelectTrigger>
                                 <SelectContent>
@@ -2025,7 +2025,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                               </Select>
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-amber-800 mb-1">Nom *</label>
+                              <label className="block text-sm font-medium text-[#1E3A8A] mb-1">Nom *</label>
                               <Input
                                 placeholder="Nom"
                                 value={cedantConjointNom}
@@ -2033,7 +2033,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                               />
                             </div>
                             <div>
-                              <label className="block text-sm font-medium text-amber-800 mb-1">Prénom *</label>
+                              <label className="block text-sm font-medium text-[#1E3A8A] mb-1">Prénom *</label>
                               <Input
                                 placeholder="Prénom"
                                 value={cedantConjointPrenom}
@@ -2049,7 +2049,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   <>
                     {/* Recherche par SIREN ou Nom pour cedant morale */}
                     {!cedantSirenFound && !cedantMorale.rcsNumero && (
-                      <div className="bg-white rounded-xl p-6 border border-gray-200 mb-6">
+                      <div className="bg-white rounded-2xl border border-gray-200 mb-6">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Recherche par SIREN ou Nom du cédant
                         </label>
@@ -2163,7 +2163,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                               setCedantSirenLoading(false);
                             }}
                             disabled={cedantSirenSearch.length < 2 || cedantSirenLoading}
-                            className="bg-[#5D9CEC] hover:bg-[#4A89DC]"
+                            className="bg-[#2563EB] hover:bg-[#4A89DC]"
                           >
                             {cedantSirenLoading ? "Recherche..." : "Rechercher"}
                           </Button>
@@ -2173,7 +2173,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         </p>
                         <button
                           type="button"
-                          className="text-sm text-[#5D9CEC] hover:underline mt-2"
+                          className="text-sm text-[#2563EB] hover:underline mt-2"
                           onClick={() => setCedantSirenFound(true)}
                         >
                           Je ne connais pas le SIREN, saisir manuellement
@@ -2333,7 +2333,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <p className="text-gray-600">Renseignez les coordonnees de l&apos;acheteur</p>
               </div>
               {cessionnaireType === "physique" && (
-                <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
                   <h3 className="font-semibold text-[#1E3A8A] flex items-center gap-2">
                     <User className="w-5 h-5" />
                     Informations personnelles du cessionnaire
@@ -2410,7 +2410,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         className={cn(
                           "p-3 rounded-lg border-2 text-center transition-all text-sm",
                           cessionnaireRegimeMatrimonial === "communaute"
-                            ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                            ? "border-[#1E3A8A] bg-[#2563EB]/10"
                             : "border-gray-200 hover:border-[#1E3A8A]/50"
                         )}
                       >
@@ -2421,7 +2421,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         className={cn(
                           "p-3 rounded-lg border-2 text-center transition-all text-sm",
                           cessionnaireRegimeMatrimonial === "separation"
-                            ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                            ? "border-[#1E3A8A] bg-[#2563EB]/10"
                             : "border-gray-200 hover:border-[#1E3A8A]/50"
                         )}
                       >
@@ -2432,7 +2432,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                         className={cn(
                           "p-3 rounded-lg border-2 text-center transition-all text-sm",
                           cessionnaireRegimeMatrimonial === "celibataire"
-                            ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                            ? "border-[#1E3A8A] bg-[#2563EB]/10"
                             : "border-gray-200 hover:border-[#1E3A8A]/50"
                         )}
                       >
@@ -2443,19 +2443,19 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
-                        className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-4"
+                        className="mt-4 p-4 bg-blue-50/50 rounded-lg border border-[#2563EB]/20 space-y-4"
                       >
                         {/* Biens communs ou biens propres / remploi ? */}
                         <div>
-                          <p className="text-sm font-medium text-amber-800 mb-2">L&apos;acquisition est financée par :</p>
+                          <p className="text-sm font-medium text-[#1E3A8A] mb-2">L&apos;acquisition est financée par :</p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <button
                               onClick={() => setCessionnaireAchatBiensPropres(false)}
                               className={cn(
                                 "p-3 rounded-lg border-2 text-center transition-all text-sm",
                                 cessionnaireAchatBiensPropres === false
-                                  ? "border-amber-600 bg-amber-100"
-                                  : "border-amber-300 hover:border-amber-500"
+                                  ? "border-amber-600 bg-blue-100"
+                                  : "border-[#2563EB]/30 hover:border-amber-500"
                               )}
                             >
                               Biens communs
@@ -2465,8 +2465,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                               className={cn(
                                 "p-3 rounded-lg border-2 text-center transition-all text-sm",
                                 cessionnaireAchatBiensPropres === true
-                                  ? "border-amber-600 bg-amber-100"
-                                  : "border-amber-300 hover:border-amber-500"
+                                  ? "border-amber-600 bg-blue-100"
+                                  : "border-[#2563EB]/30 hover:border-amber-500"
                               )}
                             >
                               Biens propres / remploi
@@ -2481,13 +2481,13 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                             animate={{ opacity: 1, height: "auto" }}
                             className="space-y-2"
                           >
-                            <p className="text-sm text-amber-800">
+                            <p className="text-sm text-[#1E3A8A]">
                               <AlertTriangle className="w-4 h-4 inline mr-1" />
                               Le conjoint doit intervenir à l&apos;acte
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                               <div>
-                                <label className="block text-sm font-medium text-amber-800 mb-1">Civilité *</label>
+                                <label className="block text-sm font-medium text-[#1E3A8A] mb-1">Civilité *</label>
                                 <Select value={cessionnaireConjointCivilite} onValueChange={(v) => setCessionnaireConjointCivilite(v as "M." | "Mme")}>
                                   <SelectTrigger><SelectValue placeholder="--" /></SelectTrigger>
                                   <SelectContent>
@@ -2497,7 +2497,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                                 </Select>
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-amber-800 mb-1">Nom *</label>
+                                <label className="block text-sm font-medium text-[#1E3A8A] mb-1">Nom *</label>
                                 <Input
                                   placeholder="Nom"
                                   value={cessionnaireConjointNom}
@@ -2505,7 +2505,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-amber-800 mb-1">Prénom *</label>
+                                <label className="block text-sm font-medium text-[#1E3A8A] mb-1">Prénom *</label>
                                 <Input
                                   placeholder="Prénom"
                                   value={cessionnaireConjointPrenom}
@@ -2533,7 +2533,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
               )}
               {cessionnaireType === "morale" && (
-                <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
                   <h3 className="font-semibold text-[#1E3A8A]">Recherche SIREN cessionnaire</h3>
                   <div className="flex gap-2">
                     <div className="flex-1 relative">
@@ -2652,7 +2652,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                               setCessionnaireSirenLoading(false);
                             }}
                             disabled={!cessionnaireSirenSearch.trim() || cessionnaireSirenLoading}
-                            className="bg-[#5D9CEC] hover:bg-[#4A89DC]"
+                            className="bg-[#2563EB] hover:bg-[#4A89DC]"
                           >
                             {cessionnaireSirenLoading ? "Recherche..." : "Rechercher"}
                           </Button>
@@ -2668,7 +2668,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <div className="flex justify-end mb-2">
                       <button
                         type="button"
-                        className="text-sm text-[#5D9CEC] hover:underline"
+                        className="text-sm text-[#2563EB] hover:underline"
                         onClick={() => {
                           setCessionnaireSirenFound(false);
                           setCessionnaireSirenSearch("");
@@ -2835,7 +2835,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Conditions de la cession</h1>
                 <p className="text-gray-600">Définissez les termes financiers de la transaction</p>
               </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -2918,9 +2918,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <button
                       onClick={() => setModePaiement("comptant")}
                       className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
+                        "p-4 rounded-2xl border-2 text-center transition-all",
                         modePaiement === "comptant"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
                           : "border-gray-200 hover:border-[#1E3A8A]/50"
                       )}
                     >
@@ -2930,9 +2930,9 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     <button
                       onClick={() => setModePaiement("echeances")}
                       className={cn(
-                        "p-4 rounded-xl border-2 text-center transition-all",
+                        "p-4 rounded-2xl border-2 text-center transition-all",
                         modePaiement === "echeances"
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
                           : "border-gray-200 hover:border-[#1E3A8A]/50"
                       )}
                     >
@@ -3023,7 +3023,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <p className="text-gray-600">Personnalisez votre acte de cession</p>
               </div>
               {/* Agrement */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-[#1E3A8A]">Agrement de la cession</h3>
                   <TooltipHelp title={TOOLTIPS.agrement.title} content={TOOLTIPS.agrement.content} />
@@ -3036,7 +3036,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       className={cn(
                         "p-3 rounded-lg border-2 text-center transition-all text-sm",
                         associeUnique === true
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
                           : "border-gray-200 hover:border-[#1E3A8A]/50"
                       )}
                     >
@@ -3047,7 +3047,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       className={cn(
                         "p-3 rounded-lg border-2 text-center transition-all text-sm",
                         associeUnique === false
-                          ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
                           : "border-gray-200 hover:border-[#1E3A8A]/50"
                       )}
                     >
@@ -3065,7 +3065,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
               </div>
 {/* Clauses de non-concurrence */}
-  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+  <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
   <div className="flex items-center gap-2">
     <h3 className="font-semibold text-[#1E3A8A]">Clauses de non-concurrence</h3>
     <TooltipHelp title={TOOLTIPS.nonConcurrence.title} content={TOOLTIPS.nonConcurrence.content} />
@@ -3135,7 +3135,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 )}
               </div>
 {/* Comptes courants */}
-  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+  <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
   <div className="flex items-center gap-2">
     <h3 className="font-semibold text-[#1E3A8A]">Comptes courants d&apos;associes *</h3>
     <TooltipHelp title={TOOLTIPS.comptesCourants.title} content={TOOLTIPS.comptesCourants.content} />
@@ -3146,7 +3146,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     className={cn(
                       "p-3 rounded-lg border-2 text-center transition-all text-sm",
                       comptesCourants === "aucun"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -3157,7 +3157,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     className={cn(
                       "p-3 rounded-lg border-2 text-center transition-all text-sm",
                       comptesCourants === "cede"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -3168,7 +3168,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     className={cn(
                       "p-3 rounded-lg border-2 text-center transition-all text-sm",
                       comptesCourants === "conserve"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -3177,7 +3177,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
               </div>
               {/* Garantie actif/passif */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
                 <div className="flex items-start gap-3">
                   <Checkbox
                     id="garantie"
@@ -3241,7 +3241,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 )}
               </div>
 {/* Frais */}
-  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+  <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
   <div className="flex items-center gap-2">
     <h3 className="font-semibold text-[#1E3A8A]">Frais de la cession *</h3>
     <TooltipHelp title={TOOLTIPS.fraisCharge.title} content={TOOLTIPS.fraisCharge.content} />
@@ -3252,7 +3252,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     className={cn(
                       "p-3 rounded-lg border-2 text-center transition-all text-sm",
                       fraisACharge === "cessionnaire"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -3263,7 +3263,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     className={cn(
                       "p-3 rounded-lg border-2 text-center transition-all text-sm",
                       fraisACharge === "cedant"
-                        ? "border-[#1E3A8A] bg-[#5D9CEC]/10"
+                        ? "border-[#1E3A8A] bg-[#2563EB]/10"
                         : "border-gray-200 hover:border-[#1E3A8A]/50"
                     )}
                   >
@@ -3292,7 +3292,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
               </div>
               {/* Mandataire des formalites */}
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
                 <h3 className="font-semibold text-[#1E3A8A]">Mandataire pour les formalites</h3>
                 <p className="text-sm text-gray-600">
                   Le mandataire sera charge d&apos;accomplir les formalites legales (enregistrement, depot au greffe, etc.)
@@ -3318,7 +3318,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Changement de dirigeant</h1>
                 <p className="text-gray-600">Informations du nouveau dirigeant</p>
               </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-6">
                 <h3 className="font-semibold text-[#1E3A8A] mb-4">Nouveau dirigeant</h3>
                 
                 {/* Type de dirigeant */}
@@ -3498,7 +3498,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       </div>
                     </div>
                     {/* DECLARATION NON-CONDAMNATION */}
-                    <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div className="mt-4 p-4 bg-blue-50/50 border border-[#2563EB]/20 rounded-xl">
                       <label className="flex items-start gap-3 cursor-pointer">
                         <input
                           type="checkbox"
@@ -3730,7 +3730,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                       </div>
                       
                       {/* Declaration non-condamnation RP */}
-                      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="mt-4 p-4 bg-blue-50/50 border border-[#2563EB]/20 rounded-lg">
                         <label className="flex items-start gap-3 cursor-pointer">
                           <input
                             type="checkbox"
@@ -3765,7 +3765,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Récapitulatif</h1>
                 <p className="text-gray-600">Vérifiez les informations avant de générer votre document</p>
               </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-6">
                 {/* Type de cession */}
                 <div className="pb-4 border-b">
                   <h3 className="font-semibold text-[#1E3A8A] mb-2">Type de cession</h3>
@@ -3849,7 +3849,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <h1 className="text-2xl font-bold text-[#1E3A8A] mb-2">Signature</h1>
                 <p className="text-gray-600">Finalisez votre acte de cession</p>
               </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-6">
+              <div className="bg-white rounded-2xl border border-gray-200 space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de signature *</label>
@@ -3877,7 +3877,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
           type="checkbox"
           checked={generateAgrement}
           onChange={(e) => setGenerateAgrement(e.target.checked)}
-          className="w-5 h-5 rounded accent-[#3B6FD9]"
+          className="w-5 h-5 rounded accent-[#1E3A8A]"
         />
         <span className="text-sm">PV d&apos;agrement (autorisation de la cession)</span>
       </label>
@@ -3886,7 +3886,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
           type="checkbox"
           checked={generateConstatation}
           onChange={(e) => setGenerateConstatation(e.target.checked)}
-          className="w-5 h-5 rounded accent-[#3B6FD9]"
+          className="w-5 h-5 rounded accent-[#1E3A8A]"
         />
         <span className="text-sm">PV de constatation de la cession</span>
       </label>
@@ -3896,7 +3896,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
             type="checkbox"
             checked={true}
             disabled
-            className="w-5 h-5 rounded accent-[#3B6FD9]"
+            className="w-5 h-5 rounded accent-[#1E3A8A]"
           />
           <span className="text-sm">PV de changement de dirigeant</span>
         </label>
@@ -3913,7 +3913,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
         onClick={() => handleGenerate("acte")}
         disabled={!lieuSignature || !dateSignature || isGeneratingActe || isGeneratingPv}
         variant="outline"
-        className="w-full border-[#5D9CEC] text-[#5D9CEC] hover:bg-[#5D9CEC]/10 py-5 text-base"
+        className="w-full border-[#2563EB] text-[#2563EB] hover:bg-[#2563EB]/10 py-5 text-base"
       >
         <Download className="w-4 h-4 mr-2" />
         {isGeneratingActe ? "Génération de l'acte..." : acteText ? "Regénérer l'Acte de cession" : "Générer l'Acte de cession"}
@@ -3922,7 +3922,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
         onClick={() => handleGenerate("pv")}
         disabled={!lieuSignature || !dateSignature || isGeneratingPv || isGeneratingActe || (!generateAgrement && !generateConstatation && !includChangementDirigeant)}
         variant="outline"
-        className="w-full border-[#3B6FD9] text-[#3B6FD9] hover:bg-[#3B6FD9]/10 py-5 text-base"
+        className="w-full border-[#1E3A8A] text-[#1E3A8A] hover:bg-[#1E3A8A]/10 py-5 text-base"
       >
         <Download className="w-4 h-4 mr-2" />
         {isGeneratingPv ? "Génération du PV..." : pvText ? "Regénérer le(s) PV" : "Générer le(s) PV"}
@@ -4119,7 +4119,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                     </div>
                     <label className="cursor-pointer">
                       <input type="file" accept=".pdf" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleJustifUpload(item.key, f); }} />
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${justifFiles[item.key] ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100" : "border-[#5D9CEC] text-[#5D9CEC] bg-white hover:bg-blue-50"}`}>
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${justifFiles[item.key] ? "border-green-300 text-green-700 bg-green-50 hover:bg-green-100" : "border-[#2563EB] text-[#2563EB] bg-white hover:bg-blue-50"}`}>
                         <Upload className="w-4 h-4" />
                         {justifFiles[item.key] ? "Remplacer" : "Charger PDF"}
                       </div>
@@ -4128,7 +4128,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 );
 
                 return (
-                  <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                  <div className="bg-white rounded-2xl border border-gray-200 space-y-4">
                     <h3 className="font-semibold text-[#1E3A8A] mb-1">Documents obligatoires</h3>
                     <p className="text-xs text-gray-500 mb-4">
                       {associeUnique === true ? "Associé unique détecté — la décision remplace le PV d'assemblée." : ""}
@@ -4166,10 +4166,10 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 ];
                 const allUploaded = requiredKeys.every(k => !!justifFiles[k]);
                 return (
-                  <div className="bg-white rounded-xl p-6 border border-gray-200">
+                  <div className="bg-white rounded-2xl border border-gray-200">
                     <h3 className="font-semibold text-[#1E3A8A] mb-3">Soumettre au Guichet Unique INPI</h3>
                     {!allUploaded && (
-                      <p className="text-sm text-amber-600 mb-4 flex items-center gap-2">
+                      <p className="text-sm text-[#2563EB]/70 mb-4 flex items-center gap-2">
                         <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                         Veuillez charger tous les documents obligatoires avant de soumettre.
                       </p>
@@ -4228,7 +4228,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 <Button
                   onClick={handleNext}
                   disabled={!canProceed()}
-                  className="gap-2 bg-[#5D9CEC] hover:bg-[#4A8BD9] text-white"
+                  className="gap-2 bg-[#2563EB] hover:bg-[#4A8BD9] text-white"
                 >
                   Suivant
                   <ArrowRight className="w-4 h-4" />
@@ -4239,8 +4239,8 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
         </main>
       </div>
       
-  {/* FAQ Section */}
-  <section className="bg-white py-16 px-4">
+  {/* FAQ Section - Only visible on landing page (step 0) */}
+  {step === 0 && <section className="bg-white py-16 px-4">
     <div className="max-w-3xl mx-auto">
       <h2 className="text-3xl md:text-4xl font-bold text-[#1E3A8A] text-center mb-2">
         Les questions à se poser pour céder ses parts ou actions ?
@@ -4308,7 +4308,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
         ))}
       </div>
     </div>
-  </section>
+  </section>}
 
   {/* Footer */}
   <footer className="bg-white border-t border-gray-100 py-4">

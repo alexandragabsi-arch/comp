@@ -516,9 +516,17 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const canProceed = (): boolean => {
     switch (step) {
       case 1:
-        return typeCession !== null && typePropriete !== null;
+        return typeCession !== null;
+      case 1.5:
+        return typePropriete !== null;
       case 2:
-        return cedantType !== null && cessionnaireType !== null;
+        return cedantType !== null;
+      case 2.25:
+        return cessionnaireType !== null;
+      case 2.5:
+        return true; // estimation optional
+      case 2.75:
+        return true; // expert optional
       case 3:
         return true; // Payment step
       case 4:
@@ -952,68 +960,7 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                 </div>
                 <p className="text-sm text-[#1E3A8A]/70 mt-2 text-justify">La cession peut s&apos;accompagner d&apos;un <strong>changement de gérant/président</strong>. Un <strong>PV</strong> sera généré pour ce changement.</p>
               </div>
-              {/* Type de propriété */}
-              {typeCession && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl border border-gray-200"
-                >
-                  <h2 className="text-xl font-semibold text-[#1E3A8A] mb-2">Type de transfert de propriété</h2>
-                  <p className="text-gray-600 mb-6">Comment souhaitez-vous transférer les {typeCession === "actions" ? "actions" : "parts sociales"} ?</p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button
-                      onClick={() => setTypePropriete("pleine-propriete")}
-                      className={cn(
-                        "p-4 rounded-2xl border-2 text-center transition-all",
-                        typePropriete === "pleine-propriete"
-                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Pleine propriété</span>
-                      <span className="text-xs text-gray-500">Transfert total</span>
-                    </button>
-                    <button
-                      onClick={() => setTypePropriete("usufruit")}
-                      className={cn(
-                        "p-4 rounded-2xl border-2 text-center transition-all",
-                        typePropriete === "usufruit"
-                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Usufruit</span>
-                      <span className="text-xs text-gray-500">Droit d&apos;usage</span>
-                    </button>
-                    <button
-                      onClick={() => setTypePropriete("nue-propriete")}
-                      className={cn(
-                        "p-4 rounded-2xl border-2 text-center transition-all",
-                        typePropriete === "nue-propriete"
-                          ? "border-[#1E3A8A] bg-[#2563EB]/10"
-                          : "border-gray-200 hover:border-[#1E3A8A]/50"
-                      )}
-                    >
-                      <span className="font-semibold text-[#1E3A8A] block">Nue-propriété</span>
-                      <span className="text-xs text-gray-500">Sans usufruit</span>
-                    </button>
-                  </div>
-                  <Collapsible className="mt-4">
-                    <CollapsibleTrigger className="flex items-center gap-2 text-sm text-[#1E3A8A]">
-                      <HelpCircle className="w-4 h-4" />
-                      <span>Quelle différence ?</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3 p-4 bg-gray-50 rounded-lg text-sm text-gray-700 space-y-2">
-                      <p><strong>Pleine propriété :</strong> Le cessionnaire acquiert tous les droits (vote, dividendes, vente).</p>
-                      <p><strong>Usufruit :</strong> Le cessionnaire perçoit les dividendes mais le nu-propriétaire conserve le titre.</p>
-                      <p><strong>Nue-propriété :</strong> Le cessionnaire devient propriétaire mais l&apos;usufruitier conserve les revenus.</p>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </motion.div>
-              )}
+              {/* Type de propriété → moved to step 1.5 */}
             </motion.div>
           )}
           {/* STEP 1.5: Type de propriété */}

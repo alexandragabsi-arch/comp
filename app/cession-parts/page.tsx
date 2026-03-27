@@ -1121,7 +1121,17 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   </button>
                 )}
               </div>
-              {/* Cessionnaire */}
+            </motion.div>
+          )}
+
+          {/* STEP 2.25: Cessionnaire */}
+          {step === 2.25 && (
+            <motion.div key="step2-25" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6 max-w-xl mx-auto">
+              <div className="text-center space-y-2 mb-8">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto"><User className="w-7 h-7 text-[#2563EB]" /></div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1E3A8A] text-center">Le Cessionnaire</h2>
+                <p className="text-gray-500 text-center">Qui achète les titres ?</p>
+              </div>
               <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
                 <h3 className="text-sm font-semibold text-[#1E3A8A] mb-4">Le Cessionnaire (acheteur)</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -1187,7 +1197,17 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   </button>
                 )}
               </div>
-              {/* Estimation */}
+            </motion.div>
+          )}
+
+          {/* STEP 2.5: Estimation */}
+          {step === 2.5 && (
+            <motion.div key="step2-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6 max-w-xl mx-auto">
+              <div className="text-center space-y-2 mb-8">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto"><Scale className="w-7 h-7 text-[#2563EB]" /></div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1E3A8A] text-center">Estimation de la cession</h2>
+                <p className="text-gray-500 text-center">Indiquez une estimation du nombre et du prix</p>
+              </div>
               <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
                 <h3 className="text-sm font-semibold text-[#1E3A8A] mb-4">Estimation de la cession</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1215,7 +1235,17 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
                   </div>
                 </div>
               </div>
-              {/* Expert-comptable pour évaluation */}
+            </motion.div>
+          )}
+
+          {/* STEP 2.75: Expert-comptable */}
+          {step === 2.75 && (
+            <motion.div key="step2-75" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6 max-w-xl mx-auto">
+              <div className="text-center space-y-2 mb-8">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto"><Scale className="w-7 h-7 text-[#2563EB]" /></div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1E3A8A] text-center">Évaluation des parts/actions</h2>
+                <p className="text-gray-500 text-center">Avez-vous besoin d&apos;un expert-comptable ?</p>
+              </div>
               <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
                 <h3 className="text-sm font-semibold text-[#1E3A8A] mb-2">Évaluation des parts/actions</h3>
                 <p className="text-sm text-gray-600 mb-4">

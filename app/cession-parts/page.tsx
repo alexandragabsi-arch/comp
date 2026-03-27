@@ -459,6 +459,14 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
+    // Pre-payment sub-step navigation
+    if (step === 1) { setStep(1.5 as any); return; }
+    if (step === 1.5) { setStep(2); return; }
+    if (step === 2) { setStep(2.25 as any); return; }
+    if (step === 2.25) { setStep(2.5 as any); return; }
+    if (step === 2.5) { setStep(2.75 as any); return; }
+    if (step === 2.75) { setStep(3); return; }
+
     if (step === 3 && !paymentComplete) {
       setPaymentComplete(true);
       setStep(4);
@@ -483,6 +491,14 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const handlePrev = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (step > 1) {
+      // Pre-payment sub-step back navigation
+      if (step === 1.5) { setStep(1); return; }
+      if (step === 2) { setStep(1.5 as any); return; }
+      if (step === 2.25) { setStep(2); return; }
+      if (step === 2.5) { setStep(2.25 as any); return; }
+      if (step === 2.75) { setStep(2.5 as any); return; }
+      if (step === 3) { setStep(2.75 as any); return; }
+
       if (step === 4 && paymentComplete) {
         return;
       }
@@ -1000,6 +1016,27 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
               )}
             </motion.div>
           )}
+          {/* STEP 1.5: Type de propriété */}
+          {step === 1.5 && (
+            <motion.div key="step1-5" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8 max-w-xl mx-auto">
+              <div className="text-center space-y-2 mb-8">
+                <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto"><FileText className="w-7 h-7 text-[#2563EB]" /></div>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1E3A8A] text-center">Type de transfert de propriété</h2>
+                <p className="text-gray-500">Comment souhaitez-vous transférer les {typeCession === "actions" ? "actions" : "parts sociales"} ?</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[{v:"pleine-propriete",l:"Pleine propriété",d:"Transfert total"},{v:"usufruit",l:"Usufruit",d:"Droit d'usage"},{v:"nue-propriete",l:"Nue-propriété",d:"Sans usufruit"}].map(o=>(
+                    <button key={o.v} onClick={()=>setTypePropriete(o.v as any)} className={cn("p-4 rounded-2xl border-2 text-center transition-all duration-200 hover:shadow-md",typePropriete===o.v?"border-[#2563EB] bg-blue-50":"border-gray-200 bg-white")}>
+                      <span className="font-semibold text-[#1E3A8A] block">{o.l}</span>
+                      <span className="text-xs text-gray-500">{o.d}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* STEP 2: Les parties (avant paiement) */}
           {step === 2 && (
             <motion.div

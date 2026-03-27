@@ -459,14 +459,6 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const handleNext = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // Pre-payment sub-step navigation
-    if (step === 1) { setStep(1.5 as any); return; }
-    if (step === 1.5) { setStep(2); return; }
-    if (step === 2) { setStep(2.25 as any); return; }
-    if (step === 2.25) { setStep(2.5 as any); return; }
-    if (step === 2.5) { setStep(2.75 as any); return; }
-    if (step === 2.75) { setStep(3); return; }
-
     if (step === 3 && !paymentComplete) {
       setPaymentComplete(true);
       setStep(4);
@@ -491,14 +483,6 @@ const [cedantPhysique, setCedantPhysique] = useState<PersonnePhysique>({
   const handlePrev = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (step > 1) {
-      // Pre-payment sub-step navigation back
-      if (step === 1.5) { setStep(1); return; }
-      if (step === 2) { setStep(1.5 as any); return; }
-      if (step === 2.25) { setStep(2); return; }
-      if (step === 2.5) { setStep(2.25 as any); return; }
-      if (step === 2.75) { setStep(2.5 as any); return; }
-      if (step === 3) { setStep(2.75 as any); return; }
-
       if (step === 4 && paymentComplete) {
         return;
       }
